@@ -1,11 +1,51 @@
 title: "開発コマンド"
 categories:
   - name: 環境構築（クローン直後）
-    commands: 未確定
+    commands: |-
+      1. 依存を lock どおりに入れる
+
+      ```bash
+      npm ci
+      ```
+
+      2. 型の宣言（`.claude-plugin/types/`）を書き出す。信頼済みのフォルダで対話のセッションを 1 度起動して閉じる
+
+      ```bash
+      claude --plugin-dir {worktree}
+      ```
+    effects: 依存のダウンロードが走る。対話のセッションは Claude Code を起動するだけで、モデルへの問い合わせはしない
+    verification:
+      state: 済
+      date: '2026-10-25'
+      detail: 作業ツリーで `npm ci` が終了コード 0 で通り、tmux の中で `claude --plugin-dir {worktree}` を起動すると `.claude-plugin/types/` が書き出され、`npm run typecheck` が終了コード 0 で通ることを確かめた
   - name: 取り込み後の追従（pull 後）
-    commands: 未確定
+    commands: |-
+      1. 依存を lock に合わせる
+
+      ```bash
+      npm ci
+      ```
+    verification:
+      state: 済
+      date: '2026-10-25'
+      detail: 作業ツリーで `npm ci` が終了コード 0 で通ることを確かめた
   - name: 依存の追加・更新・削除
-    commands: 未確定
+    commands: |-
+      1. 依存を追加・更新する（バージョンは完全一致で固定する）
+
+      ```bash
+      npm install --save-dev --save-exact {パッケージ}@{バージョン}
+      ```
+
+      2. 依存を削除する
+
+      ```bash
+      npm uninstall {パッケージ}
+      ```
+    verification:
+      state: 済
+      date: '2026-10-25'
+      detail: 作業ツリーの複製で `npm uninstall typescript` と `npm install --save-dev --save-exact typescript@5.9.3` がどちらも終了コード 0 で通り、`package.json` の `devDependencies` が元どおり `5.9.3` に戻ることを確かめた
   - name: 起動・停止
     commands: 未確定
   - name: テスト
@@ -20,3 +60,6 @@ categories:
     commands: 未確定
   - name: 管理作業
     commands: 未確定
+prerequisites:
+  - Node.js と npm
+  - Claude Code 2.1.310 以上（`claude` が PATH にある）
