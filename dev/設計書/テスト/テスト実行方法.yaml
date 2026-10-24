@@ -1,7 +1,14 @@
 title: "テスト実行方法"
 layers:
   - name: 単体テスト（バック）
-    run_all: 未確定
+    description: '`claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で流す。'
+    prerequisites:
+      - Claude Code 2.1.310 以上（`claude` が PATH にある）
+      - '`hooks/hooks.json` が `modules` で入口を指している（無いと `no hooks module to load` で失敗する）'
+    run_all: |-
+      ```bash
+      claude plugin test .
+      ```
   - name: 結合テスト（バック）
     run_all: 未確定
   - name: E2E テスト
@@ -11,4 +18,11 @@ layers:
   - name: 外部疎通テスト
     run_all: 未確定
   - name: lint
-    run_all: 未確定
+    description: TypeScript の型検査を `npm run typecheck`（`tsc -p tsconfig.json --noEmit`）で回す。linter・formatter の設定はプロジェクトに無い。
+    prerequisites:
+      - '`npm install` 済みで、`package.json` の script `typecheck` と `tsconfig.json` がある'
+      - '`.claude-plugin/types/` が書き出されている（信頼済みのフォルダから `claude --plugin-dir {worktree}` の対話のセッションを 1 度起動すると書き出される）'
+    run_all: |-
+      ```bash
+      npm run typecheck
+      ```
