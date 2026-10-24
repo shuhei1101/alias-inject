@@ -7,7 +7,7 @@ flows:
     summary: 初めて出た語の文脈を追加し、記録に入れる
     setup:
       - name: Mock
-        description: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す。`prompt.submit` は届いた `text`・`context` をそのまま返す
+        description: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す。`prompt.submit` は届いた `text`・`context` をそのまま返す。`ui.log` は届いた行を記録する
       - name: ユーザースコープの settings
         description: '`env.ALIAS_INJECT_CONFIG` が `~/.config/alias-inject/settings.yaml`'
       - name: 設定ファイル
@@ -169,6 +169,7 @@ flows:
     expected:
       - 返る `text`・`context` が受け取ったまま
       - '`fs.read` が呼ばれていない'
+      - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_config_path_missing
   - name: 正常系（プロジェクトの設定を重ねる）
     summary: 当たった projects のソースを global に重ね、同じ語を両方のセクションに追加する
@@ -253,6 +254,7 @@ flows:
     expected:
       - 返る `text`・`context` が受け取ったまま
       - フックが例外で終わらない（入力が止まらない）
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスと理由を含む行が届いている
     test: test_error_when_config_unreadable
   - name: 異常系（YAML の書式の誤り）
     summary: 書式の誤った YAML のソースだけを外し、他のソースの文脈は追加する
@@ -281,6 +283,7 @@ flows:
     expected:
       - 返る `context` に `## 用語` の term-a があり、`## URL` のセクションが無い
       - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で URL の YAML のパスと理由を含む行が届いている
     test: test_error_when_yaml_malformed
 lead: 入力の文を設定の YAML の用語・エイリアスと照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
@@ -342,10 +345,10 @@ exceptions:
     condition: 照合して文脈を追加したか、追加する語が無く受け取ったまま渡した
   - name: なし（設定ファイルが読めない）
     condition: 設定ファイルが無い・読めない・書式が誤っている
-    notes: 例外を外へ出さず、何も追加せずに `next(e)` へ渡す
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、何も追加せずに `next(e)` へ渡す。`ALIAS_INJECT_CONFIG` が無いときはログを出さない'
   - name: なし（YAML の書式の誤り）
     condition: ソースの YAML が読めない・書式が誤っている
-    notes: 例外を外へ出さず、そのソースだけを照合から外す
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパスと理由を debug log に出し、そのソースだけを照合から外す'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで
