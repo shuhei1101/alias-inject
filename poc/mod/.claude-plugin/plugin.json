@@ -1,0 +1,1 @@
+{ "name": "alias-inject-poc", "version": "0.1.0", "description": "alias-inject の PoC（mod のランタイムの検証）", "types": "./types/index.d.ts" }
