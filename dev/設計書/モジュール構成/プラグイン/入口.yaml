@@ -5,7 +5,7 @@ lead: |-
 directory: |-
   ```text
   .claude-plugin/
-    plugin.json          プラグインの定義（名前 alias-inject・説明・version。version は version.ini の値から先頭の v を外した値（今は 0.0.0））
+    plugin.json          プラグインの定義（名前 alias-inject・説明。version は置かない）
     marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を載せる）
     types/               エンジンが書き出す mod の型の宣言（git に入れない）
   hooks/
