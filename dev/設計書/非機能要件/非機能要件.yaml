@@ -1,0 +1,24 @@
+title: "非機能要件"
+requirements:
+  - name: 対応 OS
+    english_name: supported_os
+    category: 動作環境
+    external_constraint: 未確定
+    source_kind: 未確定
+    value: 未確定
+    rationale: Claude Code（ターミナル版）が mod の hooks モジュールを読み込める OS を PoC 検証で確かめて決める
+  - name: 対応する Claude Code のバージョン
+    english_name: supported_claude_code_version
+    category: 動作環境
+    external_constraint: 未確定
+    source_kind: 未確定
+    value: 未確定
+    rationale: '`hooks/hooks.json` の `modules` から hooks モジュールを読める最小のバージョンを PoC 検証で確かめて決める'
+  - name: 入力の送信で増える待ち時間
+    english_name: added_latency_on_submit
+    category: 性能
+    external_constraint: 未確定
+    source_kind: 未確定
+    value: 未確定
+    rationale: '照合と文脈の追加の処理を作る #1 の設計で、Claude Code が hooks モジュールの処理を待つ上限から決める'
+lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。
