@@ -1,0 +1,44 @@
+title: "セッションを通した引用の文脈の追加"
+scenarios:
+  - name: 正常シナリオ
+    setup:
+      - name: Mock
+        description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
+        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
+      - name: 設定ファイル
+        description: '`global.sources` に term のソースを 1 つ持つ'
+      - name: 用語の YAML
+        description: 語 `term-a`・`term-b` を持つ
+        notes: 後の手順で語 `term-c` を追加する
+    flow: |-
+      ```mermaid
+      flowchart TD
+        U0([利用者]) -->|term-a を含む入力| UC1([入力への引用の文脈の追加:正常シナリオ])
+        UC1 -->|term-a を記録| UC2([入力への引用の文脈の追加:正常シナリオ（記録済みの語だけ）])
+        UC2 -->|用語の YAML に term-c を追加| UC3([設定とYAMLの読み直し:正常シナリオ])
+        UC3 -->|/compact| UC4([圧縮とクリアの後の記録の消去:正常シナリオ（圧縮）])
+        UC4 -->|/clear| UC5([圧縮とクリアの後の記録の消去:正常シナリオ（クリア）])
+        UC5 --> DONE([語ごとに 1 回だけ文脈が追加された状態])
+
+        click UC1 "../単一ユースケース/入力への引用の文脈の追加.yaml#正常シナリオ"
+        click UC2 "../単一ユースケース/入力への引用の文脈の追加.yaml#正常シナリオ（記録済みの語だけ）"
+        click UC3 "../単一ユースケース/設定とYAMLの読み直し.yaml#正常シナリオ"
+        click UC4 "../単一ユースケース/圧縮とクリアの後の記録の消去.yaml#正常シナリオ（圧縮）"
+        click UC5 "../単一ユースケース/圧縮とクリアの後の記録の消去.yaml#正常シナリオ（クリア）"
+      ```
+    expected:
+      - 1 回目の入力にだけ term-a の文脈が追加されている
+      - 2 回目の term-a を含む入力には文脈が追加されていない
+      - YAML に追加した term-c は、書き換えた直後の入力で文脈が追加されている
+      - '`/compact` の後と `/clear` の後の term-a を含む入力に、term-a の文脈がもう一度追加されている'
+      - どの入力も文はそのままモデルに届いている
+    test: test_normal
+lead: 利用者が 1 つのセッションで入力を重ねる間に、設定ファイルの書き換え・圧縮・`/clear` を挟んでも、語ごとに 1 回だけ引用の文脈がモデルに追加される複合ユースケース。
+issue: 1
+primary_actor: 利用者
+trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで入力する
+preconditions:
+  - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
+  - 設定ファイルの `global.sources` が照合する用語の YAML を指している
+success_guarantee: 入力の文は変わらず、初めて出た語の引用の文脈だけがモデルに追加される。
+minimal_guarantee: 設定ファイルや YAML が読めないときも、入力はそのままモデルに届く。
