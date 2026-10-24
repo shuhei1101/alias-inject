@@ -1,0 +1,1 @@
+# alias-inject を Claude Code の mod の単独のプラグインとして立ち上げる
