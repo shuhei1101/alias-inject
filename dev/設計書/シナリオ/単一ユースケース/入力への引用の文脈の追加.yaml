@@ -90,7 +90,7 @@ scenarios:
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: '`origins` をプラグインだけにする'
-        notes: 値の書き方は設定の設計書（`dev/設計書/設定/プラグイン.yaml`）で決める値に揃える
+        notes: '`origins: [plugin]`（設定の設計書 `dev/設計書/設定/プラグイン.yaml` の `global.origins`）'
     flow: |-
       ```mermaid
       sequenceDiagram

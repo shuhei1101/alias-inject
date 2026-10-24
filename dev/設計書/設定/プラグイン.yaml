@@ -1,0 +1,156 @@
+title: "設定: プラグイン"
+lead: プラグイン（hooks モジュール）が読む設定値の一覧。サンプルは [settings.sample.yaml](../../../settings.sample.yaml)。
+files:
+  - file: ~/.claude/settings.json
+    manages: 設定ファイルのパス（`env` の `ALIAS_INJECT_CONFIG`）
+    notes: 'ユーザースコープだけを読む（`$.settings.read({ source: "user" })`）。プロジェクトスコープの `env` は読まない'
+  - file: ~/.config/alias-inject/settings.yaml
+    manages: 照合するソース・対象の出所・上限・見出し
+    notes: 置き場所は `ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
+  - file: settings.sample.yaml
+    manages: 設定ファイルの全キーのサンプル（実値を入れない）
+    notes: プラグインの直下に置く
+settings:
+  - key: env.ALIAS_INJECT_CONFIG
+    title: 設定ファイルのパス
+    file: ~/.claude/settings.json
+    type: string
+    required: false
+    description: 設定ファイルの絶対パス。先頭の `~` はホーム（`$.env.get("HOME")`）に展開する
+    missing: 何も追加せず、入力をそのまま渡す
+    reload: immediate
+    notes:
+      反映: 入力の送信ごとにユーザースコープの settings を読み直すので、次の入力から効く
+  - key: global.enabled
+    title: 全体のオンオフ
+    file: ~/.config/alias-inject/settings.yaml
+    type: boolean
+    default: 'true'
+    description: false のとき何も追加しない
+    reload: immediate
+  - key: global.sources[].label
+    title: ソースの見出し
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: true
+    description: 文脈の中でこのソースの語を並べるセクションの見出し
+    missing: そのソースを照合から外す
+  - key: global.sources[].type
+    title: 引用の種類
+    file: ~/.config/alias-inject/settings.yaml
+    type: "'term' | 'doc' | 'command' | 'url'"
+    required: true
+    description: 追加する列と書式を決める。term は `description`・`related`、doc は `description`・`mcp`、command は `command`・`cwd`・`description`、url は `url`・`description` を追加する
+    missing: そのソースを照合から外す
+    allowed: term / doc / command / url。それ以外の値はそのソースを照合から外す
+  - key: global.sources[].files
+    title: 照合する YAML
+    file: ~/.config/alias-inject/settings.yaml
+    type: string | string[]
+    required: true
+    description: 照合する YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。先頭の `~` はホームに展開し、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
+    missing: そのソースを照合から外す
+    notes:
+      YAML の中身: 1 ファイルに 1 項目（マッピング）か、複数の項目（マッピングの並び）を書く
+  - key: global.sources[].id
+    title: ID の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: true
+    description: 項目の ID を持つ列の名前
+    missing: そのソースを照合から外す
+  - key: global.sources[].words
+    title: 照合する列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string[]
+    required: true
+    description: 照合する語（用語・エイリアス）を持つ列の名前。列の値が並びなら要素ごとに照合する。最初の列の値を、文脈に出す語と、`related` の参照先の名前に使う
+    missing: そのソースを照合から外す
+  - key: global.sources[].description
+    title: 説明の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: 項目の説明を持つ列の名前
+    missing: 説明を追加しない
+  - key: global.sources[].related
+    title: 関連する文書の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が term のとき、関連する文書の並び（各要素の `to` が ID）を持つ列の名前。ID と、同じソースでその ID を持つ項目の名前を追加する
+    missing: 関連する文書を追加しない
+  - key: global.sources[].mcp
+    title: 引く MCP
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が doc のとき、文書を詳しく引く MCP サーバーの名前（列の名前ではなく値そのもの）
+    missing: MCP を追加しない
+  - key: global.sources[].command
+    title: コマンドの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が command のとき、コマンドを持つ列の名前
+    missing: コマンドを追加しない
+  - key: global.sources[].cwd
+    title: 実行する場所の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が command のとき、コマンドを実行するフォルダを持つ列の名前
+    missing: 実行する場所を追加しない
+  - key: global.sources[].url
+    title: URL の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が url のとき、URL を持つ列の名前
+    missing: URL を追加しない
+  - key: global.origins
+    title: 対象にする入力の出所
+    file: ~/.config/alias-inject/settings.yaml
+    type: ('user' | 'plugin')[]
+    default: '[user, plugin]'
+    description: 文脈を追加する入力の出所。`user` は利用者の入力（`e.origin.kind` が `composer`・`bridge`・`sdk`。tmux から送る ai-monitor の指示を含む）、`plugin` はプラグインが送った入力（`plugin`）。それ以外の出所（通知・他のセッション・予約の実行など）には追加しない
+    allowed: user / plugin。それ以外の値は無視する
+  - key: global.max_items
+    title: 1 回に追加する語の上限
+    file: ~/.config/alias-inject/settings.yaml
+    type: integer
+    default: '20'
+    description: 1 回の入力に文脈を追加する語の数の上限
+    allowed: 1 以上の整数。それ以外の値は既定を使う
+    refs:
+      - dev/設計書/非機能要件/非機能要件#requirements[入力の送信で増える待ち時間]
+  - key: global.max_chars
+    title: 1 回に追加する文脈の文字数の上限
+    file: ~/.config/alias-inject/settings.yaml
+    type: integer
+    default: '4000'
+    description: 1 回の入力に追加する文脈（見出しを含む文字列全体）の文字数の上限
+    allowed: 1 以上の整数。それ以外の値は既定を使う
+  - key: global.exclude
+    title: 照合しない語
+    file: ~/.config/alias-inject/settings.yaml
+    type: string[]
+    default: '[]'
+    description: 照合から外す語。入力・語と同じ正規化（NFKC・英字の小文字・前後の空白の除去）をしてから比べる
+  - key: global.heading
+    title: 文脈の先頭の見出し
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    default: この発言に出る用語
+    description: 追加する文脈の先頭に置く見出し
+  - key: projects[].match
+    title: プロジェクトの一致の条件
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: true
+    description: 絶対パスかプロジェクト名。絶対パスは起動したプロジェクトの直下がそのパスかその配下のとき、プロジェクト名はリポジトリのフォルダ名が一致したときに当たる。worktree は本体のパス・フォルダ名で見る
+    missing: その要素を使わない
+    notes:
+      重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`sources`・`exclude` は後ろに追加し、それ以外は置き換える'
+refs:
+  - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]
