@@ -7,3 +7,4 @@
 | ページ | 概要 |
 | --- | --- |
 | [claude-code](./claude-code.yaml) | mod の hooks モジュールの型とテストの道具 |
+| [typescript](./typescript.yaml) | 型の確認に使う TypeScript のコンパイラ |

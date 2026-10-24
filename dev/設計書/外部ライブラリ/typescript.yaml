@@ -1,0 +1,30 @@
+title: "typescript"
+kind: "CLI"
+version:
+  current: 5.9.3
+  checked_on: '2026-10-24'
+  source: package.json
+  pinning: devDependencies で完全一致で固定する
+catalogs:
+  - name: コマンド
+    version: 5.9.3
+    entries:
+      - name: tsc -p tsconfig.json --noEmit
+        kind: コマンド
+        purpose: 出力せずに `tsconfig.json` の対象の型を確かめる（`npm run typecheck`）
+lead: TypeScript のコンパイラ。`tsc` で型を確かめる。
+purl: pkg:npm/typescript@5.9.3
+dependency_scope: 開発のみ
+used_in:
+  - package.json
+upstream: microsoft/TypeScript
+license: Apache-2.0
+official_url: https://www.typescriptlang.org/
+verification:
+  state: 済
+  date: '2026-10-24'
+  detail: 'PoC PR #6（commit d79fd2a）で、型の取り込み方 (1)・(2) とも `npx tsc -p tsconfig.json --noEmit` が終了コード 0 で通ることを確かめた'
+install: |-
+  ```bash
+  npm install --save-dev --save-exact typescript@5.9.3
+  ```

@@ -31,4 +31,6 @@ used_in:
   - hooks/register.tsx
   - tests/unit/hooks/register.test.ts
 verification:
-  state: 未確認
+  state: 済
+  date: '2026-10-24'
+  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた'

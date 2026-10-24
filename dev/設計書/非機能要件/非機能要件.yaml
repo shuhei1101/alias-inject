@@ -16,7 +16,7 @@ requirements:
     source_kind: 実行基盤の制限
     source: https://github.com/shuhei1101/alias-inject/pull/6
     value: 2.1.310 以上
-    rationale: PoC 検証で読み込みとテスト・型の確認を確かめた最も古いバージョン。それより前のバージョンは確かめていない
+    rationale: PoC 検証で読み込みとテスト・型の確認を確かめた最も古いバージョン。それより前のバージョンは確かめていない。新しいバージョンでは保証しない。Claude Code を上げたときに測り方の手順で確かめ直す
     measurement: '`claude --version` のバージョンで、`claude plugin validate`・`claude plugin test`・`claude --plugin-dir {プラグインのフォルダ} -p` が通るかを確かめる'
   - name: 入力の送信で増える待ち時間
     english_name: added_latency_on_submit
