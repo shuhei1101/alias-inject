@@ -1,0 +1,5 @@
+{
+  "name": "alias-inject",
+  "owner": { "name": "shuhei1101" },
+  "plugins": [{ "name": "alias-inject", "source": "./" }]
+}

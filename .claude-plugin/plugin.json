@@ -1,0 +1,5 @@
+{
+  "name": "alias-inject",
+  "description": "入力の語に当たる引用の文脈をモデルへ渡す mod",
+  "version": "0.0.0"
+}
