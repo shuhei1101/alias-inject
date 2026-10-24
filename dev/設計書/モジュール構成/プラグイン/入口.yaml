@@ -55,7 +55,7 @@ functions:
         mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で流す）
         expected: 結果の `text` が `hello` で、`context` に何も追加されていない（`undefined` か空の配列）
     implementation: hooks/register.tsx#register
-    status: planned
+    status: implemented
     introduced:
       pr: 5
 notes:
