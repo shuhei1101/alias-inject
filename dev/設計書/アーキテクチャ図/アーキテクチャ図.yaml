@@ -75,6 +75,7 @@ external_systems:
     status: planned
     notes:
       事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確かめる相手ではない。設定ファイルと照合に使う YAML が読めないときは、文脈を追加せずに入力をそのまま渡す（#1 の D-74）。
+    detail: dev/設計書/外部ライブラリ/claude-code#
 constraints: |-
   - MCP サーバーと常駐するサーバーは持たない
   - 設定は `ALIAS_INJECT_CONFIG` が指す `~/.config/alias-inject/settings.yaml`（`global`・`projects`）から読む

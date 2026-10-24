@@ -1,0 +1,34 @@
+title: "claude-code"
+kind: "フレームワーク"
+version:
+  current: 2.1.310
+  checked_on: '2026-10-25'
+  source: 利用者の手元の Claude Code のバージョン（`claude --version`）
+catalogs:
+  - name: API
+    version: 2.1.310
+    entries:
+      - name: Register
+        kind: 型
+        purpose: hooks モジュールが export する入口 `register` の型。引数の `on` でイベントへ処理を登録する
+      - name: test
+        kind: 関数
+        purpose: '`claude-code/testing` のテストの定義。コールバックは mod を読み込んだ環境の `$` と `on` を受ける'
+      - name: expect
+        kind: 関数
+        purpose: '`claude-code/testing` の期待値の確認'
+  - name: コマンド
+    version: 2.1.310
+    entries:
+      - name: claude plugin test
+        kind: コマンド
+        purpose: 指定のフォルダの下の `*.test.ts` / `*.test.tsx` を全て流す。失敗があれば終了コード 1
+      - name: claude plugin validate
+        kind: コマンド
+        purpose: プラグインと hooks モジュールの定義を検証する
+lead: Claude Code が mod に渡す hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
+used_in:
+  - hooks/register.tsx
+  - tests/unit/hooks/register.test.ts
+verification:
+  state: 未確認

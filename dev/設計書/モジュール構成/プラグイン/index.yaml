@@ -1,0 +1,5 @@
+summary: "プラグイン（hooks モジュール）のモジュール構成"
+docs_index: true
+items:
+  - page: 入口.yaml
+    summary: hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル

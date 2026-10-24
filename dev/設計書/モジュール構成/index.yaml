@@ -1,2 +1,4 @@
 summary: クラス / 関数 / 関数型 インデックス（単体テストの元）
-items: []
+items:
+  - page: プラグイン/
+    summary: プラグイン（hooks モジュール）のモジュール構成

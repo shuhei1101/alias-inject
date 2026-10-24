@@ -1,2 +1,4 @@
 summary: 採用済みの外部ライブラリ / 外部ツールのリファレンス
-items: []
+items:
+  - page: claude-code.yaml
+    summary: mod の hooks モジュールの型とテストの道具

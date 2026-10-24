@@ -6,3 +6,4 @@
 
 | ページ | 概要 |
 | --- | --- |
+| [claude-code](./claude-code.yaml) | mod の hooks モジュールの型とテストの道具 |
