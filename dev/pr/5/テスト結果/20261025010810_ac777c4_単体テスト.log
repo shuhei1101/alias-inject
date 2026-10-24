@@ -1,0 +1,9 @@
+$ claude plugin test .
+
+tests/unit/hooks/register.test.ts:
+(pass) test_register [80.98ms]
+
+ 1 pass
+ 0 fail
+Ran 1 test across 1 file. [0.37s]
+exit=0

@@ -1,0 +1,28 @@
+title: "非機能要件"
+requirements:
+  - name: 対応 OS
+    english_name: supported_os
+    category: 動作環境
+    external_constraint: Claude Code（ターミナル版）が動く OS
+    source_kind: 実行基盤の制限
+    source: https://github.com/shuhei1101/alias-inject/pull/6
+    value: Linux（WSL2 を含む）
+    rationale: PoC 検証で hooks モジュールの読み込みを確かめたのは WSL2 の Ubuntu 24.04 だけのため、確かめた OS に限る
+    measurement: '`claude --plugin-dir {プラグインのフォルダ} -p` を流し、`prompt.submit` で追加した文脈がモデルに届くかを応答で確かめる'
+  - name: 対応する Claude Code のバージョン
+    english_name: supported_claude_code_version
+    category: 動作環境
+    external_constraint: hooks モジュール（`hooks/hooks.json` の `modules`）は Claude Code の EARLY ACCESS の機能で、バージョンの間で予告なく変わる
+    source_kind: 実行基盤の制限
+    source: https://github.com/shuhei1101/alias-inject/pull/6
+    value: 2.1.310 以上
+    rationale: PoC 検証で読み込みとテスト・型の確認を確かめた最も古いバージョン。それより前のバージョンは確かめていない。新しいバージョンでは保証しない。Claude Code を上げたときに測り方の手順で確かめ直す
+    measurement: '`claude --version` のバージョンで、`claude plugin validate`・`claude plugin test`・`claude --plugin-dir {プラグインのフォルダ} -p` が通るかを確かめる'
+  - name: 入力の送信で増える待ち時間
+    english_name: added_latency_on_submit
+    category: 性能
+    external_constraint: 未確定
+    source_kind: 未確定
+    value: 未確定
+    rationale: '照合と文脈の追加の処理を作る #1 の設計で、Claude Code が hooks モジュールの処理を待つ上限から決める'
+lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。

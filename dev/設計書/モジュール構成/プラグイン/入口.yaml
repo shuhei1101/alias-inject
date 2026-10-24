@@ -1,0 +1,67 @@
+title: "プラグイン / 入口"
+lead: |-
+  Claude Code が `hooks/hooks.json` の `modules` から読む hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル。
+  入口は処理を登録しない。
+directory: |-
+  ```text
+  .claude-plugin/
+    plugin.json          プラグインの定義（名前 alias-inject・説明。version は置かない）
+    marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を載せる）
+    types/               エンジンが書き出す mod の型の宣言（git に入れない）
+  hooks/
+    hooks.json           { "modules": ["./register.tsx"] }
+    register.tsx         hooks モジュールの入口（register）
+  tests/
+    unit/
+      hooks/
+        register.test.ts register の単体テスト（claude plugin test で流す）
+  package.json           private・type module・script typecheck（tsc -p tsconfig.json --noEmit）・devDependencies typescript 5.9.3
+  tsconfig.json          { "extends": "./.claude-plugin/types/tsconfig.json" }（エンジンが書き出し、git に入れる）
+  ```
+functions:
+  - name: register
+    title: 入口
+    kind: 関数
+    container: hooks/register.tsx
+    usecase: 共通
+    role: 入口
+    summary: hooks モジュールの入口として、処理を何も登録せずに返す
+    inherits: dev/設計書/外部ライブラリ/claude-code#catalogs[API].entries[Register]
+    scope: public
+    is_async: false
+    args:
+      - name: on
+        title: 処理の登録
+        type: On（claude-code の Register の引数）
+        required: true
+        passing: injected
+        description: イベントへ処理を登録する関数。エンジンが渡す
+        notes: 入口は呼ばない
+    args_example: |-
+      ```ts
+      import type { Register } from 'claude-code'
+
+      export const register: Register = () => {}
+      ```
+    returns:
+      type: void
+      description: 何も返さない
+    process: 1. 何も登録せずに返す
+    unit_tests:
+      - name: test_register
+        case: 正常
+        summary: 入口を読み込んでも入力の送信が変わらずに届く
+        condition: "テストの中で `prompt.submit` に届いた text と context をそのまま返す処理を登録し、`$.prompt.submit({ text: 'hello', wait: false, origin: { kind: 'composer' } })` を流す"
+        mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で流す）
+        expected: 結果の `text` が `hello` で、`context` に何も追加されていない（`undefined` か空の配列）
+    implementation: hooks/register.tsx#register
+    status: implemented
+    introduced:
+      pr: 5
+notes:
+  テストと型の確認: |-
+    - テストは `claude plugin test` で流す。`dir` の下の `*.test.ts` を全て流すので、`tests/` の下に置いても読まれる
+    - 型の確認は `npm run typecheck`。対象のファイルは `.claude-plugin/types/tsconfig.json` の `include` に従う。`tests/` が対象に入らないときは planner へ差し戻す
+    - `.claude-plugin/types/` は、信頼済みのフォルダから `claude --plugin-dir {worktree}` の対話のセッションを 1 度起動すると書き出される（[PoC 結果](../../../pr/5/プラグイン.md)）
+test_files:
+  - tests/unit/hooks/register.test.ts

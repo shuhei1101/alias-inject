@@ -1,0 +1,4 @@
+summary: システム全体構成（Claude Code・hooks モジュール・設定ファイル・照合に使う YAML の関係）
+items:
+  - page: アーキテクチャ図.yaml
+    summary: システム全体構成（Claude Code・hooks モジュール・設定ファイル・照合に使う YAML の関係）
