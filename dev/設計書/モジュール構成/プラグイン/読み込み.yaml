@@ -249,7 +249,7 @@ functions:
     summary: 更新時刻が前回と同じファイルは読まずに前回の値を返し、変わったときだけ読んで変換する
     scope: public
     is_async: true
-    side_effects: モジュールの中のキャッシュ（パス → 更新時刻と変換した値）を書き換える
+    side_effects: モジュールの中のキャッシュ（種類とパス → 更新時刻と変換した値）を書き換える
     args:
       - name: $
         type: EngineInterface
@@ -266,11 +266,16 @@ functions:
         required: true
         passing: keyword
         description: 読んだ文字列を値に変える関数。結果をキャッシュする
+      - name: kind
+        type: "'config' | 'source'"
+        required: true
+        passing: keyword
+        description: 読み込みの種類。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
     returns:
       type: Promise<T>
       description: 変換した値
     process: |-
-      1. キャッシュに同じパス・同じ更新時刻の値があれば、それを返す
+      1. キャッシュに同じ種類・同じパス・同じ更新時刻の値があれば、それを返す
       2. 無ければ `$.fs.read` で読み、`convert` に通してキャッシュへ入れて返す
       3. `$.fs.read` の例外はそのまま伝える（キャッシュは変えない）
     unit_tests:
@@ -286,6 +291,12 @@ functions:
         condition: 2 回目は `mtimeMs` を進め、中身を書き換える
         mock: 同上
         expected: '`fs.read` は 2 回。2 回目の戻り値が書き換え後の中身'
+      - name: test_read_if_changed_when_kind_differs
+        case: 正常
+        summary: 種類が違えば同じファイルでも別に読んで変換する
+        condition: 同じ `FileStamp` で、`kind` が `config` と `source` の 2 回を違う `convert` で呼ぶ
+        mock: テストの `on` で `fs.read` の呼ばれた回数を数える
+        expected: '`fs.read` は 2 回。戻り値はそれぞれの `convert` の結果'
   - name: parseYaml
     title: YAML のパース
     kind: 関数
