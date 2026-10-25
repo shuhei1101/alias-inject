@@ -28,7 +28,7 @@ scenarios:
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - モデルに届いた文脈に、見出し「この発言に出る用語」の下の「用語」のセクションで term-a の語・`id`・`description` が並んでいる
+      - モデルに届いた文脈に、見出し「この発言に出る用語」の下で term-a の語・`id`・`description` が並んでいる
       - term-b の文脈は追加されていない
       - 入力の文は送信したとおりのまま届いている
     test: test_normal
@@ -195,8 +195,8 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
       - name: dev-docs.yaml
-        description: '正常シナリオの要素に加え、`fields.match` の無い `type: term` の要素を 1 つ持つ'
-        notes: 合わない要素の `paths` は語 `term-x` を持つ YAML に当たる
+        description: '正常シナリオの要素に加え、`fields` に `id`・`match`・`description` を持ち、term に無いキー `mcp` を加えた `type: term` の要素を 1 つ持つ'
+        notes: 合わない要素の `paths` は語 `term-x` を持つ YAML に当たる。照合に要る列は揃っているので、スキーマで検証しなければ term-x が当たる
     flow: |-
       ```mermaid
       sequenceDiagram

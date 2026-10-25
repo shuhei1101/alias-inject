@@ -75,10 +75,10 @@ scenarios:
       - もう一方の要素の語の文脈は追加されている
       - 入力の送信は止まっていない
     test: test_error_when_yaml_malformed
-lead: 利用者が設定ファイル・`dev-docs.yaml`・照合の YAML のどれか を書き換えると、次の入力から書き換え後の内容で照合する。
+lead: 利用者が設定ファイル・`dev-docs.yaml`・照合の YAML のどれかを書き換えると、次の入力から書き換え後の内容で照合する。
 issue: 1
 primary_actor: 利用者
-trigger: 利用者が設定ファイル・`dev-docs.yaml`・照合の YAML のどれか を書き換えた後に入力を送信する
+trigger: 利用者が設定ファイル・`dev-docs.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:
   - 同じセッションで 1 回以上入力を送信し、設定ファイル・`dev-docs.yaml`・照合の YAML を読み込み済み
 success_guarantee: 書き換えた直後の入力から、書き換え後の語と `aliases` の要素で照合される。
