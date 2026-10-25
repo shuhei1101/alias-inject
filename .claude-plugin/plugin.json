@@ -1,4 +1,5 @@
 {
   "name": "alias-inject",
-  "description": "入力の語に当たる引用の文脈をモデルへ渡す mod"
+  "description": "入力の語に当たる引用の文脈をモデルへ渡す mod",
+  "types": "./types/index.d.ts"
 }
