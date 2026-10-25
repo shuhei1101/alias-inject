@@ -1,0 +1,1 @@
+# エイリアスの共通の形 aliases[] のスキーマ schemas/aliases.schema.yaml を SSOT として置く
