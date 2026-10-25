@@ -6,7 +6,10 @@ scenarios:
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
         notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
       - name: 設定ファイル
-        description: '`global.sources` に `label: 用語`・`type: term` のソースを 1 つ持つ'
+        description: '`global.repositories` に、一時のリポジトリの `dev-docs.yaml` を指す要素を 1 つ持つ'
+      - name: dev-docs.yaml
+        description: '`aliases` に `type: term` の要素を 1 つ持ち、`paths` の相対パスが用語の YAML に当たる'
+        notes: '`fields.match` は `[name, aliases]`、`fields.title` は `name`'
       - name: 用語の YAML
         description: 語 `term-a`（エイリアス `用語エー`）と `term-b` を持つ
     flow: |-
@@ -18,7 +21,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 設定ファイルと用語の YAML を読む
+        P->>P: 設定ファイルと dev-docs.yaml と用語の YAML を読む
         P->>P: 入力と語を正規化して照合し term-a が当たる
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 入力の文はそのままに、term-a の文脈を context に追加
@@ -114,6 +117,31 @@ scenarios:
       - origins がプラグインだけの間の入力には文脈が追加されていない
       - origins を既定に戻した後の term-a を含む入力で term-a の文脈が追加されている（前の入力で記録に入っていない）
     test: test_normal_when_origin_excluded
+  - name: 正常シナリオ（設定ファイルの aliases）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に `type: url` の要素を 1 つ持つ'
+        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する'
+      - name: URL の YAML
+        description: 語 `link-a` と URL を持つ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と link-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: dev-docs.yaml の aliases と設定ファイルの aliases の両方の語と照合する
+        P->>CC: term-a と link-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - モデルに届いた文脈に、term-a の文脈と、link-a の語・`id`・`url` が並んでいる
+    test: test_normal_when_config_aliases
   - name: 異常シナリオ（設定ファイルが読めない）
     setup:
       - name: Mock
@@ -138,12 +166,61 @@ scenarios:
       - 文脈が追加されていない
       - 入力の送信は止まらず、モデルの返事が返っている
     test: test_error_when_config_unreadable
-lead: 利用者が入力すると、設定ファイルが指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
+  - name: 異常シナリオ（dev-docs.yaml が読めない）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '`global.repositories` に無い `dev-docs.yaml` を指す要素を加え、`global.aliases` に `type: url` の要素を 1 つ持つ'
+        notes: 書式の誤った `dev-docs.yaml` でも同じ結末になる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と link-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 読めない dev-docs.yaml のリポジトリを照合から外す
+        P->>CC: 読めたリポジトリと設定ファイルの aliases の文脈を追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a と link-a の文脈は追加されている
+      - 入力の送信は止まっていない
+    test: test_error_when_repository_unreadable
+  - name: 異常シナリオ（スキーマに合わない aliases の要素）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: dev-docs.yaml
+        description: '正常シナリオの要素に加え、`fields.match` の無い `type: term` の要素を 1 つ持つ'
+        notes: 合わない要素の `paths` は語 `term-x` を持つ YAML に当たる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と term-x を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: aliases の要素をスキーマで検証し、合わない要素を照合から外す
+        P->>CC: term-a の文脈だけを追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a の文脈は追加されている
+      - term-x の文脈は追加されていない
+      - 入力の送信は止まっていない
+    test: test_error_when_alias_invalid
+lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` と設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する
 preconditions:
   - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
-success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下にソースの `label` ごとに並んでモデルに届き、入力の文は変わらない。
+success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下に並んでモデルに届き、入力の文は変わらない。
 minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_prompt_context.py
