@@ -1,0 +1,90 @@
+title: "クリアの後の記録の消去"
+entry:
+  kind: trigger
+  value: '`session.end`（セッションの終了ごと）'
+flows:
+  - name: 正常系
+    summary: /clear で終わるセッションの記録を消す
+    setup:
+      - name: Mock
+        description: 入力への引用の文脈の追加の正常系と同じ。テストの `on` の `session.end` は空の結果を返す
+      - name: セッションの記録
+        description: 「term-a とは」を送り、そのセッション ID で term-a が記録済み
+      - name: セッションの終了
+        description: '`reason` が `clear`、`sessionId` が記録したセッション ID'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as session.end
+        participant ST as $.state
+
+        CC->>IF: reason: clear・sessionId
+        IF->>ST: sessionId の記録を消す
+        IF->>CC: next(e)
+        CC-->>IF: 結果
+        IF-->>CC: 結果
+      ```
+    expected:
+      - '`$.state` の記録に `sessionId` の要素が無い'
+      - 返る結果が `next(e)` の結果と同じ
+    test: test_normal
+  - name: 正常系（クリア以外の終了）
+    summary: clear 以外の理由で終わるときは記録を消さない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: セッションの記録
+        description: 正常系と同じ
+      - name: セッションの終了
+        description: '`reason` が `resume`'
+        notes: '`claude --resume` で戻ったセッションは、会話に追加済みの文脈が残るため記録も残す'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as session.end
+
+        CC->>IF: reason: resume・sessionId
+        IF->>CC: next(e)
+        CC-->>IF: 結果
+        IF-->>CC: 結果（記録は消さない）
+      ```
+    expected:
+      - '`$.state` の記録に `sessionId` の term-a が残っている'
+      - 返る結果が `next(e)` の結果と同じ
+    test: test_normal_when_not_clear
+lead: '`/clear` で終わるセッションの追加済みの語の記録を消す。'
+idempotent: true
+side_effects: '`$.state` の終わるセッション ID の記録を消す'
+callers:
+  - dev/設計書/外部ライブラリ/claude-code#
+exclusivity: 排他しない
+request:
+  - name: reason
+    type: SessionEndReason
+    required: true
+    location: argument
+    description: 終わる理由。`clear` のときだけ記録を消す
+  - name: sessionId
+    type: string
+    required: true
+    location: argument
+    description: 終わるセッションの ID。この ID の記録を消す
+response:
+  - name: '-'
+    type: SessionEndResult
+    description: '`next(e)` の結果をそのまま返す'
+exceptions:
+  - name: なし（正常終了）
+    condition: 全ての場合
+constraints:
+  - item: 処理時間
+    constraint: Claude Code が全てのフックに与える上限（既定 1.5 秒）の中で終える
+    notes: '`$.state` への書き込み 1 回だけ'
+  - item: 消す範囲
+    constraint: '`sessionId` の記録だけ'
+refs:
+  - dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去#
+  - dev/設計書/インターフェース定義/入力への引用の文脈の追加#
+test_file: tests/integration/hooks/session-end.test.ts

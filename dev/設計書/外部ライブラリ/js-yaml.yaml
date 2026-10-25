@@ -1,0 +1,70 @@
+title: "js-yaml"
+kind: "ライブラリ"
+version:
+  current: 5.5.0
+  latest: 5.5.0
+  checked_on: '2026-10-25'
+  source: hooks/vendor/js-yaml.mjs
+  pinning: npm の tarball から取り出した `dist/js-yaml.mjs` と `dist/js-yaml.d.ts` をそのまま同梱して固定する
+catalogs:
+  - name: API
+    version: 5.5.0
+    entries:
+      - name: load
+        kind: 関数
+        purpose: YAML の文字列を 1 つの値へ読む
+        description: 既定のスキーマは `CORE_SCHEMA`（YAML 1.2）。マージキー `<<` は普通のキーとして読む。戻り値のキーの有無は `Object.hasOwn` で確かめる（`__proto__` は自身のプロパティとして入る）。
+        params:
+          - name: input
+            type: string
+            required: true
+            description: 読む YAML の文字列
+            constraints: 空・コメントだけのときは `YAMLException`
+          - name: options.filename
+            type: string
+            required: false
+            description: 例外のメッセージに出すファイル名
+          - name: options.schema
+            type: Schema
+            required: false
+            default: CORE_SCHEMA
+            description: 読む型の組み合わせ
+        returns:
+          - name: '-'
+            type: unknown
+            description: 読んだ値。使う側で型を絞り込む
+      - name: YAMLException
+        kind: クラス
+        purpose: 書式の誤りを位置つきで表す例外
+        returns:
+          - name: reason
+            type: string
+            description: 誤りの説明
+          - name: mark?
+            type: '{ line: number; column: number; position: number; snippet: string }'
+            description: 誤りの位置
+            notes: '`line` と `column` は 0 始まり。空の入力では無い'
+lead: YAML 1.2 のパーサー。文字列を JavaScript の値へ読み、書式の誤りを位置つきの例外で返す。
+purl: pkg:npm/js-yaml@5.5.0
+dependency_scope: 必須
+adoption: 採用
+used_in:
+  - hooks/vendor/js-yaml.mjs
+upstream: nodeca/js-yaml
+license: MIT。同梱する `dist/js-yaml.mjs` の先頭の `@license MIT` のコメントを残す
+official_url: https://github.com/nodeca/js-yaml
+docs_url: https://nodeca.github.io/js-yaml/doc/
+verification:
+  state: 済
+  date: '2026-10-25'
+  detail: npm の 5.5.0 の `dist/js-yaml.mjs` と `dist/js-yaml.d.ts` を付けた仮の mod で `claude plugin test`（Claude Code 2.1.310）が通った。`prompt.submit` の中で、ブロック・フロー・`|`・`>-` を正しく読み、`__proto__` のキーで `Object.prototype` が汚染されない。空の入力・コメントだけの入力・未知のタグ・重複キー・インデントの誤りは `YAMLException` を投げ、`mark.line` を持つ（空の入力は持たない）。5 件の読み込みで 4ms
+selection:
+  candidates: js-yaml 5.5.0・yaml 2.9.1（eemeli）・@std/yaml 1.3.0・confbox 0.3.1 を比べた（[案のスレッド](https://github.com/shuhei1101/alias-inject/pull/7#discussion_r4369287219)）。
+  decision: 1 ファイルで import を持たずに同梱でき、既定のままで YAML 1.2 の core スキーマと安全なロードを満たし、未知のタグも例外になる。yaml と @std/yaml は必須のオプションを渡し忘れると 1.1 の型や `console` が出る。confbox は中身が古い js-yaml で、二乗時間の処理が加わる。js-yaml 4 系は既定のスキーマが YAML 1.1 寄り（`<<` と timestamp が有効）なので外した。
+  consequences: 空の入力とコメントだけの入力で `load` が例外を投げるため、呼ぶ側で扱う。`YAMLException` 以外の例外も捕まえる。v5 は 5.0.0（2026-06）から若いため、勧告を追って更新する。
+install: |-
+  ```bash
+  npm pack js-yaml@5.5.0
+  tar -xzf js-yaml-5.5.0.tgz package/dist/js-yaml.mjs package/dist/js-yaml.d.ts
+  cp package/dist/js-yaml.mjs package/dist/js-yaml.d.ts hooks/vendor/
+  ```

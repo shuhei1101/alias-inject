@@ -1,0 +1,155 @@
+title: "プラグイン / 文脈"
+lead: 当たった語から記録済みの語を除き、`max_items`・`max_chars` に収まる語を選んで、追加する文脈の文字列を組み立てる。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      context.ts         語の選択と文脈の組み立て
+  tests/
+    unit/
+      hooks/
+        lib/
+          context.test.ts context.ts の単体テスト
+  ```
+data_models:
+  - name: Selection
+    title: 選んだ語と文脈
+    container: hooks/lib/context.ts
+    usecase: 共通
+    role: DTO
+    summary: 追加する文脈と、記録に入れる語のキー
+    properties:
+      - name: text
+        type: string
+        description: 追加する文脈
+      - name: keys
+        type: string[]
+        description: 選んだ語の記録のキー
+functions:
+  - name: entryKey
+    title: 記録のキー
+    kind: 関数
+    container: hooks/lib/context.ts
+    usecase: 共通
+    summary: ソースの label と項目の ID の組を 1 つの文字列にする
+    scope: public
+    is_async: false
+    args:
+      - name: entry
+        type: Entry
+        required: true
+        passing: positional
+        description: 語
+    returns:
+      type: string
+      description: '`{label}\u0000{id}`'
+    process: 1. label・NUL 文字・id をつないで返す
+    unit_tests:
+      - name: test_entry_key
+        case: 正常
+        summary: label と ID の組が違えばキーも違う
+        condition: label `a b`・id `c` と label `a`・id `b c`
+        mock: なし
+        expected: 2 つのキーが異なる
+  - name: renderContext
+    title: 文脈の書式化
+    kind: 関数
+    container: hooks/lib/context.ts
+    usecase: 共通
+    summary: 選んだ語を、見出し・ソースごとのセクション・語ごとの箇条書きの Markdown にする
+    scope: public
+    is_async: false
+    args:
+      - name: heading
+        type: string
+        required: true
+        passing: positional
+        description: 文脈の先頭の見出し
+      - name: entries
+        type: Entry[]
+        required: true
+        passing: positional
+        description: 選んだ語（選んだ順）
+    returns:
+      type: string
+      description: 文脈の Markdown
+    process: |-
+      1. 先頭に `# {heading}` を置く
+      2. 語を sourceIndex の順にセクションに分け、各セクションは空行の後に `## {label}` と空行を置く。セクションの中は選んだ順
+      3. 語ごとに `- {word}（id: {id}）` と、fields の各要素を `  - {name}: {value}` で並べる
+      4. 行を改行でつないで返す（末尾に改行を付けない）
+    unit_tests:
+      - name: test_render_context
+        case: 正常
+        summary: インターフェース定義の例と同じ Markdown になる
+        condition: 「knowledge の用語」の term-single-usecase と「ai-monitor のコマンド」の cmd-setup、heading が既定
+        mock: なし
+        expected: インターフェース定義『入力への引用の文脈の追加』のレスポンス例と一致する
+      - name: test_render_context_when_same_word_in_sources
+        case: 正常
+        summary: 同じ語が別のソースにあれば両方のセクションに並べる
+        condition: sourceIndex 1 の term-a を先、sourceIndex 0 の term-a を後に渡す
+        mock: なし
+        expected: sourceIndex 0 のセクションが先で、両方のセクションに term-a が並ぶ
+  - name: selectEntries
+    title: 語の選択
+    kind: 関数
+    container: hooks/lib/context.ts
+    usecase: 共通
+    summary: 当たった語から記録済みの語を除き、語の数と文字数の上限に収まる語を選んで文脈にする
+    scope: public
+    is_async: false
+    args:
+      - name: hits
+        type: Hit[]
+        required: true
+        passing: positional
+        description: 照合の結果（選ぶ順）
+      - name: recorded
+        type: ReadonlySet<string>
+        required: true
+        passing: positional
+        description: そのセッションの記録済みのキー
+      - name: limits
+        type: '{ heading: string; maxItems: number; maxChars: number }'
+        required: true
+        passing: keyword
+        description: 実効の設定の見出しと上限
+    returns:
+      type: Selection | null
+      description: 選んだ語の文脈とキー。1 語も選ばないときは null
+    process: |-
+      1. hits を順に見て、記録のキーが recorded にある語と、既に選んだ語を飛ばす
+      2. その語を加えて文脈を書式化し、文字数（コードポイントの数）が maxChars を超えるなら加えずに次へ進む
+      3. 選んだ語が maxItems に達したら止める
+      4. 1 語も選ばなければ null、選んだら最後に書式化した文脈と選んだ語のキーを返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/文脈#functions[entryKey]
+      - dev/設計書/モジュール構成/プラグイン/文脈#functions[renderContext]
+    unit_tests:
+      - name: test_select_entries
+        case: 正常
+        summary: 記録済みの語を除いて選ぶ
+        condition: hits が term-a・term-b、recorded に term-a のキー
+        mock: なし
+        expected: keys が term-b のキーだけで、text に term-b を含み term-a を含まない
+      - name: test_select_entries_when_over_item_limit
+        case: 正常
+        summary: maxItems 語で止める
+        condition: hits が 3 語、maxItems が 2
+        mock: なし
+        expected: 先の 2 語だけ
+      - name: test_select_entries_when_over_char_limit
+        case: 正常
+        summary: 足すと maxChars を超える語を飛ばし、後ろの収まる語を足す
+        condition: hits が term-a・term-long（description が 500 文字）・term-b、maxChars が 300
+        mock: なし
+        expected: term-a と term-b を選び、text が 300 文字以下
+      - name: test_select_entries_when_nothing_selected
+        case: 正常
+        summary: 選ぶ語が無ければ null
+        condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
+        mock: なし
+        expected: どれも null
+test_files:
+  - tests/unit/hooks/lib/context.test.ts

@@ -17,6 +17,152 @@ catalogs:
       - name: expect
         kind: 関数
         purpose: '`claude-code/testing` の期待値の確認'
+      - name: $.settings.read
+        kind: 関数
+        purpose: Claude Code の設定を、スコープ（`source`）とキー（`key`）を指定して読む
+        params:
+          - name: source
+            type: "'user' | 'project' | 'local' | 'flag' | 'policy'"
+            default: 全スコープを重ねた値
+            description: 読むスコープ
+            notes: ユーザースコープだけを読むときは `user`
+          - name: key
+            type: string
+            description: 読むキー。ドットで階層を指す
+            notes: 省くと設定のオブジェクト全体を返す
+        returns:
+          - name: '-'
+            type: Promise<unknown>
+            description: '`key` を指定したときはそのキーの値。省いたときは設定のオブジェクト'
+        params_example: |-
+          ```ts
+          const env = await $.settings.read({ source: 'user', key: 'env' })
+          ```
+      - name: $.env.get
+        kind: 関数
+        purpose: 環境変数の値を読む
+        params:
+          - name: name
+            type: string
+            required: true
+            description: 環境変数の名前
+        returns:
+          - name: '-'
+            type: Promise<string | undefined>
+            description: 環境変数の値。無いときは undefined
+      - name: $.fs.read
+        kind: 関数
+        purpose: ファイルをテキストで読む
+        params:
+          - name: path
+            type: string
+            required: true
+            description: 読むファイルの絶対パス
+        returns:
+          - name: '-'
+            type: Promise<string>
+            description: ファイルの中身
+      - name: $.fs.stat
+        kind: 関数
+        purpose: ファイル・フォルダの種類と更新時刻を調べる
+        params:
+          - name: path
+            type: string
+            required: true
+            description: 調べるパスの絶対パス
+          - name: options.resolve
+            type: boolean
+            description: リンクの指す先を調べるか
+            notes: '`true` のとき、返り値の `realPath` に解決したパスが入る'
+        returns:
+          - name: kind
+            type: "'file' | 'dir' | 'other'"
+            description: 種類
+          - name: size
+            type: number
+            description: バイト数
+          - name: mtimeMs
+            type: number
+            description: 更新時刻（ミリ秒）
+          - name: isLink
+            type: boolean
+            description: シンボリックリンクか
+          - name: realPath?
+            type: string
+            description: 解決したパス
+            notes: '`options.resolve` が `true` のときだけ入る'
+      - name: $.fs.list
+        kind: 関数
+        purpose: フォルダの直下の項目を一覧する
+        params:
+          - name: path
+            type: string
+            description: 一覧するフォルダの絶対パス
+        returns:
+          - name: '[].name'
+            type: string
+            description: 項目の名前
+          - name: '[].kind'
+            type: "'file' | 'dir' | 'other'"
+            description: 種類
+          - name: '[].size'
+            type: number
+            description: バイト数
+          - name: '[].mtimeMs'
+            type: number
+            description: 更新時刻（ミリ秒）
+          - name: '[].isLink'
+            type: boolean
+            description: シンボリックリンクか
+      - name: $.state
+        kind: オブジェクト
+        purpose: プラグインの状態を名前（`plugin`・`key`）で読み書きする
+        description: '`get(ref)` が `{ value, version }` を返し、`set(ref, value, options?)` が値を書く。名前に使える `plugin` と `key` は `PluginState` の宣言に挙げたものに限る。`options.ifVersion` を渡すと、読んだバージョンと一致したときだけ書く。'
+      - name: $.session.id
+        kind: 関数
+        purpose: 今のセッションの ID を返す
+        returns:
+          - name: '-'
+            type: Promise<string>
+            description: セッション ID
+      - name: $.session.root
+        kind: 関数
+        purpose: セッションを起動したプロジェクトの直下のパスを返す
+        returns:
+          - name: '-'
+            type: Promise<string>
+            description: プロジェクトの直下の絶対パス
+      - name: $.session.repo
+        kind: 関数
+        purpose: セッションのリポジトリの情報を返す
+        returns:
+          - name: root
+            type: string
+            description: リポジトリの直下の絶対パス
+          - name: remote
+            type: string | null
+            description: リモートの URL
+          - name: internal
+            type: boolean
+            description: 社内のリポジトリか
+          - name: name
+            type: string | null
+            description: リポジトリの名前
+        notes:
+          リポジトリが無いとき: 返り値は null
+      - name: $.ui.log
+        kind: 関数
+        purpose: テキストを会話の記録かデバッグログに出す
+        params:
+          - name: text
+            type: string
+            required: true
+            description: 出すテキスト
+          - name: options.to
+            type: "'transcript' | 'debug'"
+            default: transcript
+            description: 出す先
+            notes: '`debug` はデバッグログに出す'
   - name: コマンド
     version: 2.1.310
     entries:
@@ -26,10 +172,73 @@ catalogs:
       - name: claude plugin validate
         kind: コマンド
         purpose: プラグインと hooks モジュールの定義を検証する
+  - name: イベント
+    version: 2.1.310
+    entries:
+      - name: prompt.submit
+        kind: イベント
+        purpose: 入力の送信ごとに呼ばれ、入力の文と追加の文脈を受けて次の処理へ渡す
+        params:
+          - name: e.text
+            type: string
+            required: true
+            description: 入力の文（貼り付けは展開済み）
+          - name: e.command
+            type: PromptSubmitCommand
+            description: スラッシュコマンドの行のときに入る
+          - name: e.context
+            type: readonly string[]
+            description: 他のフックが追加した文脈
+          - name: e.origin.kind
+            type: "'composer' | 'bridge' | 'sdk' | 'task-notification' | 'scheduled-trigger' | 'peer' | 'peer-send-message' など"
+            required: true
+            description: 入力の出所
+        returns:
+          - name: text
+            type: string
+            description: モデルへ渡す入力の文
+          - name: context
+            type: readonly string[]
+            description: モデルにだけ追加する文脈
+      - name: session.compact
+        kind: イベント
+        purpose: 会話の圧縮ごとに呼ばれ、`next(e)` が圧縮した結果か見送りを返す
+        params:
+          - name: e.trigger
+            type: "'manual' | 'auto' | 'plugin' | 'precompute'"
+            required: true
+            description: 圧縮のきっかけ
+          - name: e.agentId
+            type: string
+            description: サブエージェント・フォークの会話の圧縮のときに入る
+        returns:
+          - name: '-'
+            type: SessionCompactResult
+            description: 圧縮した結果か、見送りを表す `skip`
+      - name: session.end
+        kind: イベント
+        purpose: セッションの終了ごとに呼ばれ、終わる理由とセッション ID を受ける
+        params:
+          - name: e.reason
+            type: SessionEndReason
+            required: true
+            description: 終わる理由。`/clear` で終わるときは `clear`
+          - name: e.sessionId
+            type: string
+            required: true
+            description: 終わるセッションの ID
+        returns:
+          - name: sessionId
+            type: string
+            description: 終わったセッションの ID
 lead: Claude Code が mod に渡す hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
 used_in:
   - hooks/register.tsx
   - tests/unit/hooks/register.test.ts
+  - hooks/handlers.ts
+  - hooks/lib/config.ts
+  - hooks/lib/loader.ts
+  - hooks/lib/record.ts
 verification:
   state: 済
   date: '2026-10-24'

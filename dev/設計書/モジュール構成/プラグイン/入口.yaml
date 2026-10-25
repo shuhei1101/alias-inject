@@ -1,20 +1,26 @@
 title: "プラグイン / 入口"
 lead: |-
-  Claude Code が `hooks/hooks.json` の `modules` から読む hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル。
-  入口は処理を登録しない。
+  Claude Code が `hooks/hooks.json` の `modules` から読む hooks モジュールの入口と、入口が登録するイベントの処理、プラグイン・マーケットプレイス・型の確認の定義ファイル。
+  入口は `prompt.submit`・`session.compact`・`session.end` に処理を登録する。
 directory: |-
   ```text
   .claude-plugin/
-    plugin.json          プラグインの定義（名前 alias-inject・説明。version は置かない）
+    plugin.json          プラグインの定義（名前 alias-inject・説明・types は ./types/index.d.ts。version は置かない）
     marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を載せる）
     types/               エンジンが書き出す mod の型の宣言（git に入れない）
   hooks/
     hooks.json           { "modules": ["./register.tsx"] }
     register.tsx         hooks モジュールの入口（register）
+    handlers.ts          prompt.submit・session.compact・session.end の処理
+    lib/                 読み込み・設定・ソース・照合・文脈・記録（各分類の設計書）
+    vendor/              同梱する外部ライブラリ（js-yaml）
+  types/
+    index.d.ts           $.state の型の契約（PluginState）
   tests/
     unit/
       hooks/
         register.test.ts register の単体テスト（claude plugin test で流す）
+        handlers.test.ts handlers.ts の単体テスト
   package.json           private・type module・script typecheck（tsc -p tsconfig.json --noEmit）・devDependencies typescript 5.9.3
   tsconfig.json          { "extends": "./.claude-plugin/types/tsconfig.json" }（エンジンが書き出し、git に入れる）
   ```
@@ -25,7 +31,7 @@ functions:
     container: hooks/register.tsx
     usecase: 共通
     role: 入口
-    summary: hooks モジュールの入口として、処理を何も登録せずに返す
+    summary: hooks モジュールの入口として、3 つのイベントに処理を登録する
     inherits: dev/設計書/外部ライブラリ/claude-code#catalogs[API].entries[Register]
     scope: public
     is_async: false
@@ -36,21 +42,25 @@ functions:
         required: true
         passing: injected
         description: イベントへ処理を登録する関数。エンジンが渡す
-        notes: 入口は呼ばない
+        notes: 3 回呼ぶ
     args_example: |-
       ```ts
       import type { Register } from 'claude-code'
 
-      export const register: Register = () => {}
+      export const register: Register = (on) => {
+        on('prompt.submit', handlePromptSubmit)
+        on('session.compact', handleSessionCompact)
+        on('session.end', handleSessionEnd)
+      }
       ```
     returns:
       type: void
       description: 何も返さない
-    process: 1. 何も登録せずに返す
+    process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)` を呼ぶ
     unit_tests:
       - name: test_register
         case: 正常
-        summary: 入口を読み込んでも入力の送信が変わらずに届く
+        summary: 設定ファイルのパスが無いとき、入力の送信が変わらずに届く
         condition: "テストの中で `prompt.submit` に届いた text と context をそのまま返す処理を登録し、`$.prompt.submit({ text: 'hello', wait: false, origin: { kind: 'composer' } })` を流す"
         mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で流す）
         expected: 結果の `text` が `hello` で、`context` に何も追加されていない（`undefined` か空の配列）
@@ -58,6 +68,173 @@ functions:
     status: implemented
     introduced:
       pr: 5
+  - name: handlePromptSubmit
+    title: 入力への引用の文脈の追加
+    kind: フック
+    container: hooks/handlers.ts
+    usecase: 入力への引用の文脈の追加
+    summary: 入力を設定の YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す
+    scope: public
+    is_async: true
+    side_effects: 追加した語を `$.state` のセッションの記録に入れる。読めない設定ファイル・YAML と外した設定の値を debug log に出す
+    inherits: dev/設計書/インターフェース定義/入力への引用の文脈の追加#
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: エンジンが渡す
+      - name: e
+        type: PromptSubmitInput
+        required: true
+        passing: positional
+        description: 入力の送信の入力
+      - name: next
+        type: '(e: PromptSubmitInput) => Promise<PromptSubmitResult>'
+        required: true
+        passing: positional
+        description: 下のプラグインとエンジンの処理
+    returns:
+      type: Promise<PromptSubmitResult>
+      description: '`next` の結果'
+    process: |-
+      1. `e.command` があれば `next(e)` を返す
+      2. 設定ファイルのパスの取得が null なら `next(e)` を返す（ログを出さない）
+      3. 設定ファイルを `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `config`）で読む。変換は YAML のパース（`ok` が false なら理由で ConfigError）と設定ファイルの検証で、検証の warnings をそのときだけ debug log に出す
+      4. 3 が例外になったら、設定ファイルのパスと理由を `$.ui.log(text, { to: "debug" })` に出して `next(e)` を返す
+      5. 実効の設定の組み立てをする（configDir は設定ファイルのフォルダ、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）
+      6. enabled が false、または出所の判定が false なら `next(e)` を返す
+      7. 各ソースをソースの読み込みで読む。SourceError はパスと理由を debug log に出し、そのソースだけを外す
+      8. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
+      9. 選択が null なら `next(e)` を返す
+      10. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
+      11. 3〜10 で想定しない例外が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[readConfigPath]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[parseConfig]
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[resolveSettings]
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[isOriginAllowed]
+      - dev/設計書/モジュール構成/プラグイン/ソース#functions[loadSourceEntries]
+      - dev/設計書/モジュール構成/プラグイン/照合#functions[findHits]
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[readRecorded]
+      - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[addRecorded]
+    unit_tests:
+      - name: test_handle_prompt_submit_when_disabled
+        case: 正常
+        summary: enabled が false のときはそのまま渡す
+        condition: 設定ファイルの `global.enabled` が false、入力「term-a とは」
+        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す
+        expected: 返る `context` が受け取ったままで、ソースの YAML の `fs.read` が呼ばれていない
+      - name: test_handle_prompt_submit_when_context_given
+        case: 正常
+        summary: 他のフックが追加した文脈を残して末尾に追加する
+        condition: "`e.context` が `['other']`、入力「term-a とは」"
+        mock: 同上
+        expected: 返る `context` が 2 要素で、先頭が `other`、末尾が term-a の文脈
+      - name: test_handle_prompt_submit_when_settings_warned
+        case: 正常
+        summary: 外した設定の値は設定ファイルを読んだときだけ debug log に出す
+        condition: '`type` が `memo` のソースを含む設定で 2 回入力する'
+        mock: 同上。`ui.log` は届いた行を記録する
+        expected: '`ui.log` に `to` が `debug` で `type` を含む行が 1 回だけ届く'
+      - name: test_handle_prompt_submit_when_source_matches_config
+        case: 正常
+        summary: ソースの glob が設定ファイルに当たっても、そのソースの他の語の文脈を追加する
+        condition: "設定ファイルの global に `files: '*.yaml'` の term ソース、同じフォルダに term-a.yaml、入力「term-a とは」"
+        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す
+        expected: 返る `context` の末尾が term-a の文脈で、`YAML を読めません` の debug log が出ない
+  - name: handleSessionCompact
+    title: 圧縮の後の記録の消去
+    kind: フック
+    container: hooks/handlers.ts
+    usecase: 圧縮の後の記録の消去
+    summary: メインの会話が圧縮された後に、そのセッションの記録を消去する
+    scope: public
+    is_async: true
+    side_effects: '`$.state` のそのセッションの記録を空にする'
+    inherits: dev/設計書/インターフェース定義/圧縮の後の記録の消去#
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: エンジンが渡す
+      - name: e
+        type: SessionCompactInput
+        required: true
+        passing: positional
+        description: 圧縮の入力
+      - name: next
+        type: '(e: SessionCompactInput) => Promise<SessionCompactResult>'
+        required: true
+        passing: positional
+        description: 下のプラグインとエンジンの処理
+    returns:
+      type: Promise<SessionCompactResult>
+      description: '`next(e)` の結果そのまま'
+    process: |-
+      1. `r = await next(e)`
+      2. `e.trigger` が `precompute` でなく、`e.agentId` が無く、`r` に `skip` が無ければ、`$.session.id()` の記録の消去をする
+      3. `r` を返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[clearRecorded]
+    unit_tests:
+      - name: test_handle_session_compact
+        case: 正常
+        summary: 圧縮されたら記録を消去する
+        condition: 記録に term-a を入れ、`trigger` が `manual`・`auto`・`plugin` で、`next` が `messages` を返す
+        mock: テストの `on` で `session.compact` の結果を返す
+        expected: どれも記録が空になり、結果が `next` の結果のまま
+      - name: test_handle_session_compact_when_not_compacted
+        case: 正常
+        summary: 圧縮されなかったとき・サブエージェントの圧縮では記録を残す
+        condition: '`trigger` が `precompute`、`next` が `{ skip }` を返す、`agentId` がある、の 3 通り'
+        mock: 同上
+        expected: どれも記録に term-a が残る
+  - name: handleSessionEnd
+    title: クリアの後の記録の消去
+    kind: フック
+    container: hooks/handlers.ts
+    usecase: クリアの後の記録の消去
+    summary: '`/clear` でセッションが終わったとき、そのセッションの記録を消去する'
+    scope: public
+    is_async: true
+    side_effects: '`$.state` の終わったセッションの記録を空にする'
+    inherits: dev/設計書/インターフェース定義/クリアの後の記録の消去#
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: エンジンが渡す
+      - name: e
+        type: SessionEndInput
+        required: true
+        passing: positional
+        description: セッションの終了の入力
+      - name: next
+        type: '(e: SessionEndInput) => Promise<SessionEndResult>'
+        required: true
+        passing: positional
+        description: 下のプラグインとエンジンの処理
+    returns:
+      type: Promise<SessionEndResult>
+      description: '`next(e)` の結果そのまま'
+    process: |-
+      1. `e.reason` が `clear` なら `e.sessionId` の記録の消去をする
+      2. `next(e)` を返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[clearRecorded]
+    unit_tests:
+      - name: test_handle_session_end_when_clear
+        case: 正常
+        summary: '`clear` のときだけ記録を消去する'
+        condition: '`$.session.id()` が s1。s1 と s2 の記録に term-a を入れ、`sessionId` が s2 で `reason` が `prompt_input_exit` と `clear`'
+        mock: なし（`claude-code/testing` の `test` の `$.state`）
+        expected: '`prompt_input_exit` では s2 に term-a が残り、`clear` では s2 だけが空になって s1 に term-a が残る'
 notes:
   テストと型の確認: |-
     - テストは `claude plugin test` で流す。`dir` の下の `*.test.ts` を全て流すので、`tests/` の下に置いても読まれる
@@ -65,3 +242,4 @@ notes:
     - `.claude-plugin/types/` は、信頼済みのフォルダから `claude --plugin-dir {worktree}` の対話のセッションを 1 度起動すると書き出される（[PoC 結果](../../../pr/5/プラグイン.md)）
 test_files:
   - tests/unit/hooks/register.test.ts
+  - tests/unit/hooks/handlers.test.ts

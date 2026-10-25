@@ -1,2 +1,4 @@
 summary: 使い方を読む前に知っておく仕組み
-items: []
+items:
+  - page: 引用の文脈.md
+    summary: 入力の語を YAML と照合し、モデルにだけ文脈を追加する仕組み

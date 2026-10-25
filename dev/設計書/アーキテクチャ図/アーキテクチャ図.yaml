@@ -64,7 +64,9 @@ subsystems:
     role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する
     runtime: TypeScript（Claude Code の mod のランタイムで動く）
     runs_on: 利用者の手元の Claude Code（ターミナル版）。ユーザースコープで入れる
-    status: planned
+    status: implemented
+    introduced:
+      pr: 7
 lead: alias-inject は利用者の手元の Claude Code が読み込む mod の単独のプラグインで、入力の語を設定の YAML と照合し、引用の文脈をモデルにだけ追加する。
 external_systems:
   - name: Claude Code
@@ -72,10 +74,12 @@ external_systems:
     direction: 双方向
     protocol: mod の hooks モジュール（`hooks/hooks.json` の `modules`）
     cost: なし
-    status: planned
+    status: implemented
     notes:
       事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確かめる相手ではない。設定ファイルと照合に使う YAML が読めないときは、文脈を追加せずに入力をそのまま渡す（#1 の D-74）。
     detail: dev/設計書/外部ライブラリ/claude-code#
+    introduced:
+      pr: 7
 constraints: |-
   - MCP サーバーと常駐するサーバーは持たない
   - 設定は `ALIAS_INJECT_CONFIG` が指す `~/.config/alias-inject/settings.yaml`（`global`・`projects`）から読む

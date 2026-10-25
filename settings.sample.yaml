@@ -1,0 +1,65 @@
+# alias-inject の設定ファイルのサンプル。実値は入れていない
+# ~/.config/alias-inject/settings.yaml にコピーし、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
+global:
+  # false のとき、何も追加しない
+  enabled: true
+
+  # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
+  origins: [user, plugin]
+
+  # 1 回に追加する語の上限
+  max_items: 20
+
+  # 1 回に追加する文脈全体（見出しを含む）の文字数の上限
+  max_chars: 4000
+
+  # 照合しない語
+  exclude: [それ]
+
+  # 文脈の先頭の見出し
+  heading: この発言に出る用語
+
+  # 照合するソース。files の相対パスは、この設定ファイルのフォルダから解決する
+  sources:
+    - label: 用語
+      type: term
+      files: terms/*.yaml
+      id: id
+      words: [name, aliases]
+      description: description
+      related: related
+    - label: 文書
+      type: doc
+      files: docs/*.yaml
+      id: id
+      words: [name]
+      description: description
+      mcp: document-server
+    - label: コマンド
+      type: command
+      files: commands/*.yaml
+      id: id
+      words: [name]
+      command: command
+      cwd: cwd
+      description: description
+    - label: URL
+      type: url
+      files: urls/*.yaml
+      id: id
+      words: [name]
+      url: url
+      description: description
+
+# match が当たったプロジェクトの要素だけを、並びの順に global へ重ねる
+projects:
+  # match は絶対パスかプロジェクト名。files の相対パスは、起動したプロジェクトの直下から解決する
+  - match: sample-project
+    max_items: 10
+    sources:
+      - label: プロジェクトのコマンド
+        type: command
+        files: docs/command/*.yaml
+        id: id
+        words: [name]
+        command: command

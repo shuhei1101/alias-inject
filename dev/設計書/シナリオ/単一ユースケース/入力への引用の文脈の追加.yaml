@@ -1,0 +1,149 @@
+title: "入力への引用の文脈の追加"
+scenarios:
+  - name: 正常シナリオ
+    setup:
+      - name: Mock
+        description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
+        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
+      - name: 設定ファイル
+        description: '`global.sources` に `label: 用語`・`type: term` のソースを 1 つ持つ'
+      - name: 用語の YAML
+        description: 語 `term-a`（エイリアス `用語エー`）と `term-b` を持つ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 設定ファイルと用語の YAML を読む
+        P->>P: 入力と語を正規化して照合し term-a が当たる
+        P->>P: term-a をセッションの記録に入れる
+        P->>CC: 入力の文はそのままに、term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - モデルに届いた文脈に、見出し「この発言に出る用語」の下の「用語」のセクションで term-a の語・`id`・`description` が並んでいる
+      - term-b の文脈は追加されていない
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal
+  - name: 正常シナリオ（記録済みの語だけ）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: セッションの記録
+        description: 同じセッションで term-a を含む入力を 1 回送信済み
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力をもう一度送信
+        CC->>P: prompt.submit
+        P->>P: 照合で term-a が当たるが記録済み
+        P->>CC: 入力をそのまま渡す
+        CC->>M: 入力だけを送信
+      ```
+    expected:
+      - 文脈が追加されていない
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_only_recorded_terms
+  - name: 正常シナリオ（上限を超える）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '`max_items` を 1 にする'
+      - name: 1 回目の入力
+        description: term-a と term-b を含み、term-a が先に出る
+        notes: 例「term-a と term-b の違い」。入力に最初に出た位置の早い語から選ぶので term-a が選ばれる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a が先に出て term-b が後に出る入力を送信
+        CC->>P: prompt.submit
+        P->>P: 照合で 2 語が当たり、入力に先に出た term-a だけを選ぶ
+        P->>P: term-a だけを記録に入れる
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+        U->>CC: term-b を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: term-b は記録に無い
+        P->>CC: term-b の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - 1 回目の入力では term-a の文脈だけが追加され、term-b の文脈は追加されていない
+      - 2 回目の term-b を含む入力で term-b の文脈が追加されている
+    test: test_normal_when_over_limit
+  - name: 正常シナリオ（出所が対象外）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '`origins` をプラグインだけにする'
+        notes: '`origins: [plugin]`（設定の設計書 `dev/設計書/設定/プラグイン.yaml` の `global.origins`）'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit（origin は composer）
+        P->>P: 出所が origins に無い
+        P->>CC: 入力をそのまま渡す
+        CC->>M: 入力だけを送信
+        U->>CC: 設定ファイルの origins を既定に戻す
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit（origin は composer）
+        P->>P: 設定を読み直し、term-a は記録に無い
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - origins がプラグインだけの間の入力には文脈が追加されていない
+      - origins を既定に戻した後の term-a を含む入力で term-a の文脈が追加されている（前の入力で記録に入っていない）
+    test: test_normal_when_origin_excluded
+  - name: 異常シナリオ（設定ファイルが読めない）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '`ALIAS_INJECT_CONFIG` が無いファイルを指す'
+        notes: 書式の誤った YAML でも同じ結末になる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 設定ファイルが読めない
+        P->>CC: 入力をそのまま渡す
+        CC->>M: 入力だけを送信
+      ```
+    expected:
+      - 文脈が追加されていない
+      - 入力の送信は止まらず、モデルの返事が返っている
+    test: test_error_when_config_unreadable
+lead: 利用者が入力すると、設定ファイルが指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
+issue: 1
+primary_actor: 利用者
+trigger: 利用者が対話のセッションで入力を送信する
+preconditions:
+  - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
+success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下にソースの `label` ごとに並んでモデルに届き、入力の文は変わらない。
+minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
+test_file: tests/e2e/単一ユースケース/test_prompt_context.py

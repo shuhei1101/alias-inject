@@ -10,9 +10,42 @@ layers:
       claude plugin test .
       ```
   - name: 結合テスト（バック）
-    run_all: 未確定
+    run_all: |-
+      ```bash
+      claude plugin test .
+      ```
+    description: '`tests/integration/` の下のテストを、単体テストと同じ `claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で、`on` に応答を登録して `$.prompt.submit`・`$.session.compact`・`$.session.end` を流す。ファイルの指定はできないため、`tests/unit/` の単体テストも同時に流れる。'
+    prerequisites:
+      - Claude Code 2.1.310 以上（`claude` が PATH にある）
+      - '`hooks/hooks.json` が `modules` で入口を指している'
   - name: E2E テスト
-    run_all: 未確定
+    run_all: |-
+      ```bash
+      (rc=0; for f in tests/e2e/単一ユースケース/test_*.py tests/e2e/複合ユースケース/test_*.py; do python3 "$f" -v || rc=1; done; exit $rc)
+      ```
+    description: |-
+      Python 3 の標準ライブラリ（`unittest`）で書き、tmux 上で実際の Claude Code（`claude --plugin-dir {プラグインのフォルダ}`）を起動して、入力の送信と、モデルに届いた文脈の読み取り（一時の `CLAUDE_CONFIG_DIR` の `projects/` の transcript の `hook_additional_context` の添付）を行う。共通の補助は `tests/e2e/support/harness.py`。`claude plugin test` の対象は `*.test.ts` だけのため、このテストは流れない。
+
+      環境変数で次を変えられる。
+
+      | 環境変数 | 既定 | 中身 |
+      | --- | --- | --- |
+      | `ALIAS_INJECT_E2E_SOURCE_CONFIG_DIR` | `CLAUDE_CONFIG_DIR`、無ければ `~/.claude` | 認証情報（`.credentials.json`）を借りる設定フォルダ |
+      | `ALIAS_INJECT_E2E_PLUGIN_DIR` | このリポジトリの直下 | `--plugin-dir` に渡すプラグインのフォルダ |
+      | `ALIAS_INJECT_E2E_MODEL` | `haiku` | 起動する Claude Code のモデル |
+    prerequisites:
+      - Python 3.9 以上（標準ライブラリだけ）・tmux・`claude`（2.1.310 以上）が PATH にある
+      - '`ALIAS_INJECT_E2E_SOURCE_CONFIG_DIR` が指す設定フォルダに、ログイン済みの `.credentials.json` がある（無ければ最初に失敗する。テストは一時の設定フォルダへリンクして使い、複製しない）'
+      - 実際のモデル（既定は Haiku）へ問い合わせるため、Claude の利用枠を使う（1 テストにつき数回の入力）
+      - テストごとに一時のフォルダと tmux セッション（`alias-inject-e2e-*`）を作り、終了時に自分のセッションだけを終わらせて消す
+    run_one:
+      label: テスト
+      command: |-
+        ```bash
+        python3 {テストファイルパス} {クラス名}.{テスト関数名} -v
+        ```
+    external_cost: Claude Code の利用枠（モデルは Haiku）。課金の API は呼ばない
+    parallel: false
   - name: 非機能要件テスト
     run_all: 未確定
   - name: 外部疎通テスト
