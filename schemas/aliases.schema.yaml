@@ -9,6 +9,7 @@ $defs:
     title: エイリアスの要素
     description: 1 種類の引用について、読む YAML と列の対応を定義する要素。id の一意はスキーマで表せないため、読む側が確かめる。
     type: object
+    additionalProperties: false
     required:
       - id
       - type
