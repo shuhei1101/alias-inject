@@ -169,3 +169,5 @@ functions:
         mock: 同上（無いパスの `fs.stat` は例外）
         expected: RepositoryError で、path が `/repo/missing/dev-docs.yaml`
         exception: '`dev-docs.yaml` が無い'
+test_files:
+  - tests/unit/hooks/lib/repository.test.ts

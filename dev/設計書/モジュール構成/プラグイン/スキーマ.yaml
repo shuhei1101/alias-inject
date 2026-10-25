@@ -219,3 +219,5 @@ functions:
       4. `check` が true なら `hooks/lib/aliases-schema.ts` と本文を比べ、違うか無ければ `hooks/lib/aliases-schema.ts が schemas/aliases.schema.yaml と一致しません。node scripts/gen-aliases-schema.mjs を実行してください` を標準エラーに出して終了コード 1 で終える
     notes:
       テスト: '`claude plugin test` の環境は `node:fs` を import できないため単体テストを持たない。lint の `--check` が一致を確かめる'
+test_files:
+  - tests/unit/hooks/lib/schema.test.ts

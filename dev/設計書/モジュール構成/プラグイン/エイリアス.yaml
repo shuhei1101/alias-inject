@@ -179,3 +179,5 @@ functions:
         condition: '`id` が terms・urls・terms の 3 要素'
         mock: なし
         expected: aliases が先の terms と urls の 2 件で、warnings に `terms` を含む 1 件
+test_files:
+  - tests/unit/hooks/lib/alias.test.ts

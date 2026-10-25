@@ -220,3 +220,5 @@ functions:
         condition: term-b.yaml が閉じていない括弧を含む
         mock: 同上
         expected: entries が term-a だけで、failures が term-b.yaml のパスと行と列を含む理由の 1 件
+test_files:
+  - tests/unit/hooks/lib/entry.test.ts
