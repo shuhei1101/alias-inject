@@ -1,0 +1,205 @@
+title: "プラグイン / スキーマ"
+lead: プラグインが同梱する `schemas/aliases.schema.yaml` を読み、`aliases` の要素をそのスキーマで検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      schema.ts          スキーマの読み込みとキーワードの確認・値の検証
+  tests/
+    unit/
+      hooks/
+        lib/
+          schema.test.ts schema.ts の単体テスト
+  ```
+classes:
+  - name: SchemaError
+    title: スキーマの読み込みの失敗
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: 同梱のスキーマが読めない・書式が誤っている・解釈しないキーワードを含むことを、理由つきで伝える例外
+    inherits: Error
+    properties:
+      - name: message
+        type: string
+        description: スキーマのパスと理由
+constants:
+  - name: SCHEMA_PATH
+    title: スキーマの置き場所
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: プラグインのフォルダ（`$.plugin.root`）からのスキーマのパス
+    value: '`schemas/aliases.schema.yaml`'
+  - name: VALIDATION_KEYWORDS
+    title: 検証するキーワード
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: 値の検証で解釈するキーワード
+    value: '`type`・`enum`・`const`・`required`・`properties`・`additionalProperties`・`items`・`minItems`・`minLength`・`allOf`・`if`・`then`・`$ref`・`$defs`'
+  - name: ANNOTATION_KEYWORDS
+    title: 読み飛ばすキーワード
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: 検証に効かない注釈のキーワード
+    value: '`$schema`・`title`・`description`・`default`・`examples`'
+functions:
+  - name: loadAliasSchema
+    title: スキーマの読み込み
+    kind: 関数
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: 同梱のスキーマを更新時刻が変わったときだけ読み直し、キーワードを確かめて返す
+    scope: public
+    is_async: true
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.plugin.root` と `$.fs` を使う'
+    returns:
+      type: Promise<Record<string, unknown>>
+      description: スキーマのルート
+    exceptions:
+      - name: SchemaError
+        condition: スキーマが無い・読めない・書式が誤っている・最上位がマッピングでない・解釈しないキーワードを含む
+    process: |-
+      1. `{$.plugin.root}/{SCHEMA_PATH}` を `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `schema`）で読む
+      2. 変換は YAML のパースとキーワードの確認。パースの結果の `ok` が false か、最上位がマッピングでなければ SchemaError を投げる
+      3. `$.fs.stat`・`$.fs.read` の例外は、スキーマのパスと例外のメッセージで SchemaError にして投げる
+      4. スキーマのルートを返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
+      - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[checkKeywords]
+    unit_tests:
+      - name: test_load_alias_schema
+        case: 正常
+        summary: リポジトリの `schemas/aliases.schema.yaml` を読める
+        condition: '`plugin.root` が `/plugin`、`/plugin/schemas/aliases.schema.yaml` にリポジトリの `schemas/aliases.schema.yaml` の中身'
+        mock: テストの `on` で `fs.stat`・`fs.read` をメモリのファイル表から応答する
+        expected: "`items` が `{ $ref: '#/$defs/alias' }` のマッピングを返す"
+      - name: test_load_alias_schema_when_unreadable
+        case: 異常
+        summary: スキーマが無い・書式が誤っていれば例外
+        condition: スキーマのファイルが無い、閉じていない括弧を含む
+        mock: 同上（無いパスの `fs.stat` は例外）
+        expected: どちらも SchemaError で、メッセージにスキーマのパスを含む
+        exception: スキーマが無い・書式が誤っている
+  - name: checkKeywords
+    title: キーワードの確認
+    kind: 関数
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: スキーマが検証するキーワードと読み飛ばすキーワードだけを使い、`$ref` が `$defs` の要素を指すことを確かめる
+    scope: internal
+    is_async: false
+    args:
+      - name: root
+        type: Record<string, unknown>
+        required: true
+        passing: positional
+        description: スキーマのルート
+    returns:
+      type: void
+      description: 何も返さない
+    exceptions:
+      - name: SchemaError
+        condition: 検証するキーワードにも読み飛ばすキーワードにも無いキーがある、または `$ref` が `#/$defs/{名前}` の形でない・指す要素が無い
+    process: |-
+      1. ルートからスキーマのマッピングをたどり、各キーが VALIDATION_KEYWORDS か ANNOTATION_KEYWORDS にあるかを確かめる
+      2. `properties`・`$defs` の値の各要素、`items`・`if`・`then`・マッピングの `additionalProperties`、`allOf` の各要素をスキーマとしてたどる。`enum`・`const`・`required`・`default`・`examples` の中はたどらない
+      3. 無いキーは、そのキーまでのパスとキーの名前で SchemaError を投げる
+      4. `$ref` は `#/$defs/{名前}` の形で、ルートの `$defs` にその名前があることを確かめ、無ければ SchemaError を投げる
+    unit_tests:
+      - name: test_check_keywords
+        case: 正常
+        summary: リポジトリのスキーマは例外にならない
+        condition: リポジトリの `schemas/aliases.schema.yaml` をパースした値
+        mock: なし
+        expected: 例外にならない
+      - name: test_check_keywords_when_unsupported
+        case: 異常
+        summary: 解釈しないキーワードと解けない `$ref` は例外
+        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
+        mock: なし
+        expected: どちらも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む
+        exception: 解釈しないキーワード・解けない `$ref`
+  - name: validateSchema
+    title: 値の検証
+    kind: 関数
+    container: hooks/lib/schema.ts
+    usecase: 共通
+    summary: 値をスキーマで検証し、合わない箇所をパスと理由の並びで返す
+    scope: public
+    is_async: false
+    args:
+      - name: root
+        type: Record<string, unknown>
+        required: true
+        passing: keyword
+        description: '`$ref` を解くスキーマのルート'
+      - name: schema
+        type: unknown
+        required: true
+        passing: keyword
+        description: 検証に使うスキーマ（ルートか、その中のスキーマ）
+      - name: value
+        type: unknown
+        required: true
+        passing: keyword
+        description: 検証する値
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: 値のパス。理由の先頭に付ける（例 `aliases[0]`）
+    args_example: |-
+      ```ts
+      validateSchema({ root: schema, schema: schema.items, value: item, path: 'aliases[0]' })
+      ```
+    returns:
+      type: string[]
+      description: '`{パス}: {理由}` の並び。合うときは空'
+    process: |-
+      1. `$ref` があれば、ルートの `$defs` の要素で同じパスを検証した結果を加える
+      2. `type` があれば値の型（`null`・`boolean`・`integer`・`number`・`string`・`array`・`object`。整数は `number` にも当たる）と比べ、どれにも当たらなければ理由を加えて、このスキーマの残りのキーワードを見ない
+      3. `enum` は値と同じ要素が無いとき、`const` は値と同じでないときに理由を加える（同じかは、配列とマッピングを中まで比べる）
+      4. 値がマッピングの場合
+         - `required` のキーが無ければ、`{パス}.{キー}` で理由を加える
+         - `properties` にあるキーは、`{パス}.{キー}` でそのスキーマを検証する
+         - `additionalProperties` が false なら、`properties` に無いキーごとに理由を加える。マッピングなら、そのキーをそのスキーマで検証する
+      5. 値が並びの場合、要素の数が `minItems` より少なければ理由を加え、`items` があれば各要素を `{パス}[{位置}]` で検証する
+      6. 値が文字列の場合、コードポイントの数が `minLength` より少なければ理由を加える
+      7. `allOf` の各要素で同じパスを検証した結果を加える。`if` で検証した結果が空なら、`then` で検証した結果を加える
+      8. 読み飛ばすキーワードは見ない
+    unit_tests:
+      - name: test_validate_schema
+        case: 正常
+        summary: スキーマに合う要素は空を返す
+        condition: リポジトリのスキーマで、`type` が term・doc・command・url の要素をそれぞれ書いた値
+        mock: なし
+        expected: どれも空
+      - name: test_validate_schema_when_required_missing
+        case: 正常
+        summary: 無い必須のキーをパスつきで返す
+        condition: '`fields` が無い要素、`type: command` で `fields.command` が無い要素'
+        mock: なし
+        expected: '`aliases[0].fields` と `aliases[0].fields.command` を含む理由'
+      - name: test_validate_schema_when_type_mismatch
+        case: 正常
+        summary: 型・列挙・最小の数と長さに合わない値を返す
+        condition: '`id` が数値、`type` が `memo`、`paths` が `[]`、`id` が空文字'
+        mock: なし
+        expected: それぞれ `aliases[0].id`・`aliases[0].type`・`aliases[0].paths`・`aliases[0].id` の理由
+      - name: test_validate_schema_when_additional_property
+        case: 正常
+        summary: 書けないキーを返す
+        condition: '`type: term` の `fields` に `mcp`、要素の最上位に `label`'
+        mock: なし
+        expected: '`aliases[0].fields.mcp` と `aliases[0].label` の理由'
+      - name: test_validate_schema_when_if_not_matched
+        case: 正常
+        summary: '`if` に合わないときは `then` を使わない'
+        condition: '`allOf` の `if` が `type: { const: url }`、`then` が `required: [url]` のスキーマで、`type: term` の値'
+        mock: なし
+        expected: 空

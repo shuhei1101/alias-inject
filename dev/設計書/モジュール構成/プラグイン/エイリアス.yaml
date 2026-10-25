@@ -1,0 +1,181 @@
+title: "プラグイン / エイリアス"
+lead: 設定ファイルと `dev-docs.yaml` の `aliases` の要素をスキーマで検証して取り出し、`id` の重なった要素を外す。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      alias.ts           aliases の要素の取り出しと id の重なりの確認
+  tests/
+    unit/
+      hooks/
+        lib/
+          alias.test.ts  alias.ts の単体テスト
+  ```
+enums:
+  - name: AliasType
+    title: 引用の種類
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: '`aliases` の要素の `type`。文脈に並べる列とセクションが種類ごとに決まる'
+    values:
+      - value: term
+        title: 用語
+        description: '`description`・`related` を追加する'
+      - value: doc
+        title: 文書
+        description: '`description` を追加する'
+      - value: command
+        title: コマンド
+        description: '`command`・`cwd`・`description` を追加する'
+      - value: url
+        title: URL
+        description: '`url`・`description` を追加する'
+data_models:
+  - name: AliasFields
+    title: 列の対応
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    role: DTO
+    summary: '`aliases` の要素の `fields`。項目のどの列を使うかの対応'
+    properties:
+      - name: id
+        type: string
+        description: 項目の ID の列の名前
+      - name: match
+        type: string[]
+        description: 照合する列の名前（1 つ以上）
+      - name: title
+        type: string | undefined
+        description: 文脈に出す語の列の名前
+      - name: description
+        type: string | undefined
+        description: 説明の列の名前
+      - name: related
+        type: string | undefined
+        description: 関連する項目の列の名前（term）
+      - name: avoid
+        type: string | undefined
+        description: 避ける言い方の列の名前（term）。読むが文脈には使わない
+      - name: command
+        type: string | undefined
+        description: コマンドの列の名前（command）
+      - name: cwd
+        type: string | undefined
+        description: 実行する場所の列の名前（command）
+      - name: url
+        type: string | undefined
+        description: URL の列の名前（url）
+  - name: AliasConfig
+    title: aliases の要素
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    role: DTO
+    summary: スキーマの検証を通った有効な `aliases` の 1 要素
+    properties:
+      - name: id
+        type: string
+        description: 要素の ID
+      - name: type
+        type: AliasType
+        description: 引用の種類
+      - name: paths
+        type: string[]
+        description: 読む YAML のパスか glob。書いたまま（解決は読む側が行う）
+      - name: fields
+        type: AliasFields
+        description: 列の対応
+  - name: ResolvedAlias
+    title: 読む aliases の要素
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    role: DTO
+    summary: 出所を持ち、`paths` を絶対パスにした `aliases` の要素
+    description: '`AliasConfig & { origin: string; patterns: string[] }`。'
+    properties:
+      - name: origin
+        type: string
+        description: 要素を書いた `dev-docs.yaml` か設定ファイルの絶対パス
+      - name: patterns
+        type: string[]
+        description: '`paths` を解決した絶対パスの glob'
+functions:
+  - name: parseAliases
+    title: aliases の取り出し
+    kind: 関数
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: '`aliases` の各要素をスキーマで検証し、有効な要素を取り出す。合わない要素は外して理由を残す'
+    scope: public
+    is_async: false
+    args:
+      - name: items
+        type: readonly unknown[]
+        required: true
+        passing: keyword
+        description: '`aliases` の並び'
+      - name: schema
+        type: Record<string, unknown>
+        required: true
+        passing: keyword
+        description: スキーマのルート
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: '`aliases` の並びのパス（`aliases`・`global.aliases`・`projects[0].aliases`）。理由に使う'
+    returns:
+      type: '{ aliases: AliasConfig[]; warnings: string[] }'
+      description: 取り出した要素（並びの順）と、外した要素の理由
+    process: |-
+      1. マッピングで `enabled` が false の要素は、検証せずに飛ばす
+      2. 他の要素を、スキーマのルートの `items` で `{path}[{位置}]` をパスにして検証する（値の検証）
+      3. 理由があれば要素を外し、`{path}[{位置}]（id: {id}）: {理由を「、」でつなぐ}` を warnings に入れる。`（id: {id}）` は `id` が空でない文字列のときだけ付ける
+      4. 理由の無い要素は `id`・`type`・`paths`・`fields` を AliasConfig にする
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[validateSchema]
+    unit_tests:
+      - name: test_parse_aliases
+        case: 正常
+        summary: スキーマに合う要素を並びの順に取り出す
+        condition: 'リポジトリのスキーマで、term と command の要素（`enabled: true` を含む）'
+        mock: なし
+        expected: aliases が 2 件で `fields` が書いたとおり、warnings が空
+      - name: test_parse_aliases_when_disabled
+        case: 正常
+        summary: '`enabled: false` の要素は検証せずに飛ばす'
+        condition: '`enabled: false` で `fields` の無い要素'
+        mock: なし
+        expected: aliases も warnings も空
+      - name: test_parse_aliases_when_invalid
+        case: 正常
+        summary: スキーマに合わない要素は外し、位置と id つきの理由を残す
+        condition: '`path` が `global.aliases`。`id: bad` で `fields` に `mcp` を持つ要素と、`id` の無い要素と、文字列 `x`'
+        mock: なし
+        expected: 'aliases が空。warnings が 3 件で、`global.aliases[0]（id: bad）`・`global.aliases[1]`・`global.aliases[2]` で始まる'
+  - name: dedupeAliases
+    title: id の重なりの確認
+    kind: 関数
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: 同じ出所の `aliases` の要素のうち、先の要素と `id` が重なる要素を外す
+    scope: public
+    is_async: false
+    args:
+      - name: aliases
+        type: 'readonly T[]（T extends { id: string }）'
+        required: true
+        passing: positional
+        description: 1 つの出所の要素（並びの順）
+    returns:
+      type: '{ aliases: T[]; warnings: string[] }'
+      description: 残した要素（並びの順）と、外した要素の理由
+    process: |-
+      1. 並びの順に見て、既に残した要素と同じ `id` の要素を外し、`{id}: id が先の要素と重なります` を warnings に入れる
+      2. 残した要素と warnings を返す
+    unit_tests:
+      - name: test_dedupe_aliases
+        case: 正常
+        summary: 後の重なった要素だけを外す
+        condition: '`id` が terms・urls・terms の 3 要素'
+        mock: なし
+        expected: aliases が先の terms と urls の 2 件で、warnings に `terms` を含む 1 件

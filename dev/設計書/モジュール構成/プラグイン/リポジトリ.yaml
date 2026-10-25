@@ -1,0 +1,171 @@
+title: "プラグイン / リポジトリ"
+lead: 読むリポジトリの `dev-docs.yaml` を更新時刻が変わったときだけ読み、`aliases` だけを取り出して `paths` をそのフォルダから解決する。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      repository.ts      dev-docs.yaml の読み込みと aliases の取り出し
+  tests/
+    unit/
+      hooks/
+        lib/
+          repository.test.ts repository.ts の単体テスト
+  ```
+data_models:
+  - name: RepositoryAliases
+    title: リポジトリの aliases
+    container: hooks/lib/repository.ts
+    usecase: 共通
+    role: DTO
+    summary: 1 つの `dev-docs.yaml` から取り出した `aliases` の要素と、外した要素の理由
+    properties:
+      - name: aliases
+        type: ResolvedAlias[]
+        description: 有効で検証を通った要素（並びの順）。`origin` は `dev-docs.yaml` の絶対パス
+      - name: warnings
+        type: string[]
+        description: スキーマに合わない要素と `id` の重なった要素の理由。呼び出し元が debug log に出す
+classes:
+  - name: RepositoryError
+    title: dev-docs.yaml の読み込みの失敗
+    container: hooks/lib/repository.ts
+    usecase: 共通
+    summary: '`dev-docs.yaml` が無い・読めない・書式が誤っていることを、パスと理由つきで伝える例外'
+    inherits: Error
+    properties:
+      - name: path
+        type: string
+        description: 読めなかった `dev-docs.yaml` の絶対パス
+      - name: reason
+        type: string
+        description: 理由（`$.fs` の例外のメッセージ・YAML のパースの理由・書式の誤り）
+functions:
+  - name: parseRepository
+    title: dev-docs.yaml の検証
+    kind: 関数
+    container: hooks/lib/repository.ts
+    usecase: 共通
+    summary: '`dev-docs.yaml` の文字列から `aliases` だけを取り出し、`paths` をそのフォルダから解決する'
+    scope: public
+    is_async: false
+    args:
+      - name: text
+        type: string
+        required: true
+        passing: keyword
+        description: '`dev-docs.yaml` の文字列'
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: '`dev-docs.yaml` の絶対パス'
+      - name: schema
+        type: Record<string, unknown>
+        required: true
+        passing: keyword
+        description: スキーマのルート
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームの絶対パス
+    returns:
+      type: RepositoryAliases
+      description: 取り出した要素と理由
+    exceptions:
+      - name: RepositoryError
+        condition: YAML の書式が誤っている・最上位がマッピングでも null でもない・`aliases` が並びでない
+    process: |-
+      1. YAML のパースに通し、`ok` が false なら path と理由で RepositoryError を投げる
+      2. 値が null、または `aliases` を持たないマッピングなら、要素も理由も空で返す。それ以外のマッピングでない値は RepositoryError を投げる
+      3. `aliases` が並びでなければ RepositoryError を投げる。他のキーは読まない
+      4. aliases の取り出し（path は `aliases`）と id の重なりの確認をし、両方の理由を warnings につなぐ
+      5. 各要素の `paths` を `dev-docs.yaml` のフォルダ（親のフォルダ）を基準にパスの解決に通して `patterns` にし、`origin` を path にする
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[parseAliases]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[dedupeAliases]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parentDir]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[resolvePath]
+    unit_tests:
+      - name: test_parse_repository
+        case: 正常
+        summary: '`aliases` の `paths` を `dev-docs.yaml` のフォルダから解決し、他のキーは読まない'
+        condition: 'path が `/repo/knowledge/dev-docs.yaml`。`enabled: false`・`documents` と、`paths: [terms/*.yaml]` の term の要素を持つ'
+        mock: なし
+        expected: aliases が 1 件で、`patterns` が `['/repo/knowledge/terms/*.yaml']`、`origin` が path、warnings が空
+      - name: test_parse_repository_when_aliases_missing
+        case: 正常
+        summary: '`aliases` を持たない・空の `dev-docs.yaml` は要素 0 件'
+        condition: '`documents` だけのマッピング、空の文字列'
+        mock: なし
+        expected: どちらも aliases も warnings も空
+      - name: test_parse_repository_when_alias_invalid
+        case: 正常
+        summary: スキーマに合わない要素と id の重なった要素を外す
+        condition: '`id: terms` の要素、`fields` に `mcp` を持つ `id: bad` の要素、同じ `id: terms` の要素'
+        mock: なし
+        expected: aliases が先の terms の 1 件で、warnings に `bad` と `terms` の理由
+      - name: test_parse_repository_when_malformed
+        case: 異常
+        summary: 書式の誤り・`aliases` が並びでない・最上位が並びなら例外
+        condition: '閉じていない括弧、`aliases: terms`、最上位が `[a]`'
+        mock: なし
+        expected: どれも RepositoryError で、path が `dev-docs.yaml` のパス
+        exception: 書式の誤り・`aliases` が並びでない
+  - name: loadRepositoryAliases
+    title: dev-docs.yaml の読み込み
+    kind: 関数
+    container: hooks/lib/repository.ts
+    usecase: 共通
+    summary: '`dev-docs.yaml` を更新時刻が変わったときだけ読み直し、取り出した `aliases` を返す'
+    scope: public
+    is_async: true
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.fs` を使う'
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: '`dev-docs.yaml` の絶対パス（実効の設定の repositories の 1 要素）'
+      - name: schema
+        type: Record<string, unknown>
+        required: true
+        passing: keyword
+        description: スキーマのルート
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームの絶対パス
+    returns:
+      type: Promise<RepositoryAliases>
+      description: 取り出した要素と理由。更新時刻が変わらないうちは前回と同じ値
+    exceptions:
+      - name: RepositoryError
+        condition: '`dev-docs.yaml` が無い・読めない'
+    process: |-
+      1. path を `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `repository`、変換は dev-docs.yaml の検証）で読む
+      2. `$.fs.stat`・`$.fs.read` の例外は、path と例外のメッセージで RepositoryError にして投げる。検証の RepositoryError はそのまま伝える
+      3. 読んだ値を返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
+      - dev/設計書/モジュール構成/プラグイン/リポジトリ#functions[parseRepository]
+    unit_tests:
+      - name: test_load_repository_aliases
+        case: 正常
+        summary: 更新時刻が同じうちは読み直さず、変わると読み直す
+        condition: 同じ `dev-docs.yaml` で 2 回呼び、3 回目は `mtimeMs` を進めて `aliases` に要素を足す
+        mock: テストの `on` で `fs.stat`・`fs.read` をメモリのファイル表から応答し、`fs.read` の呼ばれた回数を数える
+        expected: '`fs.read` は 2 回。1・2 回目は同じ値で、3 回目は足した要素を含む'
+      - name: test_load_repository_aliases_when_missing
+        case: 異常
+        summary: 無い `dev-docs.yaml` はパスつきで例外
+        condition: path が `/repo/missing/dev-docs.yaml`
+        mock: 同上（無いパスの `fs.stat` は例外）
+        expected: RepositoryError で、path が `/repo/missing/dev-docs.yaml`
+        exception: '`dev-docs.yaml` が無い'

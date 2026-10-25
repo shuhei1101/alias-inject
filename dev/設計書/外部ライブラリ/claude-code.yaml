@@ -163,6 +163,18 @@ catalogs:
             default: transcript
             description: 出す先
             notes: '`debug` はデバッグログに出す'
+      - name: $.plugin.root
+        kind: プロパティ
+        purpose: 読み込んだプラグインのフォルダ（plugin.json を持つフォルダ）の絶対パス
+        description: プラグインが同梱するファイルは、このパスの下を `$.fs.read` で読む。
+        params_example: |-
+          ```ts
+          const text = await $.fs.read(`${$.plugin.root}/schemas/aliases.schema.yaml`)
+          ```
+        returns:
+          - name: '-'
+            type: string
+            description: プラグインのフォルダの絶対パス
   - name: コマンド
     version: 2.1.310
     entries:

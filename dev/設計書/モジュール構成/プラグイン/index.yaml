@@ -5,10 +5,16 @@ items:
     summary: hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル
   - page: 読み込み.yaml
     summary: パスの展開・glob の展開・変わったファイルの読み込み・YAML のパース
+  - page: スキーマ.yaml
+    summary: 同梱のスキーマの読み込みと aliases の要素の検証
   - page: 設定.yaml
     summary: 設定ファイルのパスの取得・検証・実効の設定の組み立て・出所の判定
-  - page: ソース.yaml
-    summary: ソースの YAML の読み込みと語の一覧の組み立て
+  - page: エイリアス.yaml
+    summary: aliases の要素の取り出しと id の重なりの確認
+  - page: リポジトリ.yaml
+    summary: 読むリポジトリの dev-docs.yaml の読み込みと aliases の取り出し
+  - page: 項目.yaml
+    summary: aliases の要素が指す YAML の読み込みと語の一覧の組み立て
   - page: 照合.yaml
     summary: 入力と語の正規化と照合
   - page: 文脈.yaml
