@@ -459,3 +459,5 @@ functions:
         condition: '`origins` が null で、`kind` が `composer`・`plugin`・`task-notification`'
         mock: なし
         expected: どれも true
+test_files:
+  - tests/unit/hooks/lib/config.test.ts

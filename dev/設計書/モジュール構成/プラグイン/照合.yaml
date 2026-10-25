@@ -112,3 +112,5 @@ functions:
         condition: 入力「こんにちは」
         mock: なし
         expected: 空
+test_files:
+  - tests/unit/hooks/lib/match.test.ts

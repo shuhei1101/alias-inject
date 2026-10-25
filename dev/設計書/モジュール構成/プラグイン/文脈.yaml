@@ -151,3 +151,5 @@ functions:
         condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
         mock: なし
         expected: どれも null
+test_files:
+  - tests/unit/hooks/lib/context.test.ts

@@ -210,3 +210,5 @@ functions:
         condition: term-b.yaml が閉じていない括弧を含む
         mock: 同上
         expected: SourceError で、path が term-b.yaml、reason に行と列を含む
+test_files:
+  - tests/unit/hooks/lib/source.test.ts

@@ -337,3 +337,5 @@ functions:
         expected: '`({}).polluted` が undefined'
 notes:
   キャッシュ: 変わったファイルの読み込みのキャッシュはモジュールの変数に持つ。mod のホットリロードで空に戻り、次の入力で読み直す。単体テストではテストごとに空に戻す関数 `clearCache` を使う
+test_files:
+  - tests/unit/hooks/lib/loader.test.ts
