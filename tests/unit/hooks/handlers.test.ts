@@ -110,20 +110,58 @@ test('test_handle_session_compact_when_not_compacted', async ($, on) => {
   expect(after.context ?? []).toEqual([])
 })
 
-// `clear` のときだけ記録を消去する（正常系）
-test('test_handle_session_end_when_clear', async ($, on) => {
+// ソースの glob が設定ファイルに当たっても、そのソースの他の語の文脈を追加する（正常系）
+test('test_handle_prompt_submit_when_source_matches_config', async ($, on) => {
   // 準備
-  installWorld(on, { fs: makeFs(), settings: SETTINGS })
-  await submit($, 'term-a とは')
+  // 設定ファイルと同じフォルダに term-a.yaml を置き、files: '*.yaml' が設定ファイル自身にも当たるようにする
+  const config = [
+    'global:',
+    '  sources:',
+    '    - label: 用語',
+    '      type: term',
+    "      files: '*.yaml'",
+    '      id: id',
+    '      words: [name]',
+  ].join('\n')
+  const fs = new MemoryFs({
+    [CONFIG_PATH]: config,
+    '/home/u/.config/alias-inject/term-a.yaml': 'id: term-a\nname: Term-A\n',
+  })
+  const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  const ended = await $.session.end({ reason: 'clear', sessionId: 's1', resume: { id: 's1' } })
-  const afterClear = await submit($, 'term-a とは')
-  await $.session.end({ reason: 'prompt_input_exit', sessionId: 's1', resume: { id: 's1' } })
-  const afterExit = await submit($, 'term-a とは')
+  const result = await submit($, 'term-a とは')
 
   // 検証
-  expect(ended.sessionId).toBe('s1')
-  expect(afterClear.context?.length).toBe(1)
-  expect(afterExit.context ?? []).toEqual([])
+  expect(result.context?.length).toBe(1)
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(world.logs.filter((line) => line.text.includes('YAML を読めません'))).toEqual([])
+})
+
+// `clear` のときだけ、終わるセッション（e.sessionId）の記録を消去する（正常系）
+test('test_handle_session_end_when_clear', async ($, on) => {
+  // 準備
+  // s1 と s2 の記録に term-a を入れ、$.session.id() は s1 に戻す
+  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS })
+  await submit($, 'term-a とは')
+  world.sessionId = 's2'
+  await submit($, 'term-a とは')
+  world.sessionId = 's1'
+
+  // 実行
+  await $.session.end({ reason: 'prompt_input_exit', sessionId: 's2', resume: { id: 's2' } })
+  world.sessionId = 's2'
+  const s2AfterExit = await submit($, 'term-a とは')
+  world.sessionId = 's1'
+  await $.session.end({ reason: 'clear', sessionId: 's2', resume: { id: 's2' } })
+  const s1AfterClear = await submit($, 'term-a とは')
+  world.sessionId = 's2'
+  const s2AfterClear = await submit($, 'term-a とは')
+
+  // 検証
+  // prompt_input_exit では s2 の記録が残り、文脈は追加されない
+  expect(s2AfterExit.context ?? []).toEqual([])
+  // clear では s2 だけが消え、s1 の記録は残る
+  expect(s1AfterClear.context ?? []).toEqual([])
+  expect(s2AfterClear.context?.length).toBe(1)
 })

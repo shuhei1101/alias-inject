@@ -92,6 +92,8 @@ export const COMPACTED_MESSAGE = { role: 'user' as const, text: '要約', toolUs
 export type World = {
   /** `$.ui.log` に届いた行 */
   logs: LogLine[]
+  /** `$.session.id()` が返すセッション ID。テストの途中で書き換えられる */
+  sessionId: string
   /** 圧縮の結果（`session.compact` の一番下の処理が返す値） */
   compactResult: { messages: (typeof COMPACTED_MESSAGE)[] } | { skip: string }
 }
@@ -99,7 +101,7 @@ export type World = {
 /** エンジンの代わりに、プラグインが呼ぶ `$` の呼び出しを応答する処理をテストの `on` へ登録する */
 export function installWorld(on: On, options: WorldOptions): World {
   const { fs } = options
-  const world: World = { logs: [], compactResult: { messages: [COMPACTED_MESSAGE] } }
+  const world: World = { logs: [], sessionId: options.sessionId ?? 's1', compactResult: { messages: [COMPACTED_MESSAGE] } }
 
   mock.env(on, { HOME: options.home ?? HOME })
   on('settings.read', () => ({ value: options.settings }) as never)
@@ -124,7 +126,7 @@ export function installWorld(on: On, options: WorldOptions): World {
       return { deny: (error as Error).message }
     }
   })
-  on('session.id', () => ({ value: options.sessionId ?? 's1' }))
+  on('session.id', () => ({ value: world.sessionId }))
   on('session.root', () => ({ value: options.projectRoot ?? '/repo/sample' }))
   on('session.repo', () => ({ value: null }))
   on('ui.log', (_, e) => {

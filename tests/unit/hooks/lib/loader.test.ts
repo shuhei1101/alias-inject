@@ -179,8 +179,8 @@ test('test_read_if_changed', async () => {
   const convert = (text: string) => ({ text })
 
   // 実行
-  const first = await readIfChanged($, { file, convert })
-  const second = await readIfChanged($, { file, convert })
+  const first = await readIfChanged($, { file, convert, kind: 'source' })
+  const second = await readIfChanged($, { file, convert, kind: 'source' })
 
   // 検証
   expect(fs.reads).toEqual(['/d/a.yaml'])
@@ -194,16 +194,34 @@ test('test_read_if_changed_when_mtime_changed', async () => {
   const fs = new MemoryFs({ '/d/a.yaml': 'one' })
   const { $ } = createFakeEngine({ fs })
   const convert = (text: string) => ({ text })
-  const first = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert })
+  const first = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'source' })
 
   // 実行
   fs.write('/d/a.yaml', 'two')
-  const second = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert })
+  const second = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'source' })
 
   // 検証
   expect(first.text).toBe('one')
   expect(second.text).toBe('two')
   expect(fs.reads).toEqual(['/d/a.yaml', '/d/a.yaml'])
+})
+
+// 種類が違えば同じファイルでも別に読んで変換する（正常系）
+test('test_read_if_changed_when_kind_differs', async () => {
+  // 準備
+  clearCache()
+  const fs = new MemoryFs({ '/d/a.yaml': 'one' })
+  const { $ } = createFakeEngine({ fs })
+  const file = { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }
+
+  // 実行
+  const asConfig = await readIfChanged($, { file, convert: (text) => ({ config: text }), kind: 'config' })
+  const asSource = await readIfChanged($, { file, convert: (text) => ({ ok: true, value: text }), kind: 'source' })
+
+  // 検証
+  expect(fs.reads).toEqual(['/d/a.yaml', '/d/a.yaml'])
+  expect(asConfig).toEqual({ config: 'one' })
+  expect(asSource).toEqual({ ok: true, value: 'one' })
 })
 
 // ブロック・フロー・複数行の文字列を読む（正常系）
