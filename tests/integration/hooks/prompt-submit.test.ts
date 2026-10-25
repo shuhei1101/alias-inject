@@ -187,8 +187,10 @@ test('test_error_when_config_unreadable', async ($, on) => {
   // 検証
   expect(result.text).toBe('term-a とは')
   expect(result.context ?? []).toEqual([])
+  // 設定ファイルのパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
   expect(logged.length).toBeGreaterThan(0)
+  expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
 // 書式の誤った YAML のソースだけを外し、他のソースの文脈は追加する（異常系）
@@ -210,6 +212,8 @@ test('test_error_when_yaml_malformed', async ($, on) => {
   expect(context).toContain('## 用語')
   expect(context).toContain('Term-A')
   expect(context).not.toContain('## URL')
+  // YAML のパスと、パースに失敗した理由（行と列を含む）の行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath))
   expect(logged.length).toBeGreaterThan(0)
+  expect(logged.some((line) => line.text.includes('YAML を読めません') && /\d+:\d+/.test(line.text))).toBe(true)
 })
