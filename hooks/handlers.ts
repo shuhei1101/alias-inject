@@ -65,7 +65,8 @@ async function selectContext(
     return null
   }
 
-  const home = (await $.env.get('HOME')) ?? ''
+  const home = await $.env.get('HOME')
+  if (home === undefined) throw new Error('環境変数 HOME がありません')
   const projectRoot = await $.session.root()
   const settings = resolveSettings(config, {
     where: {
