@@ -1,22 +1,34 @@
 import { expect, test } from 'claude-code/testing'
+import { ALIAS_SCHEMA } from '../../../../hooks/lib/aliases-schema'
 import {
   ConfigError,
   isOriginAllowed,
   matchProject,
   parseConfig,
-  parseSource,
+  parseRepositoryConfig,
   readConfigPath,
   resolveSettings,
 } from '../../../../hooks/lib/config'
 import { createFakeEngine, userSettingsWithConfig } from '../support/engine'
+import { thrown } from '../support/thrown'
 
-// 指定したラベルの term ソース（設定ファイルに書く形）
-function rawSource(label: string, files: string) {
-  return { label, type: 'term', files, id: 'id', words: ['name'] }
+// 指定した id と paths の term の aliases の要素（設定ファイルに書く形）
+function rawAlias(id: string, path: string) {
+  return {
+    id,
+    type: 'term',
+    paths: [path],
+    fields: { id: 'id', match: ['name'], description: 'description' },
+  }
+}
+
+// 設定ファイルの値を検証して Config にする
+function parse(value: unknown) {
+  return parseConfig(value, ALIAS_SCHEMA)
 }
 
 const WHERE = {
-  configDir: '/home/u/.config/alias-inject',
+  configPath: '/home/u/.config/alias-inject/settings.yaml',
   projectRoot: '/repo/sample',
   repoRoot: '/repo/sample',
   home: '/home/u',
@@ -55,46 +67,46 @@ test('test_read_config_path_when_missing', async () => {
 // 全キーを書いた設定を読む（正常系）
 test('test_parse_config', () => {
   // 準備
+  const termAlias = {
+    id: 'glossary',
+    type: 'term',
+    paths: ['terms/*.yaml'],
+    fields: {
+      id: 'id',
+      match: ['name', 'aliases'],
+      description: 'description',
+      title: 'name',
+      related: 'related',
+      avoid: 'avoid',
+    },
+  }
   const value = {
     global: {
       enabled: false,
-      sources: [
-        {
-          label: '用語',
-          type: 'term',
-          files: 'a/*.yaml',
-          id: 'id',
-          words: ['name', 'aliases'],
-          description: 'description',
-          related: 'related',
-        },
-      ],
+      repositories: [{ config: '../knowledge/dev-docs.yaml' }, { config: '~/old/dev-docs.yaml', enabled: false }],
+      aliases: [termAlias],
       origins: ['user', 'plugin'],
       max_items: 5,
       max_chars: 100,
       exclude: ['x'],
       heading: '見出し',
     },
-    projects: [{ match: 'sample', sources: [rawSource('コマンド', 'docs/*.yaml')] }],
+    projects: [
+      {
+        match: 'sample',
+        repositories: [{ config: 'dev-docs.yaml' }],
+        aliases: [rawAlias('commands', 'docs/*.yaml')],
+      },
+    ],
   }
 
   // 実行
-  const config = parseConfig(value)
+  const config = parse(value)
 
   // 検証
   expect(config.enabled).toBe(false)
-  expect(config.sources).toEqual([
-    {
-      label: '用語',
-      type: 'term',
-      files: ['a/*.yaml'],
-      baseDir: 'config',
-      id: 'id',
-      words: ['name', 'aliases'],
-      description: 'description',
-      related: 'related',
-    },
-  ])
+  expect(config.repositories).toEqual([{ config: '../knowledge/dev-docs.yaml', baseDir: 'config' }])
+  expect(config.aliases).toEqual([termAlias])
   expect(config.origins).toEqual(['user', 'plugin'])
   expect(config.maxItems).toBe(5)
   expect(config.maxChars).toBe(100)
@@ -102,31 +114,57 @@ test('test_parse_config', () => {
   expect(config.heading).toBe('見出し')
   expect(config.projects.length).toBe(1)
   expect(config.projects[0]?.match).toBe('sample')
-  expect(config.projects[0]?.sources[0]?.baseDir).toBe('project')
+  expect(config.projects[0]?.repositories).toEqual([{ config: 'dev-docs.yaml', baseDir: 'project' }])
+  expect(config.projects[0]?.aliases.map((alias) => alias.id)).toEqual(['commands'])
   expect(config.warnings).toEqual([])
 })
 
 // 書かないキーは既定値になる（正常系）
 test('test_parse_config_when_keys_omitted', () => {
   // 実行
-  const config = parseConfig({ global: { sources: [] } })
+  const config = parse({ global: {} })
 
   // 検証
   expect(config.enabled).toBe(true)
+  expect(config.repositories).toEqual([])
+  expect(config.aliases).toEqual([])
   expect(config.origins).toBeNull()
   expect(config.maxItems).toBe(20)
   expect(config.maxChars).toBe(4000)
   expect(config.exclude).toEqual([])
   expect(config.heading).toBe('この発言に出る用語')
   expect(config.projects).toEqual([])
+  expect(config.warnings).toEqual([])
+})
+
+// スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す（正常系）
+test('test_parse_config_when_alias_invalid', () => {
+  // 準備
+  const invalid = { id: 'bad', type: 'memo', paths: ['a.yaml'], fields: {} }
+
+  // 実行
+  const config = parse({
+    global: { aliases: [invalid, rawAlias('good', 'a.yaml')] },
+    projects: [{ match: 'sample', repositories: 'a', aliases: 'b' }],
+  })
+
+  // 検証
+  expect(config.aliases.map((alias) => alias.id)).toEqual(['good'])
+  expect(config.projects[0]?.repositories).toEqual([])
+  expect(config.projects[0]?.aliases).toEqual([])
+  expect(config.warnings.some((warning) => warning.includes('global.aliases[0]'))).toBe(true)
+  expect(config.warnings.some((warning) => warning.includes('repositories'))).toBe(true)
+  expect(
+    config.warnings.some((warning) => !warning.includes('global.aliases[0]') && warning.includes('aliases')),
+  ).toBe(true)
 })
 
 // 空の並び・許す値の無い並びはすべての出所が対象になる（正常系）
 test('test_parse_config_when_origins_empty', () => {
   // 実行
-  const empty = parseConfig({ global: { origins: [] } })
-  const unknownOnly = parseConfig({ global: { origins: ['foo'] } })
-  const mixed = parseConfig({ global: { origins: ['user', 'foo', 'user'] } })
+  const empty = parse({ global: { origins: [] } })
+  const unknownOnly = parse({ global: { origins: ['foo'] } })
+  const mixed = parse({ global: { origins: ['user', 'foo', 'user'] } })
 
   // 検証
   expect(empty.origins).toBeNull()
@@ -142,8 +180,8 @@ test('test_parse_config_when_limit_invalid', () => {
   const invalidItems = [0, -1, 1.5, '10']
 
   // 実行
-  const itemConfigs = invalidItems.map((value) => parseConfig({ global: { max_items: value } }))
-  const charConfig = parseConfig({ global: { max_chars: 0 } })
+  const itemConfigs = invalidItems.map((value) => parse({ global: { max_items: value } }))
+  const charConfig = parse({ global: { max_chars: 0 } })
 
   // 検証
   for (const config of itemConfigs) {
@@ -157,7 +195,7 @@ test('test_parse_config_when_limit_invalid', () => {
 // `match` の無い projects の要素は外し、残した要素は書いたキーだけを持つ（正常系）
 test('test_parse_config_when_project_without_match', () => {
   // 実行
-  const config = parseConfig({
+  const config = parse({
     global: {},
     projects: [{ max_items: 3 }, { match: 'sample', max_items: 5, max_chars: 0 }],
   })
@@ -171,7 +209,8 @@ test('test_parse_config_when_project_without_match', () => {
   expect(project?.heading).toBeUndefined()
   expect(project?.origins).toBeUndefined()
   expect(project?.enabled).toBeUndefined()
-  expect(project?.sources).toEqual([])
+  expect(project?.repositories).toEqual([])
+  expect(project?.aliases).toEqual([])
   expect(project?.exclude).toEqual([])
   expect(config.warnings.some((warning) => warning.includes('match'))).toBe(true)
   expect(config.warnings.some((warning) => warning.includes('max_chars'))).toBe(true)
@@ -179,58 +218,11 @@ test('test_parse_config_when_project_without_match', () => {
 
 // 最上位がマッピングでなければ例外を投げる（異常系）
 test('test_parse_config_when_not_mapping', () => {
-  // 実行・検証
-  expect(() => parseConfig(null)).toThrow(ConfigError)
-  expect(() => parseConfig([])).toThrow(ConfigError)
-  expect(() => parseConfig('text')).toThrow(ConfigError)
-})
-
-// 必須と任意のキーを読む（正常系）
-test('test_parse_source', () => {
-  // 準備
-  const value = {
-    label: '用語',
-    type: 'term',
-    files: 'a/*.yaml',
-    id: 'id',
-    words: ['name', 'aliases'],
-    description: 'description',
-    related: 'related',
-  }
-
   // 実行
-  const result = parseSource(value, 'config')
+  const errors = [null, [], 'text'].map((value) => thrown(() => parse(value)))
 
   // 検証
-  expect(result).toEqual({
-    label: '用語',
-    type: 'term',
-    files: ['a/*.yaml'],
-    baseDir: 'config',
-    id: 'id',
-    words: ['name', 'aliases'],
-    description: 'description',
-    related: 'related',
-  })
-})
-
-// 必須のキーが欠けた要素は、欠けたキーの名前を含む理由を返す（正常系）
-test('test_parse_source_when_required_missing', () => {
-  // 準備
-  const base = { label: '用語', type: 'term', files: 'a/*.yaml', id: 'id', words: ['name'] }
-  const cases: [string, unknown][] = [
-    ['label', { ...base, label: undefined }],
-    ['type', { ...base, type: 'memo' }],
-    ['files', { ...base, files: [] }],
-    ['words', { ...base, words: [] }],
-  ]
-
-  // 実行・検証
-  for (const [key, value] of cases) {
-    const result = parseSource(value, 'config')
-    expect(typeof result).toBe('string')
-    expect(String(result)).toContain(key)
-  }
+  for (const error of errors) expect(error).toBeInstanceOf(ConfigError)
 })
 
 // 絶対パスは同じパスと配下に当たる（正常系）
@@ -253,14 +245,25 @@ test('test_match_project_when_name', () => {
   expect(results).toEqual([true, false])
 })
 
-// 当たった projects のソースだけを後ろに重ねる（正常系）
+// 当たった projects の repositories と aliases だけを後ろに重ねる（正常系）
 test('test_resolve_settings', () => {
   // 準備
-  const config = parseConfig({
-    global: { sources: [rawSource('global', 'g/*.yaml')] },
+  const config = parse({
+    global: {
+      repositories: [{ config: '/repo/g/dev-docs.yaml' }],
+      aliases: [rawAlias('global', 'g/*.yaml')],
+    },
     projects: [
-      { match: 'sample', sources: [rawSource('sample', 's/*.yaml')] },
-      { match: 'other', sources: [rawSource('other', 'o/*.yaml')] },
+      {
+        match: 'sample',
+        repositories: [{ config: '/repo/s/dev-docs.yaml' }],
+        aliases: [rawAlias('sample', 's/*.yaml')],
+      },
+      {
+        match: 'other',
+        repositories: [{ config: '/repo/o/dev-docs.yaml' }],
+        aliases: [rawAlias('other', 'o/*.yaml')],
+      },
     ],
   })
 
@@ -268,29 +271,70 @@ test('test_resolve_settings', () => {
   const settings = resolveSettings(config, { where: WHERE })
 
   // 検証
-  expect(settings.sources.map((source) => source.label)).toEqual(['global', 'sample'])
+  expect(settings.repositories).toEqual(['/repo/g/dev-docs.yaml', '/repo/s/dev-docs.yaml'])
+  expect(settings.aliases.map((alias) => alias.id)).toEqual(['global', 'sample'])
+  expect(settings.aliases.every((alias) => alias.origin === WHERE.configPath)).toBe(true)
+  expect(settings.warnings).toEqual([])
 })
 
 // 相対パスは global では設定ファイルのフォルダ、projects では起動したプロジェクトの直下から解決する（正常系）
-test('test_resolve_settings_when_relative_files', () => {
+test('test_resolve_settings_when_relative_paths', () => {
   // 準備
-  const config = parseConfig({
-    global: { sources: [rawSource('global', 'terms/*.yaml')] },
-    projects: [{ match: 'sample', sources: [rawSource('sample', 'docs/command/*.yaml')] }],
+  const config = parse({
+    global: {
+      repositories: [{ config: '../knowledge/dev-docs.yaml' }],
+      aliases: [rawAlias('global', 'terms/*.yaml')],
+    },
+    projects: [
+      {
+        match: 'sample',
+        repositories: [{ config: 'dev-docs.yaml' }],
+        aliases: [rawAlias('sample', 'docs/command/*.yaml')],
+      },
+    ],
   })
 
   // 実行
   const settings = resolveSettings(config, { where: { ...WHERE, projectRoot: '/repo/sample/wt' } })
 
   // 検証
-  expect(settings.sources[0]?.patterns).toEqual(['/home/u/.config/alias-inject/terms/*.yaml'])
-  expect(settings.sources[1]?.patterns).toEqual(['/repo/sample/wt/docs/command/*.yaml'])
+  expect(settings.repositories).toEqual(['/home/u/.config/knowledge/dev-docs.yaml', '/repo/sample/wt/dev-docs.yaml'])
+  expect(settings.aliases[0]?.patterns).toEqual(['/home/u/.config/alias-inject/terms/*.yaml'])
+  expect(settings.aliases[1]?.patterns).toEqual(['/repo/sample/wt/docs/command/*.yaml'])
+})
+
+// 同じ dev-docs.yaml は 1 つにし、同じ id の aliases の要素は後を外す（正常系）
+test('test_resolve_settings_when_duplicated', () => {
+  // 準備
+  const config = parse({
+    global: {
+      repositories: [{ config: '/repo/knowledge/dev-docs.yaml' }],
+      aliases: [rawAlias('terms', 'g/*.yaml')],
+    },
+    projects: [
+      {
+        match: 'sample',
+        repositories: [{ config: '/repo/sample/../knowledge/dev-docs.yaml' }],
+        aliases: [rawAlias('terms', 's/*.yaml')],
+      },
+    ],
+  })
+
+  // 実行
+  const settings = resolveSettings(config, { where: WHERE })
+
+  // 検証
+  expect(settings.repositories).toEqual(['/repo/knowledge/dev-docs.yaml'])
+  expect(settings.aliases.length).toBe(1)
+  expect(settings.aliases[0]?.patterns).toEqual(['/home/u/.config/alias-inject/g/*.yaml'])
+  expect(settings.warnings.length).toBe(1)
+  expect(settings.warnings[0]).toContain('terms')
 })
 
 // 当たった要素の exclude は追加し、max_items は置き換え、書かないキーは global のままにする（正常系）
 test('test_resolve_settings_when_project_overrides', () => {
   // 準備
-  const config = parseConfig({
+  const config = parse({
     global: { exclude: ['a'], origins: ['user'] },
     projects: [
       { match: 'sample', exclude: ['b'], max_items: 5 },
@@ -326,4 +370,42 @@ test('test_is_origin_allowed_when_origins_null', () => {
 
   // 検証
   expect(results).toEqual([true, true, true])
+})
+
+// `config` を読み、`enabled` を書かない要素は有効になる（正常系）
+test('test_parse_repository_config', () => {
+  // 実行
+  const withoutEnabled = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml' }, 'config')
+  const withEnabled = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml', enabled: true }, 'config')
+
+  // 検証
+  expect(withoutEnabled).toEqual({ config: '../knowledge/dev-docs.yaml', baseDir: 'config' })
+  expect(withEnabled).toEqual({ config: '../knowledge/dev-docs.yaml', baseDir: 'config' })
+})
+
+// `enabled: false` は null を返す（正常系）
+test('test_parse_repository_config_when_disabled', () => {
+  // 実行
+  const result = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml', enabled: false }, 'config')
+
+  // 検証
+  expect(result).toBeNull()
+})
+
+// 誤った要素は、無い・誤ったキーの名前を含む理由を返す（正常系）
+test('test_parse_repository_config_when_invalid', () => {
+  // 準備
+  const cases: [unknown, string | null][] = [
+    ['a', null],
+    [{}, 'config'],
+    [{ config: '' }, 'config'],
+    [{ config: '../knowledge/dev-docs.yaml', enabled: 'no' }, 'enabled'],
+  ]
+
+  // 実行・検証
+  for (const [value, key] of cases) {
+    const result = parseRepositoryConfig(value, 'config')
+    expect(typeof result).toBe('string')
+    if (key !== null) expect(String(result)).toContain(key)
+  }
 })

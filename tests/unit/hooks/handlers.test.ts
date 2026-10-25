@@ -1,35 +1,71 @@
 import { expect, test } from 'claude-code/testing'
 import { COMPACTED_MESSAGE, installWorld, submit, userSettingsWithConfig } from './support/engine'
+import type { LogLine } from './support/engine'
 import { MemoryFs } from './support/memory-fs'
 
-const CONFIG_PATH = '/home/u/.config/alias-inject/settings.yaml'
+const CONFIG_DIR = '/home/u/.config/alias-inject'
+const CONFIG_PATH = `${CONFIG_DIR}/settings.yaml`
+const DEV_DOCS_PATH = '/home/u/knowledge/dev-docs.yaml'
 const SETTINGS = userSettingsWithConfig('~/.config/alias-inject/settings.yaml')
 
-// 設定ファイルと用語の YAML（term-a・term-b）を持つファイル表。設定ファイルの global に足す行を渡せる
-function makeFs(globalExtra: string[] = [], extraSources: string[] = []): MemoryFs {
+// term の aliases の要素の YAML の行。`- id:` を `indent` 個の空白で始める
+function termAliasLines(id: string, paths: string, indent: number): string[] {
+  const pad = ' '.repeat(indent)
+  return [
+    `${pad}- id: ${id}`,
+    `${pad}  type: term`,
+    `${pad}  paths: ['${paths}']`,
+    `${pad}  fields:`,
+    `${pad}    id: id`,
+    `${pad}    match: [name, aliases]`,
+    `${pad}    title: name`,
+    `${pad}    description: description`,
+  ]
+}
+
+type FsOptions = {
+  /** 設定ファイルの `global` に足す行（字下げなし） */
+  globalExtra?: string[]
+  /** 設定ファイルの `global.aliases` に足す行（字下げ込み） */
+  extraAliases?: string[]
+  /** 置くと設定ファイルの `global.repositories` が指す dev-docs.yaml の行 */
+  devDocs?: string[]
+  /** 設定ファイルの `global.aliases` の term の要素の `paths` */
+  termPaths?: string
+}
+
+// 設定ファイルと用語の YAML（term-a・term-b）を持つファイル表
+function makeFs(options: FsOptions = {}): MemoryFs {
   const config = [
     'global:',
-    ...globalExtra.map((line) => `  ${line}`),
-    '  sources:',
-    '    - label: 用語',
-    '      type: term',
-    '      files: terms/*.yaml',
-    '      id: id',
-    '      words: [name, aliases]',
-    '      description: description',
-    ...extraSources.map((line) => `    ${line}`),
+    ...(options.globalExtra ?? []).map((line) => `  ${line}`),
+    ...(options.devDocs === undefined ? [] : ['  repositories:', '    - config: ~/knowledge/dev-docs.yaml']),
+    '  aliases:',
+    ...termAliasLines('terms', options.termPaths ?? 'terms/*.yaml', 4),
+    ...(options.extraAliases ?? []),
   ].join('\n')
-  return new MemoryFs({
+  const fs = new MemoryFs({
     [CONFIG_PATH]: config,
-    '/home/u/.config/alias-inject/terms/term-a.yaml': 'id: term-a\nname: Term-A\naliases: [用語エー]\ndescription: 説明 A\n',
-    '/home/u/.config/alias-inject/terms/term-b.yaml': 'id: term-b\nname: Term-B\ndescription: 説明 B\n',
+    [`${CONFIG_DIR}/terms/term-a.yaml`]: 'id: term-a\nname: Term-A\naliases: [用語エー]\ndescription: 説明 A\n',
+    [`${CONFIG_DIR}/terms/term-b.yaml`]: 'id: term-b\nname: Term-B\ndescription: 説明 B\n',
   })
+  if (options.devDocs !== undefined) fs.write(DEV_DOCS_PATH, options.devDocs.join('\n'))
+  return fs
+}
+
+// 指定したパスとキーを両方含む debug log の行
+function debugLines(logs: LogLine[], path: string, key: string): LogLine[] {
+  return logs.filter((line) => line.to === 'debug' && line.text.includes(path) && line.text.includes(key))
 }
 
 // enabled が false のときはそのまま渡す（正常系）
 test('test_handle_prompt_submit_when_disabled', async ($, on) => {
   // 準備
-  const fs = makeFs(['enabled: false'])
+  const fs = makeFs({
+    globalExtra: ['enabled: false'],
+    devDocs: ['aliases:', ...termAliasLines('repo-terms', 'terms/*.yaml', 2)],
+  })
+  fs.write('/home/u/knowledge/terms/term-c.yaml', 'id: term-c\nname: Term-C\ndescription: 説明 C\n')
   installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
@@ -39,7 +75,7 @@ test('test_handle_prompt_submit_when_disabled', async ($, on) => {
   expect(result.text).toBe('term-a とは')
   expect(result.context ?? []).toEqual([])
   expect(fs.reads).toContain(CONFIG_PATH)
-  expect(fs.reads.filter((path) => path.includes('/terms/'))).toEqual([])
+  expect(fs.reads.filter((path) => path !== CONFIG_PATH)).toEqual([])
 })
 
 // 他のフックが追加した文脈を残して末尾に追加する（正常系）
@@ -56,10 +92,28 @@ test('test_handle_prompt_submit_when_context_given', async ($, on) => {
   expect(result.context?.[1]).toContain('Term-A')
 })
 
-// 外した設定の値は設定ファイルを読んだときだけ debug log に出す（正常系）
+// 外した設定の値と aliases の要素は、読み込みの結果が変わらないうち 1 回だけ debug log に出す（正常系）
 test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   // 準備
-  const fs = makeFs([], ['- label: メモ', '  type: memo', '  files: memo/*.yaml', '  id: id', '  words: [name]'])
+  const memoAlias = [
+    '    - id: memo',
+    '      type: memo',
+    "      paths: ['memo/*.yaml']",
+    '      fields:',
+    '        id: id',
+    '        match: [name]',
+  ]
+  const badAlias = [
+    '  - id: bad',
+    '    type: term',
+    "    paths: ['terms/*.yaml']",
+    '    fields:',
+    '      id: id',
+    '      match: [name]',
+    '      description: description',
+    '      mcp: rule-inject',
+  ]
+  const fs = makeFs({ extraAliases: memoAlias, devDocs: ['aliases:', ...badAlias] })
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
@@ -67,8 +121,8 @@ test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   await submit($, 'term-b とは')
 
   // 検証
-  const warned = world.logs.filter((line) => line.to === 'debug' && line.text.includes('type'))
-  expect(warned.length).toBe(1)
+  expect(debugLines(world.logs, CONFIG_PATH, 'type').length).toBe(1)
+  expect(debugLines(world.logs, DEV_DOCS_PATH, 'mcp').length).toBe(1)
 })
 
 // 圧縮されたら記録を消去する（正常系）
@@ -110,23 +164,12 @@ test('test_handle_session_compact_when_not_compacted', async ($, on) => {
   expect(after.context ?? []).toEqual([])
 })
 
-// ソースの glob が設定ファイルに当たっても、そのソースの他の語の文脈を追加する（正常系）
-test('test_handle_prompt_submit_when_source_matches_config', async ($, on) => {
+// aliases の要素の glob が設定ファイルに当たっても、その要素の他の語の文脈を追加する（正常系）
+test('test_handle_prompt_submit_when_alias_paths_match_config', async ($, on) => {
   // 準備
-  // 設定ファイルと同じフォルダに term-a.yaml を置き、files: '*.yaml' が設定ファイル自身にも当たるようにする
-  const config = [
-    'global:',
-    '  sources:',
-    '    - label: 用語',
-    '      type: term',
-    "      files: '*.yaml'",
-    '      id: id',
-    '      words: [name]',
-  ].join('\n')
-  const fs = new MemoryFs({
-    [CONFIG_PATH]: config,
-    '/home/u/.config/alias-inject/term-a.yaml': 'id: term-a\nname: Term-A\n',
-  })
+  // 設定ファイルと同じフォルダに term-a.yaml を置き、paths: '*.yaml' が設定ファイル自身にも当たるようにする
+  const fs = makeFs({ termPaths: '*.yaml' })
+  fs.write(`${CONFIG_DIR}/term-a.yaml`, 'id: term-a\nname: Term-A\n')
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行

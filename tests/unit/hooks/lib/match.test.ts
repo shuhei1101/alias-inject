@@ -1,10 +1,10 @@
 import { expect, test } from 'claude-code/testing'
 import { findHits, normalize } from '../../../../hooks/lib/match'
-import type { Entry } from '../../../../hooks/lib/source'
+import type { Entry } from '../../../../hooks/lib/entry'
 
 // テスト用の語。照合に使う `keys` は正規化済みで渡す
 function makeEntry(id: string, word: string, keys: string[], itemIndex = 0): Entry {
-  return { sourceIndex: 0, itemIndex, label: '用語', id, word, keys, fields: [] }
+  return { aliasIndex: 0, itemIndex, origin: '/a/dev-docs.yaml', aliasId: 'terms', type: 'term', id, word, keys, fields: [] }
 }
 
 // 全角・大文字・前後の空白をそろえる（正常系）
