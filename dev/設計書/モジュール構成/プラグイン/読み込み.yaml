@@ -273,10 +273,10 @@ functions:
         passing: keyword
         description: 読んだ文字列を値に変える関数。結果をキャッシュする
       - name: kind
-        type: "'config' | 'schema' | 'repository' | 'alias'"
+        type: "'config' | 'repository' | 'alias'"
         required: true
         passing: keyword
-        description: 読み込みの種類（設定ファイル・スキーマ・`dev-docs.yaml`・`aliases` の要素が指す YAML）。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
+        description: 読み込みの種類（設定ファイル・`dev-docs.yaml`・`aliases` の要素が指す YAML）。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
     returns:
       type: Promise<T>
       description: 変換した値

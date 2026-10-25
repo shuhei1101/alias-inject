@@ -15,7 +15,9 @@ directory: |-
     lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録（各分類の設計書）
     vendor/              同梱する外部ライブラリ（js-yaml）
   schemas/
-    aliases.schema.yaml  aliases の共通のスキーマ（スキーマの読み込みが `$.plugin.root` から読む）
+    aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
+  scripts/
+    gen-aliases-schema.mjs  hooks/lib/aliases-schema.ts の生成・一致の確認（スキーマの設計書）
   types/
     index.d.ts           $.state の型の契約（PluginState）
   tests/
@@ -134,7 +136,7 @@ functions:
         case: 正常
         summary: enabled が false のときはそのまま渡す
         condition: 設定ファイルの `global.enabled` が false、入力「term-a とは」
-        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表（`{plugin.root}/schemas/aliases.schema.yaml` にリポジトリのスキーマを含む）から応答し、`mock.env` で `HOME` を渡す
+        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す
         expected: 返る `context` が受け取ったままで、`dev-docs.yaml` と YAML の `fs.read` が呼ばれていない
       - name: test_handle_prompt_submit_when_context_given
         case: 正常
@@ -154,12 +156,6 @@ functions:
         condition: "設定ファイルの `global.aliases` に `paths: ['*.yaml']` の term の要素、同じフォルダに term-a.yaml、入力「term-a とは」"
         mock: 同上
         expected: 返る `context` の末尾が term-a の文脈で、`YAML を読めません` の debug log が出ない
-      - name: test_handle_prompt_submit_when_schema_unreadable
-        case: 正常
-        summary: スキーマが読めなければ何も追加せずに渡す
-        condition: '`{plugin.root}/schemas/aliases.schema.yaml` が無い、入力「term-a とは」'
-        mock: 同上（無いパスの `fs.stat` は例外）
-        expected: 返る `context` が受け取ったままで、`ui.log` に `to` が `debug` でスキーマのパスを含む行が届く
   - name: handleSessionCompact
     title: 圧縮の後の記録の消去
     kind: フック

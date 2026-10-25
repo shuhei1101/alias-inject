@@ -51,7 +51,7 @@ layers:
   - name: 外部疎通テスト
     run_all: 未確定
   - name: lint
-    description: TypeScript の型検査（`npm run typecheck`）と、プラグイン・ hooks モジュールの定義の検証（`claude plugin validate .`）を回す。linter・formatter の設定はプロジェクトに無い。
+    description: TypeScript の型検査（`npm run typecheck`）と、プラグイン・ hooks モジュールの定義の検証（`claude plugin validate .`）と、同梱のスキーマが `schemas/aliases.schema.yaml` と一致するかの確認（`node scripts/gen-aliases-schema.mjs --check`）を回す。linter・formatter の設定はプロジェクトに無い。
     prerequisites:
       - '`npm ci` 済みで、`package.json` の script `typecheck` と `tsconfig.json` がある'
       - '`.claude-plugin/types/` が書き出されている（信頼済みのフォルダから `claude --plugin-dir {worktree}` の対話のセッションを 1 度起動すると書き出される）'
@@ -61,5 +61,6 @@ layers:
       rc=0
       npm run typecheck || rc=1
       claude plugin validate . || rc=1
+      node scripts/gen-aliases-schema.mjs --check || rc=1
       exit $rc
       ```

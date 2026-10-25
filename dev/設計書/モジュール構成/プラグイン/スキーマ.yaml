@@ -1,10 +1,13 @@
 title: "プラグイン / スキーマ"
-lead: プラグインが同梱する `schemas/aliases.schema.yaml` を読み、`aliases` の要素をそのスキーマで検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、`aliases` の要素を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
 directory: |-
   ```text
   hooks/
     lib/
-      schema.ts          スキーマの読み込みとキーワードの確認・値の検証
+      schema.ts          スキーマのキーワードの確認・値の検証
+      aliases-schema.ts  schemas/aliases.schema.yaml から生成したスキーマのオブジェクト（ALIAS_SCHEMA。手で書き換えない）
+  scripts/
+    gen-aliases-schema.mjs  aliases-schema.ts の生成と、YAML との一致の確認（--check）
   tests/
     unit/
       hooks/
@@ -23,12 +26,6 @@ classes:
         type: string
         description: スキーマのパスと理由
 constants:
-  - name: SCHEMA_PATH
-    title: スキーマの置き場所
-    container: hooks/lib/schema.ts
-    usecase: 共通
-    summary: プラグインのフォルダ（`$.plugin.root`）からのスキーマのパス
-    value: '`schemas/aliases.schema.yaml`'
   - name: VALIDATION_KEYWORDS
     title: 検証するキーワード
     container: hooks/lib/schema.ts
@@ -41,50 +38,39 @@ constants:
     usecase: 共通
     summary: 検証に効かない注釈のキーワード
     value: '`$schema`・`title`・`description`・`default`・`examples`'
+  - name: ALIAS_SCHEMA
+    title: 同梱のスキーマ
+    container: hooks/lib/aliases-schema.ts
+    usecase: 共通
+    summary: '`schemas/aliases.schema.yaml` をパースした値。`scripts/gen-aliases-schema.mjs` が生成する'
+    value: '`schemas/aliases.schema.yaml` の中身のオブジェクト（型は `Record<string, unknown>`）'
 functions:
   - name: loadAliasSchema
     title: スキーマの読み込み
     kind: 関数
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: 同梱のスキーマを更新時刻が変わったときだけ読み直し、キーワードを確かめて返す
+    summary: 同梱のスキーマのキーワードを確かめて返す
     scope: public
-    is_async: true
-    args:
-      - name: $
-        type: EngineInterface
-        required: true
-        passing: injected
-        description: '`$.plugin.root` と `$.fs` を使う'
+    is_async: false
     returns:
-      type: Promise<Record<string, unknown>>
-      description: スキーマのルート
+      type: Record<string, unknown>
+      description: スキーマのルート（ALIAS_SCHEMA）
     exceptions:
       - name: SchemaError
-        condition: スキーマが無い・読めない・書式が誤っている・最上位がマッピングでない・解釈しないキーワードを含む
+        condition: ALIAS_SCHEMA が解釈しないキーワードか解けない `$ref` を含む
     process: |-
-      1. `{$.plugin.root}/{SCHEMA_PATH}` を `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `schema`）で読む
-      2. 変換は YAML のパースとキーワードの確認。パースの結果の `ok` が false か、最上位がマッピングでなければ SchemaError を投げる
-      3. `$.fs.stat`・`$.fs.read` の例外は、スキーマのパスと例外のメッセージで SchemaError にして投げる
-      4. スキーマのルートを返す
+      1. ALIAS_SCHEMA をキーワードの確認にかける
+      2. ALIAS_SCHEMA を返す
     callees:
-      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
-      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
       - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[checkKeywords]
     unit_tests:
       - name: test_load_alias_schema
         case: 正常
-        summary: リポジトリの `schemas/aliases.schema.yaml` を読める
-        condition: '`plugin.root` が `/plugin`、`/plugin/schemas/aliases.schema.yaml` にリポジトリの `schemas/aliases.schema.yaml` の中身'
-        mock: テストの `on` で `fs.stat`・`fs.read` をメモリのファイル表から応答する
+        summary: 同梱のスキーマを返す
+        condition: 引数なし
+        mock: なし
         expected: "`items` が `{ $ref: '#/$defs/alias' }` のマッピングを返す"
-      - name: test_load_alias_schema_when_unreadable
-        case: 異常
-        summary: スキーマが無い・書式が誤っていれば例外
-        condition: スキーマのファイルが無い、閉じていない括弧を含む
-        mock: 同上（無いパスの `fs.stat` は例外）
-        expected: どちらも SchemaError で、メッセージにスキーマのパスを含む
-        exception: スキーマが無い・書式が誤っている
   - name: checkKeywords
     title: キーワードの確認
     kind: 関数
@@ -114,7 +100,7 @@ functions:
       - name: test_check_keywords
         case: 正常
         summary: リポジトリのスキーマは例外にならない
-        condition: リポジトリの `schemas/aliases.schema.yaml` をパースした値
+        condition: ALIAS_SCHEMA
         mock: なし
         expected: 例外にならない
       - name: test_check_keywords_when_unsupported
@@ -176,7 +162,7 @@ functions:
       - name: test_validate_schema
         case: 正常
         summary: スキーマに合う要素は空を返す
-        condition: リポジトリのスキーマで、`type` が term・doc・command・url の要素をそれぞれ書いた値
+        condition: ALIAS_SCHEMAで、`type` が term・doc・command・url の要素をそれぞれ書いた値
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing
@@ -203,3 +189,33 @@ functions:
         condition: '`allOf` の `if` が `type: { const: url }`、`then` が `required: [url]` のスキーマで、`type: term` の値'
         mock: なし
         expected: 空
+  - name: generateAliasSchema
+    title: 同梱のスキーマの生成
+    kind: 関数
+    container: scripts/gen-aliases-schema.mjs
+    usecase: 共通
+    summary: '`schemas/aliases.schema.yaml` から `hooks/lib/aliases-schema.ts` を書き出す。`--check` では書き出さずに一致を確かめる'
+    scope: public
+    is_async: false
+    side_effects: '`--check` が無いとき `hooks/lib/aliases-schema.ts` を書き換える'
+    args:
+      - name: check
+        type: boolean
+        required: true
+        passing: positional
+        description: コマンドラインに `--check` があるか
+    args_example: |-
+      ```bash
+      node scripts/gen-aliases-schema.mjs          # 書き出す
+      node scripts/gen-aliases-schema.mjs --check  # 一致を確かめる
+      ```
+    returns:
+      type: void
+      description: 終了コードで結果を返す（一致・書き出し済みは 0、`--check` で一致しなければ 1）
+    process: |-
+      1. `node:fs` でリポジトリの直下からの `schemas/aliases.schema.yaml` を読み、`hooks/vendor/js-yaml.mjs` の `load` でパースする
+      2. 先頭の行 `// schemas/aliases.schema.yaml から scripts/gen-aliases-schema.mjs が生成する。直接編集しない` と、`export const ALIAS_SCHEMA: Record<string, unknown> = {値の JSON.stringify（字下げ 2）}` を並べた本文を組む
+      3. `check` が false なら本文を `hooks/lib/aliases-schema.ts` に書く
+      4. `check` が true なら `hooks/lib/aliases-schema.ts` と本文を比べ、違うか無ければ `hooks/lib/aliases-schema.ts が schemas/aliases.schema.yaml と一致しません。node scripts/gen-aliases-schema.mjs を実行してください` を標準エラーに出して終了コード 1 で終える
+    notes:
+      テスト: '`claude plugin test` の環境は `node:fs` を import できないため単体テストを持たない。lint の `--check` が一致を確かめる'

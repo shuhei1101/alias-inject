@@ -55,7 +55,15 @@ categories:
     refs:
       - dev/設計書/テスト/テスト実行方法#layers[lint]
   - name: ビルド・生成
-    commands: 未確定
+    commands: |-
+      1. `schemas/aliases.schema.yaml` を書き換えた後に、hooks モジュールが import する `hooks/lib/aliases-schema.ts` を生成し直す
+
+      ```bash
+      node scripts/gen-aliases-schema.mjs
+      ```
+    verification:
+      state: 未確認
+      detail: '`scripts/gen-aliases-schema.mjs` は実装の工程で作る。実装の担当が走らせて確かめる'
   - name: 取り込み前の検査
     commands: 未確定
   - name: 管理作業
