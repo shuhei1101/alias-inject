@@ -42,3 +42,4 @@ preconditions:
   - 設定ファイルの `global.sources` が照合する用語の YAML を指している
 success_guarantee: 入力の文は変わらず、初めて出た語の引用の文脈だけがモデルに追加される。
 minimal_guarantee: 設定ファイルや YAML が読めないときも、入力はそのままモデルに届く。
+test_file: tests/e2e/複合ユースケース/test_session_flow.py

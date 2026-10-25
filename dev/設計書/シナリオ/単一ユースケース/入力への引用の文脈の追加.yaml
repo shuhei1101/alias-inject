@@ -146,3 +146,4 @@ preconditions:
   - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
 success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下にソースの `label` ごとに並んでモデルに届き、入力の文は変わらない。
 minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
+test_file: tests/e2e/単一ユースケース/test_prompt_context.py

@@ -59,3 +59,4 @@ preconditions:
   - 同じセッションで term-a の文脈を追加済み
 success_guarantee: 圧縮か `/clear` の後の最初の term-a を含む入力で、term-a の文脈がもう一度追加される。
 minimal_guarantee: 記録を消す処理が失敗しても、圧縮と `/clear` は止まらない。
+test_file: tests/e2e/単一ユースケース/test_reset_record.py
