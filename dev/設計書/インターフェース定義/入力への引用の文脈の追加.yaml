@@ -376,3 +376,4 @@ refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#
   - dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し#
   - dev/設計書/設定/プラグイン#
+test_file: tests/integration/hooks/prompt-submit.test.ts

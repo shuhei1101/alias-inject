@@ -10,7 +10,14 @@ layers:
       claude plugin test .
       ```
   - name: 結合テスト（バック）
-    run_all: 未確定
+    run_all: |-
+      ```bash
+      claude plugin test .
+      ```
+    description: '`tests/integration/` の下のテストを、単体テストと同じ `claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で、`on` に応答を登録して `$.prompt.submit`・`$.session.compact`・`$.session.end` を流す。ファイルの指定はできないため、`tests/unit/` の単体テストも同時に流れる。'
+    prerequisites:
+      - Claude Code 2.1.310 以上（`claude` が PATH にある）
+      - '`hooks/hooks.json` が `modules` で入口を指している'
   - name: E2E テスト
     run_all: 未確定
   - name: 非機能要件テスト
