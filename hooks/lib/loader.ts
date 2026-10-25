@@ -7,12 +7,15 @@ export type FileStamp = {
   mtimeMs: number
 }
 
+/** 変わったファイルの読み込みの種類。キャッシュのキーに含める */
+export type ReadKind = 'config' | 'source'
+
 /** パースした値か、読めなかった理由 */
 export type YamlResult = { ok: true; value: unknown } | { ok: false; reason: string }
 
 type CacheEntry = { mtimeMs: number; value: unknown }
 
-// 変わったファイルの読み込みのキャッシュ（パス → 更新時刻と変換した値）
+// 変わったファイルの読み込みのキャッシュ（種類とパス → 更新時刻と変換した値）
 const cache = new Map<string, CacheEntry>()
 
 const BOM = '﻿'
@@ -147,13 +150,15 @@ export async function expandFiles($: EngineInterface, { pattern }: { pattern: st
 /** 更新時刻が前回と同じファイルは読まずに前回の値を返し、変わったときだけ読んで変換する */
 export async function readIfChanged<T>(
   $: EngineInterface,
-  { file, convert }: { file: FileStamp; convert: (text: string) => T },
+  { file, convert, kind }: { file: FileStamp; convert: (text: string) => T; kind: ReadKind },
 ): Promise<T> {
-  const cached = cache.get(file.path)
+  // 変換の違う読み込みが同じファイルの値を共有しないよう、種類をキーに含める
+  const key = `${kind}\u0000${file.path}`
+  const cached = cache.get(key)
   if (cached !== undefined && cached.mtimeMs === file.mtimeMs) return cached.value as T
   const text = await $.fs.read(file.path)
   const value = convert(text)
-  cache.set(file.path, { mtimeMs: file.mtimeMs, value })
+  cache.set(key, { mtimeMs: file.mtimeMs, value })
   return value
 }
 

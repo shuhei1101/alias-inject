@@ -139,7 +139,7 @@ export async function loadSourceEntries(
   for (const file of files) {
     let result: YamlResult
     try {
-      result = await readIfChanged($, { file, convert: parseYaml })
+      result = await readIfChanged($, { file, convert: parseYaml, kind: 'source' })
     } catch (error) {
       throw new SourceError(file.path, error instanceof Error ? error.message : String(error))
     }

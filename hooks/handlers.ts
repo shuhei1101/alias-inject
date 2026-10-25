@@ -36,6 +36,7 @@ async function loadConfig($: EngineInterface, configPath: string): Promise<Confi
   const stat = await $.fs.stat(configPath)
   const loaded = await readIfChanged($, {
     file: { path: configPath, mtimeMs: stat.mtimeMs },
+    kind: 'config',
     convert: (text) => {
       const parsed = parseYaml(text)
       if (!parsed.ok) throw new ConfigError(parsed.reason)
