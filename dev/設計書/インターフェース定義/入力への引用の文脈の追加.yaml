@@ -370,7 +370,7 @@ constraints:
   - item: 読み直し
     constraint: 入力の送信ごとに、照合の前に設定ファイルと `files` に当たる YAML の `mtimeMs` とフォルダの一覧を確かめ、変わったものだけ読み直す
   - item: 出所
-    constraint: '`origins` に対応づかない出所の入力には追加しない'
+    constraint: '`origins` を書かないときはすべての出所の入力に追加する。書いたときは、`origins` に対応づかない出所の入力には追加しない'
     decided_by: dev/設計書/設定/プラグイン#settings[global.origins]
 refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#

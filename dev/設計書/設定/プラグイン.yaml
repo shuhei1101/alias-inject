@@ -112,8 +112,8 @@ settings:
     title: 対象にする入力の出所
     file: ~/.config/alias-inject/settings.yaml
     type: ('user' | 'plugin')[]
-    default: '[user, plugin]'
-    description: 文脈を追加する入力の出所。`user` は利用者の入力（`e.origin.kind` が `composer`・`bridge`・`sdk`。tmux から送る ai-monitor の指示を含む）、`plugin` はプラグインが送った入力（`plugin`）。それ以外の出所（通知・他のセッション・予約の実行など）には追加しない
+    default: 'なし（すべての出所が対象）'
+    description: 文脈を追加する入力の出所。書かないときは、すべての出所（通知・他のセッション・予約の実行などを含む）の入力が対象。書いたときは、挙げた出所の入力だけが対象になる。`user` は利用者の入力（`e.origin.kind` が `composer`・`bridge`・`sdk`。tmux から送る ai-monitor の指示を含む）、`plugin` はプラグインが送った入力（`plugin`）
     allowed: user / plugin。それ以外の値は無視する
   - key: global.max_items
     title: 1 回に追加する語の上限
