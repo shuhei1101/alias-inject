@@ -1,0 +1,1 @@
+# 設定を aliases[] の共通の構造に合わせ、リポジトリの dev-docs.yaml の aliases[] を読む
