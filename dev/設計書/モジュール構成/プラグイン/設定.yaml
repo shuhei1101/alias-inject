@@ -115,8 +115,8 @@ data_models:
         type: string
         description: 文脈の先頭の見出し。既定 `この発言に出る用語`
       - name: projects
-        type: '{ match: string; sources: SourceConfig[] }[]'
-        description: '`projects` のうち `match` を持つ要素'
+        type: ProjectConfig[]
+        description: '`projects` のうち `match` を持つ要素（設定ファイルの順）'
       - name: warnings
         type: string[]
         description: 外したソース・要素と無視した値の理由。呼び出し元が debug log に出す
@@ -125,7 +125,7 @@ data_models:
     container: hooks/lib/config.ts
     usecase: 共通
     role: DTO
-    summary: 起動したプロジェクトに当たる `projects` のソースを重ね、`files` を絶対パスにした設定
+    summary: 起動したプロジェクトに当たる `projects` の要素を重ね、`files` を絶対パスにした設定
     properties:
       - name: enabled
         type: boolean
@@ -148,6 +148,37 @@ data_models:
       - name: heading
         type: string
         description: Config の heading
+  - name: ProjectConfig
+    title: プロジェクトの設定
+    container: hooks/lib/config.ts
+    usecase: 共通
+    role: DTO
+    summary: 検証を通った `projects` の 1 要素。書いたキーだけが値を持ち、書かないキー・誤った値は undefined
+    properties:
+      - name: match
+        type: string
+        description: プロジェクトの一致の条件
+      - name: enabled
+        type: boolean | undefined
+        description: 置き換える全体のオンオフ
+      - name: sources
+        type: SourceConfig[]
+        description: 後ろに追加するソース（`baseDir` は `project`）。書かないときは []
+      - name: origins
+        type: OriginKey[] | null | undefined
+        description: 置き換える出所。null はすべての出所が対象（global と同じ規則）、undefined は書いていない
+      - name: maxItems
+        type: number | undefined
+        description: 置き換える語の上限
+      - name: maxChars
+        type: number | undefined
+        description: 置き換える文字数の上限
+      - name: exclude
+        type: string[]
+        description: 後ろに追加する照合しない語。書かないときは []
+      - name: heading
+        type: string | undefined
+        description: 置き換える見出し
 functions:
   - name: readConfigPath
     title: 設定ファイルのパスの取得
@@ -213,7 +244,8 @@ functions:
       5. `origins` が並びのとき、`user`・`plugin` だけを重複を除いて残す。残りが 0 件、または並びでない・書かないときは null（すべての出所が対象）。無視した値は warnings に入れる
       6. `max_items`・`max_chars` は 1 以上の整数ならその値、それ以外は既定値（書いて誤っているときは warnings に入れる）
       7. `exclude` は文字列の要素だけを残す。`heading` は空でない文字列ならその値、それ以外は既定値
-      8. `projects` の各要素のうち `match` が空でない文字列のものを残し、`sources` を同じく検証する（`baseDir` は `project`）。`match` の無い要素は warnings に入れる
+      8. `projects` の各要素のうち `match` が空でない文字列のものを残し、`match` の無い要素は warnings に入れる
+      9. 残した要素の `global` と同じキーを 3〜7 と同じ規則で検証して ProjectConfig にする（`sources` の `baseDir` は `project`）。既定値は当てず、書かないキー・誤った値は undefined（`sources`・`exclude` は []）にする。`origins` は書いたときだけ 5 の規則で null か並びにする
     callees:
       - dev/設計書/モジュール構成/プラグイン/設定#functions[parseSource]
     unit_tests:
@@ -243,10 +275,10 @@ functions:
         expected: maxItems が 20、maxChars が 4000 で、warnings に理由が入る
       - name: test_parse_config_when_project_without_match
         case: 正常
-        summary: '`match` の無い projects の要素は外す'
-        condition: '`projects` に `match` の無い要素と `match: sample` の要素'
+        summary: '`match` の無い projects の要素は外し、残した要素は書いたキーだけを持つ'
+        condition: '`projects` に `match` の無い要素と、`match: sample`・`max_items: 5`・`max_chars: 0` の要素'
         mock: なし
-        expected: 'projects が `match: sample` の 1 件で、warnings に理由が入る'
+        expected: 'projects が `match: sample` の 1 件で、maxItems が 5、maxChars・heading・origins・enabled が undefined、sources・exclude が []。warnings に `match` の無い要素と `max_chars` の理由が入る'
       - name: test_parse_config_when_not_mapping
         case: 異常
         summary: 最上位がマッピングでなければ例外
@@ -344,7 +376,7 @@ functions:
     kind: 関数
     container: hooks/lib/config.ts
     usecase: 共通
-    summary: 当たった projects のソースを global に重ね、`files` を絶対パスに解決する
+    summary: 当たった projects の要素を global に重ね、`files` を絶対パスに解決する
     scope: public
     is_async: false
     args:
@@ -363,9 +395,9 @@ functions:
       description: 実効の設定
     process: |-
       1. `config.projects` のうちプロジェクトの一致の判定で当たる要素を、設定ファイルの順に選ぶ
-      2. global のソースの後ろに、選んだ要素のソースを順に並べる
+      2. global の値から始め、選んだ要素を順に重ねる。`sources`・`exclude` は後ろに追加し、それ以外は undefined でない値で置き換える（`origins` の null も置き換える）
       3. 各ソースの `files` を、`baseDir` が `config` なら `configDir`、`project` なら `projectRoot` を基準にパスの解決に通して `patterns` に入れる
-      4. 他の値は Config のまま入れる
+      4. 重ねた値を返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/設定#functions[matchProject]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[resolvePath]
@@ -382,6 +414,12 @@ functions:
         condition: 'global の `files: terms/*.yaml`、sample の `files: docs/command/*.yaml`、`configDir` が `/home/u/.config/alias-inject`、`projectRoot` が `/repo/sample/wt`'
         mock: なし
         expected: '`/home/u/.config/alias-inject/terms/*.yaml` と `/repo/sample/wt/docs/command/*.yaml`'
+      - name: test_resolve_settings_when_project_overrides
+        case: 正常
+        summary: 当たった要素の exclude は追加し、max_items は置き換え、書かないキーは global のまま
+        condition: global の exclude が `[a]`・maxItems が 20・heading が既定、当たる 2 要素が順に exclude `[b]`・maxItems 5 と maxItems 3・origins null（global は `['user']`）
+        mock: なし
+        expected: exclude が `[a, b]`、maxItems が 3、origins が null、heading が既定
   - name: isOriginAllowed
     title: 出所の判定
     kind: 関数

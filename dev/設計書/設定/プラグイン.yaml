@@ -158,6 +158,6 @@ settings:
     type: object[]
     required: false
     default: '[]'
-    description: '`match` が当たったときに `global.sources` の後ろへ重ねるソース。要素のキーは `global.sources[]` と同じ。`projects` の要素は `match` と `sources` だけを読む'
+    description: '`match` が当たったときに `global.sources` の後ろへ重ねるソース。要素のキーは `global.sources[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]
