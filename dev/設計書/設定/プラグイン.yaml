@@ -5,8 +5,11 @@ files:
     manages: 設定ファイルのパス（`env` の `ALIAS_INJECT_CONFIG`）
     notes: 'ユーザースコープだけを読む（`$.settings.read({ source: "user" })`）。プロジェクトスコープの `env` は読まない'
   - file: ~/.config/alias-inject/settings.yaml
-    manages: 照合するソース・対象の出所・上限・見出し
+    manages: 読むリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
     notes: 置き場所は `ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
+  - file: dev-docs.yaml
+    manages: リポジトリのエイリアス（`aliases` だけを読む）
+    notes: 読むリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`aliases` 以外のキーは読まない
   - file: settings.sample.yaml
     manages: 設定ファイルの全キーのサンプル（実値を入れない）
     notes: プラグインの直下に置く
@@ -28,91 +31,141 @@ settings:
     default: 'true'
     description: false のとき何も追加しない
     reload: immediate
-  - key: global.sources[].label
-    title: ソースの見出し
+  - key: global.repositories
+    title: 読むリポジトリ
+    file: ~/.config/alias-inject/settings.yaml
+    type: object[]
+    required: false
+    default: '[]'
+    description: 読むリポジトリの `dev-docs.yaml` の並び。各リポジトリの `aliases` が照合の定義になる。読めない `dev-docs.yaml` は、そのリポジトリの定義だけを照合から外し、理由を debug log に出す
+    notes:
+      読み直し: '`dev-docs.yaml` も、更新時刻が変わったときだけ読み直すので、書き換えは次の入力から効く'
+  - key: global.repositories[].config
+    title: 読む dev-docs.yaml
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: true
-    description: 文脈の中でこのソースの語を並べるセクションの見出し
-    missing: そのソースを照合から外す
-  - key: global.sources[].type
+    description: 読むリポジトリの `dev-docs.yaml` のパス。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
+    missing: その要素を読まない
+  - key: global.repositories[].enabled
+    title: リポジトリの有効
+    file: ~/.config/alias-inject/settings.yaml
+    type: boolean
+    default: 'true'
+    description: false のとき、このリポジトリの `dev-docs.yaml` を読まない
+  - key: global.aliases
+    title: 端末のエイリアス
+    file: ~/.config/alias-inject/settings.yaml
+    type: object[]
+    required: false
+    default: '[]'
+    description: 端末だけのエイリアスの並び。要素は `schemas/aliases.schema.yaml` の `aliases[]` の要素と同じ構造で、各要素をそのスキーマで検証する。スキーマに合わない要素と、先の要素と `id` が重なる要素は、照合から外して理由を debug log に出す
+  - key: global.aliases[].id
+    title: 要素の ID
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: true
+    description: 要素の主キー。1 つの設定の中で一意にする
+    missing: その要素を照合から外す
+  - key: global.aliases[].enabled
+    title: 要素の有効
+    file: ~/.config/alias-inject/settings.yaml
+    type: boolean
+    default: 'true'
+    description: false のとき、この要素を使わない
+  - key: global.aliases[].type
     title: 引用の種類
     file: ~/.config/alias-inject/settings.yaml
     type: "'term' | 'doc' | 'command' | 'url'"
     required: true
-    description: 追加する列と書式を決める。term は `description`・`related`、doc は `description`・`mcp`、command は `command`・`cwd`・`description`、url は `url`・`description` を追加する
-    missing: そのソースを照合から外す
-    allowed: term / doc / command / url。それ以外の値はそのソースを照合から外す
-  - key: global.sources[].files
-    title: 照合する YAML
+    description: 追加する列とセクションを決める。term は `description`・`related`、doc は `description`、command は `command`・`cwd`・`description`、url は `url`・`description` を追加する。セクションの見出しは term が `用語`、doc が `文書`、command が `コマンド`、url が `URL`
+    missing: その要素を照合から外す
+    allowed: term / doc / command / url。それ以外の値はその要素を照合から外す
+  - key: global.aliases[].paths
+    title: 読む YAML
     file: ~/.config/alias-inject/settings.yaml
-    type: string | string[]
+    type: string[]
     required: true
-    description: 照合する YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
-    missing: そのソースを照合から外す
+    description: 読む YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。ファイルと glob を混ぜてよい。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する。`dev-docs.yaml` の `aliases` では、その `dev-docs.yaml` のフォルダ（リポジトリの直下）から解決する
+    missing: その要素を照合から外す
+    allowed: 1 件以上
     notes:
-      YAML の中身: 1 ファイルに 1 項目（マッピング）か、複数の項目（マッピングの並び）を書く
-  - key: global.sources[].id
+      YAML の中身: 1 ファイルに 1 項目（マッピング）か、複数の項目（マッピングの並び）を記載する
+  - key: global.aliases[].fields
+    title: 列の対応
+    file: ~/.config/alias-inject/settings.yaml
+    type: object
+    required: true
+    description: 引用に使う値を、読む YAML のどの列から取るかの対応。キーは `type` ごとに決まり、値は読む YAML の列の名前。`type` ごとのキーは `schemas/aliases.schema.yaml` のとおり
+    missing: その要素を照合から外す
+  - key: global.aliases[].fields.id
     title: ID の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: true
-    description: 項目の ID を持つ列の名前
-    missing: そのソースを照合から外す
-  - key: global.sources[].words
-    title: 照合する列
+    description: 項目の ID を持つ列の名前。どの `type` でも必須
+    missing: その要素を照合から外す
+  - key: global.aliases[].fields.match
+    title: 照合する語の列
     file: ~/.config/alias-inject/settings.yaml
     type: string[]
     required: true
-    description: 照合する語（用語・エイリアス）を持つ列の名前。列の値が並びなら要素ごとに照合する。最初の列の値を、文脈に出す語と、`related` の参照先の名前に使う
-    missing: そのソースを照合から外す
-  - key: global.sources[].description
+    description: 照合する語（用語・エイリアス）を持つ列の名前。列の値が並びなら要素ごとに照合する。どの `type` でも必須。`title` が無いとき、最初の列の値を、文脈に出す語と、`related` の参照先の名前に使う
+    missing: その要素を照合から外す
+    allowed: 1 件以上
+  - key: global.aliases[].fields.title
+    title: タイトルの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: 文脈に出す語を持つ列の名前
+    missing: '`fields.match` の最初の列の値を、文脈に出す語にする'
+  - key: global.aliases[].fields.description
     title: 説明の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: 項目の説明を持つ列の名前
-    missing: 説明を追加しない
-  - key: global.sources[].related
+    description: 項目の説明を持つ列の名前。term・doc では必須、command・url では任意
+    missing: term・doc ではその要素を照合から外す。command・url では説明を追加しない
+  - key: global.aliases[].fields.related
     title: 関連する文書の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: type が term のとき、関連する文書の並び（各要素の `to` が ID）を持つ列の名前。ID と、同じソースでその ID を持つ項目の名前を追加する
+    description: type が term のとき、関連する文書の並び（各要素の `to` が ID）を持つ列の名前。ID と、同じ要素でその ID を持つ項目の名前を追加する
     missing: 関連する文書を追加しない
-  - key: global.sources[].mcp
-    title: 引く MCP
+  - key: global.aliases[].fields.avoid
+    title: 避ける語の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: type が doc のとき、文書を詳しく引く MCP サーバーの名前（列の名前ではなく値そのもの）
-    missing: MCP を追加しない
-  - key: global.sources[].command
+    description: type が term のとき、避ける語を持つ列の名前。スキーマが受け付けるが、文脈には使わない
+  - key: global.aliases[].fields.command
     title: コマンドの列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: type が command のとき、コマンドを持つ列の名前
-    missing: コマンドを追加しない
-  - key: global.sources[].cwd
+    description: type が command のとき、コマンドを持つ列の名前。command では必須
+    missing: command ではその要素を照合から外す
+  - key: global.aliases[].fields.cwd
     title: 実行する場所の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
     description: type が command のとき、コマンドを実行するフォルダを持つ列の名前
     missing: 実行する場所を追加しない
-  - key: global.sources[].url
+  - key: global.aliases[].fields.url
     title: URL の列
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: type が url のとき、URL を持つ列の名前
-    missing: URL を追加しない
+    description: type が url のとき、URL を持つ列の名前。url では必須
+    missing: url ではその要素を照合から外す
   - key: global.origins
     title: 対象にする入力の出所
     file: ~/.config/alias-inject/settings.yaml
     type: ('user' | 'plugin')[]
-    default: 'なし（すべての出所が対象）'
+    default: なし（すべての出所が対象）
     description: 文脈を追加する入力の出所。書かないときは、すべての出所（通知・他のセッション・予約の実行などを含む）の入力が対象。書いたときは、挙げた出所の入力だけが対象になる。`user` は利用者の入力（`e.origin.kind` が `composer`・`bridge`・`sdk`。tmux から送る ai-monitor の指示を含む）、`plugin` はプラグインが送った入力（`plugin`）
     allowed: user / plugin。それ以外の値は無視する。空の並びや、許す値が 1 つも無い並びは書かないときと同じ（すべての出所が対象）
   - key: global.max_items
@@ -151,13 +204,20 @@ settings:
     description: 絶対パスかプロジェクト名。絶対パスは起動したプロジェクトの直下がそのパスかその配下のとき、プロジェクト名はリポジトリのフォルダ名が一致したときに当たる。worktree は本体のパス・フォルダ名で見る
     missing: その要素を使わない
     notes:
-      重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`sources`・`exclude` は後ろに追加し、それ以外は置き換える'
-  - key: projects[].sources
-    title: プロジェクトのソース
+      重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`repositories`・`aliases`・`exclude` は後ろに追加し、それ以外は置き換える'
+  - key: projects[].repositories
+    title: プロジェクトの読むリポジトリ
     file: ~/.config/alias-inject/settings.yaml
     type: object[]
     required: false
     default: '[]'
-    description: '`match` が当たったときに `global.sources` の後ろへ重ねるソース。要素のキーは `global.sources[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
+    description: '`match` が当たったときに `global.repositories` の後ろへ重ねる読むリポジトリ。要素のキーは `global.repositories[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
+  - key: projects[].aliases
+    title: プロジェクトのエイリアス
+    file: ~/.config/alias-inject/settings.yaml
+    type: object[]
+    required: false
+    default: '[]'
+    description: '`match` が当たったときに `global.aliases` の後ろへ重ねるエイリアス。要素のキーは `global.aliases[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]
