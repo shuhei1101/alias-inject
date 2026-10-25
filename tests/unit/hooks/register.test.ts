@@ -1,17 +1,15 @@
 import { expect, test } from 'claude-code/testing'
+import { installWorld, submit } from './support/engine'
+import { MemoryFs } from './support/memory-fs'
 
-// 入口を読み込んでも入力の送信が変わらずに届く（正常系）
+// 設定ファイルのパスが無いとき、入力の送信が変わらずに届く（正常系）
 test('test_register', async ($, on) => {
   // 準備
-  // エンジンの代わりに、届いた text と context をそのまま返す
-  on('prompt.submit', (_, e) => ({ text: e.text, context: e.context }))
+  // エンジンの代わりに、設定ファイルのパスを持たない settings と、届いた text と context をそのまま返す処理を登録する
+  installWorld(on, { fs: new MemoryFs(), settings: {} })
 
   // 実行
-  const result = await $.prompt.submit({
-    text: 'hello',
-    wait: false,
-    origin: { kind: 'composer' },
-  })
+  const result = await submit($, 'hello')
 
   // 検証
   expect(result.text).toBe('hello')
