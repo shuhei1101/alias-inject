@@ -4,6 +4,51 @@ global:
   # false のとき、何も追加しない
   enabled: true
 
+  # 読むリポジトリの dev-docs.yaml。その aliases が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  repositories:
+    - config: ~/repo/knowledge/dev-docs.yaml
+    - config: ../old-notes/dev-docs.yaml
+      # false のとき、このリポジトリを読まない
+      enabled: false
+
+  # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml の aliases[] の要素と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
+  aliases:
+    - id: terms
+      type: term
+      paths: [terms/*.yaml]
+      fields:
+        id: id
+        match: [name, aliases]
+        description: description
+        title: name
+        related: related
+    - id: docs
+      type: doc
+      paths: [docs/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        description: description
+    - id: commands
+      type: command
+      paths: [commands/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        command: command
+        cwd: cwd
+        description: description
+    - id: urls
+      type: url
+      # false のとき、この要素を使わない
+      enabled: true
+      paths: [urls/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        url: url
+        description: description
+
   # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
   origins: [user, plugin]
 
@@ -19,47 +64,18 @@ global:
   # 文脈の先頭の見出し
   heading: この発言に出る用語
 
-  # 照合するソース。files の相対パスは、この設定ファイルのフォルダから解決する
-  sources:
-    - label: 用語
-      type: term
-      files: terms/*.yaml
-      id: id
-      words: [name, aliases]
-      description: description
-      related: related
-    - label: 文書
-      type: doc
-      files: docs/*.yaml
-      id: id
-      words: [name]
-      description: description
-      mcp: document-server
-    - label: コマンド
-      type: command
-      files: commands/*.yaml
-      id: id
-      words: [name]
-      command: command
-      cwd: cwd
-      description: description
-    - label: URL
-      type: url
-      files: urls/*.yaml
-      id: id
-      words: [name]
-      url: url
-      description: description
-
 # match が当たったプロジェクトの要素だけを、並びの順に global へ重ねる
 projects:
-  # match は絶対パスかプロジェクト名。files の相対パスは、起動したプロジェクトの直下から解決する
+  # match は絶対パスかプロジェクト名。repositories・aliases の相対パスは、起動したプロジェクトの直下から解決する
   - match: sample-project
     max_items: 10
-    sources:
-      - label: プロジェクトのコマンド
+    repositories:
+      - config: dev-docs.yaml
+    aliases:
+      - id: project-commands
         type: command
-        files: docs/command/*.yaml
-        id: id
-        words: [name]
-        command: command
+        paths: [docs/command/*.yaml]
+        fields:
+          id: id
+          match: [name]
+          command: command

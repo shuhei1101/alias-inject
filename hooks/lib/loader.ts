@@ -8,7 +8,7 @@ export type FileStamp = {
 }
 
 /** 変わったファイルの読み込みの種類。キャッシュのキーに含める */
-export type ReadKind = 'config' | 'source'
+export type ReadKind = 'config' | 'repository' | 'alias'
 
 /** パースした値か、読めなかった理由 */
 export type YamlResult = { ok: true; value: unknown } | { ok: false; reason: string }
@@ -35,10 +35,22 @@ export function expandHome({ path, home }: { path: string; home: string }): stri
 /** `~` を展開し、相対パスを基準のフォルダからの絶対パスにする */
 export function resolvePath({ path, home, baseDir }: { path: string; home: string; baseDir: string }): string {
   const expanded = expandHome({ path, home })
-  if (expanded.startsWith('/')) return expanded
-  const base = baseDir.replace(/\/+$/, '')
-  const relative = expanded.replace(/^(\.\/)+/, '')
-  return `${base}/${relative}`
+  const joined = expanded.startsWith('/') ? expanded : `${baseDir.replace(/\/+$/, '')}/${expanded}`
+
+  // 空の区切りと `.` を除き、`..` は直前の区切りと一緒に除く（直前が無ければ `..` だけを除く）
+  const segments: string[] = []
+  for (const segment of joined.split('/')) {
+    if (segment === '' || segment === '.') continue
+    if (segment === '..') segments.pop()
+    else segments.push(segment)
+  }
+  return `/${segments.join('/')}`
+}
+
+/** 絶対パスのファイルを置いたフォルダを返す */
+export function parentDir(path: string): string {
+  const index = path.lastIndexOf('/')
+  return index <= 0 ? '/' : path.slice(0, index)
 }
 
 /** ファイル名が `*` を含む glob の 1 区切りに当たるかを判定する */

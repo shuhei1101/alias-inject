@@ -1,4 +1,4 @@
-import type { Entry } from './source'
+import type { Entry } from './entry'
 
 /** 入力に当たった語と、最初に出た位置 */
 export type Hit = {
@@ -33,12 +33,12 @@ export function findHits(text: string, entries: Entry[], exclude: string[]): Hit
     if (best !== undefined) hits.push({ entry, ...best })
   }
 
-  // 位置の昇順、同じ位置なら長い語が先、それも同じなら語の並びの順
+  // 位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順
   return hits.sort(
     (a, b) =>
       a.position - b.position ||
       b.length - a.length ||
-      a.entry.sourceIndex - b.entry.sourceIndex ||
+      a.entry.aliasIndex - b.entry.aliasIndex ||
       a.entry.itemIndex - b.entry.itemIndex,
   )
 }

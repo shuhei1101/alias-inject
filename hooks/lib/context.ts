@@ -1,5 +1,6 @@
+import type { AliasType } from './alias'
+import type { Entry } from './entry'
 import type { Hit } from './match'
-import type { Entry } from './source'
 
 /** 追加する文脈と、記録に入れる語のキー */
 export type Selection = {
@@ -7,22 +8,27 @@ export type Selection = {
   keys: string[]
 }
 
-/** ソースの label と項目の ID の組を 1 つの文字列にする */
-export function entryKey(entry: Entry): string {
-  return `${entry.label}\u0000${entry.id}`
+/** 引用の種類ごとのセクションの見出し。並びがセクションの順 */
+export const SECTION_HEADINGS: Record<AliasType, string> = {
+  term: '用語',
+  doc: '文書',
+  command: 'コマンド',
+  url: 'URL',
 }
 
-/** 選んだ語を、見出し・ソースごとのセクション・語ごとの箇条書きの Markdown にする */
-export function renderContext(heading: string, entries: Entry[]): string {
-  // ソースの並びの順にセクションへ分ける。セクションの中は選んだ順
-  const sections = new Map<number, Entry[]>()
-  for (const entry of [...entries].sort((a, b) => a.sourceIndex - b.sourceIndex)) {
-    sections.set(entry.sourceIndex, [...(sections.get(entry.sourceIndex) ?? []), entry])
-  }
+/** 出所・`aliases` の要素の `id`・項目の ID の組を 1 つの文字列にする */
+export function entryKey(entry: Entry): string {
+  return `${entry.origin}\u0000${entry.aliasId}\u0000${entry.id}`
+}
 
+/** 選んだ語を、見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする */
+export function renderContext(heading: string, entries: Entry[]): string {
   const lines = [`# ${heading}`]
-  for (const section of sections.values()) {
-    lines.push('', `## ${section[0]?.label ?? ''}`, '')
+  // セクションの順に種類で分ける。セクションの中は選んだ順で、出所や aliases の要素が違っても同じセクションに並べる
+  for (const [type, sectionHeading] of Object.entries(SECTION_HEADINGS)) {
+    const section = entries.filter((entry) => entry.type === type)
+    if (section.length === 0) continue
+    lines.push('', `## ${sectionHeading}`, '')
     for (const entry of section) {
       lines.push(`- ${entry.word}（id: ${entry.id}）`)
       for (const field of entry.fields) lines.push(`  - ${field.name}: ${field.value}`)

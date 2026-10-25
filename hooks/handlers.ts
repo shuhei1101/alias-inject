@@ -7,20 +7,23 @@ import type {
   SessionEndInput,
   SessionEndResult,
 } from 'claude-code'
+import type { ResolvedAlias } from './lib/alias'
 import { ConfigError, isOriginAllowed, parseConfig, readConfigPath, resolveSettings } from './lib/config'
 import type { Config } from './lib/config'
 import { selectEntries } from './lib/context'
 import type { Selection } from './lib/context'
+import { loadAliasEntries } from './lib/entry'
+import type { Entry } from './lib/entry'
 import { parseYaml, readIfChanged } from './lib/loader'
 import { findHits } from './lib/match'
 import { addRecorded, clearRecorded, readRecorded } from './lib/record'
-import { SourceError, loadSourceEntries } from './lib/source'
-import type { Entry } from './lib/source'
+import { RepositoryError, loadRepositoryAliases } from './lib/repository'
+import { loadAliasSchema } from './lib/schema'
 
 type Next<Input, Result> = (e: Input) => Promise<Result>
 
-// 外した設定の値を debug log に出し終えた設定ファイルの読み込み結果
-const warnedConfigs = new WeakSet<object>()
+// debug log に出し終えた理由。読み込みの結果（設定ファイルの検証した設定・dev-docs.yaml から取り出した aliases）ごとに持つ
+const loggedWarnings = new WeakMap<object, Set<string>>()
 
 // debug log に出す。入力の送信を止めないため、ログの失敗は呼び出し元に伝えない
 function logDebug($: EngineInterface, text: string): void {
@@ -31,8 +34,19 @@ function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// 設定ファイルを更新時刻が変わったときだけ読み直す。外した値は読み直したときだけ debug log に出す
-async function loadConfig($: EngineInterface, configPath: string): Promise<Config> {
+// 外した要素と無視した値の理由を、読み込みの結果が変わらないうち 1 回だけ debug log に出す
+function logWarningsOnce($: EngineInterface, owner: object, path: string, warnings: string[]): void {
+  const logged = loggedWarnings.get(owner) ?? new Set<string>()
+  loggedWarnings.set(owner, logged)
+  for (const warning of warnings) {
+    if (logged.has(warning)) continue
+    logged.add(warning)
+    logDebug($, `設定の値を外しました（${path}）: ${warning}`)
+  }
+}
+
+// 設定ファイルを更新時刻が変わったときだけ読み直す
+async function loadConfig($: EngineInterface, configPath: string, schema: Record<string, unknown>): Promise<Config> {
   const stat = await $.fs.stat(configPath)
   const loaded = await readIfChanged($, {
     file: { path: configPath, mtimeMs: stat.mtimeMs },
@@ -40,14 +54,31 @@ async function loadConfig($: EngineInterface, configPath: string): Promise<Confi
     convert: (text) => {
       const parsed = parseYaml(text)
       if (!parsed.ok) throw new ConfigError(parsed.reason)
-      return { config: parseConfig(parsed.value) }
+      return { config: parseConfig(parsed.value, schema) }
     },
   })
-  if (!warnedConfigs.has(loaded)) {
-    warnedConfigs.add(loaded)
-    for (const warning of loaded.config.warnings) logDebug($, `設定の値を外しました: ${warning}`)
-  }
   return loaded.config
+}
+
+// 読むリポジトリの aliases を repositories の順に並べる。読めない dev-docs.yaml は、そのリポジトリだけを外す
+async function loadRepositories(
+  $: EngineInterface,
+  repositories: string[],
+  schema: Record<string, unknown>,
+  home: string,
+): Promise<ResolvedAlias[]> {
+  const aliases: ResolvedAlias[] = []
+  for (const path of repositories) {
+    try {
+      const loaded = await loadRepositoryAliases($, { path, schema, home })
+      logWarningsOnce($, loaded, path, loaded.warnings)
+      aliases.push(...loaded.aliases)
+    } catch (error) {
+      if (!(error instanceof RepositoryError)) throw error
+      logDebug($, `dev-docs.yaml を読めません（${error.path}）: ${error.reason}`)
+    }
+  }
+  return aliases
 }
 
 // 入力に追加する文脈を選ぶ。追加するものが無いとき、読めない設定のときは null
@@ -58,9 +89,10 @@ async function selectContext(
   const configPath = await readConfigPath($)
   if (configPath === null) return null
 
+  const schema = loadAliasSchema()
   let config: Config
   try {
-    config = await loadConfig($, configPath)
+    config = await loadConfig($, configPath, schema)
   } catch (error) {
     logDebug($, `設定ファイルを読めません（${configPath}）: ${describe(error)}`)
     return null
@@ -70,24 +102,18 @@ async function selectContext(
   if (home === undefined) throw new Error('環境変数 HOME がありません')
   const projectRoot = await $.session.root()
   const settings = resolveSettings(config, {
-    where: {
-      configDir: configPath.slice(0, Math.max(configPath.lastIndexOf('/'), 0)),
-      projectRoot,
-      repoRoot: (await $.session.repo())?.root ?? projectRoot,
-      home,
-    },
+    where: { configPath, projectRoot, repoRoot: (await $.session.repo())?.root ?? projectRoot, home },
   })
+  logWarningsOnce($, config, configPath, [...config.warnings, ...settings.warnings])
   if (!settings.enabled || !isOriginAllowed(settings.origins, e.origin.kind)) return null
 
-  // 読めない YAML のソースだけを照合から外す
+  // 読むリポジトリの aliases の後ろに、設定ファイルの aliases を並べる。読めない YAML だけを外す
+  const aliases = [...(await loadRepositories($, settings.repositories, schema, home)), ...settings.aliases]
   const entries: Entry[] = []
-  for (const [index, source] of settings.sources.entries()) {
-    try {
-      entries.push(...(await loadSourceEntries($, source, index)))
-    } catch (error) {
-      if (!(error instanceof SourceError)) throw error
-      logDebug($, `YAML を読めません（${error.path}）: ${error.reason}`)
-    }
+  for (const [index, alias] of aliases.entries()) {
+    const loaded = await loadAliasEntries($, alias, index)
+    for (const failure of loaded.failures) logDebug($, `YAML を読めません（${failure.path}）: ${failure.reason}`)
+    entries.push(...loaded.entries)
   }
 
   const hits = findHits(e.text, entries, settings.exclude)
@@ -99,7 +125,7 @@ async function selectContext(
   return selection === null ? null : { selection, sessionId }
 }
 
-/** 入力を設定の YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す */
+/** 入力を読むリポジトリと設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す */
 export async function handlePromptSubmit(
   $: EngineInterface,
   e: PromptSubmitInput,
