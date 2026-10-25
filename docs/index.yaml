@@ -6,4 +6,4 @@ items:
   - page: 使い方/
     summary: セットアップと日々の操作
   - page: リファレンス/
-    summary: 設定ファイルの項目
+    summary: 設定ファイルの項目・エイリアスの共通のスキーマ
