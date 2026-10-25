@@ -62,8 +62,9 @@ categories:
       node scripts/gen-aliases-schema.mjs
       ```
     verification:
-      state: 未確認
-      detail: '`scripts/gen-aliases-schema.mjs` は実装の工程で作る。実装の担当が走らせて確かめる'
+      state: 済
+      date: '2026-10-26'
+      detail: 作業ツリーで `node scripts/gen-aliases-schema.mjs` が終了コード 0 で `hooks/lib/aliases-schema.ts` を書き出し、続けて `--check` が終了コード 0 で通ることを確かめた。書き出した後に `hooks/lib/aliases-schema.ts` を書き換えると `--check` が終了コード 1 になることも確かめた
   - name: 取り込み前の検査
     commands: 未確定
   - name: 管理作業
