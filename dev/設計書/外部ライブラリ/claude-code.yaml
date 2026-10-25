@@ -235,6 +235,10 @@ lead: Claude Code が mod に渡す hooks モジュールの型（`claude-code`�
 used_in:
   - hooks/register.tsx
   - tests/unit/hooks/register.test.ts
+  - hooks/handlers.ts
+  - hooks/lib/config.ts
+  - hooks/lib/loader.ts
+  - hooks/lib/record.ts
 verification:
   state: 済
   date: '2026-10-24'
