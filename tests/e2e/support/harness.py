@@ -91,10 +91,14 @@ class ClaudeSession:
         self.root = Path(tempfile.mkdtemp(prefix="alias-inject-e2e-"))
         self.config_dir = self.root / "claude-config"
         self.project_dir = self.root / "project"
+        # 端末の設定ファイルのフォルダ。設定ファイルの aliases の相対パスはここから解決される
         self.alias_dir = self.root / "alias-inject"
-        self.terms_dir = self.alias_dir / "terms"
         self.urls_dir = self.alias_dir / "urls"
         self.config_path = self.alias_dir / "settings.yaml"
+        # 読むリポジトリのフォルダ。dev-docs.yaml の aliases の相対パスはここから解決される
+        self.repo_dir = self.root / "knowledge"
+        self.terms_dir = self.repo_dir / "terms"
+        self.dev_docs_path = self.repo_dir / "dev-docs.yaml"
         self.tmux_name = f"alias-inject-e2e-{os.getpid()}-{uuid.uuid4().hex[:6]}"
         self._seen: dict[Path, int] = {}
         self._clock = time.time()
@@ -241,29 +245,54 @@ class ClaudeSession:
         self._wait_for_prompt(STARTUP_TIMEOUT_SEC)
 
 
-# ---- 設定ファイルと用語の YAML ----
+# ---- 設定ファイル・dev-docs.yaml・照合の YAML ----
+
+# type ごとの fields のうち、id 以外の列の対応
+ALIAS_COLUMNS = {
+    "term": ["match: [name, aliases]", "title: name", "description: description"],
+    "command": ["match: [name]", "command: command"],
+    "url": ["match: [name]", "url: url"],
+}
+
+
+def alias_lines(alias_id: str, alias_type: str, paths: str, *, extra_fields: list[str] | None = None) -> list[str]:
+    """aliases の要素 1 つの行（`- id:` を字下げなしで始める）。fields の列は元の YAML の `id`・`name` などに対応させる"""
+    return [
+        f"- id: {alias_id}",
+        f"  type: {alias_type}",
+        f"  paths: [{paths}]",
+        "  fields:",
+        "    id: id",
+        *[f"    {line}" for line in [*ALIAS_COLUMNS[alias_type], *(extra_fields or [])]],
+    ]
+
+
+def term_alias_lines() -> list[str]:
+    """dev-docs.yaml の用語の aliases の要素（`terms/*.yaml` を読む）の行"""
+    return alias_lines("terms", "term", "terms/*.yaml")
 
 
 def config_text(
     *,
+    repositories: list[Path],
     global_extra: list[str] | None = None,
-    extra_sources: list[str] | None = None,
-    terms_glob: Path,
+    aliases: list[str] | None = None,
 ) -> str:
-    """用語のソース 1 つ（label は「用語」）を global に持つ設定ファイルの本文"""
+    """読むリポジトリの dev-docs.yaml を global.repositories に持つ設定ファイルの本文。aliases は字下げなしの要素の行"""
     lines = [
         "global:",
         *[f"  {line}" for line in global_extra or []],
-        "  sources:",
-        "    - label: 用語",
-        "      type: term",
-        f"      files: {terms_glob}",
-        "      id: id",
-        "      words: [name, aliases]",
-        "      description: description",
-        *[f"    {line}" for line in extra_sources or []],
+        "  repositories:",
+        *[f"    - config: {path}" for path in repositories],
     ]
+    if aliases:
+        lines += ["  aliases:", *[f"    {line}" for line in aliases]]
     return "\n".join(lines) + "\n"
+
+
+def dev_docs_text(aliases: list[str]) -> str:
+    """aliases を持つ dev-docs.yaml の本文。aliases は字下げなしの要素の行"""
+    return "\n".join(["aliases:", *[f"  {line}" for line in aliases]]) + "\n"
 
 
 def term_text(term_id: str, *, aliases: list[str] | None = None, description: str | None = None) -> str:
@@ -281,6 +310,21 @@ def term_list_text(*term_ids: str) -> str:
     return "\n".join(items) + "\n"
 
 
+def command_text(command_id: str) -> str:
+    """コマンドの YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {command_id}\nname: {command_id}\ncommand: make {command_id}\n"
+
+
+def url_of(url_id: str) -> str:
+    """URL の YAML が持つ URL"""
+    return f"https://example.com/{url_id}"
+
+
+def url_text(url_id: str) -> str:
+    """URL の YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {url_id}\nname: {url_id}\nurl: {url_of(url_id)}\n"
+
+
 class E2ETestCase(unittest.TestCase):
     """テストごとに Claude Code のセッションを用意して後片付けする基底"""
 
@@ -294,32 +338,45 @@ class E2ETestCase(unittest.TestCase):
         self,
         *,
         global_extra: list[str] | None = None,
-        extra_sources: list[str] | None = None,
+        dev_docs_aliases: list[str] | None = None,
+        config_aliases: list[str] | None = None,
+        extra_repositories: list[Path] | None = None,
         config_exists: bool = True,
     ) -> ClaudeSession:
-        """term-a（エイリアス 用語エー）と term-b を持つ設定で Claude Code を起動する"""
+        """term-a（エイリアス 用語エー）と term-b を持つ設定で Claude Code を起動する。
+
+        dev-docs.yaml は用語の aliases の要素に dev_docs_aliases を足して持ち、設定ファイルは
+        dev-docs.yaml（extra_repositories の後ろ）と config_aliases を持つ
+        """
         session = self.session
         session.write_file(session.terms_dir / "term-a.yaml", term_text("term-a", aliases=["用語エー"]))
         session.write_file(session.terms_dir / "term-b.yaml", term_text("term-b"))
+        session.write_file(session.dev_docs_path, dev_docs_text([*term_alias_lines(), *(dev_docs_aliases or [])]))
         if config_exists:
             session.write_file(
                 session.config_path,
                 config_text(
+                    repositories=[*(extra_repositories or []), session.dev_docs_path],
                     global_extra=global_extra,
-                    extra_sources=extra_sources,
-                    terms_glob=session.terms_dir / "*.yaml",
+                    aliases=config_aliases,
                 ),
             )
         session.write_user_settings(session.config_path)
         session.start()
         return session
 
-    def assert_context_has_term(self, submission: Submission, term_id: str) -> None:
-        """見出しと「用語」のセクションの下に、語の ID が並んでいる"""
+    def assert_context_has_entry(self, submission: Submission, section: str, entry_id: str, *fields: str) -> None:
+        """見出しと section のセクションの下に、項目の ID と指定した列が並んでいる"""
         text = submission.context_text
         self.assertIn(f"# {HEADING}", text)
-        self.assertIn("## 用語", text)
-        self.assertIn(f"id: {term_id}", text)
+        self.assertIn(f"## {section}", text)
+        self.assertIn(f"id: {entry_id}", text)
+        for field_line in fields:
+            self.assertIn(field_line, text)
+
+    def assert_context_has_term(self, submission: Submission, term_id: str) -> None:
+        """見出しと「用語」のセクションの下に、語の ID が並んでいる"""
+        self.assert_context_has_entry(submission, "用語", term_id)
 
     def assert_no_context(self, submission: Submission) -> None:
         """文脈が追加されていない"""
