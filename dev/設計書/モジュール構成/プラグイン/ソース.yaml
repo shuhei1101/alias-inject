@@ -1,0 +1,212 @@
+title: "プラグイン / ソース"
+lead: ソースの `files` に当たる YAML を読み、項目ごとに照合する語と文脈に並べる列を持つ語の一覧を作る。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      source.ts          ソースの YAML の読み込みと語の一覧の組み立て
+  tests/
+    unit/
+      hooks/
+        lib/
+          source.test.ts source.ts の単体テスト
+  ```
+data_models:
+  - name: Entry
+    title: 語
+    container: hooks/lib/source.ts
+    usecase: 共通
+    role: DTO
+    summary: ソースの 1 項目。照合する語と、文脈に並べる列
+    properties:
+      - name: sourceIndex
+        type: number
+        description: 実効の設定の sources での並びの位置
+      - name: itemIndex
+        type: number
+        description: ソースの中の項目の並び（ファイルのパスの順、ファイルの中の順）
+      - name: label
+        type: string
+        description: ソースの見出し
+      - name: id
+        type: string
+        description: 項目の ID
+      - name: word
+        type: string
+        description: 文脈に出す語。`words` の最初の列の値（並びなら最初の要素）。無ければ照合する最初の語
+      - name: keys
+        type: string[]
+        description: 照合する語を正規化したもの。空文字と重複を除く
+      - name: fields
+        type: '{ name: string; value: string }[]'
+        description: 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ
+classes:
+  - name: SourceError
+    title: ソースの読み込みの失敗
+    container: hooks/lib/source.ts
+    usecase: 共通
+    summary: ソースの YAML が読めない・書式が誤っていることを、YAML のパスと理由つきで伝える例外
+    inherits: Error
+    properties:
+      - name: path
+        type: string
+        description: 読めなかった YAML の絶対パス
+      - name: reason
+        type: string
+        description: 理由（`$.fs.read` の例外のメッセージか YAML のパースの理由）
+functions:
+  - name: parseItems
+    title: 項目の取り出し
+    kind: 関数
+    container: hooks/lib/source.ts
+    usecase: 共通
+    summary: 1 つの YAML のパースの結果から、ID と照合する語を持つ項目を取り出す
+    scope: public
+    is_async: false
+    args:
+      - name: value
+        type: unknown
+        required: true
+        passing: positional
+        description: YAML のパースの結果
+      - name: source
+        type: SourceConfig
+        required: true
+        passing: positional
+        description: ソースの設定
+    returns:
+      type: Record<string, unknown>[]
+      description: ID と照合する語を持つ項目（マッピング）。無ければ空
+    process: |-
+      1. 最上位がマッピングならそれを 1 項目、並びならマッピングの要素をそれぞれ 1 項目とし、それ以外（null を含む）は空を返す
+      2. `source.id` の列の値が空でない文字列か数値で、`source.words` の列のどれかに空でない文字列（並びならその要素）がある項目だけを残す
+    unit_tests:
+      - name: test_parse_items_when_mapping
+        case: 正常
+        summary: 最上位のマッピングは 1 項目
+        condition: '`id: term-a` と `name: Term-A` を持つマッピング'
+        mock: なし
+        expected: 1 件
+      - name: test_parse_items_when_sequence
+        case: 正常
+        summary: 最上位の並びはマッピングの要素ごとに 1 項目
+        condition: マッピング 2 つと文字列 1 つの並び
+        mock: なし
+        expected: 2 件
+      - name: test_parse_items_when_id_or_words_missing
+        case: 正常
+        summary: ID か照合する語の無い項目と空の入力は外す
+        condition: '`id` が無い項目・`words` の列が空の項目・null'
+        mock: なし
+        expected: どれも空
+  - name: buildEntries
+    title: 語の組み立て
+    kind: 関数
+    container: hooks/lib/source.ts
+    usecase: 共通
+    summary: 1 つのソースの全ての項目から、照合する語と文脈に並べる列を持つ語を作る
+    scope: public
+    is_async: false
+    args:
+      - name: items
+        type: Record<string, unknown>[]
+        required: true
+        passing: positional
+        description: ソースの全てのファイルの項目（ファイルのパスの順）
+      - name: source
+        type: SourceConfig
+        required: true
+        passing: positional
+        description: ソースの設定
+      - name: sourceIndex
+        type: number
+        required: true
+        passing: positional
+        description: sources での並びの位置
+    returns:
+      type: Entry[]
+      description: 語の一覧
+    process: |-
+      1. 各項目の照合する語を `source.words` の列の順に集め、`word` を決め、正規化して `keys` にする（照合の正規化）
+      2. ID から `word` を引く表をこのソースの項目で作る
+      3. type ごとに `fields` を作る。列の名前が設定に無い・値が空の列は並べない
+         - term: `description`、`related`（各要素の `to` を `{ID}（{名前}）` にして `, ` でつなぐ。名前が引けない ID は ID だけ）
+         - doc: `description`、`mcp`（設定の値そのもの）
+         - command: `command`（値をバッククォートで囲む）、`cwd`、`description`
+         - url: `url`、`description`
+      4. 列の値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
+    unit_tests:
+      - name: test_build_entries_when_term
+        case: 正常
+        summary: term は description と、名前を引いた related を並べる
+        condition: 'term-a（`aliases: [用語エー]`、`related: [{to: term-b}, {to: tpl-x}]`）と term-b（`name: Term-B`）'
+        mock: なし
+        expected: "term-a の word が `Term-A`、keys が `['term-a', '用語エー']`、fields が description と `related: term-b（Term-B）, tpl-x`"
+      - name: test_build_entries_when_command
+        case: 正常
+        summary: command は command・cwd・description の順で、値のある列だけ
+        condition: '`command: uv sync`、`cwd` が無い、`description: 依存を入れる`'
+        mock: なし
+        expected: 'fields が `command: `uv sync``・`description: 依存を入れる` の 2 つ'
+      - name: test_build_entries_when_doc_and_url
+        case: 正常
+        summary: doc は設定の mcp の値を、url は url の列を並べる
+        condition: 'type が doc（`mcp: rule-inject`）と url のソース'
+        mock: なし
+        expected: 'doc の fields に `mcp: rule-inject`、url の fields に `url: …`'
+  - name: loadSourceEntries
+    title: ソースの読み込み
+    kind: 関数
+    container: hooks/lib/source.ts
+    usecase: 共通
+    summary: ソースの `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す
+    scope: public
+    is_async: true
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.fs` を使う'
+      - name: source
+        type: Settings['sources'][number]
+        required: true
+        passing: positional
+        description: 実効の設定の 1 つのソース
+      - name: sourceIndex
+        type: number
+        required: true
+        passing: positional
+        description: sources での並びの位置
+    returns:
+      type: Promise<Entry[]>
+      description: 語の一覧。当たるファイルが無ければ空
+    exceptions:
+      - name: SourceError
+        condition: 当たった YAML のどれかが読めない・書式が誤っている
+    process: |-
+      1. `patterns` ごとに glob の展開をし、重複を除いてパスの順に並べる
+      2. 各ファイルを変わったファイルの読み込み（変換は YAML のパース）で読む
+      3. `$.fs.read` の例外か、パースの結果の `ok` が false なら、そのパスと理由で SourceError を投げる
+      4. 各ファイルの項目の取り出しの結果をつなげ、語の組み立てに通して返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandFiles]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
+      - dev/設計書/モジュール構成/プラグイン/ソース#functions[parseItems]
+      - dev/設計書/モジュール構成/プラグイン/ソース#functions[buildEntries]
+    unit_tests:
+      - name: test_load_source_entries
+        case: 正常
+        summary: glob に当たる全ての YAML の項目を語にする
+        condition: '`/d/term/*.yaml` に term-a.yaml と term-b.yaml'
+        mock: テストの `on` で `fs.list`・`fs.stat`・`fs.read` をメモリのファイル表から応答する
+        expected: term-a・term-b の順の 2 件
+      - name: test_load_source_entries_when_yaml_malformed
+        case: 異常
+        summary: 書式の誤った YAML があればパスつきで例外
+        condition: term-b.yaml が閉じていない括弧を含む
+        mock: 同上
+        expected: SourceError で、path が term-b.yaml、reason に行と列を含む

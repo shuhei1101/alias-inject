@@ -1,0 +1,114 @@
+title: "プラグイン / 照合"
+lead: 入力と語を同じ正規化でそろえ、部分文字列として含まれる語を入力に出た位置の順に返す。正規表現は使わない。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      match.ts           正規化と照合
+  tests/
+    unit/
+      hooks/
+        lib/
+          match.test.ts  match.ts の単体テスト
+  ```
+data_models:
+  - name: Hit
+    title: 当たった語
+    container: hooks/lib/match.ts
+    usecase: 共通
+    role: DTO
+    summary: 入力に当たった語と、最初に出た位置
+    properties:
+      - name: entry
+        type: Entry
+        description: 当たった語
+      - name: position
+        type: number
+        description: 正規化した入力で、その語の keys のどれかが最初に出た位置
+      - name: length
+        type: number
+        description: その位置で当たった key のうち最も長いものの長さ
+functions:
+  - name: normalize
+    title: 照合の正規化
+    kind: 関数
+    container: hooks/lib/match.ts
+    usecase: 共通
+    summary: NFKC・英字の小文字・前後の空白の除去でそろえる
+    scope: public
+    is_async: false
+    args:
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: 正規化する文字列
+    returns:
+      type: string
+      description: 正規化した文字列
+    process: 1. `text.normalize('NFKC').toLowerCase().trim()` を返す
+    unit_tests:
+      - name: test_normalize
+        case: 正常
+        summary: 全角・大文字・前後の空白をそろえる
+        condition: '`　Ｔｅｒｍ－Ａ `、`ﾊﾟﾝ`'
+        mock: なし
+        expected: '`term-a`、`パン`'
+  - name: findHits
+    title: 照合
+    kind: 関数
+    container: hooks/lib/match.ts
+    usecase: 共通
+    summary: 入力に含まれる語を、最初に出た位置の順に返す
+    scope: public
+    is_async: false
+    args:
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: 入力の文
+      - name: entries
+        type: Entry[]
+        required: true
+        passing: positional
+        description: 全てのソースの語（sources の順、ソースの中は項目の順）
+      - name: exclude
+        type: string[]
+        required: true
+        passing: positional
+        description: 照合しない語（正規化前）
+    returns:
+      type: Hit[]
+      description: 当たった語。位置の昇順、同じ位置なら長い語が先、それも同じなら sourceIndex・itemIndex の順
+    process: |-
+      1. `text` と `exclude` の各要素を照合の正規化に通す
+      2. 各語の keys のうち exclude に無いものを `indexOf` で探し、最も小さい位置と、その位置で当たった最も長い key の長さを取る。どれも当たらない語は外す
+      3. 戻り値の順に並べて返す。同じ語は 1 回だけ返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
+    unit_tests:
+      - name: test_find_hits
+        case: 正常
+        summary: 入力に先に出た語から並べる
+        condition: '入力「term-b と 用語エー の違い」、term-a（keys: term-a・用語エー）と term-b'
+        mock: なし
+        expected: term-b・term-a の順
+      - name: test_find_hits_when_same_position
+        case: 正常
+        summary: 同じ位置なら長い語が先
+        condition: 入力「レビュースレッドの扱い」、語「レビュー」と「レビュースレッド」
+        mock: なし
+        expected: レビュースレッド・レビューの順
+      - name: test_find_hits_when_excluded
+        case: 正常
+        summary: exclude の語は照合しない
+        condition: exclude が `[ＴＥＲＭ－Ａ]`、term-a の keys が term-a・用語エー、入力「term-a と用語エー」
+        mock: なし
+        expected: term-a が用語エーの位置で 1 件
+      - name: test_find_hits_when_no_match
+        case: 正常
+        summary: 当たらなければ空
+        condition: 入力「こんにちは」
+        mock: なし
+        expected: 空

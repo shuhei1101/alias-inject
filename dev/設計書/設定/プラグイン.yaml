@@ -48,7 +48,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string | string[]
     required: true
-    description: 照合する YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。先頭の `~` はホームに展開し、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
+    description: 照合する YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
     missing: そのソースを照合から外す
     notes:
       YAML の中身: 1 ファイルに 1 項目（マッピング）か、複数の項目（マッピングの並び）を書く
@@ -114,7 +114,7 @@ settings:
     type: ('user' | 'plugin')[]
     default: 'なし（すべての出所が対象）'
     description: 文脈を追加する入力の出所。書かないときは、すべての出所（通知・他のセッション・予約の実行などを含む）の入力が対象。書いたときは、挙げた出所の入力だけが対象になる。`user` は利用者の入力（`e.origin.kind` が `composer`・`bridge`・`sdk`。tmux から送る ai-monitor の指示を含む）、`plugin` はプラグインが送った入力（`plugin`）
-    allowed: user / plugin。それ以外の値は無視する
+    allowed: user / plugin。それ以外の値は無視する。空の並びや、許す値が 1 つも無い並びは書かないときと同じ（すべての出所が対象）
   - key: global.max_items
     title: 1 回に追加する語の上限
     file: ~/.config/alias-inject/settings.yaml
@@ -152,5 +152,12 @@ settings:
     missing: その要素を使わない
     notes:
       重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`sources`・`exclude` は後ろに追加し、それ以外は置き換える'
+  - key: projects[].sources
+    title: プロジェクトのソース
+    file: ~/.config/alias-inject/settings.yaml
+    type: object[]
+    required: false
+    default: '[]'
+    description: '`match` が当たったときに `global.sources` の後ろへ重ねるソース。要素のキーは `global.sources[]` と同じ。`projects` の要素は `match` と `sources` だけを読む'
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]

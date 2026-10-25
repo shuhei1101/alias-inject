@@ -1,0 +1,332 @@
+title: "プラグイン / 読み込み"
+lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイルとソースの YAML の両方が使う。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      loader.ts          パスの展開・glob の展開・変わったファイルの読み込み・YAML のパース
+    vendor/
+      js-yaml.mjs        同梱する js-yaml 5.5.0（npm の dist のまま）
+      js-yaml.d.ts       js-yaml 5.5.0 の型（npm の dist のまま）
+  tests/
+    unit/
+      hooks/
+        lib/
+          loader.test.ts loader.ts の単体テスト
+  ```
+data_models:
+  - name: FileStamp
+    title: ファイルの更新時刻
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    role: DTO
+    summary: glob を展開して見つけたファイルのパスと更新時刻
+    properties:
+      - name: path
+        type: string
+        description: ファイルの絶対パス
+      - name: mtimeMs
+        type: number
+        description: '`$.fs.list` か `$.fs.stat` が返した更新時刻'
+  - name: YamlResult
+    title: YAML のパースの結果
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    role: DTO
+    summary: パースした値か、読めなかった理由
+    description: '`{ ok: true; value: unknown } | { ok: false; reason: string }` の union。'
+    properties:
+      - name: ok
+        type: boolean
+        description: パースできたか
+      - name: value
+        type: unknown
+        description: '`ok` が true のときのパースした値。空・コメントだけの入力は `null`'
+      - name: reason
+        type: string
+        description: '`ok` が false のときの理由（行と列を含む）'
+functions:
+  - name: expandHome
+    title: ホームの展開
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: 先頭の `~` をホームのパスへ置き換える
+    scope: public
+    is_async: false
+    args:
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: 展開するパス
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームの絶対パス（`$.env.get("HOME")`）
+    returns:
+      type: string
+      description: 展開したパス
+    process: |-
+      1. `path` が `~` だけなら `home` を返す
+      2. `path` が `~/` で始まるなら、`~` を `home` に置き換えて返す
+      3. それ以外は `path` をそのまま返す（`~user` は展開しない）
+    unit_tests:
+      - name: test_expand_home
+        case: 正常
+        summary: 先頭の `~/` を展開する
+        condition: '`path` が `~/.config/a.yaml`、`home` が `/home/u`'
+        mock: なし
+        expected: '`/home/u/.config/a.yaml`'
+      - name: test_expand_home_when_tilde_only
+        case: 正常
+        summary: '`~` だけはホームになる'
+        condition: '`path` が `~`'
+        mock: なし
+        expected: '`/home/u`'
+      - name: test_expand_home_when_not_tilde
+        case: 正常
+        summary: '`~` で始まらないパスと `~user` は変えない'
+        condition: '`path` が `/etc/a.yaml` と `~other/a.yaml`'
+        mock: なし
+        expected: どちらも受け取ったまま
+  - name: resolvePath
+    title: パスの解決
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: '`~` を展開し、相対パスを基準のフォルダからの絶対パスにする'
+    scope: public
+    is_async: false
+    args:
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: 解決するパスか glob
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームの絶対パス
+      - name: baseDir
+        type: string
+        required: true
+        passing: keyword
+        description: 相対パスの基準のフォルダ（絶対パス）
+    returns:
+      type: string
+      description: 絶対パス。区切りは `/`
+    process: |-
+      1. `path` をホームの展開に通す（ホームの展開）
+      2. `/` で始まるならそのまま返す
+      3. それ以外は `baseDir` の末尾の `/` を除き、`/` でつないで返す。先頭の `./` は除く
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
+    unit_tests:
+      - name: test_resolve_path
+        case: 正常
+        summary: 相対パスを基準のフォルダから解決する
+        condition: '`path` が `./docs/command/*.yaml`、`baseDir` が `/repo/sample/`'
+        mock: なし
+        expected: '`/repo/sample/docs/command/*.yaml`'
+      - name: test_resolve_path_when_absolute
+        case: 正常
+        summary: 絶対パスと `~` は基準のフォルダを使わない
+        condition: '`path` が `/a/b.yaml` と `~/b.yaml`、`home` が `/home/u`'
+        mock: なし
+        expected: '`/a/b.yaml` と `/home/u/b.yaml`'
+  - name: matchSegment
+    title: 名前と glob の区切りの照合
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: ファイル名が `*` を含む glob の 1 区切りに当たるかを判定する
+    scope: internal
+    is_async: false
+    args:
+      - name: name
+        type: string
+        required: true
+        passing: positional
+        description: ファイル名かフォルダ名
+      - name: segment
+        type: string
+        required: true
+        passing: positional
+        description: glob の `/` で区切った 1 つ（`**` を除く）
+    returns:
+      type: boolean
+      description: 当たるとき true
+    process: |-
+      1. `segment` を `*` で分けた片を得る
+      2. 先頭の片で `name` が始まり、末尾の片で終わり、間の片がこの順に重ならずに現れるとき true を返す（正規表現は使わない）
+    unit_tests:
+      - name: test_match_segment
+        case: 正常
+        summary: '`*` が任意の文字列に当たる'
+        condition: '`segment` が `term-*.yaml`、`name` が `term-a.yaml`・`term-.yaml`・`rule-a.yaml`・`term-a.yml`'
+        mock: なし
+        expected: true・true・false・false
+      - name: test_match_segment_when_multiple_stars
+        case: 正常
+        summary: 複数の `*` は順に重ならずに当てる
+        condition: '`segment` が `a*b*c`、`name` が `axbyc`・`abc`・`acb`'
+        mock: なし
+        expected: true・true・false
+  - name: expandFiles
+    title: glob の展開
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: 絶対パスの glob に当たるファイルを、更新時刻つきでパスの順に返す
+    scope: public
+    is_async: true
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.fs.list` と `$.fs.stat` を使う'
+      - name: pattern
+        type: string
+        required: true
+        passing: keyword
+        description: 絶対パスの glob（パスの解決を通したもの）
+    returns:
+      type: Promise<FileStamp[]>
+      description: 当たったファイル。無ければ空
+    process: |-
+      1. `pattern` に `*` が無い場合、`$.fs.stat` で確かめ、ファイルなら 1 件、無い・フォルダなら空を返す
+      2. `*` を含む最初の区切りより前を起点のフォルダ、それ以降を区切りの並びとする
+      3. 起点から区切りを 1 つずつたどる
+         - `**` の場合、そのフォルダ自身と、`$.fs.list` でたどれる配下の全てのフォルダを次の区切りの起点にする
+         - `*` を含む場合、`$.fs.list` の項目のうち名前が当たるものを残す（名前と glob の区切りの照合）
+         - それ以外はその名前の項目を残す
+         - 最後の区切りでは `kind` が `file` の項目だけを、それ以外では `dir` の項目だけを残す
+      4. 無いフォルダの `$.fs.list` の失敗は、その枝を空として続ける
+      5. 当たったファイルを重複を除いてパスの順に返す。更新時刻は `$.fs.list` の `mtimeMs`
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[matchSegment]
+    unit_tests:
+      - name: test_expand_files
+        case: 正常
+        summary: 区切りの `*` に当たるファイルだけを返す
+        condition: '`pattern` が `/d/term/*.yaml`。`/d/term` に `a.yaml`・`b.yaml`・`c.md` とフォルダ `x.yaml`'
+        mock: テストの `on` で `fs.list`・`fs.stat` をメモリのファイル表から応答する
+        expected: '`/d/term/a.yaml` と `/d/term/b.yaml`（パスの順、更新時刻つき）'
+      - name: test_expand_files_when_double_star
+        case: 正常
+        summary: '`**` は 0 階層以上のフォルダに当たる'
+        condition: '`pattern` が `/d/**/*.yaml`。`/d/a.yaml`・`/d/x/b.yaml`・`/d/x/y/c.yaml`'
+        mock: 同上
+        expected: 3 件とも返る
+      - name: test_expand_files_when_no_star
+        case: 正常
+        summary: '`*` の無いパスはそのファイルだけを返す'
+        condition: '`pattern` があるファイル・無いファイル・フォルダ'
+        mock: 同上（無いパスの `fs.stat` は例外）
+        expected: 1 件・空・空
+      - name: test_expand_files_when_dir_missing
+        case: 正常
+        summary: 起点のフォルダが無いときは空を返す
+        condition: '`pattern` が `/none/*.yaml`'
+        mock: 同上（`fs.list` は例外）
+        expected: 空。例外にならない
+  - name: readIfChanged
+    title: 変わったファイルの読み込み
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: 更新時刻が前回と同じファイルは読まずに前回の値を返し、変わったときだけ読んで変換する
+    scope: public
+    is_async: true
+    side_effects: モジュールの中のキャッシュ（パス → 更新時刻と変換した値）を書き換える
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.fs.read` を使う'
+      - name: file
+        type: FileStamp
+        required: true
+        passing: keyword
+        description: 読むファイルと今の更新時刻
+      - name: convert
+        type: '(text: string) => T'
+        required: true
+        passing: keyword
+        description: 読んだ文字列を値に変える関数。結果をキャッシュする
+    returns:
+      type: Promise<T>
+      description: 変換した値
+    process: |-
+      1. キャッシュに同じパス・同じ更新時刻の値があれば、それを返す
+      2. 無ければ `$.fs.read` で読み、`convert` に通してキャッシュへ入れて返す
+      3. `$.fs.read` の例外はそのまま伝える（キャッシュは変えない）
+    unit_tests:
+      - name: test_read_if_changed
+        case: 正常
+        summary: 更新時刻が同じうちは読み直さない
+        condition: 同じ `FileStamp` で 2 回呼ぶ
+        mock: テストの `on` で `fs.read` の呼ばれた回数を数える
+        expected: '`fs.read` は 1 回。戻り値は 2 回とも同じ'
+      - name: test_read_if_changed_when_mtime_changed
+        case: 正常
+        summary: 更新時刻が変わると読み直す
+        condition: 2 回目は `mtimeMs` を進め、中身を書き換える
+        mock: 同上
+        expected: '`fs.read` は 2 回。2 回目の戻り値が書き換え後の中身'
+  - name: parseYaml
+    title: YAML のパース
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: YAML の文字列を値にし、書式の誤りを例外ではなく理由で返す
+    scope: public
+    is_async: false
+    args:
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: YAML の文字列
+    returns:
+      type: YamlResult
+      description: パースした値か、読めなかった理由
+    process: |-
+      1. 先頭の BOM を除く
+      2. 空行と `#` で始まる行だけなら `{ ok: true, value: null }` を返す（js-yaml の `load` は例外を投げるため、呼ぶ前に扱う）
+      3. js-yaml の `load` を既定のスキーマ（CORE_SCHEMA）で呼ぶ
+      4. 例外は型を問わず捕まえ、`YAMLException` なら `{reason}（{mark.line + 1}:{mark.column + 1}）`、それ以外は例外のメッセージを `reason` にして返す
+    callees:
+      - dev/設計書/外部ライブラリ/js-yaml#catalogs[API].entries[load]
+    unit_tests:
+      - name: test_parse_yaml
+        case: 正常
+        summary: ブロック・フロー・複数行の文字列を読む
+        condition: '`|` と `>-` とフローの並びを含む YAML'
+        mock: なし
+        expected: '`ok` が true で、値が書いたとおり'
+      - name: test_parse_yaml_when_empty
+        case: 正常
+        summary: 空・コメントだけ・BOM だけの入力は null
+        condition: "`''`・`'# only comment\\n'`・`'\uFEFF'`"
+        mock: なし
+        expected: 'どれも `{ ok: true, value: null }`'
+      - name: test_parse_yaml_when_malformed
+        case: 異常
+        summary: 書式の誤りは行と列つきの理由で返す
+        condition: 閉じていない括弧・重複キー・未知のタグ（`!foo`）
+        mock: なし
+        expected: どれも `ok` が false で、`reason` に行と列を含む。例外にならない
+      - name: test_parse_yaml_when_proto_key
+        case: 正常
+        summary: '`__proto__` のキーで `Object.prototype` を汚染しない'
+        condition: '`__proto__: {polluted: 1}`'
+        mock: なし
+        expected: '`({}).polluted` が undefined'
+notes:
+  キャッシュ: 変わったファイルの読み込みのキャッシュはモジュールの変数に持つ。mod のホットリロードで空に戻り、次の入力で読み直す。単体テストではテストごとに空に戻す関数 `clearCache` を使う
