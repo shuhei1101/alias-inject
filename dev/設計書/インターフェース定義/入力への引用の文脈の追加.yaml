@@ -25,6 +25,7 @@ flows:
         description: '`text` が「用語エーを説明して」、`origin.kind` が `composer`'
         notes: エイリアスで当てる。2 回目の入力「term-a とは」で、大文字を含む語 `Term-A` が正規化で当たり、記録済みで追加されないことを確かめる
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -44,6 +45,7 @@ flows:
         IF->>IF: 正規化して照合し term-a が当たる
         IF->>ST: term-a を記録に入れる
         IF-->>CC: text はそのまま、context に term-a の文脈
+      ```
     expected:
       - 返る `text` が入力の `text` と同じ
       - 返る `context` が 1 要素で、`# この発言に出る用語`・`## 用語`・term-a の語 `Term-A`・`id`・`description` を含む
@@ -195,6 +197,7 @@ flows:
         description: 「term-a とは」
         notes: '-'
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -207,6 +210,7 @@ flows:
         IF->>FS: 両方の aliases の要素の YAML を読む
         FS-->>IF: 項目
         IF-->>CC: context に「用語」と「コマンド」の両方のセクションで term-a
+      ```
     expected:
       - 返る `context` に `## 用語` と `## コマンド` の両方のセクションがあり、それぞれに term-a が並ぶ
       - '`## コマンド` の term-a に `command: make term-a` が並ぶ'
@@ -260,6 +264,7 @@ flows:
         description: 1 回目も 2 回目も「term-a とは」
         notes: '-'
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -272,6 +277,7 @@ flows:
         CC->>IF: term-a とは
         IF->>ST: 記録を読む
         IF-->>CC: 受け取ったまま
+      ```
     expected:
       - 1 回目の返る `context` の `## 用語` に、両方のリポジトリの term-a の `description` が並ぶ
       - 2 回目の返る `context` が受け取ったまま
@@ -295,6 +301,7 @@ flows:
         description: 「term-a・term-x・term-y」
         notes: '-'
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -305,6 +312,7 @@ flows:
         IF->>FS: 有効な aliases の要素の YAML だけを読む
         FS-->>IF: 項目
         IF-->>CC: context に term-a だけ
+      ```
     expected:
       - 返る `context` に term-a があり、term-x と term-y が無い
       - '`/repo/other/dev-docs.yaml` と `/repo/knowledge/drafts/` の YAML に `fs.read` が呼ばれていない'
@@ -325,6 +333,7 @@ flows:
         description: 1 回目「term-a とは」、2 回目「term-a と cmd-a」
         notes: '-'
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -337,6 +346,7 @@ flows:
         FS-->>IF: dev-docs.yaml が更新
         IF->>FS: dev-docs.yaml とコマンドの YAML を読む
         IF-->>CC: context に cmd-a だけ
+      ```
     expected:
       - '2 回目の返る `context` に `## コマンド` の cmd-a と `command: make cmd-a` があり、term-a が無い（記録が残っている）'
       - 2 回目の入力で `fs.read` が呼ばれたのは `dev-docs.yaml` とコマンドの YAML だけ
@@ -349,6 +359,7 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -358,6 +369,7 @@ flows:
         IF->>FS: 設定ファイルを読む
         FS-->>IF: ファイルが無い
         IF-->>CC: 受け取ったまま
+      ```
     expected:
       - 返る `text`・`context` が受け取ったまま
       - フックが例外で終わらない（入力が止まらない）
@@ -373,6 +385,7 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -383,6 +396,7 @@ flows:
         FS-->>IF: /repo/missing はファイルが無い
         IF->>IF: /repo/missing のリポジトリを照合から外す
         IF-->>CC: context に「用語」の term-a
+      ```
     expected:
       - 返る `context` に `## 用語` の term-a がある
       - フックが例外で終わらない
@@ -400,6 +414,7 @@ flows:
       - name: 入力
         description: 「term-a・term-x・term-z」
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -410,6 +425,7 @@ flows:
         IF->>IF: id: bad はスキーマに合わず、後の id: terms は重なるので外す
         IF->>FS: 残った要素の YAML を読む
         IF-->>CC: context に term-a だけ
+      ```
     expected:
       - 返る `context` に term-a があり、term-x と term-z が無い
       - フックが例外で終わらない
@@ -427,6 +443,7 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      ```mermaid
       sequenceDiagram
         participant CC as Claude Code
         participant IF as prompt.submit
@@ -437,6 +454,7 @@ flows:
         FS-->>IF: URL の YAML は書式の誤り
         IF->>IF: URL の YAML の項目を照合から外す
         IF-->>CC: context に「用語」の term-a
+      ```
     expected:
       - 返る `context` に `## 用語` の term-a があり、`## URL` のセクションが無い
       - フックが例外で終わらない
@@ -507,7 +525,7 @@ exceptions:
     condition: '`aliases` の要素の `paths` に当たる YAML が読めない・書式が誤っている'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパスと理由を debug log に出し、その YAML の項目だけを照合から外す'
   - name: なし（dev-docs.yaml が読めない）
-    condition: '`repositories` の要素の `config` が指す `dev-docs.yaml` が無い・読めない・書式が誤っている'
+    condition: '`repositories` の要素の `config` が指す `dev-docs.yaml` が無い・読めない・書式が誤っているか、`aliases` が並びでない'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で `dev-docs.yaml` のパスと理由を debug log に出し、そのリポジトリの `aliases` だけを照合から外す'
   - name: なし（スキーマに合わない aliases の要素）
     condition: '`aliases` の要素が `schemas/aliases.schema.yaml` に合わないか、同じ出所の中で先の要素と `id` が重なる'
@@ -537,7 +555,7 @@ constraints:
     decided_by: dev/設計書/設定/プラグイン#settings[global.origins]
   - item: 検証
     constraint: '設定ファイルの `aliases` と、読んだ `dev-docs.yaml` の `aliases` の要素ごとに `schemas/aliases.schema.yaml` で検証する。`enabled: false` の `repositories` の要素と `aliases` の要素は読まない。`id` の重なりは出所ごとに確かめ、設定ファイルは `global` と当たった `projects` を重ねた並びで確かめる'
-    notes: '`dev-docs.yaml` は `aliases` だけを読む'
+    notes: '`dev-docs.yaml` は `aliases` だけを読む。`aliases` を持たない `dev-docs.yaml` は要素 0 件として扱い、ログを出さない'
 refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#
   - dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し#
