@@ -30,6 +30,21 @@ enums:
       - value: url
         title: URL
         description: '`url`・`description` を追加する'
+      - value: skill
+        title: スキル
+        description: '`skill`・`description` を追加する'
+      - value: tool
+        title: ツール
+        description: '`tool`・`description` を追加する'
+      - value: path
+        title: パス
+        description: '`path`・`description` を追加する'
+      - value: env
+        title: 環境
+        description: '`url`・`port`・`description` を追加する'
+      - value: avoid
+        title: 避ける語
+        description: '`replacement` を追加する'
 data_models:
   - name: AliasFields
     title: 列の対応
@@ -64,7 +79,22 @@ data_models:
         description: 実行する場所の列の名前（command）
       - name: url
         type: string | undefined
-        description: URL の列の名前（url）
+        description: URL の列の名前（url・env）
+      - name: skill
+        type: string | undefined
+        description: スキル名の列の名前（skill）
+      - name: tool
+        type: string | undefined
+        description: MCP のツール名の列の名前（tool）
+      - name: path
+        type: string | undefined
+        description: ファイルかフォルダのパスの列の名前（path）
+      - name: port
+        type: string | undefined
+        description: ポートの列の名前（env）
+      - name: replacement
+        type: string | undefined
+        description: 正しい語の列の名前（avoid）
   - name: AliasConfig
     title: aliases の要素
     container: hooks/lib/alias.ts
