@@ -151,6 +151,70 @@ test('test_build_entries_when_doc_and_url', () => {
   expect(urlEntries[0]?.fields).toEqual([{ name: 'url', value: 'https://example.com/a' }])
 })
 
+// skill・tool・path は値をバッククォートで囲んだ列と description を並べる（正常系）
+test('test_build_entries_when_skill_tool_path', () => {
+  // 準備
+  const skillItems = [{ id: 'skill-a', name: 'Skill-A', skill: 'code-review', description: 'レビューする' }]
+  const toolItems = [{ id: 'tool-a', name: 'Tool-A', tool: 'search_design_docs' }]
+  const pathItems = [{ id: 'path-a', name: 'Path-A', path: '~/.config/ai-monitor/settings.yaml' }]
+  const skillAlias = makeAlias({
+    type: 'skill',
+    fields: { id: 'id', match: ['name'], skill: 'skill', description: 'description' },
+  })
+  const toolAlias = makeAlias({
+    type: 'tool',
+    fields: { id: 'id', match: ['name'], tool: 'tool', description: 'description' },
+  })
+  const pathAlias = makeAlias({
+    type: 'path',
+    fields: { id: 'id', match: ['name'], path: 'path', description: 'description' },
+  })
+
+  // 実行
+  const skillEntries = buildEntries(skillItems, skillAlias, 0)
+  const toolEntries = buildEntries(toolItems, toolAlias, 1)
+  const pathEntries = buildEntries(pathItems, pathAlias, 2)
+
+  // 検証
+  expect(skillEntries[0]?.fields).toEqual([
+    { name: 'skill', value: '`code-review`' },
+    { name: 'description', value: 'レビューする' },
+  ])
+  expect(toolEntries[0]?.fields).toEqual([{ name: 'tool', value: '`search_design_docs`' }])
+  expect(pathEntries[0]?.fields).toEqual([{ name: 'path', value: '`~/.config/ai-monitor/settings.yaml`' }])
+})
+
+// env は url・port・description の順で値のある列だけを、avoid は replacement を並べる（正常系）
+test('test_build_entries_when_env_and_avoid', () => {
+  // 準備
+  const envItems = [
+    { id: 'env-a', name: 'Env-A', url: 'http://127.0.0.1:8000', port: 8000, description: '開発サーバー' },
+    { id: 'env-b', name: 'Env-B', port: 5432 },
+  ]
+  const avoidItems = [{ id: 'avoid-a', name: '旧用語', replacement: 'term-a' }]
+  const envAlias = makeAlias({
+    type: 'env',
+    fields: { id: 'id', match: ['name'], url: 'url', port: 'port', description: 'description' },
+  })
+  const avoidAlias = makeAlias({
+    type: 'avoid',
+    fields: { id: 'id', match: ['name'], replacement: 'replacement' },
+  })
+
+  // 実行
+  const envEntries = buildEntries(envItems, envAlias, 0)
+  const avoidEntries = buildEntries(avoidItems, avoidAlias, 1)
+
+  // 検証
+  expect(envEntries[0]?.fields).toEqual([
+    { name: 'url', value: 'http://127.0.0.1:8000' },
+    { name: 'port', value: '8000' },
+    { name: 'description', value: '開発サーバー' },
+  ])
+  expect(envEntries[1]?.fields).toEqual([{ name: 'port', value: '5432' }])
+  expect(avoidEntries[0]?.fields).toEqual([{ name: 'replacement', value: 'term-a' }])
+})
+
 // glob に当たる全ての YAML の項目を語にする（正常系）
 test('test_load_alias_entries', async () => {
   // 準備

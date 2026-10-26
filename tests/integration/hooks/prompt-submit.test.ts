@@ -249,6 +249,45 @@ test('test_normal_when_repository_config_changed', async ($, on) => {
   expect(fs.reads).toEqual([DEV_DOCS_PATH, `${KNOWLEDGE_DIR}/commands/cmd-a.yaml`])
 })
 
+// skill・tool・path・env・avoid の要素の語を、種類ごとのセクションと列で追加する（正常系）
+test('test_normal_when_added_types', async ($, on) => {
+  // 準備
+  const config = makeConfig({
+    aliases: [
+      ...aliasLines({ id: 'skills', type: 'skill', paths: 'skills/*.yaml' }),
+      ...aliasLines({ id: 'tools', type: 'tool', paths: 'tools/*.yaml' }),
+      ...aliasLines({ id: 'paths', type: 'path', paths: 'paths/*.yaml' }),
+      ...aliasLines({ id: 'envs', type: 'env', paths: 'envs/*.yaml' }),
+      ...aliasLines({ id: 'avoids', type: 'avoid', paths: 'avoids/*.yaml' }),
+    ],
+  })
+  const fs = makeFs(config)
+  fs.write(`${CONFIG_DIR}/skills/skill-a.yaml`, 'id: skill-a\nname: skill-a\nskill: code-review\n')
+  fs.write(`${CONFIG_DIR}/tools/tool-a.yaml`, 'id: tool-a\nname: tool-a\ntool: search_design_docs\n')
+  fs.write(`${CONFIG_DIR}/paths/path-a.yaml`, 'id: path-a\nname: path-a\npath: ~/.config/ai-monitor/settings.yaml\n')
+  fs.write(`${CONFIG_DIR}/envs/env-a.yaml`, 'id: env-a\nname: env-a\nurl: http://127.0.0.1:8000\nport: 8000\ndescription: 開発サーバー\n')
+  fs.write(`${CONFIG_DIR}/envs/env-b.yaml`, 'id: env-b\nname: env-b\nport: 5432\n')
+  fs.write(`${CONFIG_DIR}/avoids/avoid-a.yaml`, 'id: avoid-a\nname: avoid-a\nreplacement: term-a\n')
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a・skill-a・tool-a・path-a・env-a・env-b・avoid-a')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  const headings = ['## 用語', '## スキル', '## ツール', '## パス', '## 環境', '## 避ける語']
+  const positions = headings.map((heading) => context.indexOf(heading))
+  expect(positions.every((position) => position >= 0)).toBe(true)
+  expect(positions).toEqual([...positions].sort((a, b) => a - b))
+  expect(context).toContain('- skill-a（id: skill-a）\n  - skill: `code-review`')
+  expect(context).toContain('- tool-a（id: tool-a）\n  - tool: `search_design_docs`')
+  expect(context).toContain('- path-a（id: path-a）\n  - path: `~/.config/ai-monitor/settings.yaml`')
+  expect(context).toContain('- env-a（id: env-a）\n  - url: http://127.0.0.1:8000\n  - port: 8000\n  - description: 開発サーバー')
+  expect(context).toContain('- env-b（id: env-b）\n  - port: 5432\n\n## 避ける語')
+  expect(context).toContain('- avoid-a（id: avoid-a）\n  - replacement: term-a')
+  expect(world.logs).toEqual([])
+})
+
 // 設定ファイルが読めないときは何も追加せずに渡す（異常系）
 test('test_error_when_config_unreadable', async ($, on) => {
   // 準備
@@ -338,4 +377,29 @@ test('test_error_when_yaml_malformed', async ($, on) => {
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('YAML を読めません') && /\d+:\d+/.test(line.text))).toBe(true)
+})
+
+// fields に url も port も無い env の要素をスキーマに合わない要素として外し、他の要素の文脈は追加する（異常系）
+test('test_error_when_env_without_endpoint', async ($, on) => {
+  // 準備
+  // fields に url も port も無い id: envs の要素
+  const config = makeConfig({
+    aliases: aliasLines({ id: 'envs', type: 'env', paths: 'envs/*.yaml', columns: ['match: [name]', 'description: description'] }),
+  })
+  const fs = makeFs(config)
+  fs.write(`${CONFIG_DIR}/envs/env-x.yaml`, 'id: env-x\nname: env-x\nurl: http://127.0.0.1:8000\nport: 8000\ndescription: 開発サーバー\n')
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a と env-x')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('## 用語')
+  expect(context).toContain('Term-A')
+  expect(context).not.toContain('## 環境')
+  expect(context).not.toContain('env-x')
+  // 設定ファイルのパス・要素の id・理由を含む行が debug log に届く
+  const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
+  expect(debugLines.some((line) => line.text.includes('envs') && line.text.includes('必須のキーがありません'))).toBe(true)
 })

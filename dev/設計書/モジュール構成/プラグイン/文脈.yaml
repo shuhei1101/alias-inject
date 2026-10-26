@@ -168,3 +168,13 @@ constants:
         value: コマンド
       - key: url
         value: URL
+      - key: skill
+        value: スキル
+      - key: tool
+        value: ツール
+      - key: path
+        value: パス
+      - key: env
+        value: 環境
+      - key: avoid
+        value: 避ける語

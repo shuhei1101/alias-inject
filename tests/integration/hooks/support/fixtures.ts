@@ -27,17 +27,24 @@ export function indent(lines: string[], width: number): string[] {
 /** `aliases` の要素 1 つの行。`- id:` を字下げなしで始める。`type` ごとに照合する列と表示する列を `fields` に持つ */
 export function aliasLines(options: {
   id: string
-  type: 'term' | 'command' | 'url'
+  type: 'term' | 'command' | 'url' | 'skill' | 'tool' | 'path' | 'env' | 'avoid'
   paths: string
   /** `false` のとき、この要素を使わない */
   enabled?: boolean
   /** `fields` に追加する列の行（字下げなし） */
   fields?: string[]
+  /** `type` ごとの既定の列の行（字下げなし）の代わりに使う列の行 */
+  columns?: string[]
 }): string[] {
-  const columns = {
+  const columns = options.columns ?? {
     term: ['match: [name, aliases]', 'title: name', 'description: description'],
     command: ['match: [name]', 'command: command'],
     url: ['match: [name]', 'url: url'],
+    skill: ['match: [name]', 'skill: skill'],
+    tool: ['match: [name]', 'tool: tool'],
+    path: ['match: [name]', 'path: path'],
+    env: ['match: [name]', 'url: url', 'port: port', 'description: description'],
+    avoid: ['match: [name]', 'replacement: replacement'],
   }[options.type]
   return [
     `- id: ${options.id}`,

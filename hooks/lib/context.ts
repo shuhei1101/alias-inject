@@ -14,6 +14,11 @@ export const SECTION_HEADINGS: Record<AliasType, string> = {
   doc: '文書',
   command: 'コマンド',
   url: 'URL',
+  skill: 'スキル',
+  tool: 'ツール',
+  path: 'パス',
+  env: '環境',
+  avoid: '避ける語',
 }
 
 /** 出所・`aliases` の要素の `id`・項目の ID の組を 1 つの文字列にする */

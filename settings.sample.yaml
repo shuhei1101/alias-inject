@@ -48,6 +48,47 @@ global:
         match: [name]
         url: url
         description: description
+    - id: skills
+      type: skill
+      paths: [skills/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        skill: skill
+        description: description
+    - id: tools
+      type: tool
+      paths: [tools/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        tool: tool
+        description: description
+    - id: paths
+      type: path
+      paths: [paths/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        path: path
+        description: description
+    - id: envs
+      type: env
+      paths: [envs/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        # url と port は、どちらか 1 つ以上を書く
+        url: url
+        port: port
+        description: description
+    - id: avoids
+      type: avoid
+      paths: [avoids/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        replacement: replacement
 
   # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
   origins: [user, plugin]

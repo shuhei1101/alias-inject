@@ -140,6 +140,11 @@ functions:
          - doc: `description`
          - command: `command`（値をバッククォートで囲む）、`cwd`、`description`
          - url: `url`、`description`
+         - skill: `skill`（値をバッククォートで囲む）、`description`
+         - tool: `tool`（値をバッククォートで囲む）、`description`
+         - path: `path`（値をバッククォートで囲む）、`description`
+         - env: `url`、`port`、`description`
+         - avoid: `replacement`
       5. 列の値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
       6. `origin`・`aliasId`・`type` は alias の値を入れる
     callees:
@@ -169,6 +174,18 @@ functions:
         condition: type が doc（`description` と `mcp` の列を持つ項目）と url の要素
         mock: なし
         expected: 'doc の fields が description だけで、url の fields に `url: …`'
+      - name: test_build_entries_when_skill_tool_path
+        case: 正常
+        summary: skill・tool・path は値をバッククォートで囲んだ列と description を並べる
+        condition: 'type が skill（`skill: code-review`・`description: レビューする`）・tool（`tool: search_design_docs`、`description` が無い）・path（`path: ~/.config/ai-monitor/settings.yaml`）の要素'
+        mock: なし
+        expected: 'skill の fields が `skill: `code-review``・`description: レビューする`、tool の fields が `tool: `search_design_docs`` だけ、path の fields が `path: `~/.config/ai-monitor/settings.yaml`` で `~` を展開しない'
+      - name: test_build_entries_when_env_and_avoid
+        case: 正常
+        summary: env は url・port・description の順で値のある列だけを、avoid は replacement を並べる
+        condition: 'type が env の要素で、env-a（`url: http://127.0.0.1:8000`・`port: 8000`（数値）・`description: 開発サーバー`）と env-b（`port: 5432` だけ）。type が avoid の要素で `replacement: term-a`'
+        mock: なし
+        expected: 'env-a の fields が `url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー` の順、env-b の fields が `port: 5432` だけ、avoid の fields が `replacement: term-a`'
   - name: loadAliasEntries
     title: aliases の要素の読み込み
     kind: 関数

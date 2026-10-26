@@ -6,7 +6,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from support.harness import ANSWER_BRIEFLY, E2ETestCase, alias_lines, config_text, term_text, url_of, url_text
+from support.harness import (
+    ANSWER_BRIEFLY,
+    ENV_PORT,
+    E2ETestCase,
+    alias_lines,
+    avoid_text,
+    config_text,
+    env_text,
+    env_url_of,
+    path_of,
+    path_text,
+    skill_of,
+    skill_text,
+    term_text,
+    tool_of,
+    tool_text,
+    url_of,
+    url_text,
+)
 
 
 class PromptContextTest(E2ETestCase):
@@ -80,6 +98,40 @@ class PromptContextTest(E2ETestCase):
         # 検証
         self.assert_context_has_term(result, "term-a")
         self.assert_context_has_entry(result, "URL", "link-a", f"url: {url_of('link-a')}")
+
+    def test_normal_when_added_types(self) -> None:
+        """skill・tool・path・env・avoid の要素の語が、種類ごとのセクションと列でモデルに届く（正常シナリオ（追加した種類の aliases））"""
+        # 準備
+        session = self.start_with_terms(
+            config_aliases=[
+                *alias_lines("skills", "skill", "skills/*.yaml"),
+                *alias_lines("tools", "tool", "tools/*.yaml"),
+                *alias_lines("paths", "path", "paths/*.yaml"),
+                *alias_lines("envs", "env", "envs/*.yaml"),
+                *alias_lines("avoids", "avoid", "avoids/*.yaml"),
+            ],
+        )
+        session.write_file(session.alias_dir / "skills" / "skill-a.yaml", skill_text("skill-a"))
+        session.write_file(session.alias_dir / "tools" / "tool-a.yaml", tool_text("tool-a"))
+        session.write_file(session.alias_dir / "paths" / "path-a.yaml", path_text("path-a"))
+        session.write_file(session.alias_dir / "envs" / "env-a.yaml", env_text("env-a"))
+        session.write_file(session.alias_dir / "avoids" / "avoid-a.yaml", avoid_text("avoid-a", "term-a"))
+        text = f"term-a と skill-a・tool-a・path-a・env-a・avoid-a について。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_sections_in_order(result, "用語", "スキル", "ツール", "パス", "環境", "避ける語")
+        self.assert_context_has_term(result, "term-a")
+        self.assert_context_has_entry(result, "スキル", "skill-a", "- skill-a（id: skill-a）", f"skill: `{skill_of('skill-a')}`")
+        self.assert_context_has_entry(result, "ツール", "tool-a", "- tool-a（id: tool-a）", f"tool: `{tool_of('tool-a')}`")
+        self.assert_context_has_entry(result, "パス", "path-a", "- path-a（id: path-a）", f"path: `{path_of('path-a')}`")
+        self.assert_context_has_entry(
+            result, "環境", "env-a", "- env-a（id: env-a）", f"url: {env_url_of('env-a')}", f"port: {ENV_PORT}"
+        )
+        self.assert_context_has_entry(result, "避ける語", "avoid-a", "- avoid-a（id: avoid-a）", "replacement: term-a")
+        self.assert_sent_unchanged(result, text)
 
     def test_error_when_config_unreadable(self) -> None:
         """設定ファイルが読めなくても入力は止まらず、文脈は追加されない（異常シナリオ（設定ファイルが読めない））"""
