@@ -215,6 +215,34 @@ scenarios:
       - term-x の文脈は追加されていない
       - 入力の送信は止まっていない
     test: test_error_when_alias_invalid
+  - name: 正常シナリオ（追加した種類の aliases）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `type` が `skill`・`tool`・`path`・`env`・`avoid` の要素を 1 つずつ持つ
+        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。env の要素の `fields` は `url` と `port` の両方を指す'
+      - name: 種類ごとの YAML
+        description: 語 `skill-a`（スキル名）・`tool-a`（ツール名）・`path-a`（パス）・`env-a`（URL とポート）・`avoid-a`（正しい語）を、それぞれの種類の YAML に 1 つずつ持つ
+        notes: '-'
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と skill-a・tool-a・path-a・env-a・avoid-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: aliases の要素をスキーマで検証し、全ての要素の語と照合する
+        P->>P: 当たった 6 語を記録に入れる
+        P->>CC: 種類ごとのセクションに分けた文脈を context に追加
+        CC->>M: 入力と文脈を送信
+    expected:
+      - モデルに届いた文脈に、見出し「この発言に出る用語」の下で、セクション「用語」「スキル」「ツール」「パス」「環境」「避ける語」がこの順に並んでいる
+      - skill-a の語・`id`・`skill`、tool-a の語・`id`・`tool`、path-a の語・`id`・`path`、env-a の語・`id`・`url`・`port`、avoid-a の語・`id`・`replacement` がそれぞれのセクションに並んでいる
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_added_types
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` と設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
