@@ -12,6 +12,7 @@ export const VALIDATION_KEYWORDS: readonly string[] = [
   'minItems',
   'minLength',
   'allOf',
+  'anyOf',
   'if',
   'then',
   '$ref',
@@ -76,9 +77,11 @@ function walkKeywords(root: Json, schema: unknown, pointer: string): void {
   if (isRecord(schema.additionalProperties)) {
     walkKeywords(root, schema.additionalProperties, `${pointer}/additionalProperties`)
   }
-  if (schema.allOf !== undefined) {
-    if (!Array.isArray(schema.allOf)) throw new SchemaError(`${pointer}/allOf: 並びではありません`)
-    for (const [index, child] of schema.allOf.entries()) walkKeywords(root, child, `${pointer}/allOf/${index}`)
+  for (const key of ['allOf', 'anyOf']) {
+    const children = schema[key]
+    if (children === undefined) continue
+    if (!Array.isArray(children)) throw new SchemaError(`${pointer}/${key}: 並びではありません`)
+    for (const [index, child] of children.entries()) walkKeywords(root, child, `${pointer}/${key}/${index}`)
   }
 }
 
@@ -201,6 +204,11 @@ export function validateSchema({
 
   if (Array.isArray(schema.allOf)) {
     for (const child of schema.allOf) reasons.push(...validate(child, value, path))
+  }
+  // どれか 1 つの要素に合えば理由を加えず、どれにも合わないときは全ての要素の理由を加える
+  if (Array.isArray(schema.anyOf)) {
+    const results = schema.anyOf.map((child) => validate(child, value, path))
+    if (!results.some((result) => result.length === 0)) reasons.push(...results.flat())
   }
   // `if` に合うときだけ `then` を当てる
   if (schema.if !== undefined && schema.then !== undefined && validate(schema.if, value, path).length === 0) {

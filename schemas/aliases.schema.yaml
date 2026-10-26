@@ -1,6 +1,6 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 title: エイリアスの定義
-description: 用語・文書のエイリアス・コマンド・URL を、どの YAML のどの列から取るかを定義する aliases[] の並び。取り込む側は、自分の設定の aliases のキーからこのルートを $ref で指す。
+description: 用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する aliases[] の並び。取り込む側は、自分の設定の aliases のキーからこのルートを $ref で指す。
 type: array
 items:
   $ref: "#/$defs/alias"
@@ -34,6 +34,11 @@ $defs:
           - doc
           - command
           - url
+          - skill
+          - tool
+          - path
+          - env
+          - avoid
       paths:
         title: 読む YAML
         description: 読む YAML のパスか glob。ファイルと glob を混ぜてよい。
@@ -149,6 +154,135 @@ $defs:
                   $ref: "#/$defs/fieldTitle"
                 description:
                   $ref: "#/$defs/fieldDescription"
+      - if:
+          required:
+            - type
+          properties:
+            type:
+              const: skill
+        then:
+          properties:
+            fields:
+              required:
+                - id
+                - match
+                - skill
+              additionalProperties: false
+              properties:
+                id:
+                  $ref: "#/$defs/fieldId"
+                match:
+                  $ref: "#/$defs/fieldMatch"
+                skill:
+                  $ref: "#/$defs/fieldSkill"
+                title:
+                  $ref: "#/$defs/fieldTitle"
+                description:
+                  $ref: "#/$defs/fieldDescription"
+      - if:
+          required:
+            - type
+          properties:
+            type:
+              const: tool
+        then:
+          properties:
+            fields:
+              required:
+                - id
+                - match
+                - tool
+              additionalProperties: false
+              properties:
+                id:
+                  $ref: "#/$defs/fieldId"
+                match:
+                  $ref: "#/$defs/fieldMatch"
+                tool:
+                  $ref: "#/$defs/fieldTool"
+                title:
+                  $ref: "#/$defs/fieldTitle"
+                description:
+                  $ref: "#/$defs/fieldDescription"
+      - if:
+          required:
+            - type
+          properties:
+            type:
+              const: path
+        then:
+          properties:
+            fields:
+              required:
+                - id
+                - match
+                - path
+              additionalProperties: false
+              properties:
+                id:
+                  $ref: "#/$defs/fieldId"
+                match:
+                  $ref: "#/$defs/fieldMatch"
+                path:
+                  $ref: "#/$defs/fieldPath"
+                title:
+                  $ref: "#/$defs/fieldTitle"
+                description:
+                  $ref: "#/$defs/fieldDescription"
+      - if:
+          required:
+            - type
+          properties:
+            type:
+              const: env
+        then:
+          properties:
+            fields:
+              required:
+                - id
+                - match
+              anyOf:
+                - required:
+                    - url
+                - required:
+                    - port
+              additionalProperties: false
+              properties:
+                id:
+                  $ref: "#/$defs/fieldId"
+                match:
+                  $ref: "#/$defs/fieldMatch"
+                url:
+                  $ref: "#/$defs/fieldUrl"
+                port:
+                  $ref: "#/$defs/fieldPort"
+                title:
+                  $ref: "#/$defs/fieldTitle"
+                description:
+                  $ref: "#/$defs/fieldDescription"
+      - if:
+          required:
+            - type
+          properties:
+            type:
+              const: avoid
+        then:
+          properties:
+            fields:
+              required:
+                - id
+                - match
+                - replacement
+              additionalProperties: false
+              properties:
+                id:
+                  $ref: "#/$defs/fieldId"
+                match:
+                  $ref: "#/$defs/fieldMatch"
+                replacement:
+                  $ref: "#/$defs/fieldReplacement"
+                title:
+                  $ref: "#/$defs/fieldTitle"
     examples:
       - id: glossary
         type: term
@@ -198,6 +332,61 @@ $defs:
           url: url
           title: name
           description: description
+      - id: skills
+        type: skill
+        paths:
+          - skills.yaml
+        fields:
+          id: id
+          match:
+            - aliases
+          skill: skill
+          title: name
+          description: description
+      - id: tools
+        type: tool
+        paths:
+          - tools.yaml
+        fields:
+          id: id
+          match:
+            - aliases
+          tool: tool
+          title: name
+          description: description
+      - id: paths
+        type: path
+        paths:
+          - paths.yaml
+        fields:
+          id: id
+          match:
+            - aliases
+          path: path
+          title: name
+          description: description
+      - id: envs
+        type: env
+        paths:
+          - envs.yaml
+        fields:
+          id: id
+          match:
+            - aliases
+          url: url
+          port: port
+          title: name
+          description: description
+      - id: avoids
+        type: avoid
+        paths:
+          - avoids.yaml
+        fields:
+          id: id
+          match:
+            - aliases
+          replacement: replacement
+          title: name
   fieldId:
     title: ID の列
     description: 項目の ID を持つ列の名前。
@@ -243,6 +432,31 @@ $defs:
     minLength: 1
   fieldUrl:
     title: URL の列
-    description: url のとき、URL を持つ列の名前。
+    description: url か env のとき、URL を持つ列の名前。env では port と合わせて 1 つ以上が必須。
+    type: string
+    minLength: 1
+  fieldSkill:
+    title: スキルの列
+    description: skill のとき、スキル名を持つ列の名前。
+    type: string
+    minLength: 1
+  fieldTool:
+    title: ツールの列
+    description: tool のとき、MCP のツール名を持つ列の名前。
+    type: string
+    minLength: 1
+  fieldPath:
+    title: パスの列
+    description: path のとき、ファイルかフォルダのパスを持つ列の名前。
+    type: string
+    minLength: 1
+  fieldPort:
+    title: ポートの列
+    description: env のとき、ポートを持つ列の名前。url と合わせて 1 つ以上が必須。
+    type: string
+    minLength: 1
+  fieldReplacement:
+    title: 正しい語の列
+    description: avoid のとき、やめた言い方に代えて使う正しい語を持つ列の名前。
     type: string
     minLength: 1

@@ -1,7 +1,7 @@
 import { validateSchema } from './schema'
 
 /** `aliases` の要素の `type`。文脈に並べる列とセクションが種類ごとに決まる */
-export type AliasType = 'term' | 'doc' | 'command' | 'url'
+export type AliasType = 'term' | 'doc' | 'command' | 'url' | 'skill' | 'tool' | 'path' | 'env' | 'avoid'
 
 /** `aliases` の要素の `fields`。項目のどの列を使うかの対応 */
 export type AliasFields = {
@@ -19,6 +19,16 @@ export type AliasFields = {
   command?: string | undefined
   cwd?: string | undefined
   url?: string | undefined
+  /** スキル名の列の名前（skill） */
+  skill?: string | undefined
+  /** MCP のツール名の列の名前（tool） */
+  tool?: string | undefined
+  /** パスの列の名前（path） */
+  path?: string | undefined
+  /** ポートの列の名前（env） */
+  port?: string | undefined
+  /** やめた言い方に代えて使う正しい語の列の名前（avoid） */
+  replacement?: string | undefined
 }
 
 /** スキーマの検証を通った有効な `aliases` の 1 要素 */

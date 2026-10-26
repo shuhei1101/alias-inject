@@ -76,6 +76,11 @@ function relatedText(value: unknown, wordOfId: Map<string, string>): string | un
 function buildFields(item: Item, alias: ResolvedAlias, wordOfId: Map<string, string>) {
   const { fields } = alias
   const column = (name: string | undefined) => (name === undefined ? undefined : textOf(item[name]))
+  // 値をバッククォートで囲んだ列の値
+  const code = (name: string | undefined) => {
+    const value = column(name)
+    return value === undefined ? undefined : `\`${value}\``
+  }
   const candidates: [string, string | undefined][] = []
   switch (alias.type) {
     case 'term':
@@ -85,16 +90,34 @@ function buildFields(item: Item, alias: ResolvedAlias, wordOfId: Map<string, str
     case 'doc':
       candidates.push(['description', column(fields.description)])
       break
-    case 'command': {
-      const command = column(fields.command)
-      candidates.push(['command', command === undefined ? undefined : `\`${command}\``])
+    case 'command':
+      candidates.push(['command', code(fields.command)])
       candidates.push(['cwd', column(fields.cwd)])
       candidates.push(['description', column(fields.description)])
       break
-    }
     case 'url':
       candidates.push(['url', column(fields.url)])
       candidates.push(['description', column(fields.description)])
+      break
+    case 'skill':
+      candidates.push(['skill', code(fields.skill)])
+      candidates.push(['description', column(fields.description)])
+      break
+    case 'tool':
+      candidates.push(['tool', code(fields.tool)])
+      candidates.push(['description', column(fields.description)])
+      break
+    case 'path':
+      candidates.push(['path', code(fields.path)])
+      candidates.push(['description', column(fields.description)])
+      break
+    case 'env':
+      candidates.push(['url', column(fields.url)])
+      candidates.push(['port', column(fields.port)])
+      candidates.push(['description', column(fields.description)])
+      break
+    case 'avoid':
+      candidates.push(['replacement', column(fields.replacement)])
       break
   }
   return candidates.flatMap(([name, value]) => (value === undefined ? [] : [{ name, value }]))
