@@ -239,7 +239,7 @@ function installToolWorld(on: On): ToolWorld {
 
 // ツールを呼び、返ったツールの結果を返す
 async function callTool($: Engine) {
-  return $.tool.call({ tool: 'Read', input: { file_path: '/repo/sample/note.md' } })
+  return $.tool.call({ tool: 'Read', file_path: '/repo/sample/note.md' })
 }
 
 // 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する（正常系）
