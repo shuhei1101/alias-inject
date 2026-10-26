@@ -1,0 +1,1 @@
+# 引用の種類に skill・tool・path・env・avoid を追加する
