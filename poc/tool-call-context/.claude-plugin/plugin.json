@@ -1,0 +1,4 @@
+{
+  "name": "poc-tool-call-context",
+  "description": "PoC: tool.call の結果へ変数参照の値を文脈として追加する"
+}
