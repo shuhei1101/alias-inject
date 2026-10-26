@@ -7,10 +7,12 @@ scenarios:
         notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
       - name: 設定ファイル
         description: '`global.repositories` に、一時のリポジトリの `dev-docs.yaml` を指す要素を 1 つ持つ'
+        notes: '-'
       - name: dev-docs.yaml
-        description: '`aliases` に `type: term` の要素を 1 つ持ち、`paths` が用語の YAML に当たる'
+        description: '`documents` に、`metadata.alias_type` が `{type: custom, value: term}` で `records: terms` の行を 1 つ持ち、`paths` が用語の YAML に当たる'
+        notes: '-'
       - name: 用語の YAML
-        description: 語 `term-a`・`term-b` を持つ
+        description: 配列 `terms` に語 `term-a`・`term-b` を持つ
         notes: 後の手順で語 `term-c` を追加する
       - name: 読ませるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` を含むテキストファイル
@@ -47,7 +49,7 @@ primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで入力する
 preconditions:
   - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
-  - 設定ファイルの `global.repositories` が `dev-docs.yaml` を指し、その `aliases` が照合する用語の YAML を指している
+  - 設定ファイルの `global.repositories` が `dev-docs.yaml` を指し、その `documents` の `metadata.alias_type` を持つ行が照合する用語の YAML を指している
 success_guarantee: 入力の文は変わらず、初めて出た語の引用の文脈だけがモデルに追加される。ツールで読んだ本文も変わらず、本文の変数参照の値がツールの結果の後ろの文脈としてモデルに届く。
 minimal_guarantee: 設定ファイルや YAML が読めないときも、入力はそのままモデルに届く。
 test_file: tests/e2e/複合ユースケース/test_session_flow.py
