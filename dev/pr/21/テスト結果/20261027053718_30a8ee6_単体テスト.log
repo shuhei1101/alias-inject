@@ -1,0 +1,251 @@
+$ claude plugin test .
+
+
+tests/integration/hooks/prompt-submit.test.ts:
+(fail) test_normal [655.95ms]
+  AssertionError: expect(received).toBe()
+  
+  Expected: 1
+  Received: undefined
+(fail) test_normal_when_over_item_limit [274.50ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(fail) test_normal_when_over_char_limit [301.67ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: ""
+(fail) test_normal_when_origin_excluded [205.56ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(fail) test_normal_when_slash_command [209.90ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(pass) test_normal_when_config_path_missing [160.92ms]
+(fail) test_normal_when_project_matched [173.22ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "## 用語"
+  Received: ""
+(fail) test_normal_when_files_changed [170.17ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-B"
+  Received: undefined
+(fail) test_normal_when_same_id_across_repositories [172.29ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "description: 説明 Term-A"
+  Received: ""
+(fail) test_normal_when_disabled [167.46ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: ""
+(fail) test_normal_when_repository_config_changed [191.75ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(fail) test_normal_when_added_types [174.58ms]
+  AssertionError: expect(received).toBe()
+  
+  Expected: true
+  Received: false
+(pass) test_error_when_config_unreadable [186.70ms]
+(fail) test_error_when_repository_unreadable [174.58ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "## 用語"
+  Received: ""
+(fail) test_error_when_alias_invalid [172.65ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: ""
+(fail) test_error_when_yaml_malformed [159.94ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "## 用語"
+  Received: ""
+(fail) test_error_when_env_without_endpoint [164.26ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "## 用語"
+  Received: ""
+
+tests/integration/hooks/session-compact.test.ts:
+(fail) test_normal [577.04ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(fail) test_normal_when_not_compacted [341.79ms]
+  AssertionError: expect(received).toBe()
+  
+  Expected: 1
+  Received: undefined
+
+tests/integration/hooks/session-end.test.ts:
+(fail) test_normal [691.69ms]
+  AssertionError: expect(received).toContain()
+  
+  Expected: containing "Term-A"
+  Received: undefined
+(pass) test_normal_when_not_clear [334.75ms]
+
+tests/integration/hooks/tool-call.test.ts:
+(pass) test_normal [575.80ms]
+(pass) test_normal_when_unset [334.12ms]
+(pass) test_normal_when_no_reference [241.74ms]
+(pass) test_normal_when_error_result [246.48ms]
+(pass) test_normal_when_over_reference_limit [278.09ms]
+(pass) test_normal_when_over_value_limit [170.37ms]
+(pass) test_error_when_nonzero_exit [177.95ms]
+(pass) test_error_when_process_failed [173.77ms]
+
+tests/unit/hooks/handlers.test.ts:
+(pass) test_handle_prompt_submit_when_disabled [422.06ms]
+(pass) test_handle_prompt_submit_when_context_given [315.81ms]
+(pass) test_handle_prompt_submit_when_settings_warned [308.32ms]
+(pass) test_handle_session_compact [274.46ms]
+(pass) test_handle_session_compact_when_not_compacted [251.72ms]
+(pass) test_handle_prompt_submit_when_alias_paths_match_config [205.21ms]
+(pass) test_handle_session_end_when_clear [223.25ms]
+(pass) test_handle_tool_call_when_context_given [171.52ms]
+(pass) test_handle_tool_call_when_skipped [161.18ms]
+(pass) test_handle_tool_call_when_process_failed [176.14ms]
+
+tests/unit/hooks/lib/alias.test.ts:
+(pass) test_parse_aliases [15.18ms]
+(pass) test_parse_aliases_when_disabled [0.53ms]
+(pass) test_parse_aliases_when_alias_type_only [3.77ms]
+(pass) test_parse_aliases_when_invalid [1.61ms]
+(pass) test_dedupe_aliases [1.57ms]
+(pass) test_resolve_metadata [4.33ms]
+(pass) test_missing_keys [0.49ms]
+(pass) test_missing_keys_when_env [0.47ms]
+(pass) test_is_alias_type [0.21ms]
+
+tests/unit/hooks/lib/config.test.ts:
+(pass) test_read_config_path [18.50ms]
+(pass) test_read_config_path_when_missing [4.14ms]
+(pass) test_parse_config [6.20ms]
+(pass) test_parse_config_when_keys_omitted [4.99ms]
+(pass) test_parse_config_when_alias_invalid [1.88ms]
+(pass) test_parse_config_when_origins_empty [7.94ms]
+(pass) test_parse_config_when_limit_invalid [0.54ms]
+(pass) test_parse_config_when_project_without_match [0.68ms]
+(pass) test_parse_config_when_not_mapping [0.33ms]
+(pass) test_match_project_when_absolute [0.35ms]
+(pass) test_match_project_when_name [0.20ms]
+(pass) test_resolve_settings [0.91ms]
+(pass) test_resolve_settings_when_relative_paths [6.10ms]
+(pass) test_resolve_settings_when_duplicated [2.18ms]
+(pass) test_resolve_settings_when_project_overrides [0.50ms]
+(pass) test_is_origin_allowed [0.25ms]
+(pass) test_is_origin_allowed_when_origins_null [0.16ms]
+(pass) test_parse_repository_config [0.59ms]
+(pass) test_parse_repository_config_when_disabled [0.16ms]
+(pass) test_parse_repository_config_when_invalid [0.51ms]
+
+tests/unit/hooks/lib/context.test.ts:
+(pass) test_entry_key [7.15ms]
+(pass) test_render_context [1.13ms]
+(pass) test_render_context_when_same_id_in_repositories [0.81ms]
+(pass) test_select_entries [4.59ms]
+(pass) test_select_entries_when_over_item_limit [16.35ms]
+(pass) test_select_entries_when_over_char_limit [0.69ms]
+(pass) test_select_entries_when_nothing_selected [0.53ms]
+
+tests/unit/hooks/lib/entry.test.ts:
+(pass) test_parse_documents_when_file [2.11ms]
+(pass) test_parse_documents_when_records [0.22ms]
+(pass) test_parse_documents_when_unmatched [0.49ms]
+(pass) test_build_entries_when_term [1.38ms]
+(pass) test_build_entries_when_ref [0.26ms]
+(pass) test_build_entries_when_name_missing [0.25ms]
+(pass) test_build_entries_when_required_missing [0.55ms]
+(pass) test_build_entries_when_command [0.27ms]
+(pass) test_build_entries_when_doc_and_url [0.35ms]
+(pass) test_build_entries_when_skill_tool_path [0.56ms]
+(pass) test_build_entries_when_env_and_avoid [0.53ms]
+(pass) test_load_alias_entries [7.03ms]
+(pass) test_load_alias_entries_when_records [0.81ms]
+(pass) test_load_alias_entries_when_yaml_malformed [1.47ms]
+
+tests/unit/hooks/lib/loader.test.ts:
+(pass) test_expand_home [2.31ms]
+(pass) test_expand_home_when_tilde_only [0.27ms]
+(pass) test_expand_home_when_not_tilde [0.25ms]
+(pass) test_resolve_path [0.27ms]
+(pass) test_resolve_path_when_absolute [0.45ms]
+(pass) test_resolve_path_when_dot_segments [0.29ms]
+(pass) test_match_segment [0.90ms]
+(pass) test_match_segment_when_multiple_stars [0.39ms]
+(pass) test_expand_files [1.41ms]
+(pass) test_expand_files_when_double_star [0.57ms]
+(pass) test_expand_files_when_no_star [0.35ms]
+(pass) test_expand_files_when_dir_missing [0.25ms]
+(pass) test_expand_files_when_symlink [0.55ms]
+(pass) test_read_if_changed [0.55ms]
+(pass) test_read_if_changed_when_mtime_changed [0.58ms]
+(pass) test_read_if_changed_when_kind_differs [0.83ms]
+(pass) test_parse_yaml [4.08ms]
+(pass) test_parse_yaml_when_empty [0.32ms]
+(pass) test_parse_yaml_when_malformed [1.43ms]
+(pass) test_parse_yaml_when_proto_key [0.26ms]
+(pass) test_parent_dir [0.22ms]
+
+tests/unit/hooks/lib/match.test.ts:
+(pass) test_normalize [4.27ms]
+(pass) test_find_hits [0.89ms]
+(pass) test_find_hits_when_same_position [0.44ms]
+(pass) test_find_hits_when_excluded [0.58ms]
+(pass) test_find_hits_when_no_match [0.31ms]
+
+tests/unit/hooks/lib/record.test.ts:
+(pass) test_read_recorded_when_never_written [4.00ms]
+(pass) test_add_recorded [2.12ms]
+(pass) test_clear_recorded [0.75ms]
+
+tests/unit/hooks/lib/repository.test.ts:
+(pass) test_parse_repository [4.83ms]
+(pass) test_parse_repository_when_documents_missing [1.50ms]
+(pass) test_parse_repository_when_alias_invalid [1.36ms]
+(pass) test_parse_repository_when_malformed [1.50ms]
+(pass) test_load_repository_aliases [2.04ms]
+(pass) test_load_repository_aliases_when_missing [1.90ms]
+
+tests/unit/hooks/lib/schema.test.ts:
+(pass) test_load_alias_schema [3.81ms]
+(pass) test_check_keywords [0.80ms]
+(pass) test_check_keywords_when_unsupported [1.81ms]
+(pass) test_validate_schema [1.30ms]
+(pass) test_validate_schema_when_required_missing [0.42ms]
+(pass) test_validate_schema_when_type_mismatch [0.87ms]
+(pass) test_validate_schema_when_additional_property [1.45ms]
+(pass) test_validate_schema_when_if_not_matched [0.28ms]
+(pass) test_validate_schema_when_any_of_not_matched [1.59ms]
+
+tests/unit/hooks/lib/variable.test.ts:
+(pass) test_find_reference_names [2.24ms]
+(pass) test_find_reference_names_when_not_name [0.67ms]
+(pass) test_parse_env_output [2.01ms]
+(pass) test_format_reference_lines [0.46ms]
+(pass) test_format_reference_lines_when_multiline [0.39ms]
+(pass) test_format_reference_lines_when_value_too_long [1.41ms]
+(pass) test_format_reference_lines_when_too_many [1.69ms]
+
+tests/unit/hooks/register.test.ts:
+(pass) test_register [285.05ms]
+
+ 123 pass
+ 18 fail
+Ran 141 tests across 16 files. [4.50s]
