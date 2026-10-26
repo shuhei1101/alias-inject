@@ -1,0 +1,4 @@
+{
+  "name": "poc-child-path",
+  "description": "PoC: hooks モジュールの子プロセスへ届く PATH を観測する"
+}
