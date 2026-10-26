@@ -4,91 +4,83 @@ global:
   # false のとき、何も追加しない
   enabled: true
 
-  # 読むリポジトリの dev-docs.yaml。その aliases が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  # 読むリポジトリの dev-docs.yaml。その documents のうち metadata.alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
   repositories:
     - config: ~/repo/knowledge/dev-docs.yaml
     - config: ../old-notes/dev-docs.yaml
       # false のとき、このリポジトリを読まない
       enabled: false
 
-  # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml の aliases[] の要素と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
+  # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml のエイリアスの元の行と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
+  # metadata の各キーは、文書の列から取る {type: ref, field: 列名} か、行の全文書に同じ値を使う {type: custom, value: 値}。書かないキーは同じ名前の列の ref とみなす
   aliases:
     - id: terms
-      type: term
       paths: [terms/*.yaml]
-      fields:
-        id: id
-        match: [name, aliases]
-        description: description
-        title: name
-        related: related
+      metadata:
+        alias_type:
+          type: custom
+          value: term
+        # 文脈に出す語を title の列から取る
+        name:
+          type: ref
+          field: title
     - id: docs
-      type: doc
       paths: [docs/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: doc
     - id: commands
-      type: command
       paths: [commands/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        command: command
-        cwd: cwd
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: command
     - id: urls
-      type: url
-      # false のとき、この要素を使わない
-      enabled: true
       paths: [urls/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        url: url
-        description: description
+      # false のとき、この行を使わない
+      enabled: true
+      metadata:
+        alias_type:
+          type: custom
+          value: url
     - id: skills
-      type: skill
       paths: [skills/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        skill: skill
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: skill
     - id: tools
-      type: tool
       paths: [tools/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        tool: tool
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: tool
     - id: paths
-      type: path
       paths: [paths/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        path: path
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: path
     - id: envs
-      type: env
       paths: [envs/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        # url と port は、どちらか 1 つ以上を書く
-        url: url
-        port: port
-        description: description
+      metadata:
+        alias_type:
+          type: custom
+          value: env
+        # url と port は、どちらか 1 つ以上を指定する（書かなくても同じ名前の列から取る）
+        url:
+          type: ref
+          field: url
+        port:
+          type: ref
+          field: port
     - id: avoids
-      type: avoid
       paths: [avoids/*.yaml]
-      fields:
-        id: id
-        match: [name]
-        replacement: replacement
+      metadata:
+        alias_type:
+          type: custom
+          value: avoid
 
   # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
   origins: [user, plugin]
@@ -114,9 +106,10 @@ projects:
       - config: dev-docs.yaml
     aliases:
       - id: project-commands
-        type: command
-        paths: [docs/command/*.yaml]
-        fields:
-          id: id
-          match: [name]
-          command: command
+        paths: [docs/command.yaml]
+        # 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書
+        records: commands
+        metadata:
+          alias_type:
+            type: custom
+            value: command
