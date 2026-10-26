@@ -363,10 +363,10 @@ test('test_error_when_alias_invalid', async ($, on) => {
   expect(context).not.toContain('Term-X')
   expect(context).not.toContain('Term-V')
   expect(context).not.toContain('Term-Z')
-  // dev-docs.yaml のパス・行の id・理由を含む行と、id の重なりの行が debug log に届く
+  // dev-docs.yaml のパス・行の id・理由（bad は name、unknown は alias_type）を含む行と、id の重なりの行が debug log に届く
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(DEV_DOCS_PATH))
-  expect(debugLines.some((line) => line.text.includes('bad'))).toBe(true)
-  expect(debugLines.some((line) => line.text.includes('unknown'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('id: bad') && line.text.includes('metadata.name'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('id: unknown') && line.text.includes('metadata.alias_type'))).toBe(true)
   expect(debugLines.some((line) => line.text.includes('terms') && line.text.includes('重なり'))).toBe(true)
 })
 
