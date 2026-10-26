@@ -83,6 +83,6 @@ primary_actor: 利用者
 trigger: 利用者が設定ファイル・`dev-docs.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:
   - 同じセッションで 1 回以上入力を送信し、設定ファイル・`dev-docs.yaml`・照合の YAML を読み込み済み
-success_guarantee: 書き換えた直後の入力から、書き換え後の語と エイリアスの行で照合される。
+success_guarantee: 書き換えた直後の入力から、書き換え後の語とエイリアスの行で照合される。
 minimal_guarantee: 書き換え後の YAML が読めないときも、入力の送信は止まらず、他のエイリアスの行の照合は続く。
 test_file: tests/e2e/単一ユースケース/test_reload.py
