@@ -586,7 +586,7 @@ response_example: |
     - cwd: /mnt/c/Users/shuhe/repo/ai-monitor
     - description: 依存を入れる
   ```
-response_notes: '文脈は `# {heading}` の下に、`type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 避ける語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの `aliases` の要素の語も、同じ `type` なら 1 つのセクションに並べる。語は `fields.title` の列の値にし、無ければ `fields.match` の最初の列の値にする。箇条書きの子には `type` ごとの列（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲むのうち値のあるものだけを並べる。'
+response_notes: '文脈は `# {heading}` の下に、`type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 避ける語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの `aliases` の要素の語も、同じ `type` なら 1 つのセクションに並べる。語は `fields.title` の列の値にし、無ければ `fields.match` の最初の列の値にする。箇条書きの子には `type` ごとの列（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
 exceptions:
   - name: なし（正常終了）
     condition: 照合して文脈を追加したか、追加する語が無く受け取ったまま渡した

@@ -161,6 +161,46 @@ settings:
     required: false
     description: type が url か env のとき、URL を持つ列の名前。url では必須。env では `fields.port` と合わせて 1 つ以上が必須
     missing: url ではその要素を照合から外す。env では `fields.port` も無ければその要素を照合から外し、`fields.port` があれば URL を追加しない
+  - key: global.aliases[].fields.skill
+    title: スキルの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が skill のとき、スキル名を持つ列の名前。skill では必須
+    missing: skill ではその要素を照合から外す
+    status: planned
+  - key: global.aliases[].fields.tool
+    title: ツールの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が tool のとき、MCP のツール名を持つ列の名前。tool では必須
+    missing: tool ではその要素を照合から外す
+    status: planned
+  - key: global.aliases[].fields.path
+    title: パスの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が path のとき、ファイルかフォルダのパスを持つ列の名前。path では必須。値のパスは展開も解決もせず、そのまま追加する
+    missing: path ではその要素を照合から外す
+    status: planned
+  - key: global.aliases[].fields.port
+    title: ポートの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が env のとき、ポートを持つ列の名前。env では `fields.url` と合わせて 1 つ以上が必須。列の値が数値なら文字列にして追加する
+    missing: '`fields.url` も無ければその要素を照合から外し、`fields.url` があればポートを追加しない'
+    status: planned
+  - key: global.aliases[].fields.replacement
+    title: 正しい語の列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: type が avoid のとき、やめた言い方（`fields.match` の語）に代えて使う正しい語を持つ列の名前。avoid では必須
+    missing: avoid ではその要素を照合から外す
+    status: planned
   - key: global.origins
     title: 対象にする入力の出所
     file: ~/.config/alias-inject/settings.yaml
@@ -219,45 +259,5 @@ settings:
     required: false
     default: '[]'
     description: '`match` が当たったときに `global.aliases` の後ろへ重ねるエイリアス。要素のキーは `global.aliases[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
-  - key: global.aliases[].fields.skill
-    title: スキルの列
-    file: ~/.config/alias-inject/settings.yaml
-    type: string
-    required: false
-    description: type が skill のとき、スキル名を持つ列の名前。skill では必須
-    missing: skill ではその要素を照合から外す
-    status: planned
-  - key: global.aliases[].fields.tool
-    title: ツールの列
-    file: ~/.config/alias-inject/settings.yaml
-    type: string
-    required: false
-    description: type が tool のとき、MCP のツール名を持つ列の名前。tool では必須
-    missing: tool ではその要素を照合から外す
-    status: planned
-  - key: global.aliases[].fields.path
-    title: パスの列
-    file: ~/.config/alias-inject/settings.yaml
-    type: string
-    required: false
-    description: type が path のとき、ファイルかフォルダのパスを持つ列の名前。path では必須。値のパスは展開も解決もせず、そのまま追加する
-    missing: path ではその要素を照合から外す
-    status: planned
-  - key: global.aliases[].fields.port
-    title: ポートの列
-    file: ~/.config/alias-inject/settings.yaml
-    type: string
-    required: false
-    description: type が env のとき、ポートを持つ列の名前。env では `fields.url` と合わせて 1 つ以上が必須。列の値が数値なら文字列にして追加する
-    missing: '`fields.url` も無ければその要素を照合から外し、`fields.url` があればポートを追加しない'
-    status: planned
-  - key: global.aliases[].fields.replacement
-    title: 正しい語の列
-    file: ~/.config/alias-inject/settings.yaml
-    type: string
-    required: false
-    description: type が avoid のとき、やめた言い方（`fields.match` の語）に代えて使う正しい語を持つ列の名前。avoid では必須
-    missing: avoid ではその要素を照合から外す
-    status: planned
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]
