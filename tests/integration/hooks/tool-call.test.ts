@@ -1,20 +1,5 @@
-import type { On } from 'claude-code'
 import { expect, test } from 'claude-code/testing'
-import type { Engine } from 'claude-code/testing'
-import type { LogLine } from '../../unit/hooks/support/engine'
-
-type ProcessRun = { argv: readonly string[]; timeoutMs: number | undefined }
-
-type ToolWorld = {
-  /** `tool.call` の一番下の処理が返すツールの結果 */
-  answer: unknown
-  /** `process.run` の応答。`{ value }` は子プロセスの結果、`{ deny }` は例外 */
-  run: unknown
-  /** `process.run` に届いた argv と待ちの上限 */
-  runs: ProcessRun[]
-  /** `$.ui.log` に届いた行 */
-  logs: LogLine[]
-}
+import { callTool, installToolWorld, numberedNames } from '../../unit/hooks/support/engine'
 
 // `env -0` の出力。名前と値の組を NUL で区切る
 function envOutput(entries: Record<string, string>): string {
@@ -26,31 +11,6 @@ function envOutput(entries: Record<string, string>): string {
 // `env -0` が終了コード 0 で返す応答
 function envRun(entries: Record<string, string>): unknown {
   return { value: { exitCode: 0, stdout: envOutput(entries) } }
-}
-
-// ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる
-function installToolWorld(on: On): ToolWorld {
-  const world: ToolWorld = { answer: { result: 'r' }, run: envRun({}), runs: [], logs: [] }
-  on('tool.call', () => world.answer as never)
-  on('process.run', (_, e) => {
-    world.runs.push({ argv: e.argv, timeoutMs: e.init?.timeoutMs })
-    return world.run as never
-  })
-  on('ui.log', (_, e) => {
-    world.logs.push({ text: e.text, to: e.to })
-    return { value: undefined }
-  })
-  return world
-}
-
-// ツールを呼び、返ったツールの結果を返す
-async function callTool($: Engine) {
-  return $.tool.call({ tool: 'Read', file_path: '/repo/sample/note.md' })
-}
-
-// `NAME_01` の形の名前を `count` 個並べる
-function numberedNames(count: number): string[] {
-  return Array.from({ length: count }, (_, index) => `NAME_${String(index + 1).padStart(2, '0')}`)
 }
 
 // 本文に出た名前ごとに 1 行の値を context に追加する（正常系）

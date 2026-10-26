@@ -1,10 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 import { findReferenceNames, formatReferenceLines, parseEnvOutput } from '../../../../hooks/lib/variable'
-
-// `NAME_01` の形の名前を `count` 個並べる
-function numberedNames(count: number): string[] {
-  return Array.from({ length: count }, (_, index) => `NAME_${String(index + 1).padStart(2, '0')}`)
-}
+import { numberedNames } from '../support/engine'
 
 // 名前を出た順に重なりを除いて返す（正常系）
 test('test_find_reference_names', () => {

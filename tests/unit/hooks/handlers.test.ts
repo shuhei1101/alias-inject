@@ -1,7 +1,5 @@
-import type { On } from 'claude-code'
 import { expect, test } from 'claude-code/testing'
-import type { Engine } from 'claude-code/testing'
-import { COMPACTED_MESSAGE, installWorld, submit, userSettingsWithConfig } from './support/engine'
+import { COMPACTED_MESSAGE, callTool, installToolWorld, installWorld, submit, userSettingsWithConfig } from './support/engine'
 import type { LogLine } from './support/engine'
 import { MemoryFs } from './support/memory-fs'
 
@@ -210,37 +208,6 @@ test('test_handle_session_end_when_clear', async ($, on) => {
   expect(s1AfterClear.context ?? []).toEqual([])
   expect(s2AfterClear.context?.length).toBe(1)
 })
-
-type ToolWorld = {
-  /** `tool.call` の一番下の処理が返すツールの結果 */
-  answer: unknown
-  /** `process.run` の応答。`{ value }` は子プロセスの結果、`{ deny }` は例外 */
-  run: unknown
-  /** `process.run` に届いた argv と待ちの上限 */
-  runs: { argv: readonly string[]; timeoutMs: number | undefined }[]
-  /** `$.ui.log` に届いた行 */
-  logs: LogLine[]
-}
-
-// ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる
-function installToolWorld(on: On): ToolWorld {
-  const world: ToolWorld = { answer: { result: 'r' }, run: { value: { exitCode: 0, stdout: '' } }, runs: [], logs: [] }
-  on('tool.call', () => world.answer as never)
-  on('process.run', (_, e) => {
-    world.runs.push({ argv: e.argv, timeoutMs: e.init?.timeoutMs })
-    return world.run as never
-  })
-  on('ui.log', (_, e) => {
-    world.logs.push({ text: e.text, to: e.to })
-    return { value: undefined }
-  })
-  return world
-}
-
-// ツールを呼び、返ったツールの結果を返す
-async function callTool($: Engine) {
-  return $.tool.call({ tool: 'Read', file_path: '/repo/sample/note.md' })
-}
 
 // 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する（正常系）
 test('test_handle_tool_call_when_context_given', async ($, on) => {
