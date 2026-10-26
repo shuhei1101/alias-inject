@@ -156,3 +156,42 @@ export async function submit(
     ...(extra.command === undefined ? {} : { command: extra.command }),
   })
 }
+
+/** `process.run` に届いた argv と待ちの上限 */
+export type ProcessRun = { argv: readonly string[]; timeoutMs: number | undefined }
+
+export type ToolWorld = {
+  /** `tool.call` の一番下の処理が返すツールの結果 */
+  answer: unknown
+  /** `process.run` の応答。`{ value }` は子プロセスの結果、`{ deny }` は例外 */
+  run: unknown
+  /** `process.run` に届いた argv と待ちの上限 */
+  runs: ProcessRun[]
+  /** `$.ui.log` に届いた行 */
+  logs: LogLine[]
+}
+
+/** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる */
+export function installToolWorld(on: On): ToolWorld {
+  const world: ToolWorld = { answer: { result: 'r' }, run: { value: { exitCode: 0, stdout: '' } }, runs: [], logs: [] }
+  on('tool.call', () => world.answer as never)
+  on('process.run', (_, e) => {
+    world.runs.push({ argv: e.argv, timeoutMs: e.init?.timeoutMs })
+    return world.run as never
+  })
+  on('ui.log', (_, e) => {
+    world.logs.push({ text: e.text, to: e.to })
+    return { value: undefined }
+  })
+  return world
+}
+
+/** ツールを呼び、返ったツールの結果を返す */
+export async function callTool($: Engine) {
+  return $.tool.call({ tool: 'Read', file_path: '/repo/sample/note.md' })
+}
+
+/** `NAME_01` の形の名前を `count` 個並べる */
+export function numberedNames(count: number): string[] {
+  return Array.from({ length: count }, (_, index) => `NAME_${String(index + 1).padStart(2, '0')}`)
+}

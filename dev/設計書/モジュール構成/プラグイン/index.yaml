@@ -21,3 +21,5 @@ items:
     summary: 追加する語の選択と文脈の組み立て
   - page: 記録.yaml
     summary: セッションごとの追加した語の記録
+  - page: 変数参照.yaml
+    summary: ツールの結果の変数参照の名前の拾い出し・env の出力の分割・値の行の組み立て

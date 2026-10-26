@@ -42,6 +42,12 @@ overview:
     - from: plugin
       to: cc
       label: 引用の文脈
+    - from: cc
+      to: plugin
+      label: ツールの結果
+    - from: plugin
+      to: cc
+      label: 変数参照の値
     - from: plugin
       to: settings
       label: 読む
@@ -71,7 +77,7 @@ repository:
 subsystems:
   - name: プラグイン
     scope: plugin
-    role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する
+    role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する。ツールで読んだ本文の `!{名前}` には、同じ名前の環境変数の値を文脈として追加する
     runtime: TypeScript（Claude Code の mod のランタイムで動く）
     runs_on: 利用者の手元の Claude Code（ターミナル版）。ユーザースコープで入れる
     status: implemented

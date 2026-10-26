@@ -6,6 +6,8 @@ import type {
   SessionCompactResult,
   SessionEndInput,
   SessionEndResult,
+  ToolCallInput,
+  ToolCallResult,
 } from 'claude-code'
 import type { ResolvedAlias } from './lib/alias'
 import { ConfigError, isOriginAllowed, parseConfig, readConfigPath, resolveSettings } from './lib/config'
@@ -19,6 +21,7 @@ import { findHits } from './lib/match'
 import { addRecorded, clearRecorded, readRecorded } from './lib/record'
 import { RepositoryError, loadRepositoryAliases } from './lib/repository'
 import { loadAliasSchema } from './lib/schema'
+import { VARIABLE_REFERENCE_TIMEOUT_MS, findReferenceNames, formatReferenceLines, parseEnvOutput } from './lib/variable'
 
 type Next<Input, Result> = (e: Input) => Promise<Result>
 
@@ -167,4 +170,31 @@ export async function handleSessionEnd(
 ): Promise<SessionEndResult> {
   if (e.reason === 'clear') await clearRecorded($, e.sessionId)
   return next(e)
+}
+
+/** ツールの結果の本文の `!{名前}` に、同じ名前の環境変数の値を `context` の末尾に追加して返す */
+export async function handleToolCall(
+  $: EngineInterface,
+  e: ToolCallInput,
+  next: Next<ToolCallInput, ToolCallResult>,
+): Promise<ToolCallResult> {
+  const result = await next(e)
+  if (result.deny !== undefined || result.isError || typeof result.text !== 'string') return result
+
+  const names = findReferenceNames(result.text)
+  if (names.length === 0) return result
+
+  try {
+    const run = await $.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })
+    if (run.exitCode !== 0) {
+      logDebug($, `変数参照の値を引けません: env の終了コード ${run.exitCode}`)
+      return result
+    }
+    const lines = formatReferenceLines(names, parseEnvOutput(run.stdout))
+    return { ...result, context: [...(result.context ?? []), lines] }
+  } catch (error) {
+    // 起動できない・待ちの上限の超過を含め、値を引けなくてもツールの結果は止めない
+    logDebug($, `変数参照の値を引けません: ${describe(error)}`)
+    return result
+  }
 }

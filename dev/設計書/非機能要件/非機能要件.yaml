@@ -50,4 +50,35 @@ requirements:
     overflow: 上限を超える語は飛ばして、後ろの語で収まるものを続けて追加する。飛ばした語は記録に入れず、次に出た入力で追加の対象になる
     refs:
       - dev/設計書/設定/プラグイン#settings[global.max_chars]
+  - name: 変数参照の値を引く子プロセスの待ちの上限
+    english_name: variable_reference_timeout
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '20'
+    unit: ms
+    rationale: 規約『資源の値の決め方』の下流を待つタイムアウト（p99.9 + p99.9 の 50% の余裕）で導く。WSL2 の Ubuntu 24.04・Claude Code 2.1.310 で、`tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流す計測を 3 回行い、p50 は 2.02〜2.17ms、p99.9 は 10.82・12.69・12.77ms（最大 28.89ms）だった。最も大きい p99.9 の 12.77ms × 1.5 = 19.2ms を切り上げて 20ms にする。フックの予算（`HookBudget.ms`）は待ちを数えないため、外側の制約は無い。`$.process.run` の既定（30 秒）は使わず `timeoutMs` で渡す
+    measurement: '`!{名前}` を含む結果を返すツールの `tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流し、1 回ごとに起こしてから返るまでの時間の p50・p99.9 を測る'
+    overflow: 子プロセスを打ち切り、debug log に出して、文脈を追加せずにツールの結果をそのまま返す
+    status: planned
+  - name: 1 回に値を追加する変数参照の名前の上限
+    english_name: max_variable_references
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '50'
+    unit: 名前
+    rationale: 規約の 1 ページに出る変数参照の名前は多くて 10 前後。その 5 倍の余裕を持ち、1 回のツールの結果に追加する文脈の長さを抑える
+    overflow: 本文に出た順で 50 名前までの行を作り、残りの名前は行を作らず、最後に残りの件数を添えた 1 行を追加する
+    status: planned
+  - name: 変数参照の値の長さの上限
+    english_name: max_variable_reference_value_chars
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '1000'
+    unit: 文字
+    rationale: 変数参照に使う値はパス・URL・識別子で、長くて数百文字。`PATH` のような長い値が 1 行で文脈を占めないようにする
+    overflow: 値の先頭 1000 文字だけを書き、行の末尾に値の全体の文字数を添えて、切ったことを示す
+    status: planned
 lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。

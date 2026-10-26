@@ -1,5 +1,5 @@
 import { expect, test } from 'claude-code/testing'
-import { COMPACTED_MESSAGE, installWorld, submit, userSettingsWithConfig } from './support/engine'
+import { COMPACTED_MESSAGE, callTool, installToolWorld, installWorld, submit, userSettingsWithConfig } from './support/engine'
 import type { LogLine } from './support/engine'
 import { MemoryFs } from './support/memory-fs'
 
@@ -207,4 +207,69 @@ test('test_handle_session_end_when_clear', async ($, on) => {
   // clear では s2 だけが消え、s1 の記録は残る
   expect(s1AfterClear.context ?? []).toEqual([])
   expect(s2AfterClear.context?.length).toBe(1)
+})
+
+// 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する（正常系）
+test('test_handle_tool_call_when_context_given', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on)
+  world.answer = { result: 'r', text: '本文 !{VALUE_A}', ref: 'ref1', context: ['other'] }
+  world.run = { value: { exitCode: 0, stdout: 'VALUE_A=value-a\0' } }
+
+  // 実行
+  const result = await callTool($)
+
+  // 検証
+  expect(result.context).toEqual(['other', '変数参照の値: !{VALUE_A} = value-a'])
+  expect(result.text).toBe('本文 !{VALUE_A}')
+  expect(result.ref).toBe('ref1')
+  expect(world.runs).toEqual([{ argv: ['env', '-0'], timeoutMs: 20 }])
+})
+
+// deny・エラーの結果・本文が無い結果・変数参照が無い結果は子プロセスを起こさずそのまま返す（正常系）
+test('test_handle_tool_call_when_skipped', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on)
+  const answers = [
+    { deny: 'no' },
+    { result: 'r', text: '本文 !{VALUE_A}', isError: true },
+    { result: 'r' },
+    { result: 'r', text: '変数参照の無い本文' },
+  ]
+
+  for (const answer of answers) {
+    // 実行
+    world.answer = answer
+    const result = await callTool($)
+
+    // 検証
+    expect(result).toEqual(answer)
+  }
+  expect(world.runs).toEqual([])
+})
+
+// 終了コードが 0 以外・例外のときは debug log に出してそのまま返す（異常系）
+test('test_handle_tool_call_when_process_failed', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on)
+  const answer = { result: 'r', text: '本文 !{VALUE_A}' }
+  world.answer = answer
+  const debugLines = () => world.logs.filter((line) => line.to === 'debug')
+
+  // 実行
+  // 終了コード 3 で終わる
+  world.run = { value: { exitCode: 3, stdout: '' } }
+  const exited = await callTool($)
+  const exitLogs = debugLines().filter((line) => line.text.includes('3'))
+  world.logs.length = 0
+  // 子プロセスの例外（起動できない）
+  world.run = { deny: 'spawn env ENOENT' }
+  const failed = await callTool($)
+  const failedLogs = debugLines().filter((line) => line.text.includes('spawn env ENOENT'))
+
+  // 検証
+  expect(exited).toEqual(answer)
+  expect(exitLogs.length).toBe(1)
+  expect(failed).toEqual(answer)
+  expect(failedLogs.length).toBe(1)
 })
