@@ -153,3 +153,5 @@ functions:
         mock: なし
         expected: '51 個では 50 行の後ろに `変数参照の値: ほか 1 件の変数参照は値を追加していない` が付く。50 個では 50 行だけ'
     status: planned
+test_files:
+  - tests/unit/hooks/lib/variable.test.ts
