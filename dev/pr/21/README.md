@@ -1,0 +1,1 @@
+# 共通のスキーマを「エイリアスの元の行」に変え、dev-docs.yaml の documents から読む
