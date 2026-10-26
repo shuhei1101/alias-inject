@@ -30,6 +30,17 @@ POLL_INTERVAL_SEC = 0.5
 CLEAR_SETTLE_SEC = 5
 
 HEADING = "この発言に出る用語"
+# ツールの結果の後ろの文脈に追加される、変数参照の値の行の先頭
+REFERENCE_PREFIX = "変数参照の値"
+# 読ませるファイルの変数参照が指す、claude の起動時に設定する環境変数と、その値
+REFERENCE_NAME = "ALIAS_INJECT_E2E_VALUE"
+REFERENCE_VALUE = "value-a"
+# 読ませるファイルの変数参照が指す、設定しない環境変数
+UNSET_NAME = "ALIAS_INJECT_E2E_UNSET"
+# REFERENCE_NAME の変数参照を 2 回含む、読ませるファイルの本文
+REFERENCE_NOTE = f"値は !{{{REFERENCE_NAME}}} です。\nもう一度 !{{{REFERENCE_NAME}}} と書きます。\n"
+# ツールを使う入力でモデルが確認を求めて止まらないよう、許可しておくツール
+ALLOWED_TOOLS = ["Read", "Bash(cat:*)"]
 # モデルがツールを使って止まらないよう、入力の末尾に付ける
 ANSWER_BRIEFLY = "ツールは使わず、一言で答えて。"
 
@@ -44,10 +55,16 @@ class Submission:
     contexts: list[str]
     # この入力の間に transcript へ増えた行
     lines: list[dict[str, Any]] = field(default_factory=list)
+    # モデルに届いたツールの結果の本文
+    tool_results: list[str] = field(default_factory=list)
 
     @property
     def context_text(self) -> str:
         return "\n".join(self.contexts)
+
+    @property
+    def tool_result_text(self) -> str:
+        return "\n".join(self.tool_results)
 
 
 def _user_text(line: dict[str, Any]) -> str | None:
@@ -72,6 +89,23 @@ def _context_of(line: dict[str, Any]) -> str | None:
         return None
     content = attachment.get("content")
     return "\n".join(content) if isinstance(content, list) else str(content)
+
+
+def _tool_results_of(line: dict[str, Any]) -> list[str]:
+    """transcript の user の行からツールの結果の本文を取り出す"""
+    content = (line.get("message") or {}).get("content")
+    if line.get("type") != "user" or not isinstance(content, list):
+        return []
+    texts: list[str] = []
+    for part in content:
+        if not isinstance(part, dict) or part.get("type") != "tool_result":
+            continue
+        body = part.get("content")
+        if isinstance(body, str):
+            texts.append(body)
+        elif isinstance(body, list):
+            texts.append("".join(item.get("text", "") for item in body if isinstance(item, dict) and item.get("type") == "text"))
+    return texts
 
 
 def is_turn_end(line: dict[str, Any]) -> bool:
@@ -99,19 +133,23 @@ class ClaudeSession:
         self.repo_dir = self.root / "knowledge"
         self.terms_dir = self.repo_dir / "terms"
         self.dev_docs_path = self.repo_dir / "dev-docs.yaml"
+        # 中身の無い PATH 用のフォルダ。`env` などのコマンドが見つからない PATH にするときに使う
+        self.empty_bin_dir = self.root / "empty-bin"
         self.tmux_name = f"alias-inject-e2e-{os.getpid()}-{uuid.uuid4().hex[:6]}"
         self._seen: dict[Path, int] = {}
         self._clock = time.time()
-        for folder in (self.config_dir, self.project_dir, self.terms_dir, self.urls_dir):
+        for folder in (self.config_dir, self.project_dir, self.terms_dir, self.urls_dir, self.empty_bin_dir):
             folder.mkdir(parents=True)
 
     # ---- 準備 ----
 
-    def write_user_settings(self, config_path: Path | None) -> None:
-        """ユーザースコープの settings.json の env に ALIAS_INJECT_CONFIG を置く（None なら env を置かない）"""
+    def write_user_settings(self, config_path: Path | None, *, allow: list[str] | None = None) -> None:
+        """ユーザースコープの settings.json の env に ALIAS_INJECT_CONFIG を置く（None なら env を置かない）。allow は確認なしで使うツール"""
         settings: dict[str, Any] = {}
         if config_path is not None:
             settings["env"] = {"ALIAS_INJECT_CONFIG": str(config_path)}
+        if allow:
+            settings["permissions"] = {"allow": allow}
         (self.config_dir / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
 
     def write_file(self, path: Path, text: str) -> None:
@@ -147,18 +185,21 @@ class ClaudeSession:
     def pane(self) -> str:
         return self._tmux("capture-pane", "-p", "-t", self.tmux_name)
 
-    def start(self) -> None:
-        """Claude Code を起動し、入力を受け付ける状態まで待つ"""
+    def start(self, *, env: dict[str, str] | None = None, path: str | None = None) -> None:
+        """Claude Code を起動し、入力を受け付ける状態まで待つ。env は起動時に足す環境変数、path は PATH の差し替え（claude は絶対パスで起動する）"""
         for tool in ("tmux", "claude"):
             if shutil.which(tool) is None:
                 raise RuntimeError(f"{tool} が PATH にありません")
+        claude = str(shutil.which("claude"))
         self._prepare_config_dir()
+        extra_env = [arg for name, value in (env or {}).items() for arg in ("-e", f"{name}={value}")]
         self._tmux(
             "new-session", "-d", "-s", self.tmux_name, "-x", "200", "-y", "50", "-c", str(self.project_dir),
             "-e", f"CLAUDE_CONFIG_DIR={self.config_dir}",
             "-e", f"HOME={os.environ['HOME']}",
-            "-e", f"PATH={os.environ['PATH']}",
-            f"claude --plugin-dir {PLUGIN_DIR} --model {MODEL}",
+            "-e", f"PATH={os.environ['PATH'] if path is None else path}",
+            *extra_env,
+            f"{claude} --plugin-dir {PLUGIN_DIR} --model {MODEL}",
         )
         self._wait_for_prompt(STARTUP_TIMEOUT_SEC)
 
@@ -228,7 +269,8 @@ class ClaudeSession:
         lines.extend(self._drain())
         sent = next((value for value in map(_user_text, lines) if value is not None), None)
         contexts = [value for value in map(_context_of, lines) if value is not None]
-        return Submission(sent=sent, contexts=contexts, lines=lines)
+        tool_results = [text for line in lines for text in _tool_results_of(line)]
+        return Submission(sent=sent, contexts=contexts, lines=lines, tool_results=tool_results)
 
     def compact(self) -> None:
         """/compact を実行し、圧縮が終わるまで待つ"""
@@ -325,6 +367,26 @@ def url_text(url_id: str) -> str:
     return f"id: {url_id}\nname: {url_id}\nurl: {url_of(url_id)}\n"
 
 
+def reference_line(name: str, value: str) -> str:
+    """環境変数が設定されている名前の、変数参照の値の行"""
+    return f"{REFERENCE_PREFIX}: !{{{name}}} = {value}"
+
+
+def unset_reference_line(name: str) -> str:
+    """環境変数が設定されていない名前の、変数参照の値の行"""
+    return f"{REFERENCE_PREFIX}: !{{{name}}} は環境変数が設定されていない"
+
+
+def read_prompt(path: Path) -> str:
+    """ファイルを Read ツールで読ませる入力"""
+    return f"{path} を Read ツールで読んで、読み終えたら「了」とだけ答えて。"
+
+
+def cat_prompt(path: Path) -> str:
+    """ファイルを Bash ツールの cat で読ませる入力"""
+    return f"Bash ツールで cat {path} を実行して、実行し終えたら「了」とだけ答えて。"
+
+
 class E2ETestCase(unittest.TestCase):
     """テストごとに Claude Code のセッションを用意して後片付けする基底"""
 
@@ -342,11 +404,14 @@ class E2ETestCase(unittest.TestCase):
         config_aliases: list[str] | None = None,
         extra_repositories: list[Path] | None = None,
         config_exists: bool = True,
+        env: dict[str, str] | None = None,
+        path: str | None = None,
     ) -> ClaudeSession:
         """term-a（エイリアス 用語エー）と term-b を持つ設定で Claude Code を起動する。
 
         dev-docs.yaml は用語の aliases の要素に dev_docs_aliases を足して持ち、設定ファイルは
-        dev-docs.yaml（extra_repositories の後ろ）と config_aliases を持つ
+        dev-docs.yaml（extra_repositories の後ろ）と config_aliases を持つ。
+        env は起動時に足す環境変数、path は claude を起動する PATH の差し替え
         """
         session = self.session
         session.write_file(session.terms_dir / "term-a.yaml", term_text("term-a", aliases=["用語エー"]))
@@ -361,9 +426,15 @@ class E2ETestCase(unittest.TestCase):
                     aliases=config_aliases,
                 ),
             )
-        session.write_user_settings(session.config_path)
-        session.start()
+        session.write_user_settings(session.config_path, allow=ALLOWED_TOOLS)
+        session.start(env=env, path=path)
         return session
+
+    def write_note(self, text: str) -> Path:
+        """読ませるテキストファイルをプロジェクトのフォルダに書き、そのパスを返す"""
+        path = self.session.project_dir / "note.txt"
+        self.session.write_file(path, text)
+        return path
 
     def assert_context_has_entry(self, submission: Submission, section: str, entry_id: str, *fields: str) -> None:
         """見出しと section のセクションの下に、項目の ID と指定した列が並んでいる"""
@@ -377,6 +448,15 @@ class E2ETestCase(unittest.TestCase):
     def assert_context_has_term(self, submission: Submission, term_id: str) -> None:
         """見出しと「用語」のセクションの下に、語の ID が並んでいる"""
         self.assert_context_has_entry(submission, "用語", term_id)
+
+    def assert_context_has_reference_line(self, submission: Submission, line: str) -> None:
+        """ツールの結果の後ろの文脈に、変数参照の値の行がちょうど 1 行ある"""
+        self.assertEqual(submission.context_text.count(line), 1)
+
+    def assert_no_reference_line(self, submission: Submission) -> None:
+        """文脈にもツールの結果にも、変数参照の値の行が無い"""
+        self.assertNotIn(REFERENCE_PREFIX, submission.context_text)
+        self.assertNotIn(REFERENCE_PREFIX, submission.tool_result_text)
 
     def assert_no_context(self, submission: Submission) -> None:
         """文脈が追加されていない"""
