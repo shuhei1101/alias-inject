@@ -30,7 +30,7 @@ flows:
       - 返る `context` が 2 要素で、先頭が受け取った要素のまま
       - '返る `context` の末尾が `変数参照の値: !{VALUE_A} = value-a` の 1 行だけ'
       - 返る `text` が `next(e)` の結果の `text` と同じ
-      - '`process.run` が 1 回だけ呼ばれ、argv が `["env", "-0"]`・`timeoutMs` が 500'
+      - '`process.run` が 1 回だけ呼ばれ、argv が `["env", "-0"]`・`timeoutMs` が 20'
     test: test_normal
   - name: 正常系（設定されていない名前）
     summary: env -0 の出力に無い名前は、設定されていない旨の行にする
@@ -270,7 +270,7 @@ exceptions:
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で例外の理由を debug log に出し、結果をそのまま返す'
 constraints:
   - item: 処理時間
-    constraint: 子プロセスを 500ms まで待つ（`timeoutMs` で渡す）
+    constraint: 子プロセスを 20ms まで待つ（`timeoutMs` で渡す）
     decided_by: dev/設計書/非機能要件/非機能要件#requirements[変数参照の値を引く子プロセスの待ちの上限]
     notes: 変数参照が無い結果では子プロセスを起こさない
   - item: 名前の拾い出し

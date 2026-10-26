@@ -55,10 +55,10 @@ requirements:
     category: 性能
     external_constraint: 制限なし
     source_kind: 制限なし
-    value: '500'
+    value: '20'
     unit: ms
-    rationale: PoC の実測で `env -0` の子プロセス 1 回が 5〜11ms。実測の最大の 40 倍余りの余裕を持ち、上限に当たったときもツールの結果が届くまでの待ちを体感で感じない値にする。`$.process.run` の既定（30 秒）は待たせすぎるため `timeoutMs` で渡す
-    measurement: '`!{名前}` を含む結果を返すツールの `tool.call` を流し、子プロセスを起こしてから値を受け取るまでの時間を測る'
+    rationale: 規約『資源の値の決め方』の下流を待つタイムアウト（p99.9 + p99.9 の 50% の余裕）で導く。WSL2 の Ubuntu 24.04・Claude Code 2.1.310 で、`tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流す計測を 3 回行い、p50 は 2.02〜2.17ms、p99.9 は 10.82・12.69・12.77ms（最大 28.89ms）だった。最も大きい p99.9 の 12.77ms × 1.5 = 19.2ms を切り上げて 20ms にする。フックの予算（`HookBudget.ms`）は待ちを数えないため、外側の制約は無い。`$.process.run` の既定（30 秒）は使わず `timeoutMs` で渡す
+    measurement: '`!{名前}` を含む結果を返すツールの `tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流し、1 回ごとに起こしてから返るまでの時間の p50・p99.9 を測る'
     overflow: 子プロセスを打ち切り、debug log に出して、文脈を追加せずにツールの結果をそのまま返す
     status: planned
   - name: 1 回に値を追加する変数参照の名前の上限
