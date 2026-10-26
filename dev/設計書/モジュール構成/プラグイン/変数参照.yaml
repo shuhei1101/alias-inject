@@ -56,7 +56,7 @@ functions:
       description: 名前の並び。変数参照が無ければ空
     process: |-
       1. `/!\{([A-Za-z_][A-Za-z0-9_]*)\}/g` に当たる名前を出た順に集める
-      2. 重なりを除い、最初に出た位置の順で返す
+      2. 重なりを除き、最初に出た位置の順で返す
     unit_tests:
       - name: test_find_reference_names
         case: 正常
