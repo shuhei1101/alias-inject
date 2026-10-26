@@ -14,7 +14,7 @@ from support.harness import (
     E2ETestCase,
     read_prompt,
     reference_line,
-    term_text,
+    term_list_text,
 )
 
 
@@ -22,15 +22,16 @@ class SessionFlowTest(E2ETestCase):
     def test_normal(self) -> None:
         """入力を重ねる間に書き換え・圧縮・/clear を挟んでも、語ごとに 1 回だけ文脈が追加され、/clear の後に読んだ本文の変数参照の値が届く（正常シナリオ）"""
         # 準備
-        session = self.start_with_terms(env={REFERENCE_NAME: REFERENCE_VALUE})
+        # 用語は配列 terms を持つ YAML に置く（用語の行は records: terms）
+        session = self.start_with_terms(term_records=True, env={REFERENCE_NAME: REFERENCE_VALUE})
         text_a = f"term-a について。{ANSWER_BRIEFLY}"
         text_read = read_prompt(self.write_note(REFERENCE_NOTE))
 
         # 実行
         first = session.submit(text_a)
         second = session.submit(text_a)
-        # 用語の YAML に term-c を追加する
-        session.write_file(session.terms_dir / "term-c.yaml", term_text("term-c"))
+        # 用語の YAML の配列 terms に term-c を追加する
+        session.write_file(session.terms_dir / "terms.yaml", term_list_text("term-a", "term-b", "term-c"))
         text_c = f"term-c について。{ANSWER_BRIEFLY}"
         third = session.submit(text_c)
         session.compact()
