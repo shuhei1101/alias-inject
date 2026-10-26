@@ -1,10 +1,10 @@
 title: "プラグイン / エイリアス"
-lead: 設定ファイルと `dev-docs.yaml` の `aliases` の要素をスキーマで検証して取り出し、`id` の重なった要素を外す。
+lead: 設定ファイルの `aliases` の行と `dev-docs.yaml` の `documents` の行をスキーマで検証して取り出し、`id` の重なった行を外す。文書ごとに `metadata` の値を解決し、種類ごとの必須のキーを確かめる。
 directory: |-
   ```text
   hooks/
     lib/
-      alias.ts           aliases の要素の取り出しと id の重なりの確認
+      alias.ts           エイリアスの元の行の取り出し・id の重なりの確認・metadata の値の解決
   tests/
     unit/
       hooks/
@@ -16,7 +16,7 @@ enums:
     title: 引用の種類
     container: hooks/lib/alias.ts
     usecase: 共通
-    summary: '`aliases` の要素の `type`。文脈に並べる列とセクションが種類ごとに決まる'
+    summary: '`metadata.alias_type` の値。文脈に並べるキーとセクションが種類ごとに決まる'
     values:
       - value: term
         title: 用語
@@ -46,95 +46,77 @@ enums:
         title: 避ける語
         description: '`replacement` を追加する'
 data_models:
-  - name: AliasFields
-    title: 列の対応
-    container: hooks/lib/alias.ts
-    usecase: 共通
-    role: DTO
-    summary: '`aliases` の要素の `fields`。項目のどの列を使うかの対応'
-    properties:
-      - name: id
-        type: string
-        description: 項目の ID の列の名前
-      - name: match
-        type: string[]
-        description: 照合する列の名前（1 つ以上）
-      - name: title
-        type: string | undefined
-        description: 文脈に出す語の列の名前
-      - name: description
-        type: string | undefined
-        description: 説明の列の名前
-      - name: related
-        type: string | undefined
-        description: 関連する項目の列の名前（term）
-      - name: avoid
-        type: string | undefined
-        description: 避ける言い方の列の名前（term）。読むが文脈には使わない
-      - name: command
-        type: string | undefined
-        description: コマンドの列の名前（command）
-      - name: cwd
-        type: string | undefined
-        description: 実行する場所の列の名前（command）
-      - name: url
-        type: string | undefined
-        description: URL の列の名前（url・env）
-      - name: skill
-        type: string | undefined
-        description: スキル名の列の名前（skill）
-      - name: tool
-        type: string | undefined
-        description: MCP のツール名の列の名前（tool）
-      - name: path
-        type: string | undefined
-        description: ファイルかフォルダのパスの列の名前（path）
-      - name: port
-        type: string | undefined
-        description: ポートの列の名前（env）
-      - name: replacement
-        type: string | undefined
-        description: 正しい語の列の名前（avoid）
   - name: AliasConfig
-    title: aliases の要素
+    title: エイリアスの元の行
     container: hooks/lib/alias.ts
     usecase: 共通
     role: DTO
-    summary: スキーマの検証を通った有効な `aliases` の 1 要素
+    summary: スキーマの検証を通った有効なエイリアスの元の行
     properties:
       - name: id
         type: string
-        description: 要素の ID
-      - name: type
-        type: AliasType
-        description: 引用の種類
+        description: 行の ID
       - name: paths
         type: string[]
         description: 読む YAML のパスか glob。書いたまま（解決は読む側が行う）
-      - name: fields
-        type: AliasFields
-        description: 列の対応
+      - name: records
+        type: string | undefined
+        description: 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書
+      - name: metadata
+        type: AliasMetadata
+        description: エイリアスのキーの値の取り方
   - name: ResolvedAlias
-    title: 読む aliases の要素
+    title: 読む行
     container: hooks/lib/alias.ts
     usecase: 共通
     role: DTO
-    summary: 出所を持ち、`paths` を絶対パスにした `aliases` の要素
+    summary: 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行
     description: '`AliasConfig & { origin: string; patterns: string[] }`。'
     properties:
       - name: origin
         type: string
-        description: 要素を書いた `dev-docs.yaml` か設定ファイルの絶対パス
+        description: 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス
       - name: patterns
         type: string[]
         description: '`paths` を解決した絶対パスの glob'
+  - name: MetadataValue
+    title: metadata の値
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    role: DTO
+    summary: '`metadata` の 1 キーの値の取り方。`type` が判別子'
+    description: "`{ type: 'ref'; field: string } | { type: 'custom'; value: unknown }`。"
+    properties:
+      - name: type
+        type: "'ref' | 'custom'"
+        description: '`ref` は文書の列から取り、`custom` は行の全文書に同じ値を使う'
+      - name: field
+        type: string
+        description: '`ref` のとき、値を取る文書の列の名前'
+      - name: value
+        type: unknown
+        description: '`custom` のとき、行の全文書に使う値'
+  - name: AliasMetadata
+    title: エイリアスのキー
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    role: DTO
+    summary: 行の `metadata` のうち、エイリアスのキー（ALIAS_KEYS）だけを持つもの
+    description: '`{ alias_type: MetadataValue } & Partial<Record<AliasKey, MetadataValue>>`。他のキー（`tags`・`status` 等）は持たない。'
+    properties:
+      - name: alias_type
+        type: MetadataValue
+        description: 引用の種類の取り方
+      - name: '{ALIAS_KEYS の他のキー}'
+        type: MetadataValue | undefined
+        description: 書いたキーの値の取り方。書かないキーは同じ名前の列の `ref` とみなす
 functions:
   - name: parseAliases
-    title: aliases の取り出し
+    title: 行の取り出し
     kind: 関数
     container: hooks/lib/alias.ts
     usecase: 共通
-    summary: '`aliases` の各要素をスキーマで検証し、有効な要素を取り出す。合わない要素は外して理由を残す'
+    summary: '行の並びの各行をスキーマで検証し、有効な行を取り出す。合わない行は外して理由を残す'
     scope: public
     is_async: false
     args:
@@ -142,7 +124,7 @@ functions:
         type: readonly unknown[]
         required: true
         passing: keyword
-        description: '`aliases` の並び'
+        description: 設定ファイルの `aliases` か `dev-docs.yaml` の `documents` の並び
       - name: schema
         type: Record<string, unknown>
         required: true
@@ -152,42 +134,55 @@ functions:
         type: string
         required: true
         passing: keyword
-        description: '`aliases` の並びのパス（`aliases`・`global.aliases`・`projects[0].aliases`）。理由に使う'
+        description: 並びのパス（`documents`・`global.aliases`・`projects[0].aliases`）。理由に使う
+      - name: aliasTypeOnly
+        type: boolean
+        required: false
+        default: 'false'
+        passing: keyword
+        description: true のとき、`metadata` に `alias_type` のキーを持たない行を検証せずに飛ばす（`documents` で使う）
     returns:
       type: '{ aliases: AliasConfig[]; warnings: string[] }'
-      description: 取り出した要素（並びの順）と、外した要素の理由
+      description: 取り出した行（並びの順）と、外した行の理由
     process: |-
-      1. マッピングで `enabled` が false の要素は、検証せずに飛ばす
-      2. 他の要素を、スキーマのルートの `items` で `{path}[{位置}]` をパスにして検証する（値の検証）
-      3. 理由があれば要素を外し、`{path}[{位置}]（id: {id}）: {理由を「、」でつなぐ}` を warnings に入れる。`（id: {id}）` は `id` が空でない文字列のときだけ付ける
-      4. 理由の無い要素は `id`・`type`・`paths`・`fields` を AliasConfig にする
+      1. `aliasTypeOnly` が true で、行が `metadata` に `alias_type` のキーを持つマッピングでなければ、検証せずに飛ばす
+      2. マッピングで `enabled` が false の行は、検証せずに飛ばす
+      3. 他の行を、スキーマのルートの `items` で `{path}[{位置}]` をパスにして検証する（値の検証）。位置は飛ばした行を含む元の並びでの位置
+      4. 理由があれば行を外し、`{path}[{位置}]（id: {id}）: {理由を「、」でつなぐ}` を warnings に入れる。`（id: {id}）` は `id` が空でない文字列のときだけ付ける
+      5. 理由の無い行は `id`・`paths`・`records` と、`metadata` のうち ALIAS_KEYS のキーだけを AliasConfig にする
     callees:
       - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[validateSchema]
     unit_tests:
       - name: test_parse_aliases
         case: 正常
-        summary: スキーマに合う要素を並びの順に取り出す
-        condition: 'リポジトリのスキーマで、term と command の要素（`enabled: true` を含む）'
+        summary: スキーマに合う行を並びの順に取り出し、metadata はエイリアスのキーだけを持つ
+        condition: 'リポジトリのスキーマで、`alias_type` だけを書いた term の行（`enabled: true`・`type: yaml` と `metadata.tags` を持つ）と、`records: commands` で `name: {type: ref, field: title}` を書いた command の行'
         mock: なし
-        expected: aliases が 2 件で `fields` が書いたとおり、warnings が空
+        expected: aliases が 2 件で、term の metadata が `alias_type` だけ、command の records が `commands` で metadata が `alias_type`・`name`。warnings が空
       - name: test_parse_aliases_when_disabled
         case: 正常
-        summary: '`enabled: false` の要素は検証せずに飛ばす'
-        condition: '`enabled: false` で `fields` の無い要素'
+        summary: '`enabled: false` の行は検証せずに飛ばす'
+        condition: '`enabled: false` で `metadata` の無い行'
         mock: なし
         expected: aliases も warnings も空
+      - name: test_parse_aliases_when_alias_type_only
+        case: 正常
+        summary: aliasTypeOnly のとき alias_type を持たない行は飛ばし、位置は元の並びで数える
+        condition: '`path` が `documents`。`metadata` の無い行・`metadata.tags` だけの行・`metadata.name` が文字列で `alias_type` を持つ `id: bad` の行'
+        mock: なし
+        expected: 'aliases が空で、warnings が `documents[2]（id: bad）` で始まる 1 件'
       - name: test_parse_aliases_when_invalid
         case: 正常
-        summary: スキーマに合わない要素は外し、位置と id つきの理由を残す
-        condition: '`path` が `global.aliases`。`id: bad` で `fields` に `mcp` を持つ要素と、`id` の無い要素と、文字列 `x`'
+        summary: スキーマに合わない行は外し、位置と id つきの理由を残す
+        condition: '`path` が `global.aliases`。旧い構造（`type: url`・`fields`）の `id: urls` の行と、`metadata.alias_type` が `{type: custom, value: memo}` の行と、`id` の無い行と、文字列 `x`'
         mock: なし
-        expected: 'aliases が空。warnings が 3 件で、`global.aliases[0]（id: bad）`・`global.aliases[1]`・`global.aliases[2]` で始まる'
+        expected: 'aliases が空。warnings が 4 件で、`global.aliases[0]（id: urls）`・`global.aliases[1]`・`global.aliases[2]`・`global.aliases[3]` で始まり、1 件目に `metadata` を含む'
   - name: dedupeAliases
     title: id の重なりの確認
     kind: 関数
     container: hooks/lib/alias.ts
     usecase: 共通
-    summary: 同じ出所の `aliases` の要素のうち、先の要素と `id` が重なる要素を外す
+    summary: 同じ出所の行のうち、先の行と `id` が重なる行を外す
     scope: public
     is_async: false
     args:
@@ -209,5 +204,111 @@ functions:
         condition: '`id` が terms・urls・terms の 3 要素'
         mock: なし
         expected: aliases が先の terms と urls の 2 件で、warnings に `terms` を含む 1 件
+  - name: resolveMetadata
+    title: metadata の値の解決
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: 1 件の文書について、エイリアスのキーごとの値を行の `metadata` から取る
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: metadata
+        type: AliasMetadata
+        required: true
+        passing: positional
+        description: 行の `metadata`
+      - name: document
+        type: Record<string, unknown>
+        required: true
+        passing: positional
+        description: 文書（ファイルの最上位か `records` の要素）
+    returns:
+      type: Record<AliasKey, unknown>
+      description: ALIAS_KEYS の各キーの値。無い列は undefined
+    process: 1. ALIAS_KEYS の各キーについて、`metadata` の値が `ref` なら文書の `field` の列、`custom` なら `value`、書かないキーは文書の同じ名前の列を値にする
+    unit_tests:
+      - name: test_resolve_metadata
+        case: 正常
+        summary: ref は列、custom は値、書かないキーは同じ名前の列から取る
+        condition: 'metadata が `alias_type: {type: custom, value: term}`・`name: {type: ref, field: title}`。文書が `id: term-a`・`title: Term-A`・`name: x`・`description: d`'
+        mock: なし
+        expected: alias_type が `term`、name が `Term-A`、id が `term-a`、description が `d`、command が undefined
+  - name: missingKeys
+    title: 必須のキーの確認
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: 解決した値のうち、種類の必須のキーで値が空のものを返す
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: type
+        type: AliasType
+        required: true
+        passing: positional
+        description: 文書の引用の種類
+      - name: values
+        type: Record<AliasKey, unknown>
+        required: true
+        passing: positional
+        description: 解決した値（`name` は補った後）
+    returns:
+      type: string[]
+      description: 値が空のキー。env で `url`・`port` がどちらも空のときは `url`・`port` を含む。揃っていれば空
+    process: |-
+      1. REQUIRED_KEYS の type のキーごとに、値が空でない文字列・数値・真偽値のどれでもなければ返す並びに入れる
+      2. type が env で `url`・`port` の値がどちらも 1 と同じ規則で空なら、`url` と `port` を入れる
+    unit_tests:
+      - name: test_missing_keys
+        case: 正常
+        summary: 種類の必須のキーで値が空のものを返す
+        condition: term で `description` が空文字、command で全て揃う（`id` が数値）
+        mock: なし
+        expected: term は `['description']`、command は空
+      - name: test_missing_keys_when_env
+        case: 正常
+        summary: env は url・port の 1 つ以上を求める
+        condition: env で `port` だけを持つ値と、`url`・`port` をどちらも持たない値
+        mock: なし
+        expected: 前者は空、後者は `['url', 'port']`
+  - name: isAliasType
+    title: 引用の種類の確認
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: 値が AliasType の 9 つのどれかであるかを確かめる型の絞り込み
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: value
+        type: unknown
+        required: true
+        passing: positional
+        description: 解決した `alias_type` の値
+    returns:
+      type: value is AliasType
+      description: 9 つのどれかの文字列なら true
+    process: 1. 値が文字列で、AliasType の値に含まれるかを返す
+    unit_tests:
+      - name: test_is_alias_type
+        case: 正常
+        summary: 9 つの値だけを通す
+        condition: '`term`・`avoid`・`memo`・数値 1・undefined'
+        mock: なし
+        expected: '`term`・`avoid` だけ true'
 test_files:
   - tests/unit/hooks/lib/alias.test.ts
+constants:
+  - name: ALIAS_KEYS
+    title: エイリアスのキー
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: '`metadata` に書けるエイリアスのキー。型 `AliasKey` はこの要素の union'
+    value: '`alias_type`・`id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`'
+  - name: REQUIRED_KEYS
+    title: 種類ごとの必須のキー
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: '`AliasType` ごとに、文書で値が空であってはならないキー（`Record<AliasType, readonly AliasKey[]>`）。env の `url`・`port` の 1 つ以上は含めず、必須のキーの確認が別に確かめる'
+    value: 'term: `id`・`name`・`description` / doc: `id`・`name`・`description` / command: `id`・`name`・`command` / url: `id`・`name`・`url` / skill: `id`・`name`・`skill` / tool: `id`・`name`・`tool` / path: `id`・`name`・`path` / env: `id`・`name` / avoid: `id`・`name`・`replacement`'

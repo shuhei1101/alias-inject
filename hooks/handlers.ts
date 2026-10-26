@@ -25,7 +25,7 @@ import { VARIABLE_REFERENCE_TIMEOUT_MS, findReferenceNames, formatReferenceLines
 
 type Next<Input, Result> = (e: Input) => Promise<Result>
 
-// debug log に出し終えた理由。読み込みの結果（設定ファイルの検証した設定・dev-docs.yaml から取り出した aliases）ごとに持つ
+// debug log に出し終えた理由。読み込みの結果（設定ファイルの検証した設定・dev-docs.yaml から取り出した行）ごとに持つ
 const loggedWarnings = new WeakMap<object, Set<string>>()
 
 // debug log に出す。入力の送信を止めないため、ログの失敗は呼び出し元に伝えない
@@ -37,7 +37,7 @@ function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// 外した要素と無視した値の理由を、読み込みの結果が変わらないうち 1 回だけ debug log に出す
+// 外した行と無視した値の理由を、読み込みの結果が変わらないうち 1 回だけ debug log に出す
 function logWarningsOnce($: EngineInterface, owner: object, path: string, warnings: string[]): void {
   const logged = loggedWarnings.get(owner) ?? new Set<string>()
   loggedWarnings.set(owner, logged)
@@ -63,7 +63,7 @@ async function loadConfig($: EngineInterface, configPath: string, schema: Record
   return loaded.config
 }
 
-// 読むリポジトリの aliases を repositories の順に並べる。読めない dev-docs.yaml は、そのリポジトリだけを外す
+// 読むリポジトリの行を repositories の順に並べる。読めない dev-docs.yaml は、そのリポジトリだけを外す
 async function loadRepositories(
   $: EngineInterface,
   repositories: string[],
@@ -110,12 +110,12 @@ async function selectContext(
   logWarningsOnce($, config, configPath, [...config.warnings, ...settings.warnings])
   if (!settings.enabled || !isOriginAllowed(settings.origins, e.origin.kind)) return null
 
-  // 読むリポジトリの aliases の後ろに、設定ファイルの aliases を並べる。読めない YAML だけを外す
+  // 読むリポジトリの行の後ろに、設定ファイルの aliases の行を並べる。読めない YAML と必須の値が空の文書だけを外す
   const aliases = [...(await loadRepositories($, settings.repositories, schema, home)), ...settings.aliases]
   const entries: Entry[] = []
   for (const [index, alias] of aliases.entries()) {
     const loaded = await loadAliasEntries($, alias, index)
-    for (const failure of loaded.failures) logDebug($, `YAML を読めません（${failure.path}）: ${failure.reason}`)
+    for (const failure of loaded.failures) logDebug($, `照合から外しました（${failure.path}）: ${failure.reason}`)
     entries.push(...loaded.entries)
   }
 
@@ -128,7 +128,7 @@ async function selectContext(
   return selection === null ? null : { selection, sessionId }
 }
 
-/** 入力を読むリポジトリと設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す */
+/** 入力を読むリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す */
 export async function handlePromptSubmit(
   $: EngineInterface,
   e: PromptSubmitInput,

@@ -1,5 +1,5 @@
 title: "プラグイン / スキーマ"
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、`aliases` の要素を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `dev-docs.yaml` の `documents` の行）を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
 directory: |-
   ```text
   hooks/
@@ -162,28 +162,28 @@ functions:
     unit_tests:
       - name: test_validate_schema
         case: 正常
-        summary: スキーマに合う要素は空を返す
-        condition: ALIAS_SCHEMAで、`type` が term・doc・command・url・skill・tool・path・env・avoid の要素（env は `url` だけ・`port` だけの 2 つ）をそれぞれ書いた値
+        summary: スキーマに合う行は空を返す
+        condition: 'ALIAS_SCHEMA で、`metadata.alias_type` が custom の term・doc・command・url・skill・tool・path・env・avoid の行と、`{type: ref, field: kind}` の行と、`records`・`enabled` と他のキー（行の `type: yaml`・`metadata.tags`）を持つ行'
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing
         case: 正常
         summary: 無い必須のキーをパスつきで返す
-        condition: '`fields` が無い要素、`type: command` で `fields.command` が無い要素'
+        condition: '`metadata` が無い行、`metadata` に `alias_type` が無い行'
         mock: なし
-        expected: '`aliases[0].fields` と `aliases[0].fields.command` を含む理由'
+        expected: '`aliases[0].metadata` と `aliases[0].metadata.alias_type` を含む理由'
       - name: test_validate_schema_when_type_mismatch
         case: 正常
         summary: 型・列挙・最小の数と長さに合わない値を返す
-        condition: '`id` が数値、`type` が `memo`、`paths` が `[]`、`id` が空文字'
+        condition: '`id` が数値、`metadata.alias_type` が `{type: custom, value: memo}`、`paths` が `[]`、`id` が空文字'
         mock: なし
-        expected: それぞれ `aliases[0].id`・`aliases[0].type`・`aliases[0].paths`・`aliases[0].id` の理由
+        expected: それぞれ `aliases[0].id`・`aliases[0].metadata.alias_type`・`aliases[0].paths`・`aliases[0].id` の理由
       - name: test_validate_schema_when_additional_property
         case: 正常
-        summary: 書けないキーを返す
-        condition: '`type: term` の `fields` に `mcp`、要素の最上位に `label`'
+        summary: 値の型に書けないキーを返し、行と metadata の他のキーは許す
+        condition: '`metadata.name` が `{type: ref, field: title, label: x}` の行と、行の最上位に `label`・`metadata` に `tags` を持つ行'
         mock: なし
-        expected: '`aliases[0].fields.mcp` と `aliases[0].label` の理由'
+        expected: '前者は `aliases[0].metadata.name.label` を含む理由、後者は空'
       - name: test_validate_schema_when_if_not_matched
         case: 正常
         summary: '`if` に合わないときは `then` を使わない'
@@ -193,9 +193,9 @@ functions:
       - name: test_validate_schema_when_any_of_not_matched
         case: 正常
         summary: '`anyOf` のどの要素にも合わないときだけ理由を返す'
-        condition: 'ALIAS_SCHEMA で、`type: env` の `fields` が `id`・`match`・`description` だけの値と、`url`・`port` を両方持つ値'
+        condition: 'ALIAS_SCHEMA で、`metadata.name` が文字列 `Term-A` の値と、`{type: ref, field: title}` の値'
         mock: なし
-        expected: 前者は `aliases[0].fields.url` と `aliases[0].fields.port` を含む理由、後者は空
+        expected: 前者は `aliases[0].metadata.name` を含む理由、後者は空
   - name: generateAliasSchema
     title: 同梱のスキーマの生成
     kind: 関数

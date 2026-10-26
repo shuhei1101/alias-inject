@@ -1,34 +1,157 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-title: エイリアスの定義
-description: 用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する aliases[] の並び。取り込む側は、自分の設定の aliases のキーからこのルートを $ref で指す。
+title: エイリアスの元の行
+description: 用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は dev-docs.yaml の documents の行と同じ構造で、metadata にエイリアスのキーを置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。
 type: array
 items:
   $ref: "#/$defs/alias"
 $defs:
   alias:
-    title: エイリアスの要素
-    description: 1 種類の引用について、読む YAML と列の対応を定義する要素。id の一意はスキーマで表せないため、読む側が確かめる。
+    title: エイリアスの元の行
+    description: paths に当たる各ファイルを 1 件の文書にし、metadata でエイリアスのキーの値の取り方を定義する行。records を書いた行は、ファイルのその配列の各要素を 1 件の文書にする。id の一意はスキーマで表せないため、読む側が確かめる。行と metadata は他のキー（type・schema・tags・status など）も書ける。
+    type: object
+    required:
+      - id
+      - paths
+      - metadata
+    properties:
+      id:
+        title: 行の ID
+        description: 行の主キー。
+        type: string
+        minLength: 1
+        examples:
+          - terms
+      enabled:
+        title: 有効
+        description: false のとき、この行を使わない。
+        type: boolean
+        default: true
+        examples:
+          - true
+      paths:
+        title: 読む YAML
+        description: 読む YAML のパスか glob。ファイルと glob を混ぜてよい。
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+        examples:
+          - - terms/*.yaml
+      records:
+        title: 文書の並びのキー
+        description: 文書の並びを持つ配列のキー。書かないとき、各ファイルを 1 件の文書にする。
+        type: string
+        minLength: 1
+        examples:
+          - terms
+      metadata:
+        title: エイリアスのキーの値の取り方
+        description: エイリアスのキーごとに、文書の列から取るか行の全文書に同じ値を使うかを定義する。書かないキーは、同じ名前の列の ref とみなす。alias_type だけは必ず書く。
+        type: object
+        required:
+          - alias_type
+        properties:
+          alias_type:
+            title: 引用の種類
+            description: 引用の種類の取り方。custom のときは 9 つの種類のどれかを値にする。ref のときは、文書ごとに読む側が確かめる。
+            anyOf:
+              - $ref: "#/$defs/refValue"
+              - $ref: "#/$defs/aliasTypeValue"
+          id:
+            $ref: "#/$defs/metadataValue"
+          name:
+            $ref: "#/$defs/metadataValue"
+          aliases:
+            $ref: "#/$defs/metadataValue"
+          description:
+            $ref: "#/$defs/metadataValue"
+          related:
+            $ref: "#/$defs/metadataValue"
+          command:
+            $ref: "#/$defs/metadataValue"
+          cwd:
+            $ref: "#/$defs/metadataValue"
+          url:
+            $ref: "#/$defs/metadataValue"
+          avoid:
+            $ref: "#/$defs/metadataValue"
+          skill:
+            $ref: "#/$defs/metadataValue"
+          tool:
+            $ref: "#/$defs/metadataValue"
+          path:
+            $ref: "#/$defs/metadataValue"
+          port:
+            $ref: "#/$defs/metadataValue"
+          replacement:
+            $ref: "#/$defs/metadataValue"
+        examples:
+          - alias_type:
+              type: custom
+              value: term
+  metadataValue:
+    title: metadata の値
+    description: metadata の 1 キーの値の取り方。type が判別子で、ref は文書の列から取り、custom は行の全文書に同じ値を使う。
+    anyOf:
+      - $ref: "#/$defs/refValue"
+      - $ref: "#/$defs/customValue"
+  refValue:
+    title: 文書の列から取る値
+    description: 文書の field の列の値を使う。
     type: object
     additionalProperties: false
     required:
-      - id
       - type
-      - paths
-      - fields
+      - field
     properties:
-      id:
-        title: 要素の ID
-        description: 要素の主キー。
+      type:
+        title: 値の取り方
+        description: 文書の列から取ることを表す。
+        const: ref
+      field:
+        title: 列の名前
+        description: 値を取る文書の列の名前。
         type: string
         minLength: 1
-      enabled:
-        title: 有効
-        description: false のとき、この要素を使わない。
-        type: boolean
-        default: true
+    examples:
+      - type: ref
+        field: title
+  customValue:
+    title: 行で固定する値
+    description: 行の全文書に同じ value を使う。
+    type: object
+    additionalProperties: false
+    required:
+      - type
+      - value
+    properties:
       type:
+        title: 値の取り方
+        description: 行の全文書に同じ値を使うことを表す。
+        const: custom
+      value:
+        title: 値
+        description: 行の全文書に使う値。
+    examples:
+      - type: custom
+        value: 開発
+  aliasTypeValue:
+    title: 固定する引用の種類
+    description: 行の全文書に同じ引用の種類を使う。値は 9 つの種類のどれか。
+    type: object
+    additionalProperties: false
+    required:
+      - type
+      - value
+    properties:
+      type:
+        title: 値の取り方
+        description: 行の全文書に同じ値を使うことを表す。
+        const: custom
+      value:
         title: 引用の種類
-        description: 引用の種類。fields に書けるキーが種類ごとに決まる。
+        description: 引用の種類。文脈に並べる列とセクションが種類ごとに決まる。
         enum:
           - term
           - doc
@@ -39,424 +162,6 @@ $defs:
           - path
           - env
           - avoid
-      paths:
-        title: 読む YAML
-        description: 読む YAML のパスか glob。ファイルと glob を混ぜてよい。
-        type: array
-        minItems: 1
-        items:
-          type: string
-          minLength: 1
-      fields:
-        title: 列の対応
-        description: 引用に使う値を、元の YAML のどの列から取るかの対応。キーは type ごとに決まり、値は元の YAML の列の名前。
-        type: object
-    allOf:
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: term
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - description
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                related:
-                  $ref: "#/$defs/fieldRelated"
-                avoid:
-                  $ref: "#/$defs/fieldAvoid"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: doc
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - description
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: command
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - command
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                command:
-                  $ref: "#/$defs/fieldCommand"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-                cwd:
-                  $ref: "#/$defs/fieldCwd"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: url
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - url
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                url:
-                  $ref: "#/$defs/fieldUrl"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: skill
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - skill
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                skill:
-                  $ref: "#/$defs/fieldSkill"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: tool
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - tool
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                tool:
-                  $ref: "#/$defs/fieldTool"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: path
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - path
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                path:
-                  $ref: "#/$defs/fieldPath"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: env
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-              anyOf:
-                - required:
-                    - url
-                - required:
-                    - port
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                url:
-                  $ref: "#/$defs/fieldUrl"
-                port:
-                  $ref: "#/$defs/fieldPort"
-                title:
-                  $ref: "#/$defs/fieldTitle"
-                description:
-                  $ref: "#/$defs/fieldDescription"
-      - if:
-          required:
-            - type
-          properties:
-            type:
-              const: avoid
-        then:
-          properties:
-            fields:
-              required:
-                - id
-                - match
-                - replacement
-              additionalProperties: false
-              properties:
-                id:
-                  $ref: "#/$defs/fieldId"
-                match:
-                  $ref: "#/$defs/fieldMatch"
-                replacement:
-                  $ref: "#/$defs/fieldReplacement"
-                title:
-                  $ref: "#/$defs/fieldTitle"
     examples:
-      - id: glossary
-        type: term
-        paths:
-          - docs/用語集.yaml
-        fields:
-          id: id
-          match:
-            - name
-            - aliases
-          description: description
-          title: name
-          related: related_docs
-          avoid: avoid
-      - id: docs
-        type: doc
-        paths:
-          - dev/設計書/**/index.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          description: summary
-          title: title
-      - id: commands
-        type: command
-        enabled: false
-        paths:
-          - commands.yaml
-          - scripts/*.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          command: command
-          title: name
-          description: description
-          cwd: cwd
-      - id: urls
-        type: url
-        paths:
-          - urls.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          url: url
-          title: name
-          description: description
-      - id: skills
-        type: skill
-        paths:
-          - skills.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          skill: skill
-          title: name
-          description: description
-      - id: tools
-        type: tool
-        paths:
-          - tools.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          tool: tool
-          title: name
-          description: description
-      - id: paths
-        type: path
-        paths:
-          - paths.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          path: path
-          title: name
-          description: description
-      - id: envs
-        type: env
-        paths:
-          - envs.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          url: url
-          port: port
-          title: name
-          description: description
-      - id: avoids
-        type: avoid
-        paths:
-          - avoids.yaml
-        fields:
-          id: id
-          match:
-            - aliases
-          replacement: replacement
-          title: name
-  fieldId:
-    title: ID の列
-    description: 項目の ID を持つ列の名前。
-    type: string
-    minLength: 1
-  fieldMatch:
-    title: 照合する語の列
-    description: 本文・入力と照合する語が入っている列の名前の並び。列の値が並びのときは、要素ごとに照合する。
-    type: array
-    minItems: 1
-    items:
-      type: string
-      minLength: 1
-  fieldDescription:
-    title: 説明の列
-    description: 項目の説明を持つ列の名前。
-    type: string
-    minLength: 1
-  fieldTitle:
-    title: タイトルの列
-    description: 項目のタイトルを持つ列の名前。
-    type: string
-    minLength: 1
-  fieldRelated:
-    title: 関連の列
-    description: term のとき、関連する文書の並びを持つ列の名前。
-    type: string
-    minLength: 1
-  fieldAvoid:
-    title: 避ける語の列
-    description: term のとき、避ける語を持つ列の名前。
-    type: string
-    minLength: 1
-  fieldCommand:
-    title: コマンドの列
-    description: command のとき、実行するコマンドを持つ列の名前。
-    type: string
-    minLength: 1
-  fieldCwd:
-    title: 実行場所の列
-    description: command のとき、コマンドを実行するフォルダを持つ列の名前。
-    type: string
-    minLength: 1
-  fieldUrl:
-    title: URL の列
-    description: url か env のとき、URL を持つ列の名前。env では port と合わせて 1 つ以上が必須。
-    type: string
-    minLength: 1
-  fieldSkill:
-    title: スキルの列
-    description: skill のとき、スキル名を持つ列の名前。
-    type: string
-    minLength: 1
-  fieldTool:
-    title: ツールの列
-    description: tool のとき、MCP のツール名を持つ列の名前。
-    type: string
-    minLength: 1
-  fieldPath:
-    title: パスの列
-    description: path のとき、ファイルかフォルダのパスを持つ列の名前。
-    type: string
-    minLength: 1
-  fieldPort:
-    title: ポートの列
-    description: env のとき、ポートを持つ列の名前。url と合わせて 1 つ以上が必須。
-    type: string
-    minLength: 1
-  fieldReplacement:
-    title: 正しい語の列
-    description: avoid のとき、やめた言い方に代えて使う正しい語を持つ列の名前。
-    type: string
-    minLength: 1
+      - type: custom
+        value: term
