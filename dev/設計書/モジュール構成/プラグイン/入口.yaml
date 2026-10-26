@@ -1,7 +1,7 @@
 title: "プラグイン / 入口"
 lead: |-
   Claude Code が `hooks/hooks.json` の `modules` から読む hooks モジュールの入口と、入口が登録するイベントの処理、プラグイン・マーケットプレイス・型の確認の定義ファイル。
-  入口は `prompt.submit`・`session.compact`・`session.end` に処理を登録する。
+  入口は `prompt.submit`・`session.compact`・`session.end`・`tool.call` に処理を登録する。
 directory: |-
   ```text
   .claude-plugin/
@@ -11,8 +11,8 @@ directory: |-
   hooks/
     hooks.json           { "modules": ["./register.tsx"] }
     register.tsx         hooks モジュールの入口（register）
-    handlers.ts          prompt.submit・session.compact・session.end の処理
-    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録（各分類の設計書）
+    handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理
+    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録・変数参照（各分類の設計書）
     vendor/              同梱する外部ライブラリ（js-yaml）
   schemas/
     aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
@@ -35,7 +35,7 @@ functions:
     container: hooks/register.tsx
     usecase: 共通
     role: 入口
-    summary: hooks モジュールの入口として、3 つのイベントに処理を登録する
+    summary: hooks モジュールの入口として、4 つのイベントに処理を登録する
     inherits: dev/設計書/外部ライブラリ/claude-code#catalogs[API].entries[Register]
     scope: public
     is_async: false
@@ -46,7 +46,7 @@ functions:
         required: true
         passing: injected
         description: イベントへ処理を登録する関数。エンジンが渡す
-        notes: 3 回呼ぶ
+        notes: 4 回呼ぶ
     args_example: |-
       ```ts
       import type { Register } from 'claude-code'
@@ -55,12 +55,13 @@ functions:
         on('prompt.submit', handlePromptSubmit)
         on('session.compact', handleSessionCompact)
         on('session.end', handleSessionEnd)
+        on('tool.call', handleToolCall)
       }
       ```
     returns:
       type: void
       description: 何も返さない
-    process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)` を呼ぶ
+    process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)`・`on('tool.call', handleToolCall)` を呼ぶ
     unit_tests:
       - name: test_register
         case: 正常
@@ -245,6 +246,68 @@ functions:
         condition: '`$.session.id()` が s1。s1 と s2 の記録に term-a を入れ、`sessionId` が s2 で `reason` が `prompt_input_exit` と `clear`'
         mock: なし（`claude-code/testing` の `test` の `$.state`）
         expected: '`prompt_input_exit` では s2 に term-a が残り、`clear` では s2 だけが空になって s1 に term-a が残る'
+  - name: handleToolCall
+    title: 読んだ本文への変数参照の値の追加
+    container: hooks/handlers.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: ツールの結果の本文の `!{名前}` に、同じ名前の環境変数の値を `context` の末尾に追加して返す
+    kind: フック
+    inherits: dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加#
+    scope: public
+    is_async: true
+    side_effects: 変数参照があるときだけ `env -0` の子プロセスを 1 回起こす。値を引けない理由を debug log に出す
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: エンジンが渡す
+      - name: e
+        type: ToolCallInput
+        required: true
+        passing: positional
+        description: ツールの呼び出しの入力
+      - name: next
+        type: '(e: ToolCallInput) => Promise<ToolCallResult>'
+        required: true
+        passing: positional
+        description: 下のプラグインとエンジンの処理（ツールの実行）
+    returns:
+      type: Promise<ToolCallResult>
+      description: '`next(e)` の結果。値の行を追加したときは `context` だけを替えたもの'
+    process: |-
+      1. `r = await next(e)`
+      2. `r.deny` があるか、`r.isError` が true か、`r.text` が文字列でなければ `r` を返す
+      3. 変数参照の名前の拾い出しが空なら `r` を返す
+      4. `$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ
+      5. `exitCode` が 0 以外なら、終了コードを debug log に出して `r` を返す
+      6. env の出力の分割と値の行の組み立てをし、`{ ...r, context: [...(r.context ?? []), 行] }` を返す
+      7. 4〜6 で例外が起きたら（起動できない・待ちの上限の超過を含む）、理由を debug log に出して `r` を返す
+    unit_tests:
+      - name: test_handle_tool_call_when_context_given
+        case: 正常
+        summary: 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する
+        condition: "`next` が `text` に `!{VALUE_A}` を含み `context` が `['other']` の結果を返す"
+        mock: テストの `on` で `process.run` に `VALUE_A=value-a` を含む出力と終了コード 0 を返す
+        expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`text`・`ref` が `next` の結果のまま。`process.run` に `timeoutMs` 20 が渡る"
+      - name: test_handle_tool_call_when_skipped
+        case: 正常
+        summary: deny・エラーの結果・本文が無い結果・変数参照が無い結果は子プロセスを起こさずそのまま返す
+        condition: '`next` が `deny` あり、`isError: true`、`text` が無い、`text` に変数参照が無いの 4 通りを返す'
+        mock: 同上。`process.run` の呼ばれた回数を記録する
+        expected: どれも返る結果が `next` の結果のままで、`process.run` が呼ばれていない
+      - name: test_handle_tool_call_when_process_failed
+        case: 異常
+        summary: 終了コードが 0 以外・例外のときは debug log に出してそのまま返す
+        condition: '`process.run` が終了コード 3 を返すか、例外を投げるの 2 通り'
+        mock: 同上。`ui.log` は届いた行を記録する
+        expected: どちらも返る結果が `next` の結果のままで、`ui.log` に `to` が `debug` で終了コードか例外の理由を含む行が届く
+    refs:
+      - dev/設計書/モジュール構成/プラグイン/変数参照#functions[findReferenceNames]
+      - dev/設計書/モジュール構成/プラグイン/変数参照#functions[parseEnvOutput]
+      - dev/設計書/モジュール構成/プラグイン/変数参照#functions[formatReferenceLines]
+      - dev/設計書/モジュール構成/プラグイン/変数参照#constants[VARIABLE_REFERENCE_TIMEOUT_MS]
+    status: planned
 notes:
   テストと型の確認: |-
     - テストは `claude plugin test` で流す。`dir` の下の `*.test.ts` を全て流すので、`tests/` の下に置いても読まれる

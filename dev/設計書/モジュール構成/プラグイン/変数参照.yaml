@@ -1,0 +1,155 @@
+title: "プラグイン / 変数参照"
+lead: ツールの結果の本文から `!{名前}` の名前を拾い、`env -0` の出力から値を引いて、文脈に追加する値の行を組み立てる。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      variable.ts          変数参照の名前の拾い出し・`env -0` の出力の分割・値の行の組み立て・上限の定数
+  tests/
+    unit/
+      hooks/
+        lib/
+          variable.test.ts variable.ts の単体テスト
+  ```
+constants:
+  - name: VARIABLE_REFERENCE_TIMEOUT_MS
+    title: 子プロセスの待ちの上限
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: '`env -0` の子プロセスを待つ上限（ms）'
+    value: '20'
+    refs:
+      - dev/設計書/非機能要件/非機能要件#requirements[変数参照の値を引く子プロセスの待ちの上限]
+  - name: MAX_VARIABLE_REFERENCES
+    title: 名前の数の上限
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: 1 回に値の行を作る名前の数の上限
+    value: '50'
+    refs:
+      - dev/設計書/非機能要件/非機能要件#requirements[1 回に値を追加する変数参照の名前の上限]
+  - name: MAX_VARIABLE_REFERENCE_VALUE_CHARS
+    title: 値の長さの上限
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: 1 つの値を書く文字数の上限
+    value: '1000'
+    refs:
+      - dev/設計書/非機能要件/非機能要件#requirements[変数参照の値の長さの上限]
+functions:
+  - name: findReferenceNames
+    title: 変数参照の名前の拾い出し
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: 本文の `!{名前}` の名前を出た順に、重なりを除いて返す
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: ツールの結果の本文
+    returns:
+      type: string[]
+      description: 名前の並び。変数参照が無ければ空
+    process: |-
+      1. `/!\{([A-Za-z_][A-Za-z0-9_]*)\}/g` に当たる名前を出た順に集める
+      2. 重なりを除い、最初に出た位置の順で返す
+    unit_tests:
+      - name: test_find_reference_names
+        case: 正常
+        summary: 名前を出た順に重なりを除いて返す
+        condition: '`text` が `!{B} !{A} !{B}`'
+        mock: なし
+        expected: "`['B', 'A']`"
+      - name: test_find_reference_names_when_not_name
+        case: 正常
+        summary: 名前の書式に合わないものを拾わない
+        condition: '`text` が `!{} !{1ABC} !{A-B} {A} ${A}`'
+        mock: なし
+        expected: 空の並び
+    status: planned
+  - name: parseEnvOutput
+    title: env の出力の分割
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: '`env -0` の出力を名前 → 値に分ける'
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: stdout
+        type: string
+        required: true
+        passing: positional
+        description: '`env -0` の標準出力'
+    returns:
+      type: Map<string, string>
+      description: 名前 → 値
+    process: |-
+      1. NUL で区切る
+      2. 要素ごとに最初の `=` より前を名前、後ろを値にする。`=` が無いか先頭にある要素は飛ばす
+    unit_tests:
+      - name: test_parse_env_output
+        case: 正常
+        summary: 値に `=` や改行を含んでも崩さずに分ける
+        condition: '`stdout` が `A=1\0B=x=y\0C=line1\nline2\0\0=bad\0`'
+        mock: なし
+        expected: '`A` が `1`、`B` が `x=y`、`C` が `line1\nline2` の 3 件だけ'
+    status: planned
+  - name: formatReferenceLines
+    title: 値の行の組み立て
+    container: hooks/lib/variable.ts
+    usecase: 読んだ本文への変数参照の値の追加
+    summary: 名前ごとに値の行を作り、改行でつないで返す
+    kind: 関数
+    scope: public
+    is_async: false
+    args:
+      - name: names
+        type: string[]
+        required: true
+        passing: positional
+        description: 変数参照の名前の拾い出しの結果
+      - name: values
+        type: Map<string, string>
+        required: true
+        passing: positional
+        description: env の出力の分割の結果
+    returns:
+      type: string
+      description: 値の行を改行でつないだ文字列
+    process: |-
+      1. `names` の先頭から `MAX_VARIABLE_REFERENCES` 個までを順に行にする
+      2. `values` に無い名前は `変数参照の値: !{名前} は環境変数が設定されていない`
+      3. ある名前は、値が `MAX_VARIABLE_REFERENCE_VALUE_CHARS` 文字を超えるとき先頭だけに切る。切った後の値が改行を含むときは `JSON.stringify` した文字列にする。`変数参照の値: !{名前} = {値}` にし、切ったときは末尾に `（{全体の文字数} 文字のうち先頭 {上限} 文字）` を添える
+      4. 上限で外した名前があれば、最後に `変数参照の値: ほか {件数} 件の変数参照は値を追加していない` を置く
+      5. 行を `\n` でつないで返す
+    unit_tests:
+      - name: test_format_reference_lines
+        case: 正常
+        summary: 設定されている名前と設定されていない名前を並べる
+        condition: "`names` が `['A', 'B']`、`values` が `A` → `value-a` だけ"
+        mock: なし
+        expected: '`変数参照の値: !{A} = value-a` と `変数参照の値: !{B} は環境変数が設定されていない` の 2 行'
+      - name: test_format_reference_lines_when_multiline
+        case: 正常
+        summary: 改行を含む値を JSON の文字列で 1 行に収める
+        condition: '`values` の `C` が `line1\nline2`'
+        mock: なし
+        expected: '`変数参照の値: !{C} = "line1\nline2"` の 1 行'
+      - name: test_format_reference_lines_when_value_too_long
+        case: 正常
+        summary: 上限を超える値は先頭だけを書き、全体の文字数を添える
+        condition: '`values` の `L` が `x` 1001 文字。別に 1000 文字ちょうども渡す'
+        mock: なし
+        expected: 1001 文字では `x` 1000 文字の後ろに `（1001 文字のうち先頭 1000 文字）` が付く。1000 文字では切らず添えない
+      - name: test_format_reference_lines_when_too_many
+        case: 正常
+        summary: 上限を超えた名前は行を作らず件数を添える
+        condition: '`names` が 51 個。別に 50 個ちょうども渡す'
+        mock: なし
+        expected: '51 個では 50 行の後ろに `変数参照の値: ほか 1 件の変数参照は値を追加していない` が付く。50 個では 50 行だけ'
+    status: planned
