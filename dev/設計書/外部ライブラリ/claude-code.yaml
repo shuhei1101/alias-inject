@@ -163,6 +163,31 @@ catalogs:
             default: transcript
             description: 出す先
             notes: '`debug` はデバッグログに出す'
+      - name: $.process.run
+        kind: 関数
+        purpose: 子プロセスを起こして終了を待ち、終了コードと標準出力を返す
+        params:
+          - name: argv
+            type: string[]
+            required: true
+            description: コマンドと引数の並び
+          - name: options.timeoutMs
+            type: number
+            description: 待ちの上限（ミリ秒）
+            notes: 超えると例外になる
+        params_example: |-
+          ```ts
+          const run = await $.process.run(['env', '-0'], { timeoutMs: 20 })
+          ```
+        returns:
+          - name: exitCode
+            type: number
+            description: 子プロセスの終了コード
+            notes: 0 以外でも例外にはならない
+          - name: stdout
+            type: string
+            description: 標準出力
+        returns_example: 起動できないとき（`ENOENT`）と、`options.timeoutMs` を超えたときは例外になる。子プロセスは Claude Code の環境変数を継ぐ。
   - name: コマンド
     version: 2.1.310
     entries:
@@ -231,6 +256,29 @@ catalogs:
           - name: sessionId
             type: string
             description: 終わったセッションの ID
+      - name: tool.call
+        kind: イベント
+        purpose: ツールの呼び出しごとに呼ばれ、`next(e)` がツールを実行して結果を返す
+        params:
+          - name: e
+            type: ToolCallInput
+            required: true
+            description: ツールの呼び出し。中身は読まず、そのまま `next(e)` に渡す
+        returns:
+          - name: text?
+            type: string
+            description: ツールの結果の本文
+            notes: 組み込みのツールと MCP のツールのどちらでも読める。本文が無い結果では入らない
+          - name: isError?
+            type: boolean
+            description: エラーの結果のとき true
+          - name: deny?
+            type: string
+            description: 他のフックが実行を拒んだときに入る
+          - name: context?
+            type: readonly string[]
+            description: モデルにだけ追加する文脈
+            notes: '末尾に追加した文字列が、ツールの結果の後ろの文脈としてモデルに届く'
 lead: Claude Code が mod に渡す hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
 used_in:
   - hooks/register.tsx
