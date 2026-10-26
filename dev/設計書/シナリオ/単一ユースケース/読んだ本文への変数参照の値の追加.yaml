@@ -149,3 +149,4 @@ preconditions:
   - alias-inject が有効なセッションで動いている
 success_guarantee: ツールの結果の本文はそのままで、本文に出た名前ごとに 1 行の値（設定されていない名前は設定されていない旨）が結果の後ろの文脈としてモデルに届く。
 minimal_guarantee: 値を引けないときも、ツールの結果はそのままモデルに届き、ツールの呼び出しは止まらない。
+test_file: tests/e2e/単一ユースケース/test_variable_reference.py
