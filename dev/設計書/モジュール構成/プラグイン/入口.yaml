@@ -78,10 +78,10 @@ functions:
     kind: フック
     container: hooks/handlers.ts
     usecase: 入力への引用の文脈の追加
-    summary: 入力を読むリポジトリと設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す
+    summary: 入力を読むリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す
     scope: public
     is_async: true
-    side_effects: 追加した語を `$.state` のセッションの記録に入れる。読めない設定ファイル・`dev-docs.yaml`・YAML と、外した設定の値・`aliases` の要素を debug log に出す
+    side_effects: 追加した語を `$.state` のセッションの記録に入れる。読めない設定ファイル・`dev-docs.yaml`・YAML と、外した設定の値・行・文書を debug log に出す
     inherits: dev/設計書/インターフェース定義/入力への引用の文脈の追加#
     args:
       - name: $
@@ -111,13 +111,13 @@ functions:
       6. 実効の設定の組み立てをする（configPath は設定ファイルのパス、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）。設定ファイルの検証と組み立ての warnings を、設定ファイルのパスを添えて debug log に出す
       7. enabled が false、または出所の判定が false なら `next(e)` を返す
       8. 実効の設定の repositories を順に dev-docs.yaml の読み込みで読む。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを外す。読めたリポジトリの warnings は、`dev-docs.yaml` のパスを添えて debug log に出す
-      9. 8 のリポジトリの aliases を repositories の順に並べ、その後ろに実効の設定の aliases を並べる。各要素を並びの位置とともに aliases の要素の読み込みで読み、failures は YAML のパスと理由を debug log に出す
+      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べる。各行を並びの位置とともに行の文書の読み込みで読み、failures は YAML のパスと理由を debug log に出す
       10. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
       11. 選択が null なら `next(e)` を返す
       12. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
       13. 3〜12 で想定しない例外（SchemaError を含む）が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
 
-      6・8 の warnings は、同じ読み込みの結果（設定ファイルは検証した設定、リポジトリは取り出した aliases）について同じ文言を 1 回だけ出す。読み直して結果が変われば、また出す
+      6・8 の warnings は、同じ読み込みの結果（設定ファイルは検証した設定、リポジトリは取り出した行）について同じ文言を 1 回だけ出す。読み直して結果が変われば、また出す
     callees:
       - dev/設計書/モジュール構成/プラグイン/設定#functions[readConfigPath]
       - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[loadAliasSchema]
@@ -148,9 +148,9 @@ functions:
       - name: test_handle_prompt_submit_when_settings_warned
         case: 正常
         summary: 外した設定の値と aliases の要素は、読み込みの結果が変わらないうち 1 回だけ debug log に出す
-        condition: '設定ファイルの `global.aliases` に `type: memo` の要素、`dev-docs.yaml` に `fields` に `mcp` を持つ要素を置いて 2 回入力する'
+        condition: '設定ファイルの `global.aliases` に `metadata.alias_type` が `{type: custom, value: memo}` の行、`dev-docs.yaml` の `documents` に `metadata.name` が文字列 `mcp` で `alias_type` を持つ行を置いて 2 回入力する'
         mock: 同上。`ui.log` は届いた行を記録する
-        expected: '`ui.log` に `to` が `debug` で、設定ファイルのパスと `type` を含む行と、`dev-docs.yaml` のパスと `mcp` を含む行が 1 回ずつだけ届く'
+        expected: '`ui.log` に `to` が `debug` で、設定ファイルのパスと `alias_type` を含む行と、`dev-docs.yaml` のパスと `metadata.name` を含む行が 1 回ずつだけ届く'
       - name: test_handle_prompt_submit_when_alias_paths_match_config
         case: 正常
         summary: aliases の要素の glob が設定ファイルに当たっても、その要素の他の語の文脈を追加する

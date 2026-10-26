@@ -1,10 +1,10 @@
 title: "プラグイン / 項目"
-lead: '`aliases` の要素の `paths` に当たる YAML を読み、項目ごとに照合する語と文脈に並べる列を持つ語の一覧を作る。'
+lead: 'エイリアスの元の行の `paths` に当たる YAML を読み、文書ごとに `metadata` の値を解決して、照合する語と文脈に並べる列を持つ語の一覧を作る。'
 directory: |-
   ```text
   hooks/
     lib/
-      entry.ts           aliases の要素が指す YAML の読み込みと語の一覧の組み立て
+      entry.ts           行が指す YAML の読み込みと語の一覧の組み立て
   tests/
     unit/
       hooks/
@@ -17,32 +17,32 @@ data_models:
     container: hooks/lib/entry.ts
     usecase: 共通
     role: DTO
-    summary: '`aliases` の要素が指す YAML の 1 項目。照合する語と、文脈に並べる列'
+    summary: '行が指す YAML の 1 文書。照合する語と、文脈に並べる列'
     properties:
       - name: aliasIndex
         type: number
-        description: 読む `aliases` の要素の並び（`repositories` の順の `dev-docs.yaml` の要素、その後に設定ファイルの要素）での位置
+        description: 読む行の並び（`repositories` の順の `dev-docs.yaml` の行、その後に設定ファイルの行）での位置
       - name: itemIndex
         type: number
-        description: 要素の中の項目の並び（ファイルのパスの順、ファイルの中の順）
+        description: 行の中の文書の並び（ファイルのパスの順、ファイルの中の `records` の順）
       - name: origin
         type: string
-        description: 要素を書いた `dev-docs.yaml` か設定ファイルの絶対パス
+        description: 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス
       - name: aliasId
         type: string
-        description: '`aliases` の要素の `id`'
+        description: 行の `id`
       - name: type
         type: AliasType
-        description: 引用の種類
+        description: 文書ごとに解決した `alias_type`
       - name: id
         type: string
-        description: 項目の ID
+        description: 文書の ID。解決した `id` の値
       - name: word
         type: string
-        description: 文脈に出す語。`fields.title` の列の値。無ければ照合する最初の語
+        description: 文脈に出す語。解決した `name` の値（空なら補った値）
       - name: keys
         type: string[]
-        description: 照合する語を正規化したもの。空文字と重複を除く
+        description: 照合する語（`name` と `aliases`）を正規化したもの。空文字と重複を除く
       - name: fields
         type: '{ name: string; value: string }[]'
         description: 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ
@@ -51,21 +51,37 @@ data_models:
     container: hooks/lib/entry.ts
     usecase: 共通
     role: DTO
-    summary: 1 つの `aliases` の要素から作った語と、読めなかった YAML
+    summary: 1 つの行から作った語と、読めなかった YAML・外した文書
     properties:
       - name: entries
         type: Entry[]
         description: 語の一覧
       - name: failures
         type: '{ path: string; reason: string }[]'
-        description: 読めない・書式の誤った YAML の絶対パスと理由。呼び出し元が debug log に出す
+        description: 読めない・書式の誤った YAML と、必須の値が空の文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す
+  - name: SourceDocument
+    title: 文書
+    container: hooks/lib/entry.ts
+    usecase: 共通
+    role: DTO
+    summary: YAML から取り出した 1 件の文書と、その出所
+    properties:
+      - name: path
+        type: string
+        description: 文書を持つ YAML の絶対パス
+      - name: index
+        type: number | null
+        description: '`records` の並びでの位置。ファイルを 1 件の文書にしたときは null'
+      - name: value
+        type: Record<string, unknown>
+        description: 文書（ファイルの最上位か `records` の要素のマッピング）
 functions:
-  - name: parseItems
-    title: 項目の取り出し
+  - name: parseDocuments
+    title: 文書の取り出し
     kind: 関数
     container: hooks/lib/entry.ts
     usecase: 共通
-    summary: 1 つの YAML のパースの結果から、ID と照合する語を持つ項目を取り出す
+    summary: 1 つの YAML のパースの結果から、行の `records` に沿って文書を取り出す
     scope: public
     is_async: false
     args:
@@ -74,68 +90,70 @@ functions:
         required: true
         passing: positional
         description: YAML のパースの結果
-      - name: fields
-        type: AliasFields
+      - name: records
+        type: string | undefined
         required: true
         passing: positional
-        description: '`aliases` の要素の列の対応'
+        description: 行の `records`。書かない行は undefined
     returns:
-      type: Record<string, unknown>[]
-      description: ID と照合する語を持つ項目（マッピング）。無ければ空
+      type: '{ ok: true; documents: Record<string, unknown>[] } | { ok: false; reason: string }'
+      description: 取り出した文書（ファイルの中の順）か、取り出せない理由
     process: |-
-      1. 最上位がマッピングならそれを 1 項目、並びならマッピングの要素をそれぞれ 1 項目とし、それ以外（null を含む）は空を返す
-      2. `fields.id` の列の値が空でない文字列か数値で、`fields.match` の列のどれかに空でない文字列（並びならその要素）がある項目だけを残す
+      1. `records` が undefined なら、最上位がマッピングのときそれを 1 件の文書にし、それ以外（null を含む）は `ok: false`（理由 `最上位がマッピングではありません`）を返す
+      2. `records` があれば、最上位がマッピングで `records` のキーの値が並びのとき、マッピングの要素を順に文書にする（マッピングでない要素は飛ばす）。それ以外は `ok: false`（理由 `{records} の並びがありません`）を返す
     unit_tests:
-      - name: test_parse_items_when_mapping
+      - name: test_parse_documents_when_file
         case: 正常
-        summary: 最上位のマッピングは 1 項目
-        condition: '`id: term-a` と `name: Term-A` を持つマッピング、`fields` が `id: id`・`match: [name]`'
+        summary: records の無い行は最上位のマッピングを 1 件の文書にする
+        condition: '`records` が undefined で、`id: term-a` を持つマッピング'
         mock: なし
-        expected: 1 件
-      - name: test_parse_items_when_sequence
+        expected: ok が true で documents が 1 件
+      - name: test_parse_documents_when_records
         case: 正常
-        summary: 最上位の並びはマッピングの要素ごとに 1 項目
-        condition: マッピング 2 つと文字列 1 つの並び
+        summary: records の配列のマッピングの要素を文書にする
+        condition: '`records` が `terms` で、`terms` にマッピング 2 つと文字列 1 つを持つマッピング'
         mock: なし
-        expected: 2 件
-      - name: test_parse_items_when_id_or_match_missing
+        expected: ok が true で documents が 2 件
+      - name: test_parse_documents_when_unmatched
         case: 正常
-        summary: ID か照合する語の無い項目と空の入力は外す
-        condition: '`id` が無い項目・`match` の列が空の項目・null'
+        summary: 構造が合わなければ理由を返す
+        condition: '`records` が undefined で最上位が並び・null。`records` が `terms` で `terms` を持たないマッピング・`terms` が文字列'
         mock: なし
-        expected: どれも空
+        expected: どれも ok が false で、前の 2 つの理由が `最上位がマッピングではありません`、後の 2 つの理由が `terms の並びがありません`
   - name: buildEntries
     title: 語の組み立て
     kind: 関数
     container: hooks/lib/entry.ts
     usecase: 共通
-    summary: 1 つの `aliases` の要素の全ての項目から、照合する語と文脈に並べる列を持つ語を作る
+    summary: 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書は外す
     scope: public
     is_async: false
     args:
-      - name: items
-        type: Record<string, unknown>[]
+      - name: documents
+        type: SourceDocument[]
         required: true
         passing: positional
-        description: 要素の全ての読めたファイルの項目（ファイルのパスの順）
+        description: 行の全ての読めたファイルの文書（ファイルのパスの順、ファイルの中の順）
       - name: alias
         type: ResolvedAlias
         required: true
         passing: positional
-        description: 読む `aliases` の要素
+        description: 読む行
       - name: aliasIndex
         type: number
         required: true
         passing: positional
-        description: 読む `aliases` の要素の並びでの位置
+        description: 読む行の並びでの位置
     returns:
-      type: Entry[]
-      description: 語の一覧
+      type: LoadedEntries
+      description: 語の一覧と、外した文書の YAML のパスと理由
     process: |-
-      1. 各項目の照合する語を `fields.match` の列の順に集め、正規化して `keys` にする（照合の正規化）
-      2. `word` は `fields.title` の列の値が空でない文字列ならその値、それ以外は照合する最初の語にする
-      3. ID から `word` を引く表をこの要素の項目で作る
-      4. type ごとに `fields` を作る。列の名前が `alias.fields` に無い・値が空の列は並べない
+      1. 各文書の値を `alias.metadata` で解決する（metadata の値の解決）
+      2. `name` が空なら、`index` が null の文書はファイル名（拡張子を除く）、それ以外は `id` の値を `name` にする
+      3. 解決した `alias_type` が引用の種類でなければ、failures に `{path}` と `{文書の名前}: alias_type の値 {値} は引用の種類にありません` を入れて外す。引用の種類なら必須のキーの確認をし、空のキーがあれば `{文書の名前}: {空のキーを「、」でつなぐ} が空です` を入れて外す。文書の名前は `id` が空でなければ `id`、空なら `{records}[{index}]`（ファイルの文書は `id`）
+      4. `name` と `aliases`（文字列か文字列の並び）の順に照合する語を集め、正規化して `keys` にする（照合の正規化）。`word` は `name`
+      5. ID から `word` を引く表をこの行の残った文書で作る
+      6. type ごとに `fields` を作る。値が空の列は並べない
          - term: `description`、`related`（各要素の `to` を `{ID}（{名前}）` にして `, ` でつなぐ。名前が引けない ID は ID だけ）
          - doc: `description`
          - command: `command`（値をバッククォートで囲む）、`cwd`、`description`
@@ -145,23 +163,38 @@ functions:
          - path: `path`（値をバッククォートで囲む）、`description`
          - env: `url`、`port`、`description`
          - avoid: `replacement`
-      5. 列の値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
-      6. `origin`・`aliasId`・`type` は alias の値を入れる
+      7. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
+      8. `origin`・`aliasId` は alias の値、`type` は解決した `alias_type` を入れる
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[resolveMetadata]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[missingKeys]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[isAliasType]
     unit_tests:
       - name: test_build_entries_when_term
         case: 正常
-        summary: term は title を語にし、description と名前を引いた related を並べる
-        condition: '`fields` が `id: id`・`match: [name, aliases]`・`title: name`・`description: description`・`related: related`。term-a（`name: Term-A`、`aliases: [用語エー]`、`related: [{to: term-b}, {to: tpl-x}]`）と term-b（`name: Term-B`）'
+        summary: term は name を語にし、description と名前を引いた related を並べる
+        condition: 'metadata が `alias_type: {type: custom, value: term}` だけの行。term-a（`name: Term-A`、`aliases: [用語エー]`、`description`、`related: [{to: term-b}, {to: tpl-x}]`）と term-b（`name: Term-B`、`description`）'
         mock: なし
-        expected: "term-a の word が `Term-A`、keys が `['term-a', '用語エー']`、fields が description と `related: term-b（Term-B）, tpl-x`"
-      - name: test_build_entries_when_title_missing
+        expected: "term-a の word が `Term-A`、keys が `['term-a', '用語エー']`、fields が description と `related: term-b（Term-B）, tpl-x`。failures が空"
+      - name: test_build_entries_when_ref
         case: 正常
-        summary: title の列が無い・値が空なら照合する最初の語を語にする
-        condition: '`fields.title` を書かない要素と、`title: name` で `name` が空の項目。`match: [name, aliases]` の最初の語が `用語エー`'
+        summary: ref は文書の列から値を取り、alias_type も文書ごとに決まる
+        condition: 'metadata が `alias_type: {type: ref, field: kind}`・`name: {type: ref, field: title}`。文書が `kind: command`・`title: Sync`・`command: uv sync` と `kind: url`・`title: Site`・`url: https://example.com`'
         mock: なし
-        expected: どちらも word が `用語エー`
+        expected: type が command と url の 2 件で、word が `Sync`・`Site`
+      - name: test_build_entries_when_name_missing
+        case: 正常
+        summary: name が空なら、ファイルの文書はファイル名、records の要素は id を語にする
+        condition: '`index` が null で path が `/d/term/term-b.yaml`、`name` を持たない文書と、`index` が 0 で `id: cmd-a`、`name` が空文字の文書'
+        mock: なし
+        expected: word が `term-b` と `cmd-a`
+      - name: test_build_entries_when_required_missing
+        case: 正常
+        summary: 必須の値が空・alias_type が引用の種類にない文書は外し、理由を返す
+        condition: 'term の行で `id: term-n` で `description` の無い文書と、`records: terms` の `index` が 1 で `id` の無い文書。ref の `alias_type` で値が `memo` の文書'
+        mock: なし
+        expected: 'entries が空。failures が 3 件で、`term-n: description が空です`・`terms[1]: id、description が空です` と `memo` を含む理由。path は各文書の path'
       - name: test_build_entries_when_command
         case: 正常
         summary: command は command・cwd・description の順で、値のある列だけ
@@ -171,27 +204,27 @@ functions:
       - name: test_build_entries_when_doc_and_url
         case: 正常
         summary: doc は description だけを、url は url・description を並べる
-        condition: type が doc（`description` と `mcp` の列を持つ項目）と url の要素
+        condition: alias_type が doc（`description` と `mcp` の列を持つ文書）と url の行
         mock: なし
         expected: 'doc の fields が description だけで、url の fields に `url: …`'
       - name: test_build_entries_when_skill_tool_path
         case: 正常
         summary: skill・tool・path は値をバッククォートで囲んだ列と description を並べる
-        condition: 'type が skill（`skill: code-review`・`description: レビューする`）・tool（`tool: search_design_docs`、`description` が無い）・path（`path: ~/.config/ai-monitor/settings.yaml`）の要素'
+        condition: 'alias_type が skill（`skill: code-review`・`description: レビューする`）・tool（`tool: search_design_docs`・`description: 設計書を引く`）・path（`path: ~/.config/ai-monitor/settings.yaml`・`description: 設定`）の行'
         mock: なし
-        expected: 'skill の fields が `skill: `code-review``・`description: レビューする`、tool の fields が `tool: `search_design_docs`` だけ、path の fields が `path: `~/.config/ai-monitor/settings.yaml`` で `~` を展開しない'
+        expected: 'skill の fields が `skill: `code-review``・`description: レビューする`、tool の fields が `tool: `search_design_docs``・`description: 設計書を引く`、path の fields が `path: `~/.config/ai-monitor/settings.yaml`` で `~` を展開しない'
       - name: test_build_entries_when_env_and_avoid
         case: 正常
         summary: env は url・port・description の順で値のある列だけを、avoid は replacement を並べる
-        condition: 'type が env の要素で、env-a（`url: http://127.0.0.1:8000`・`port: 8000`（数値）・`description: 開発サーバー`）と env-b（`port: 5432` だけ）。type が avoid の要素で `replacement: term-a`'
+        condition: 'alias_type が env の行で、env-a（`url: http://127.0.0.1:8000`・`port: 8000`（数値）・`description: 開発サーバー`）と env-b（`port: 5432` だけ）。alias_type が avoid の行で `replacement: term-a`'
         mock: なし
         expected: 'env-a の fields が `url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー` の順、env-b の fields が `port: 5432` だけ、avoid の fields が `replacement: term-a`'
   - name: loadAliasEntries
-    title: aliases の要素の読み込み
+    title: 行の文書の読み込み
     kind: 関数
     container: hooks/lib/entry.ts
     usecase: 共通
-    summary: '`aliases` の要素の `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す'
+    summary: '行の `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す'
     scope: public
     is_async: true
     args:
@@ -204,38 +237,45 @@ functions:
         type: ResolvedAlias
         required: true
         passing: positional
-        description: 読む `aliases` の要素
+        description: 読む行
       - name: aliasIndex
         type: number
         required: true
         passing: positional
-        description: 読む `aliases` の要素の並びでの位置
+        description: 読む行の並びでの位置
     returns:
       type: Promise<LoadedEntries>
-      description: 語の一覧と読めなかった YAML。当たるファイルが無ければどちらも空
+      description: 語の一覧と、読めなかった YAML・外した文書。当たるファイルが無ければどちらも空
     process: |-
       1. `patterns` ごとに glob の展開をし、重複を除いてパスの順に並べる
       2. 各ファイルを変わったファイルの読み込み（種類は `alias`、変換は YAML のパース）で読む
-      3. `$.fs.read` の例外か、パースの結果の `ok` が false なら、そのパスと理由を failures に入れ、そのファイルの項目だけを外して続ける
-      4. 読めたファイルの項目の取り出しの結果をつなげ、語の組み立てに通して、failures とあわせて返す
+      3. `$.fs.read` の例外か、パースの結果の `ok` が false なら、そのパスと理由を failures に入れ、そのファイルだけを外して続ける
+      4. 読めたファイルを `alias.records` で文書の取り出しに通し、`ok` が false ならそのパスと理由を failures に入れて外す
+      5. 取り出した文書を path と位置（`records` を書かない行は null）つきでつなげ、語の組み立てに通して、その failures を後ろにつなげて返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandFiles]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
-      - dev/設計書/モジュール構成/プラグイン/項目#functions[parseItems]
+      - dev/設計書/モジュール構成/プラグイン/項目#functions[parseDocuments]
       - dev/設計書/モジュール構成/プラグイン/項目#functions[buildEntries]
     unit_tests:
       - name: test_load_alias_entries
         case: 正常
-        summary: glob に当たる全ての YAML の項目を語にする
-        condition: '`patterns` が `/d/term/*.yaml`、`/d/term` に term-a.yaml と term-b.yaml'
+        summary: glob に当たる全ての YAML を 1 件ずつの文書にして語にする
+        condition: '`records` を書かず `patterns` が `/d/term/*.yaml` の term の行。`/d/term` に term-a.yaml と term-b.yaml'
         mock: テストの `on` で `fs.list`・`fs.stat`・`fs.read` をメモリのファイル表から応答する
-        expected: entries が term-a・term-b の順の 2 件で、origin・aliasId・type が要素の値。failures が空
+        expected: entries が term-a・term-b の順の 2 件で、origin・aliasId が行の値、type が term。failures が空
+      - name: test_load_alias_entries_when_records
+        case: 正常
+        summary: records を書いた行はその配列の要素を文書にする
+        condition: '`records: commands` の command の行。`/d/command.yaml` の `commands` に 2 件'
+        mock: 同上
+        expected: entries が 2 件で、itemIndex が 0・1
       - name: test_load_alias_entries_when_yaml_malformed
         case: 正常
-        summary: 書式の誤った YAML だけを外し、パスと理由を返す
-        condition: term-b.yaml が閉じていない括弧を含む
+        summary: 書式の誤った YAML・records の配列の無い YAML だけを外し、パスと理由を返す
+        condition: 'term-b.yaml が閉じていない括弧を含む。`records: terms` の行で `terms` を持たない YAML'
         mock: 同上
-        expected: entries が term-a だけで、failures が term-b.yaml のパスと行と列を含む理由の 1 件
+        expected: 前者は entries が term-a だけで、failures が term-b.yaml のパスと行と列を含む理由の 1 件。後者は entries が空で、failures が `terms の並びがありません` の 1 件
 test_files:
   - tests/unit/hooks/lib/entry.test.ts
