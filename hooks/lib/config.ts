@@ -1,41 +1,31 @@
 import type { EngineInterface, PromptOrigin } from 'claude-code'
-import { expandHome, resolvePath } from './loader'
+import { dedupeAliases, parseAliases } from './alias'
+import type { AliasConfig, ResolvedAlias } from './alias'
+import { expandHome, parentDir, resolvePath } from './loader'
 
 const DEFAULT_MAX_ITEMS = 20
 const DEFAULT_MAX_CHARS = 4000
 const DEFAULT_HEADING = 'この発言に出る用語'
 
-const SOURCE_TYPES = ['term', 'doc', 'command', 'url'] as const
 const ORIGIN_KEYS = ['user', 'plugin'] as const
-const OPTIONAL_COLUMNS = ['description', 'related', 'mcp', 'command', 'cwd', 'url'] as const
-
-/** ソースが追加する列と書式の種類 */
-export type SourceType = (typeof SOURCE_TYPES)[number]
 
 /** 設定の `origins` に書ける値 */
 export type OriginKey = (typeof ORIGIN_KEYS)[number]
 
-/** 検証を通った 1 つのソースの設定 */
-export type SourceConfig = {
-  label: string
-  type: SourceType
-  files: string[]
+/** 検証を通った有効な `repositories` の 1 要素 */
+export type RepositoryConfig = {
+  /** `dev-docs.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う） */
+  config: string
+  /** 相対パスの基準。`global` の要素は設定ファイルのフォルダ、`projects` の要素は起動したプロジェクトの直下 */
   baseDir: 'config' | 'project'
-  id: string
-  words: string[]
-  description?: string
-  related?: string
-  mcp?: string
-  command?: string
-  cwd?: string
-  url?: string
 }
 
 /** 検証したプロジェクトの設定。書いたキーだけが値を持つ */
 export type ProjectConfig = {
   match: string
   enabled: boolean | undefined
-  sources: SourceConfig[]
+  repositories: RepositoryConfig[]
+  aliases: AliasConfig[]
   origins: OriginKey[] | null | undefined
   maxItems: number | undefined
   maxChars: number | undefined
@@ -46,25 +36,32 @@ export type ProjectConfig = {
 /** 検証して既定値を当てた設定ファイルの内容 */
 export type Config = {
   enabled: boolean
-  sources: SourceConfig[]
+  repositories: RepositoryConfig[]
+  aliases: AliasConfig[]
   origins: OriginKey[] | null
   maxItems: number
   maxChars: number
   exclude: string[]
   heading: string
   projects: ProjectConfig[]
+  /** 外した要素と無視した値の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
-/** 起動したプロジェクトに当たる projects を重ね、files を絶対パスにした設定 */
+/** 起動したプロジェクトに当たる projects を重ね、パスを絶対パスにした設定 */
 export type Settings = {
   enabled: boolean
-  sources: (SourceConfig & { patterns: string[] })[]
+  /** 読む `dev-docs.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す */
+  repositories: string[]
+  /** 設定ファイルの `aliases` の要素。global の後ろに当たった projects を並べ、先の要素と `id` が重なる要素を外したもの */
+  aliases: ResolvedAlias[]
   origins: OriginKey[] | null
   maxItems: number
   maxChars: number
   exclude: string[]
   heading: string
+  /** `id` が重なって外した `aliases` の要素の理由。呼び出し元が debug log に出す */
+  warnings: string[]
 }
 
 /** 設定ファイルの最上位がマッピングでないことを伝える例外 */
@@ -94,46 +91,53 @@ export async function readConfigPath($: EngineInterface): Promise<string | null>
   return expandHome({ path: value, home })
 }
 
-/** `sources` の 1 要素を検証し、必須のキーが揃えば SourceConfig を返す。揃わなければ外す理由を返す */
-export function parseSource(value: unknown, baseDir: 'config' | 'project'): SourceConfig | string {
-  if (!isRecord(value)) return 'sources の要素がマッピングではありません'
-  const { label, id, type, files, words } = value
-  if (!isNonEmptyString(label)) return 'label が空でない文字列ではありません'
-  if (!isNonEmptyString(id)) return 'id が空でない文字列ではありません'
-  if (!SOURCE_TYPES.includes(type as SourceType)) return `type が term・doc・command・url のどれでもありません（${String(type)}）`
-  const fileList = typeof files === 'string' ? [files] : files
-  if (!Array.isArray(fileList) || fileList.length === 0 || !fileList.every(isNonEmptyString)) {
-    return 'files が空でない文字列か、その並びではありません'
-  }
-  const wordList = Array.isArray(words) ? words.filter(isNonEmptyString) : []
-  if (wordList.length === 0) return 'words が空でない文字列を 1 つ以上含む並びではありません'
+/** `repositories` の 1 要素を検証し、有効なら RepositoryConfig を返す。`enabled: false` のときは null、外すときは理由を返す */
+export function parseRepositoryConfig(value: unknown, baseDir: 'config' | 'project'): RepositoryConfig | null | string {
+  if (!isRecord(value)) return 'repositories の要素がマッピングではありません'
+  if (value.enabled !== undefined && typeof value.enabled !== 'boolean') return 'enabled が真偽値ではありません'
+  if (value.enabled === false) return null
+  if (!isNonEmptyString(value.config)) return 'config が空でない文字列ではありません'
+  return { config: value.config, baseDir }
+}
 
-  const source: SourceConfig = {
-    label,
-    type: type as SourceType,
-    files: fileList,
-    baseDir,
-    id,
-    words: wordList,
+// `repositories` の並びを検証する。外した要素と並びでない値の理由は warnings に入れる
+function parseRepositories(
+  value: unknown,
+  baseDir: 'config' | 'project',
+  prefix: string,
+  warnings: string[],
+): RepositoryConfig[] {
+  if (value === undefined) return []
+  if (!Array.isArray(value)) {
+    warnings.push(`${prefix}repositories が並びではないため、読むリポジトリを使いません`)
+    return []
   }
-  for (const column of OPTIONAL_COLUMNS) {
-    const columnName = value[column]
-    if (isNonEmptyString(columnName)) source[column] = columnName
+  const repositories: RepositoryConfig[] = []
+  for (const [index, raw] of value.entries()) {
+    const parsed = parseRepositoryConfig(raw, baseDir)
+    if (typeof parsed === 'string') warnings.push(`${prefix}repositories[${index}] を外しました: ${parsed}`)
+    else if (parsed !== null) repositories.push(parsed)
   }
-  return source
+  return repositories
+}
+
+// `aliases` の並びをスキーマで検証する。外した要素と並びでない値の理由は warnings に入れる
+function parseAliasList(value: unknown, schema: Record<string, unknown>, prefix: string, warnings: string[]): AliasConfig[] {
+  if (value === undefined) return []
+  if (!Array.isArray(value)) {
+    warnings.push(`${prefix}aliases が並びではないため、端末のエイリアスを使いません`)
+    return []
+  }
+  const parsed = parseAliases({ items: value, schema, path: `${prefix}aliases` })
+  warnings.push(...parsed.warnings)
+  return parsed.aliases
 }
 
 // `global` と `projects` の 1 要素に共通のキーを検証する。書かないキー・誤った値は undefined
-function parseScope(scope: Record<string, unknown>, baseDir: 'config' | 'project', prefix: string, warnings: string[]) {
-  const sources: SourceConfig[] = []
-  if (Array.isArray(scope.sources)) {
-    for (const [index, raw] of scope.sources.entries()) {
-      const parsed = parseSource(raw, baseDir)
-      if (typeof parsed === 'string') warnings.push(`${prefix}sources[${index}] を外しました: ${parsed}`)
-      else sources.push(parsed)
-    }
-  }
-
+function parseScope(
+  scope: Record<string, unknown>,
+  { baseDir, prefix, schema, warnings }: { baseDir: 'config' | 'project'; prefix: string; schema: Record<string, unknown>; warnings: string[] },
+) {
   let origins: OriginKey[] | null | undefined
   if ('origins' in scope && scope.origins !== undefined) {
     const kept: OriginKey[] = []
@@ -160,7 +164,8 @@ function parseScope(scope: Record<string, unknown>, baseDir: 'config' | 'project
 
   return {
     enabled: typeof scope.enabled === 'boolean' ? scope.enabled : undefined,
-    sources,
+    repositories: parseRepositories(scope.repositories, baseDir, prefix, warnings),
+    aliases: parseAliasList(scope.aliases, schema, prefix, warnings),
     origins,
     maxItems: limit('max_items'),
     maxChars: limit('max_chars'),
@@ -170,26 +175,27 @@ function parseScope(scope: Record<string, unknown>, baseDir: 'config' | 'project
 }
 
 /** パースした設定ファイルの値を検証し、既定値を当てる。誤った要素は外して理由を残す */
-export function parseConfig(value: unknown): Config {
+export function parseConfig(value: unknown, schema: Record<string, unknown>): Config {
   if (!isRecord(value)) throw new ConfigError('設定ファイルの最上位がマッピングではありません')
   const warnings: string[] = []
-  const global = parseScope(isRecord(value.global) ? value.global : {}, 'config', 'global.', warnings)
+  const global = parseScope(isRecord(value.global) ? value.global : {}, { baseDir: 'config', prefix: 'global.', schema, warnings })
 
   const projects: ProjectConfig[] = []
   if (Array.isArray(value.projects)) {
     for (const [index, raw] of value.projects.entries()) {
-      const prefix = `projects[${index}].`
       if (!isRecord(raw) || !isNonEmptyString(raw.match)) {
         warnings.push(`projects[${index}] を外しました: match が空でない文字列ではありません`)
         continue
       }
-      projects.push({ match: raw.match, ...parseScope(raw, 'project', prefix, warnings) })
+      const prefix = `projects[${index}].`
+      projects.push({ match: raw.match, ...parseScope(raw, { baseDir: 'project', prefix, schema, warnings }) })
     }
   }
 
   return {
     enabled: global.enabled ?? true,
-    sources: global.sources,
+    repositories: global.repositories,
+    aliases: global.aliases,
     origins: global.origins ?? null,
     maxItems: global.maxItems ?? DEFAULT_MAX_ITEMS,
     maxChars: global.maxChars ?? DEFAULT_MAX_CHARS,
@@ -208,21 +214,25 @@ export function matchProject(match: string, repoRoot: string, home: string): boo
   return root.split('/').pop() === expanded
 }
 
-/** 当たった projects の要素を global に重ね、files を絶対パスに解決する */
+/** 当たった projects の要素を global に重ね、`repositories` と `aliases` のパスを絶対パスに解決する */
 export function resolveSettings(
   config: Config,
-  {
-    where,
-  }: { where: { configDir: string; projectRoot: string; repoRoot: string; home: string } },
+  { where }: { where: { configPath: string; projectRoot: string; repoRoot: string; home: string } },
 ): Settings {
   const matched = config.projects.filter((project) => matchProject(project.match, where.repoRoot, where.home))
 
   let { enabled, origins, maxItems, maxChars, heading } = config
   const exclude = [...config.exclude]
-  const sources = [...config.sources]
-  // sources と exclude は後ろに追加し、それ以外は書いた値で置き換える
+  const repositories = [...config.repositories]
+  // 相対パスの基準を決めるため、aliases は書いた場所（global か projects）とあわせて持つ
+  const scopedAliases: { alias: AliasConfig; baseDir: 'config' | 'project' }[] = config.aliases.map((alias) => ({
+    alias,
+    baseDir: 'config',
+  }))
+  // repositories・aliases・exclude は後ろに追加し、それ以外は書いた値で置き換える
   for (const project of matched) {
-    sources.push(...project.sources)
+    repositories.push(...project.repositories)
+    scopedAliases.push(...project.aliases.map((alias) => ({ alias, baseDir: 'project' as const })))
     exclude.push(...project.exclude)
     if (project.enabled !== undefined) enabled = project.enabled
     if (project.origins !== undefined) origins = project.origins
@@ -231,23 +241,30 @@ export function resolveSettings(
     if (project.heading !== undefined) heading = project.heading
   }
 
+  const baseDirOf = (baseDir: 'config' | 'project') => (baseDir === 'config' ? parentDir(where.configPath) : where.projectRoot)
+  const resolvedAliases: ResolvedAlias[] = scopedAliases.map(({ alias, baseDir }) => ({
+    ...alias,
+    origin: where.configPath,
+    patterns: alias.paths.map((path) => resolvePath({ path, home: where.home, baseDir: baseDirOf(baseDir) })),
+  }))
+  const deduped = dedupeAliases(resolvedAliases)
+
   return {
     enabled,
-    sources: sources.map((source) => ({
-      ...source,
-      patterns: source.files.map((path) =>
-        resolvePath({
-          path,
-          home: where.home,
-          baseDir: source.baseDir === 'config' ? where.configDir : where.projectRoot,
-        }),
+    repositories: [
+      ...new Set(
+        repositories.map((repository) =>
+          resolvePath({ path: repository.config, home: where.home, baseDir: baseDirOf(repository.baseDir) }),
+        ),
       ),
-    })),
+    ],
+    aliases: deduped.aliases,
     origins,
     maxItems,
     maxChars,
     exclude,
     heading,
+    warnings: deduped.warnings,
   }
 }
 

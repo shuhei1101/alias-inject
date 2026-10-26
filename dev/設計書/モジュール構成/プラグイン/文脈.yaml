@@ -31,7 +31,7 @@ functions:
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: ソースの label と項目の ID の組を 1 つの文字列にする
+    summary: 出所・`aliases` の要素の `id`・項目の ID の組を 1 つの文字列にする
     scope: public
     is_async: false
     args:
@@ -42,21 +42,21 @@ functions:
         description: 語
     returns:
       type: string
-      description: '`{label}\u0000{id}`'
-    process: 1. label・NUL 文字・id をつないで返す
+      description: '`{origin}\u0000{aliasId}\u0000{id}`'
+    process: 1. origin・aliasId・id を NUL 文字でつないで返す
     unit_tests:
       - name: test_entry_key
         case: 正常
-        summary: label と ID の組が違えばキーも違う
-        condition: label `a b`・id `c` と label `a`・id `b c`
+        summary: 出所・aliases の要素の id・項目の ID の組が違えばキーも違う
+        condition: origin `/a`・aliasId `b c`・id `d` と origin `/a`・aliasId `b`・id `c d`、origin だけが `/a` と `/b` で違う 2 つ
         mock: なし
-        expected: 2 つのキーが異なる
+        expected: どちらの組も 2 つのキーが異なる
   - name: renderContext
     title: 文脈の書式化
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: 選んだ語を、見出し・ソースごとのセクション・語ごとの箇条書きの Markdown にする
+    summary: 選んだ語を、見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする
     scope: public
     is_async: false
     args:
@@ -75,22 +75,22 @@ functions:
       description: 文脈の Markdown
     process: |-
       1. 先頭に `# {heading}` を置く
-      2. 語を sourceIndex の順にセクションに分け、各セクションは空行の後に `## {label}` と空行を置く。セクションの中は選んだ順
+      2. 語を type ごとのセクションに分け、SECTION_HEADINGS の順に並べる。各セクションは空行の後に `## {見出し}` と空行を置く。セクションの中は選んだ順で、出所や `aliases` の要素が違っても同じセクションに並べる
       3. 語ごとに `- {word}（id: {id}）` と、fields の各要素を `  - {name}: {value}` で並べる
       4. 行を改行でつないで返す（末尾に改行を付けない）
     unit_tests:
       - name: test_render_context
         case: 正常
         summary: インターフェース定義の例と同じ Markdown になる
-        condition: 「knowledge の用語」の term-single-usecase と「ai-monitor のコマンド」の cmd-setup、heading が既定
+        condition: command の cmd-setup を先、term の term-single-usecase を後に渡し、heading が既定
         mock: なし
-        expected: インターフェース定義『入力への引用の文脈の追加』のレスポンス例と一致する
-      - name: test_render_context_when_same_word_in_sources
+        expected: インターフェース定義『入力への引用の文脈の追加』のレスポンス例と一致する（`## 用語` が `## コマンド` より先）
+      - name: test_render_context_when_same_id_in_repositories
         case: 正常
-        summary: 同じ語が別のソースにあれば両方のセクションに並べる
-        condition: sourceIndex 1 の term-a を先、sourceIndex 0 の term-a を後に渡す
+        summary: 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる
+        condition: origin `/b/dev-docs.yaml` の term-a を先、origin `/a/dev-docs.yaml` の term-a を後に渡す
         mock: なし
-        expected: sourceIndex 0 のセクションが先で、両方のセクションに term-a が並ぶ
+        expected: '`## 用語` が 1 つで、`/b` の term-a・`/a` の term-a の順に並ぶ'
   - name: selectEntries
     title: 語の選択
     kind: 関数
@@ -153,3 +153,18 @@ functions:
         expected: どれも null
 test_files:
   - tests/unit/hooks/lib/context.test.ts
+constants:
+  - name: SECTION_HEADINGS
+    title: セクションの見出し
+    container: hooks/lib/context.ts
+    usecase: 共通
+    summary: 引用の種類ごとのセクションの見出し。並びがセクションの順
+    entries:
+      - key: term
+        value: 用語
+      - key: doc
+        value: 文書
+      - key: command
+        value: コマンド
+      - key: url
+        value: URL

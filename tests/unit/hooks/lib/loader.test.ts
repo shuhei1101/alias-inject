@@ -4,6 +4,7 @@ import {
   expandFiles,
   expandHome,
   matchSegment,
+  parentDir,
   parseYaml,
   readIfChanged,
   resolvePath,
@@ -58,6 +59,21 @@ test('test_resolve_path_when_absolute', () => {
   // 検証
   expect(absolute).toBe('/a/b.yaml')
   expect(home).toBe('/home/u/b.yaml')
+})
+
+// `.`・`..` の区切りを畳む（正常系）
+test('test_resolve_path_when_dot_segments', () => {
+  // 実行
+  const relative = resolvePath({
+    path: '../knowledge/./dev-docs.yaml',
+    home: '/home/u',
+    baseDir: '/home/u/.config/alias-inject',
+  })
+  const aboveRoot = resolvePath({ path: '/../a/**/*.yaml', home: '/home/u', baseDir: '/repo/sample' })
+
+  // 検証
+  expect(relative).toBe('/home/u/.config/knowledge/dev-docs.yaml')
+  expect(aboveRoot).toBe('/a/**/*.yaml')
 })
 
 // `*` が任意の文字列に当たる（正常系）
@@ -179,8 +195,8 @@ test('test_read_if_changed', async () => {
   const convert = (text: string) => ({ text })
 
   // 実行
-  const first = await readIfChanged($, { file, convert, kind: 'source' })
-  const second = await readIfChanged($, { file, convert, kind: 'source' })
+  const first = await readIfChanged($, { file, convert, kind: 'alias' })
+  const second = await readIfChanged($, { file, convert, kind: 'alias' })
 
   // 検証
   expect(fs.reads).toEqual(['/d/a.yaml'])
@@ -194,11 +210,11 @@ test('test_read_if_changed_when_mtime_changed', async () => {
   const fs = new MemoryFs({ '/d/a.yaml': 'one' })
   const { $ } = createFakeEngine({ fs })
   const convert = (text: string) => ({ text })
-  const first = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'source' })
+  const first = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'alias' })
 
   // 実行
   fs.write('/d/a.yaml', 'two')
-  const second = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'source' })
+  const second = await readIfChanged($, { file: { path: '/d/a.yaml', mtimeMs: fs.mtime('/d/a.yaml') }, convert, kind: 'alias' })
 
   // 検証
   expect(first.text).toBe('one')
@@ -216,12 +232,12 @@ test('test_read_if_changed_when_kind_differs', async () => {
 
   // 実行
   const asConfig = await readIfChanged($, { file, convert: (text) => ({ config: text }), kind: 'config' })
-  const asSource = await readIfChanged($, { file, convert: (text) => ({ ok: true, value: text }), kind: 'source' })
+  const asAlias = await readIfChanged($, { file, convert: (text) => ({ ok: true, value: text }), kind: 'alias' })
 
   // 検証
   expect(fs.reads).toEqual(['/d/a.yaml', '/d/a.yaml'])
   expect(asConfig).toEqual({ config: 'one' })
-  expect(asSource).toEqual({ ok: true, value: 'one' })
+  expect(asAlias).toEqual({ ok: true, value: 'one' })
 })
 
 // ブロック・フロー・複数行の文字列を読む（正常系）
@@ -273,4 +289,15 @@ test('test_parse_yaml_when_proto_key', () => {
 
   // 検証
   expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+})
+
+// ファイルを置いたフォルダを返す（正常系）
+test('test_parent_dir', () => {
+  // 実行
+  const nested = parentDir('/repo/knowledge/dev-docs.yaml')
+  const root = parentDir('/dev-docs.yaml')
+
+  // 検証
+  expect(nested).toBe('/repo/knowledge')
+  expect(root).toBe('/')
 })

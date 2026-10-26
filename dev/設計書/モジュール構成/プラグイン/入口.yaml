@@ -12,8 +12,12 @@ directory: |-
     hooks.json           { "modules": ["./register.tsx"] }
     register.tsx         hooks モジュールの入口（register）
     handlers.ts          prompt.submit・session.compact・session.end の処理
-    lib/                 読み込み・設定・ソース・照合・文脈・記録（各分類の設計書）
+    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録（各分類の設計書）
     vendor/              同梱する外部ライブラリ（js-yaml）
+  schemas/
+    aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
+  scripts/
+    gen-aliases-schema.mjs  hooks/lib/aliases-schema.ts の生成・一致の確認（スキーマの設計書）
   types/
     index.d.ts           $.state の型の契約（PluginState）
   tests/
@@ -73,10 +77,10 @@ functions:
     kind: フック
     container: hooks/handlers.ts
     usecase: 入力への引用の文脈の追加
-    summary: 入力を設定の YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す
+    summary: 入力を読むリポジトリと設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す
     scope: public
     is_async: true
-    side_effects: 追加した語を `$.state` のセッションの記録に入れる。読めない設定ファイル・YAML と外した設定の値を debug log に出す
+    side_effects: 追加した語を `$.state` のセッションの記録に入れる。読めない設定ファイル・`dev-docs.yaml`・YAML と、外した設定の値・`aliases` の要素を debug log に出す
     inherits: dev/設計書/インターフェース定義/入力への引用の文脈の追加#
     args:
       - name: $
@@ -100,23 +104,29 @@ functions:
     process: |-
       1. `e.command` があれば `next(e)` を返す
       2. 設定ファイルのパスの取得が null なら `next(e)` を返す（ログを出さない）
-      3. 設定ファイルを `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `config`）で読む。変換は YAML のパース（`ok` が false なら理由で ConfigError）と設定ファイルの検証で、検証の warnings をそのときだけ debug log に出す
-      4. 3 が例外になったら、設定ファイルのパスと理由を `$.ui.log(text, { to: "debug" })` に出して `next(e)` を返す
-      5. 実効の設定の組み立てをする（configDir は設定ファイルのフォルダ、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）
-      6. enabled が false、または出所の判定が false なら `next(e)` を返す
-      7. 各ソースをソースの読み込みで読む。SourceError はパスと理由を debug log に出し、そのソースだけを外す
-      8. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
-      9. 選択が null なら `next(e)` を返す
-      10. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
-      11. 3〜10 で想定しない例外が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
+      3. スキーマの読み込みをする
+      4. 設定ファイルを `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `config`）で読む。変換は YAML のパース（`ok` が false なら理由で ConfigError）と設定ファイルの検証（スキーマは 3 のもの）
+      5. 4 が例外になったら、設定ファイルのパスと理由を `$.ui.log(text, { to: "debug" })` に出して `next(e)` を返す
+      6. 実効の設定の組み立てをする（configPath は設定ファイルのパス、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）。設定ファイルの検証と組み立ての warnings を、設定ファイルのパスを添えて debug log に出す
+      7. enabled が false、または出所の判定が false なら `next(e)` を返す
+      8. 実効の設定の repositories を順に dev-docs.yaml の読み込みで読む。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを外す。読めたリポジトリの warnings は、`dev-docs.yaml` のパスを添えて debug log に出す
+      9. 8 のリポジトリの aliases を repositories の順に並べ、その後ろに実効の設定の aliases を並べる。各要素を並びの位置とともに aliases の要素の読み込みで読み、failures は YAML のパスと理由を debug log に出す
+      10. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
+      11. 選択が null なら `next(e)` を返す
+      12. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
+      13. 3〜12 で想定しない例外（SchemaError を含む）が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
+
+      6・8 の warnings は、同じ読み込みの結果（設定ファイルは検証した設定、リポジトリは取り出した aliases）について同じ文言を 1 回だけ出す。読み直して結果が変われば、また出す
     callees:
       - dev/設計書/モジュール構成/プラグイン/設定#functions[readConfigPath]
+      - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[loadAliasSchema]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[readIfChanged]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
       - dev/設計書/モジュール構成/プラグイン/設定#functions[parseConfig]
       - dev/設計書/モジュール構成/プラグイン/設定#functions[resolveSettings]
       - dev/設計書/モジュール構成/プラグイン/設定#functions[isOriginAllowed]
-      - dev/設計書/モジュール構成/プラグイン/ソース#functions[loadSourceEntries]
+      - dev/設計書/モジュール構成/プラグイン/リポジトリ#functions[loadRepositoryAliases]
+      - dev/設計書/モジュール構成/プラグイン/項目#functions[loadAliasEntries]
       - dev/設計書/モジュール構成/プラグイン/照合#functions[findHits]
       - dev/設計書/モジュール構成/プラグイン/記録#functions[readRecorded]
       - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
@@ -127,7 +137,7 @@ functions:
         summary: enabled が false のときはそのまま渡す
         condition: 設定ファイルの `global.enabled` が false、入力「term-a とは」
         mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す
-        expected: 返る `context` が受け取ったままで、ソースの YAML の `fs.read` が呼ばれていない
+        expected: 返る `context` が受け取ったままで、`dev-docs.yaml` と YAML の `fs.read` が呼ばれていない
       - name: test_handle_prompt_submit_when_context_given
         case: 正常
         summary: 他のフックが追加した文脈を残して末尾に追加する
@@ -136,15 +146,15 @@ functions:
         expected: 返る `context` が 2 要素で、先頭が `other`、末尾が term-a の文脈
       - name: test_handle_prompt_submit_when_settings_warned
         case: 正常
-        summary: 外した設定の値は設定ファイルを読んだときだけ debug log に出す
-        condition: '`type` が `memo` のソースを含む設定で 2 回入力する'
+        summary: 外した設定の値と aliases の要素は、読み込みの結果が変わらないうち 1 回だけ debug log に出す
+        condition: '設定ファイルの `global.aliases` に `type: memo` の要素、`dev-docs.yaml` に `fields` に `mcp` を持つ要素を置いて 2 回入力する'
         mock: 同上。`ui.log` は届いた行を記録する
-        expected: '`ui.log` に `to` が `debug` で `type` を含む行が 1 回だけ届く'
-      - name: test_handle_prompt_submit_when_source_matches_config
+        expected: '`ui.log` に `to` が `debug` で、設定ファイルのパスと `type` を含む行と、`dev-docs.yaml` のパスと `mcp` を含む行が 1 回ずつだけ届く'
+      - name: test_handle_prompt_submit_when_alias_paths_match_config
         case: 正常
-        summary: ソースの glob が設定ファイルに当たっても、そのソースの他の語の文脈を追加する
-        condition: "設定ファイルの global に `files: '*.yaml'` の term ソース、同じフォルダに term-a.yaml、入力「term-a とは」"
-        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す
+        summary: aliases の要素の glob が設定ファイルに当たっても、その要素の他の語の文脈を追加する
+        condition: "設定ファイルの `global.aliases` に `paths: ['*.yaml']` の term の要素、同じフォルダに term-a.yaml、入力「term-a とは」"
+        mock: 同上
         expected: 返る `context` の末尾が term-a の文脈で、`YAML を読めません` の debug log が出ない
   - name: handleSessionCompact
     title: 圧縮の後の記録の消去

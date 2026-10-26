@@ -72,7 +72,7 @@ functions:
         type: Entry[]
         required: true
         passing: positional
-        description: 全てのソースの語（sources の順、ソースの中は項目の順）
+        description: 全ての `aliases` の要素の語（読む `aliases` の要素の順、要素の中は項目の順）
       - name: exclude
         type: string[]
         required: true
@@ -80,7 +80,7 @@ functions:
         description: 照合しない語（正規化前）
     returns:
       type: Hit[]
-      description: 当たった語。位置の昇順、同じ位置なら長い語が先、それも同じなら sourceIndex・itemIndex の順
+      description: 当たった語。位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順
     process: |-
       1. `text` と `exclude` の各要素を照合の正規化に通す
       2. 各語の keys のうち exclude に無いものを `indexOf` で探し、最も小さい位置と、その位置で当たった最も長い key の長さを取る。どれも当たらない語は外す

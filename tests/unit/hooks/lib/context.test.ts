@@ -1,16 +1,21 @@
 import { expect, test } from 'claude-code/testing'
 import { entryKey, renderContext, selectEntries } from '../../../../hooks/lib/context'
+import type { Entry } from '../../../../hooks/lib/entry'
 import type { Hit } from '../../../../hooks/lib/match'
-import type { Entry } from '../../../../hooks/lib/source'
 
 const HEADING = 'この発言に出る用語'
 
 // テスト用の語。説明を渡すと description の列を持つ
-function makeEntry(id: string, options: { sourceIndex?: number; label?: string; description?: string } = {}): Entry {
+function makeEntry(
+  id: string,
+  options: { origin?: string; aliasId?: string; type?: Entry['type']; description?: string } = {},
+): Entry {
   return {
-    sourceIndex: options.sourceIndex ?? 0,
+    aliasIndex: 0,
     itemIndex: 0,
-    label: options.label ?? '用語',
+    origin: options.origin ?? '/a/dev-docs.yaml',
+    aliasId: options.aliasId ?? 'terms',
+    type: options.type ?? 'term',
     id,
     word: id,
     keys: [id],
@@ -25,38 +30,31 @@ function makeHit(entry: Entry, position: number): Hit {
 
 const LIMITS = { heading: HEADING, maxItems: 20, maxChars: 4000 }
 
-// label と ID の組が違えばキーも違う（正常系）
+// 出所・aliases の要素の id・項目の ID の組が違えばキーも違う（正常系）
 test('test_entry_key', () => {
   // 準備
-  const first = makeEntry('c', { label: 'a b' })
-  const second = makeEntry('b c', { label: 'a' })
+  const first = makeEntry('d', { origin: '/a', aliasId: 'b c' })
+  const second = makeEntry('c d', { origin: '/a', aliasId: 'b' })
+  const otherOrigin = makeEntry('d', { origin: '/b', aliasId: 'b c' })
 
   // 実行
-  const keys = [entryKey(first), entryKey(second)]
+  const boundaryKeys = [entryKey(first), entryKey(second)]
+  const originKeys = [entryKey(first), entryKey(otherOrigin)]
 
   // 検証
-  expect(keys[0]).not.toBe(keys[1])
+  expect(boundaryKeys[0]).not.toBe(boundaryKeys[1])
+  expect(originKeys[0]).not.toBe(originKeys[1])
 })
 
-// 見出し・ソースごとのセクション・語ごとの箇条書きの Markdown にする（正常系）
+// 見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする（正常系）
 test('test_render_context', () => {
   // 準備
-  const usecase: Entry = {
-    sourceIndex: 0,
-    itemIndex: 0,
-    label: 'knowledge の用語',
-    id: 'term-single-usecase',
-    word: '単一ユースケース',
-    keys: ['単一ユースケース'],
-    fields: [
-      { name: 'description', value: '1 つの操作を始めから終わりまで書くシナリオの単位' },
-      { name: 'related', value: 'tpl-scenario（シナリオのテンプレート）' },
-    ],
-  }
   const setup: Entry = {
-    sourceIndex: 1,
+    aliasIndex: 1,
     itemIndex: 0,
-    label: 'ai-monitor のコマンド',
+    origin: '/mnt/c/Users/shuhe/repo/ai-monitor/dev-docs.yaml',
+    aliasId: 'commands',
+    type: 'command',
     id: 'cmd-setup',
     word: 'セットアップ',
     keys: ['セットアップ'],
@@ -66,22 +64,36 @@ test('test_render_context', () => {
       { name: 'description', value: '依存を入れる' },
     ],
   }
+  const usecase: Entry = {
+    aliasIndex: 0,
+    itemIndex: 0,
+    origin: '/mnt/c/Users/shuhe/repo/knowledge/dev-docs.yaml',
+    aliasId: 'terms',
+    type: 'term',
+    id: 'term-single-usecase',
+    word: '単一ユースケース',
+    keys: ['単一ユースケース'],
+    fields: [
+      { name: 'description', value: '1 つの操作を始めから終わりまで書くシナリオの単位' },
+      { name: 'related', value: 'tpl-scenario（シナリオのテンプレート）' },
+    ],
+  }
 
   // 実行
-  const text = renderContext(HEADING, [usecase, setup])
+  const text = renderContext(HEADING, [setup, usecase])
 
   // 検証
   expect(text).toBe(
     [
       '# この発言に出る用語',
       '',
-      '## knowledge の用語',
+      '## 用語',
       '',
       '- 単一ユースケース（id: term-single-usecase）',
       '  - description: 1 つの操作を始めから終わりまで書くシナリオの単位',
       '  - related: tpl-scenario（シナリオのテンプレート）',
       '',
-      '## ai-monitor のコマンド',
+      '## コマンド',
       '',
       '- セットアップ（id: cmd-setup）',
       '  - command: `uv sync`',
@@ -91,18 +103,19 @@ test('test_render_context', () => {
   )
 })
 
-// 同じ語が別のソースにあれば両方のセクションに並べる（正常系）
-test('test_render_context_when_same_word_in_sources', () => {
+// 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる（正常系）
+test('test_render_context_when_same_id_in_repositories', () => {
   // 準備
-  const later = makeEntry('term-a', { sourceIndex: 1, label: '後のソース' })
-  const earlier = makeEntry('term-a', { sourceIndex: 0, label: '前のソース' })
+  const later = makeEntry('term-a', { origin: '/b/dev-docs.yaml', description: 'b の説明' })
+  const earlier = makeEntry('term-a', { origin: '/a/dev-docs.yaml', description: 'a の説明' })
 
   // 実行
   const text = renderContext(HEADING, [later, earlier])
 
   // 検証
-  expect(text.indexOf('## 前のソース')).toBeLessThan(text.indexOf('## 後のソース'))
+  expect(text.split('## 用語').length - 1).toBe(1)
   expect(text.split('- term-a（id: term-a）').length - 1).toBe(2)
+  expect(text.indexOf('b の説明')).toBeLessThan(text.indexOf('a の説明'))
 })
 
 // 記録済みの語を除いて選ぶ（正常系）

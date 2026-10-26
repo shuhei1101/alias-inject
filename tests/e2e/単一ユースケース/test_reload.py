@@ -6,7 +6,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from support.harness import ANSWER_BRIEFLY, E2ETestCase, term_list_text, term_text
+from support.harness import (
+    ANSWER_BRIEFLY,
+    E2ETestCase,
+    alias_lines,
+    command_text,
+    dev_docs_text,
+    term_alias_lines,
+    term_list_text,
+    term_text,
+    url_text,
+)
 
 
 class ReloadTest(E2ETestCase):
@@ -26,13 +36,29 @@ class ReloadTest(E2ETestCase):
         self.assert_context_has_term(result, "term-c")
         self.assertIn("id: term-d", result.context_text)
 
-    def test_error_when_yaml_malformed(self) -> None:
-        """書式の誤った YAML のソースだけが外れ、もう一方のソースの文脈は追加される（異常シナリオ（YAML の書式の誤り））"""
+    def test_normal_when_repository_config_changed(self) -> None:
+        """書き換えた dev-docs.yaml の aliases に足した要素の語の文脈が、書き換えた直後の入力で追加される（正常シナリオ（dev-docs.yaml の書き換え））"""
         # 準備
-        session = self.start_with_terms(
-            extra_sources=["- label: URL", "  type: url", f"  files: {self.session.urls_dir}/*.yaml", "  id: id", "  words: [name]", "  url: url"],
+        session = self.start_with_terms()
+        session.write_file(session.repo_dir / "commands" / "cmd-a.yaml", command_text("cmd-a"))
+        session.submit(f"こんにちは。{ANSWER_BRIEFLY}")
+        # dev-docs.yaml の aliases に、コマンドの YAML を読む要素を足す
+        session.write_file(
+            session.dev_docs_path,
+            dev_docs_text([*term_alias_lines(), *alias_lines("commands", "command", "commands/*.yaml")]),
         )
-        session.write_file(session.urls_dir / "url-a.yaml", "id: url-a\nname: url-a\nurl: https://example.com/a\n")
+
+        # 実行
+        result = session.submit(f"cmd-a について。{ANSWER_BRIEFLY}")
+
+        # 検証
+        self.assert_context_has_entry(result, "コマンド", "cmd-a", "command: `make cmd-a`")
+
+    def test_error_when_yaml_malformed(self) -> None:
+        """書式の誤った YAML の要素だけが外れ、もう一方の要素の文脈は追加される（異常シナリオ（YAML の書式の誤り））"""
+        # 準備
+        session = self.start_with_terms(config_aliases=alias_lines("urls", "url", "urls/*.yaml"))
+        session.write_file(session.urls_dir / "url-a.yaml", url_text("url-a"))
         session.submit(f"こんにちは。{ANSWER_BRIEFLY}")
         # URL の YAML を書式の誤った内容に書き換える
         session.write_file(session.urls_dir / "url-a.yaml", "id: [url-a\nname: url-a\n")

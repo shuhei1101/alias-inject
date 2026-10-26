@@ -1,5 +1,5 @@
 title: "プラグイン / 読み込み"
-lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイルとソースの YAML の両方が使う。
+lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイル・スキーマ・`dev-docs.yaml`・`aliases` の要素が指す YAML が使う。
 directory: |-
   ```text
   hooks/
@@ -120,8 +120,8 @@ functions:
       description: 絶対パス。区切りは `/`
     process: |-
       1. `path` をホームの展開に通す（ホームの展開）
-      2. `/` で始まるならそのまま返す
-      3. それ以外は `baseDir` の末尾の `/` を除き、`/` でつないで返す。先頭の `./` は除く
+      2. `/` で始まらなければ、`baseDir` の末尾の `/` を除き、`/` でつなぐ
+      3. `/` で区切って、空の区切りと `.` を除き、`..` は直前の区切りと一緒に除いて（直前が無ければ `..` だけを除く）、先頭に `/` を付けてつなぎ直して返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
     unit_tests:
@@ -137,6 +137,12 @@ functions:
         condition: '`path` が `/a/b.yaml` と `~/b.yaml`、`home` が `/home/u`'
         mock: なし
         expected: '`/a/b.yaml` と `/home/u/b.yaml`'
+      - name: test_resolve_path_when_dot_segments
+        case: 正常
+        summary: '`.`・`..` の区切りを畳む'
+        condition: '`path` が `../knowledge/./dev-docs.yaml`、`baseDir` が `/home/u/.config/alias-inject`。`path` が `/../a/**/*.yaml`'
+        mock: なし
+        expected: '`/home/u/.config/knowledge/dev-docs.yaml` と `/a/**/*.yaml`'
   - name: matchSegment
     title: 名前と glob の区切りの照合
     kind: 関数
@@ -267,10 +273,10 @@ functions:
         passing: keyword
         description: 読んだ文字列を値に変える関数。結果をキャッシュする
       - name: kind
-        type: "'config' | 'source'"
+        type: "'config' | 'repository' | 'alias'"
         required: true
         passing: keyword
-        description: 読み込みの種類。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
+        description: 読み込みの種類（設定ファイル・`dev-docs.yaml`・`aliases` の要素が指す YAML）。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
     returns:
       type: Promise<T>
       description: 変換した値
@@ -294,7 +300,7 @@ functions:
       - name: test_read_if_changed_when_kind_differs
         case: 正常
         summary: 種類が違えば同じファイルでも別に読んで変換する
-        condition: 同じ `FileStamp` で、`kind` が `config` と `source` の 2 回を違う `convert` で呼ぶ
+        condition: 同じ `FileStamp` で、`kind` が `config` と `alias` の 2 回を違う `convert` で呼ぶ
         mock: テストの `on` で `fs.read` の呼ばれた回数を数える
         expected: '`fs.read` は 2 回。戻り値はそれぞれの `convert` の結果'
   - name: parseYaml
@@ -346,6 +352,31 @@ functions:
         condition: '`__proto__: {polluted: 1}`'
         mock: なし
         expected: '`({}).polluted` が undefined'
+  - name: parentDir
+    title: 親のフォルダ
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: 絶対パスのファイルを置いたフォルダを返す
+    scope: public
+    is_async: false
+    args:
+      - name: path
+        type: string
+        required: true
+        passing: positional
+        description: ファイルの絶対パス
+    returns:
+      type: string
+      description: フォルダの絶対パス
+    process: 1. 最後の `/` より前を返す。最後の `/` が先頭なら `/` を返す
+    unit_tests:
+      - name: test_parent_dir
+        case: 正常
+        summary: ファイルを置いたフォルダを返す
+        condition: '`/repo/knowledge/dev-docs.yaml` と `/dev-docs.yaml`'
+        mock: なし
+        expected: '`/repo/knowledge` と `/`'
 notes:
   キャッシュ: 変わったファイルの読み込みのキャッシュはモジュールの変数に持つ。mod のホットリロードで空に戻り、次の入力で読み直す。単体テストではテストごとに空に戻す関数 `clearCache` を使う
 test_files:

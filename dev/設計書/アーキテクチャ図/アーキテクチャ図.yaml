@@ -25,6 +25,10 @@ overview:
       label: 照合に使う YAML
       kind: store
       shape: cylinder
+    - id: repo_config
+      label: 読むリポジトリの dev-docs.yaml
+      kind: store
+      shape: cylinder
   edges:
     - from: user
       to: cc
@@ -47,6 +51,9 @@ overview:
     - from: cc
       to: model
       label: 入力と文脈
+    - from: plugin
+      to: repo_config
+      label: 読む
   subgraphs:
     - id: alias_inject
       label: alias-inject
@@ -60,6 +67,7 @@ repository:
   notes: |-
     リポジトリ自身をマーケットプレイスにして配る。
     mdmark・dev-docs は、リリースのタグを指定して `schemas/aliases.schema.yaml` を取り込む。
+    プラグイン自身も、設定ファイルと読む `dev-docs.yaml` の `aliases` を検証する。検証に使うのは、`schemas/aliases.schema.yaml` から生成して同梱する `hooks/lib/aliases-schema.ts`。
 subsystems:
   - name: プラグイン
     scope: plugin
