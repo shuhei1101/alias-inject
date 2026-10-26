@@ -1,0 +1,166 @@
+ $ claude plugin test .
+
+
+tests/integration/hooks/prompt-submit.test.ts:
+(pass) test_normal [486.29ms]
+(pass) test_normal_when_over_item_limit [397.80ms]
+(pass) test_normal_when_over_char_limit [262.37ms]
+(pass) test_normal_when_origin_excluded [284.66ms]
+(pass) test_normal_when_slash_command [221.19ms]
+(pass) test_normal_when_config_path_missing [254.26ms]
+(pass) test_normal_when_project_matched [169.92ms]
+(pass) test_normal_when_files_changed [248.57ms]
+(pass) test_normal_when_same_id_across_repositories [182.29ms]
+(pass) test_normal_when_disabled [163.13ms]
+(pass) test_normal_when_repository_config_changed [240.91ms]
+(pass) test_error_when_config_unreadable [200.09ms]
+(pass) test_error_when_repository_unreadable [196.28ms]
+(pass) test_error_when_alias_invalid [180.75ms]
+(pass) test_error_when_yaml_malformed [186.70ms]
+
+tests/integration/hooks/session-compact.test.ts:
+(pass) test_normal [446.70ms]
+(pass) test_normal_when_not_compacted [386.54ms]
+
+tests/integration/hooks/session-end.test.ts:
+(pass) test_normal [566.35ms]
+(pass) test_normal_when_not_clear [335.68ms]
+
+tests/integration/hooks/tool-call.test.ts:
+(pass) test_normal [327.26ms]
+(pass) test_normal_when_unset [365.50ms]
+(pass) test_normal_when_no_reference [230.11ms]
+(pass) test_normal_when_error_result [213.82ms]
+(pass) test_normal_when_over_reference_limit [212.84ms]
+(pass) test_normal_when_over_value_limit [229.93ms]
+(pass) test_error_when_nonzero_exit [199.92ms]
+(pass) test_error_when_process_failed [248.74ms]
+
+tests/unit/hooks/handlers.test.ts:
+(pass) test_handle_prompt_submit_when_disabled [427.24ms]
+(pass) test_handle_prompt_submit_when_context_given [287.92ms]
+(pass) test_handle_prompt_submit_when_settings_warned [213.76ms]
+(pass) test_handle_session_compact [231.86ms]
+(pass) test_handle_session_compact_when_not_compacted [230.60ms]
+(pass) test_handle_prompt_submit_when_alias_paths_match_config [241.66ms]
+(pass) test_handle_session_end_when_clear [260.47ms]
+(pass) test_handle_tool_call_when_context_given [260.46ms]
+(pass) test_handle_tool_call_when_skipped [238.54ms]
+(pass) test_handle_tool_call_when_process_failed [158.74ms]
+
+tests/unit/hooks/lib/alias.test.ts:
+(pass) test_parse_aliases [9.08ms]
+(pass) test_parse_aliases_when_disabled [0.52ms]
+(pass) test_parse_aliases_when_invalid [4.36ms]
+(pass) test_dedupe_aliases [0.40ms]
+
+tests/unit/hooks/lib/config.test.ts:
+(pass) test_read_config_path [18.55ms]
+(pass) test_read_config_path_when_missing [0.59ms]
+(pass) test_parse_config [15.00ms]
+(pass) test_parse_config_when_keys_omitted [0.95ms]
+(pass) test_parse_config_when_alias_invalid [10.58ms]
+(pass) test_parse_config_when_origins_empty [0.36ms]
+(pass) test_parse_config_when_limit_invalid [0.46ms]
+(pass) test_parse_config_when_project_without_match [0.57ms]
+(pass) test_parse_config_when_not_mapping [0.33ms]
+(pass) test_match_project_when_absolute [0.31ms]
+(pass) test_match_project_when_name [0.20ms]
+(pass) test_resolve_settings [16.72ms]
+(pass) test_resolve_settings_when_relative_paths [0.69ms]
+(pass) test_resolve_settings_when_duplicated [0.45ms]
+(pass) test_resolve_settings_when_project_overrides [0.32ms]
+(pass) test_is_origin_allowed [0.41ms]
+(pass) test_is_origin_allowed_when_origins_null [0.13ms]
+(pass) test_parse_repository_config [0.15ms]
+(pass) test_parse_repository_config_when_disabled [0.10ms]
+(pass) test_parse_repository_config_when_invalid [2.63ms]
+
+tests/unit/hooks/lib/context.test.ts:
+(pass) test_entry_key [8.56ms]
+(pass) test_render_context [0.50ms]
+(pass) test_render_context_when_same_id_in_repositories [0.49ms]
+(pass) test_select_entries [5.77ms]
+(pass) test_select_entries_when_over_item_limit [0.39ms]
+(pass) test_select_entries_when_over_char_limit [0.49ms]
+(pass) test_select_entries_when_nothing_selected [0.45ms]
+
+tests/unit/hooks/lib/entry.test.ts:
+(pass) test_parse_items_when_mapping [2.31ms]
+(pass) test_parse_items_when_sequence [0.26ms]
+(pass) test_parse_items_when_id_or_match_missing [0.47ms]
+(pass) test_build_entries_when_term [0.74ms]
+(pass) test_build_entries_when_title_missing [0.21ms]
+(pass) test_build_entries_when_command [0.48ms]
+(pass) test_build_entries_when_doc_and_url [0.48ms]
+(pass) test_load_alias_entries [5.10ms]
+(pass) test_load_alias_entries_when_yaml_malformed [1.61ms]
+
+tests/unit/hooks/lib/loader.test.ts:
+(pass) test_expand_home [5.08ms]
+(pass) test_expand_home_when_tilde_only [0.31ms]
+(pass) test_expand_home_when_not_tilde [0.28ms]
+(pass) test_resolve_path [0.34ms]
+(pass) test_resolve_path_when_absolute [0.40ms]
+(pass) test_resolve_path_when_dot_segments [0.16ms]
+(pass) test_match_segment [0.61ms]
+(pass) test_match_segment_when_multiple_stars [0.18ms]
+(pass) test_expand_files [1.14ms]
+(pass) test_expand_files_when_double_star [0.45ms]
+(pass) test_expand_files_when_no_star [0.27ms]
+(pass) test_expand_files_when_dir_missing [0.16ms]
+(pass) test_expand_files_when_symlink [0.33ms]
+(pass) test_read_if_changed [0.58ms]
+(pass) test_read_if_changed_when_mtime_changed [0.47ms]
+(pass) test_read_if_changed_when_kind_differs [0.31ms]
+(pass) test_parse_yaml [2.75ms]
+(pass) test_parse_yaml_when_empty [0.37ms]
+(pass) test_parse_yaml_when_malformed [1.07ms]
+(pass) test_parse_yaml_when_proto_key [0.18ms]
+(pass) test_parent_dir [0.13ms]
+
+tests/unit/hooks/lib/match.test.ts:
+(pass) test_normalize [12.92ms]
+(pass) test_find_hits [0.98ms]
+(pass) test_find_hits_when_same_position [0.41ms]
+(pass) test_find_hits_when_excluded [0.32ms]
+(pass) test_find_hits_when_no_match [0.46ms]
+
+tests/unit/hooks/lib/record.test.ts:
+(pass) test_read_recorded_when_never_written [6.53ms]
+(pass) test_add_recorded [1.05ms]
+(pass) test_clear_recorded [6.47ms]
+
+tests/unit/hooks/lib/repository.test.ts:
+(pass) test_parse_repository [9.79ms]
+(pass) test_parse_repository_when_aliases_missing [0.61ms]
+(pass) test_parse_repository_when_alias_invalid [0.81ms]
+(pass) test_parse_repository_when_malformed [2.43ms]
+(pass) test_load_repository_aliases [1.53ms]
+(pass) test_load_repository_aliases_when_missing [0.45ms]
+
+tests/unit/hooks/lib/schema.test.ts:
+(pass) test_load_alias_schema [10.92ms]
+(pass) test_check_keywords [1.09ms]
+(pass) test_check_keywords_when_unsupported [5.65ms]
+(pass) test_validate_schema [0.98ms]
+(pass) test_validate_schema_when_required_missing [3.55ms]
+(pass) test_validate_schema_when_type_mismatch [5.17ms]
+(pass) test_validate_schema_when_additional_property [0.73ms]
+(pass) test_validate_schema_when_if_not_matched [0.29ms]
+
+tests/unit/hooks/lib/variable.test.ts:
+(pass) test_find_reference_names [2.19ms]
+(pass) test_find_reference_names_when_not_name [0.30ms]
+(pass) test_parse_env_output [0.43ms]
+(pass) test_format_reference_lines [0.35ms]
+(pass) test_format_reference_lines_when_multiline [0.19ms]
+(pass) test_format_reference_lines_when_value_too_long [0.25ms]
+(pass) test_format_reference_lines_when_too_many [0.90ms]
+
+tests/unit/hooks/register.test.ts:
+(pass) test_register [308.68ms]
+
+ 128 pass
+ 0 fail
+Ran 128 tests across 16 files. [4.19s]
