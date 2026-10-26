@@ -289,5 +289,5 @@ used_in:
   - hooks/lib/record.ts
 verification:
   state: 済
-  date: '2026-10-24'
-  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた'
+  date: '2026-10-26'
+  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた。PoC PR #16（commit 0a72f27）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで読め、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確かめた'
