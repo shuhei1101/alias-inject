@@ -8,19 +8,23 @@ const CONFIG_PATH = `${CONFIG_DIR}/settings.yaml`
 const DEV_DOCS_PATH = '/home/u/knowledge/dev-docs.yaml'
 const SETTINGS = userSettingsWithConfig('~/.config/alias-inject/settings.yaml')
 
-// term の aliases の要素の YAML の行。`- id:` を `indent` 個の空白で始める
-function termAliasLines(id: string, paths: string, indent: number): string[] {
+// `alias_type` を custom で固定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める
+function aliasLines(id: string, paths: string, aliasType: string, indent: number, extraMetadata: string[] = []): string[] {
   const pad = ' '.repeat(indent)
   return [
     `${pad}- id: ${id}`,
-    `${pad}  type: term`,
     `${pad}  paths: ['${paths}']`,
-    `${pad}  fields:`,
-    `${pad}    id: id`,
-    `${pad}    match: [name, aliases]`,
-    `${pad}    title: name`,
-    `${pad}    description: description`,
+    `${pad}  metadata:`,
+    `${pad}    alias_type:`,
+    `${pad}      type: custom`,
+    `${pad}      value: ${aliasType}`,
+    ...extraMetadata.map((line) => `${pad}    ${line}`),
   ]
+}
+
+// term の行の YAML の行
+function termAliasLines(id: string, paths: string, indent: number): string[] {
+  return aliasLines(id, paths, 'term', indent)
 }
 
 type FsOptions = {
@@ -28,7 +32,7 @@ type FsOptions = {
   globalExtra?: string[]
   /** 設定ファイルの `global.aliases` に足す行（字下げ込み） */
   extraAliases?: string[]
-  /** 置くと設定ファイルの `global.repositories` が指す dev-docs.yaml の行 */
+  /** 置くと設定ファイルの `global.repositories` が指す dev-docs.yaml の行（字下げ込み） */
   devDocs?: string[]
   /** 設定ファイルの `global.aliases` の term の要素の `paths` */
   termPaths?: string
@@ -63,7 +67,7 @@ test('test_handle_prompt_submit_when_disabled', async ($, on) => {
   // 準備
   const fs = makeFs({
     globalExtra: ['enabled: false'],
-    devDocs: ['aliases:', ...termAliasLines('repo-terms', 'terms/*.yaml', 2)],
+    devDocs: ['documents:', ...termAliasLines('repo-terms', 'terms/*.yaml', 2)],
   })
   fs.write('/home/u/knowledge/terms/term-c.yaml', 'id: term-c\nname: Term-C\ndescription: 説明 C\n')
   installWorld(on, { fs, settings: SETTINGS })
@@ -92,28 +96,12 @@ test('test_handle_prompt_submit_when_context_given', async ($, on) => {
   expect(result.context?.[1]).toContain('Term-A')
 })
 
-// 外した設定の値と aliases の要素は、読み込みの結果が変わらないうち 1 回だけ debug log に出す（正常系）
+// 外した設定の値と aliases の行は、読み込みの結果が変わらないうち 1 回だけ debug log に出す（正常系）
 test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   // 準備
-  const memoAlias = [
-    '    - id: memo',
-    '      type: memo',
-    "      paths: ['memo/*.yaml']",
-    '      fields:',
-    '        id: id',
-    '        match: [name]',
-  ]
-  const badAlias = [
-    '  - id: bad',
-    '    type: term',
-    "    paths: ['terms/*.yaml']",
-    '    fields:',
-    '      id: id',
-    '      match: [name]',
-    '      description: description',
-    '      mcp: rule-inject',
-  ]
-  const fs = makeFs({ extraAliases: memoAlias, devDocs: ['aliases:', ...badAlias] })
+  const memoAlias = aliasLines('memo', 'memo/*.yaml', 'memo', 4)
+  const badAlias = aliasLines('bad', 'terms/*.yaml', 'term', 2, ['name: mcp'])
+  const fs = makeFs({ extraAliases: memoAlias, devDocs: ['documents:', ...badAlias] })
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
@@ -121,8 +109,8 @@ test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   await submit($, 'term-b とは')
 
   // 検証
-  expect(debugLines(world.logs, CONFIG_PATH, 'type').length).toBe(1)
-  expect(debugLines(world.logs, DEV_DOCS_PATH, 'mcp').length).toBe(1)
+  expect(debugLines(world.logs, CONFIG_PATH, 'alias_type').length).toBe(1)
+  expect(debugLines(world.logs, DEV_DOCS_PATH, 'metadata.name').length).toBe(1)
 })
 
 // 圧縮されたら記録を消去する（正常系）
@@ -164,12 +152,12 @@ test('test_handle_session_compact_when_not_compacted', async ($, on) => {
   expect(after.context ?? []).toEqual([])
 })
 
-// aliases の要素の glob が設定ファイルに当たっても、その要素の他の語の文脈を追加する（正常系）
+// aliases の行の glob が設定ファイルに当たっても、その行の他の語の文脈を追加する（正常系）
 test('test_handle_prompt_submit_when_alias_paths_match_config', async ($, on) => {
   // 準備
   // 設定ファイルと同じフォルダに term-a.yaml を置き、paths: '*.yaml' が設定ファイル自身にも当たるようにする
   const fs = makeFs({ termPaths: '*.yaml' })
-  fs.write(`${CONFIG_DIR}/term-a.yaml`, 'id: term-a\nname: Term-A\n')
+  fs.write(`${CONFIG_DIR}/term-a.yaml`, 'id: term-a\nname: Term-A\ndescription: 説明 A\n')
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
