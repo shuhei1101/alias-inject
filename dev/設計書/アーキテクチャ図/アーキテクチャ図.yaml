@@ -72,8 +72,8 @@ repository:
   layout: '`.claude-plugin/`（プラグインとマーケットプレイスの定義）・`hooks/`（`hooks.json` と hooks モジュール）・`schemas/`（他のリポジトリが取り込むスキーマ）・`tests/`・`dev/`（開発ドキュメント）・`docs/`（公開ドキュメント）'
   notes: |-
     リポジトリ自身をマーケットプレイスにして配る。
-    mdmark・dev-docs は、リリースのタグを指定して `schemas/aliases.schema.yaml` を取り込む。
-    プラグイン自身も、設定ファイルと読む `dev-docs.yaml` の `aliases` を検証する。検証に使うのは、`schemas/aliases.schema.yaml` から生成して同梱する `hooks/lib/aliases-schema.ts`。
+    mdmark・dev-docs は、リリースのタグを指定して `schemas/aliases.schema.yaml`（エイリアスの元の行のスキーマ）を取り込む。
+    プラグイン自身も、設定ファイルの `aliases` の行と、読む `dev-docs.yaml` の `documents` のうち `metadata.alias_type` を持つ行を検証する。検証に使うのは、`schemas/aliases.schema.yaml` から生成して同梱する `hooks/lib/aliases-schema.ts`。
 subsystems:
   - name: プラグイン
     scope: plugin
