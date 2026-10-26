@@ -34,7 +34,7 @@ rule-inject は `read_rules` と MCP サーバーを廃止すると決めた（[
 - [x] ~~部品設計~~（画面を持たない）
 - [x] ~~画面設計~~（画面を持たない）
 - [x] モジュール構成設計
-- [ ] ドキュメント修正（設計書/アーキテクチャ図/アーキテクチャ図.yaml・設計書/外部ライブラリ/claude-code.yaml・docs/はじめに/コアコンセプト/変数参照の値.md・README.md・CLAUDE.md・.claude-plugin/plugin.json）
+- [x] ドキュメント修正（設計書/アーキテクチャ図/アーキテクチャ図.yaml・設計書/外部ライブラリ/claude-code.yaml・docs/はじめに/コアコンセプト/変数参照の値.md・README.md・CLAUDE.md・.claude-plugin/plugin.json）
 - [ ] 単体テスト作成
 - [ ] 実装
 - [ ] 結合テスト作成
