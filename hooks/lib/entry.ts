@@ -151,17 +151,19 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
   for (const [itemIndex, document] of documents.entries()) {
     const values = resolveMetadata(alias.metadata, document.value)
     // name が空なら、ファイルの文書はファイル名、records の要素は id を使う
-    if (textOf(values.name) === undefined) values.name = document.index === null ? baseName(document.path) : values.id
+    if (textOf(values.name) === undefined) values.name = document.index === null ? baseName(document.path) : textOf(values.id)
 
     const id = textOf(values.id)
-    const label = id ?? (alias.records !== undefined && document.index !== null ? `${alias.records}[${document.index}]` : 'id')
+    // id が空のファイルの文書は、文書の名前と `: ` を付けない
+    const name = id ?? (alias.records !== undefined && document.index !== null ? `${alias.records}[${document.index}]` : undefined)
+    const label = name === undefined ? '' : `${name}: `
     if (!isAliasType(values.alias_type)) {
-      failures.push({ path: document.path, reason: `${label}: alias_type の値 ${String(values.alias_type)} は引用の種類にありません` })
+      failures.push({ path: document.path, reason: `${label}alias_type の値 ${String(values.alias_type)} は引用の種類にありません` })
       continue
     }
     const missing = missingKeys(values.alias_type, values)
     if (missing.length > 0) {
-      failures.push({ path: document.path, reason: `${label}: ${missing.join('、')} が空です` })
+      failures.push({ path: document.path, reason: `${label}${missing.join('、')} が空です` })
       continue
     }
     kept.push({ itemIndex, type: values.alias_type, values })
