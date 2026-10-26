@@ -106,9 +106,9 @@ functions:
       - name: test_check_keywords_when_unsupported
         case: 異常
         summary: 解釈しないキーワードと解けない `$ref` は例外
-        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
+        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`anyOf` の要素に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
         mock: なし
-        expected: どちらも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む
+        expected: どれも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む。`anyOf` の値のメッセージは `anyOf` を含むパスを持つ
         exception: 解釈しないキーワード・解けない `$ref`
   - name: validateSchema
     title: 値の検証
