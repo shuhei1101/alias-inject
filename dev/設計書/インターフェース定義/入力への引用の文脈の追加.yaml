@@ -460,6 +460,78 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で URL の YAML のパスと理由を含む行が届いている
     test: test_error_when_yaml_malformed
+  - name: 正常系（追加した種類）
+    summary: skill・tool・path・env・avoid の要素の語を、種類ごとのセクションと列で追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: skills`（`type: skill`・`fields.skill: skill`）・`id: tools`（`type: tool`・`fields.tool: tool`）・`id: paths`（`type: path`・`fields.path: path`）・`id: envs`（`type: env`・`fields.url: url`・`fields.port: port`・`fields.description: description`）・`id: avoids`（`type: avoid`・`fields.replacement: replacement`）の要素を持つ'
+        notes: 'どの要素も `fields.id: id`・`fields.match: [name]` で、`paths` は設定フォルダの `{種類}/*.yaml`'
+      - name: 種類ごとの YAML
+        description: '項目 skill-a（`skill: code-review`）・tool-a（`tool: search_design_docs`）・path-a（`path: ~/.config/ai-monitor/settings.yaml`）・env-a（`url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー`）・avoid-a（`replacement: term-a`）'
+        notes: 'env-b（`port: 5432` だけを持ち `url` が無い）も envs の YAML に持つ'
+      - name: 入力
+        description: 「term-a・skill-a・tool-a・path-a・env-a・env-b・avoid-a」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+        participant ST as $.state
+
+        CC->>IF: term-a・skill-a・tool-a・path-a・env-a・env-b・avoid-a
+        IF->>FS: 設定ファイルと dev-docs.yaml を読む
+        IF->>IF: 全ての aliases の要素がスキーマに合う
+        IF->>FS: 種類ごとの YAML を読む
+        FS-->>IF: 項目
+        IF->>IF: 7 語が当たる
+        IF->>ST: 7 語を記録に入れる
+        IF-->>CC: context に種類ごとのセクションで 7 語の文脈
+      ```
+    expected:
+      - 返る `context` のセクションが `## 用語`・`## スキル`・`## ツール`・`## パス`・`## 環境`・`## 避ける語` の順に並ぶ
+      - '`## スキル` の skill-a に行「- skill: `code-review`」、`## ツール` の tool-a に行「- tool: `search_design_docs`」、`## パス` の path-a に行「- path: `~/.config/ai-monitor/settings.yaml`」が並ぶ（値をバッククォートで囲む）'
+      - '`## 環境` の env-a に `url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー` がこの順に並び、env-b に `port: 5432` だけが並ぶ'
+      - '`## 避ける語` の avoid-a に `replacement: term-a` が並ぶ'
+      - テストの `on` の `ui.log` に行が届いていない
+    test: test_normal_when_added_types
+  - name: 異常系（URL もポートも指さない env の要素）
+    summary: fields に url も port も無い env の要素をスキーマに合わない要素として外し、他の要素の文脈は追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: envs`・`type: env`・`paths: [envs/*.yaml]`・`fields`（`id: id`・`match: [name]`・`description: description`）の要素を持つ'
+        notes: '`fields` に `url` も `port` も無い'
+      - name: 環境の YAML
+        description: 設定フォルダの `envs/` に項目 env-x（`url`・`port`・`description` を持つ）
+        notes: スキーマで検証しなければ env-x が当たる
+      - name: 入力
+        description: 「term-a と env-x」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+
+        CC->>IF: term-a と env-x
+        IF->>FS: 設定ファイルと dev-docs.yaml を読む
+        IF->>IF: id: envs は url も port も指さずスキーマに合わないので外す
+        IF->>FS: 残った要素の YAML を読む
+        IF-->>CC: context に term-a だけ
+      ```
+    expected:
+      - 返る `context` に `## 用語` の term-a があり、`## 環境` のセクションが無い
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパス・`envs`・理由を含む行が届いている
+    test: test_error_when_env_without_endpoint
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` と設定ファイルの `aliases` が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
@@ -514,7 +586,7 @@ response_example: |
     - cwd: /mnt/c/Users/shuhe/repo/ai-monitor
     - description: 依存を入れる
   ```
-response_notes: '文脈は `# {heading}` の下に、`type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの `aliases` の要素の語も、同じ `type` なら 1 つのセクションに並べる。語は `fields.title` の列の値にし、無ければ `fields.match` の最初の列の値にする。箇条書きの子には `type` ごとの列（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description`）のうち値のあるものだけを並べる。'
+response_notes: '文脈は `# {heading}` の下に、`type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 避ける語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの `aliases` の要素の語も、同じ `type` なら 1 つのセクションに並べる。語は `fields.title` の列の値にし、無ければ `fields.match` の最初の列の値にする。箇条書きの子には `type` ごとの列（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲むのうち値のあるものだけを並べる。'
 exceptions:
   - name: なし（正常終了）
     condition: 照合して文脈を追加したか、追加する語が無く受け取ったまま渡した
