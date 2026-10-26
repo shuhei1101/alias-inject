@@ -111,7 +111,7 @@ functions:
       6. 実効の設定の組み立てをする（configPath は設定ファイルのパス、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）。設定ファイルの検証と組み立ての warnings を、設定ファイルのパスを添えて debug log に出す
       7. enabled が false、または出所の判定が false なら `next(e)` を返す
       8. 実効の設定の repositories を順に dev-docs.yaml の読み込みで読む。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを外す。読めたリポジトリの warnings は、`dev-docs.yaml` のパスを添えて debug log に出す
-      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べる。各行を並びの位置とともに行の文書の読み込みで読み、failures は YAML のパスと理由を debug log に出す
+      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べる。各行を並びの位置とともに行の文書の読み込みで読み、failures は `照合から外しました（{YAML のパス}）: {理由}` を debug log に出す
       10. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
       11. 選択が null なら `next(e)` を返す
       12. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
