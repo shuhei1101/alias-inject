@@ -50,4 +50,35 @@ requirements:
     overflow: 上限を超える語は飛ばして、後ろの語で収まるものを続けて追加する。飛ばした語は記録に入れず、次に出た入力で追加の対象になる
     refs:
       - dev/設計書/設定/プラグイン#settings[global.max_chars]
+  - name: 変数参照の値を引く子プロセスの待ちの上限
+    english_name: variable_reference_timeout
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '500'
+    unit: ms
+    rationale: PoC の実測で `env -0` の子プロセス 1 回が 5〜11ms。実測の最大の 40 倍余りの余裕を持ち、上限に当たったときもツールの結果が届くまでの待ちを体感で感じない値にする。`$.process.run` の既定（30 秒）は待たせすぎるため `timeoutMs` で渡す
+    measurement: '`!{名前}` を含む結果を返すツールの `tool.call` を流し、子プロセスを起こしてから値を受け取るまでの時間を測る'
+    overflow: 子プロセスを打ち切り、debug log に出して、文脈を追加せずにツールの結果をそのまま返す
+    status: planned
+  - name: 1 回に値を追加する変数参照の名前の上限
+    english_name: max_variable_references
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '50'
+    unit: 名前
+    rationale: 規約の 1 ページに出る変数参照の名前は多くて 10 前後。その 5 倍の余裕を持ち、1 回のツールの結果に追加する文脈の長さを抑える
+    overflow: 本文に出た順で 50 名前までの行を作り、残りの名前は行を作らず、最後に残りの件数を添えた 1 行を追加する
+    status: planned
+  - name: 変数参照の値の長さの上限
+    english_name: max_variable_reference_value_chars
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '1000'
+    unit: 文字
+    rationale: 変数参照に使う値はパス・URL・識別子で、長くて数百文字。`PATH` のような長い値が 1 行で文脈を占めないようにする
+    overflow: 値の先頭 1000 文字だけを書き、行の末尾に値の全体の文字数を添えて、切ったことを示す
+    status: planned
 lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。

@@ -1,0 +1,292 @@
+title: "読んだ本文への変数参照の値の追加"
+entry:
+  kind: trigger
+  value: '`tool.call`（ツールの呼び出しごと）'
+flows:
+  - name: 正常系
+    summary: 本文に出た名前ごとに 1 行の値を context に追加する
+    setup:
+      - name: Mock
+        description: テストの `on` の `tool.call` は本文を含む結果を返す。`process.run` は `env -0` に終了コード 0 と、`VALUE_A=value-a` を NUL 区切りで含む出力を返す。`process.run` の呼ばれた回数を記録する
+      - name: ツールの結果
+        description: '`text` が `!{VALUE_A}` を 2 回含む。`context` に他のフックが追加した要素を 1 つ持つ'
+        notes: 同じ名前を 2 回含めて、行が 1 行になることを確かめる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: 本文から VALUE_A を拾う
+        IF->>PR: env -0
+        PR-->>IF: 終了コード 0・環境の一覧
+        IF-->>CC: 結果の context の末尾に値の行
+      ```
+    expected:
+      - 返る `context` が 2 要素で、先頭が受け取った要素のまま
+      - '返る `context` の末尾が `変数参照の値: !{VALUE_A} = value-a` の 1 行だけ'
+      - 返る `text` が `next(e)` の結果の `text` と同じ
+      - '`process.run` が 1 回だけ呼ばれ、argv が `["env", "-0"]`・`timeoutMs` が 500'
+    test: test_normal
+  - name: 正常系（設定されていない名前）
+    summary: env -0 の出力に無い名前は、設定されていない旨の行にする
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの結果
+        description: '`text` が `!{VALUE_A}` と `!{UNSET_B}` をこの順に含む。`context` が無い'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>PR: env -0
+        PR-->>IF: UNSET_B を含まない一覧
+        IF-->>CC: VALUE_A の値と UNSET_B が設定されていない旨の行
+      ```
+    expected:
+      - '返る `context` が 1 要素で、`変数参照の値: !{VALUE_A} = value-a` と `変数参照の値: !{UNSET_B} は環境変数が設定されていない` の 2 行がこの順に並ぶ'
+    test: test_normal_when_unset
+  - name: 正常系（変数参照が無い）
+    summary: 変数参照が無い結果は子プロセスを起こさずそのまま返す
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの結果
+        description: '`text` が `!{}` と `!{1ABC}` だけを含む'
+        notes: 名前の書式に合わないものを変数参照として拾わないことを確かめる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: 変数参照が無い
+        IF-->>CC: 結果そのまま
+      ```
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - '`process.run` が呼ばれていない'
+    test: test_normal_when_no_reference
+  - name: 正常系（エラーの結果）
+    summary: エラーの結果と deny は本文に変数参照があってもそのまま返す
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの結果
+        description: 1 回目は `isError` が `true` で `text` に `!{VALUE_A}` を含む。別の呼び出しでは `deny` が入っている
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: isError の結果か deny
+        IF-->>CC: 結果そのまま
+      ```
+    expected:
+      - どちらの呼び出しも、返る結果が `next(e)` の結果と同じ
+      - '`process.run` が呼ばれていない'
+    test: test_normal_when_error_result
+  - name: 正常系（名前の数の上限を超える）
+    summary: 本文に出た順で 50 名前までの行を作り、残りの件数の行を置く
+    setup:
+      - name: Mock
+        description: 正常系と同じ。`env -0` の出力は `NAME_01`〜`NAME_52` を含む
+      - name: ツールの結果
+        description: '`text` が `!{NAME_01}`〜`!{NAME_52}` の 52 名前をこの順に含む'
+        notes: 上限を 2 つ超えさせる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 52 名前を含む結果
+        IF->>PR: env -0
+        PR-->>IF: 環境の一覧
+        IF-->>CC: NAME_01〜NAME_50 の行と残り 2 件の行
+      ```
+    expected:
+      - 返る `context` の追加した要素に `NAME_01`〜`NAME_50` の行があり、`NAME_51`・`NAME_52` の行が無い
+      - '追加した要素の最後の行が `変数参照の値: ほか 2 件の変数参照は値を追加していない`'
+    test: test_normal_when_over_reference_limit
+  - name: 正常系（値の長さの上限を超える）
+    summary: 1000 文字を超える値は先頭だけを書き、改行を含む値は JSON の文字列で 1 行に収める
+    setup:
+      - name: Mock
+        description: 正常系と同じ。`env -0` の出力は `LONG_C`（`x` が 1200 文字）と `MULTI_D`（`line1` と `line2` を改行でつないだ値）を含む
+      - name: ツールの結果
+        description: '`text` が `!{LONG_C}` と `!{MULTI_D}` を含む'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>PR: env -0
+        PR-->>IF: 長い値と改行を含む値
+        IF-->>CC: 切った値の行と JSON の文字列の行
+      ```
+    expected:
+      - '`LONG_C` の行が `x` 1000 文字と `（1200 文字のうち先頭 1000 文字）` で終わる'
+      - '`MULTI_D` の行が `変数参照の値: !{MULTI_D} = "line1\nline2"`'
+      - 追加した要素が 2 行
+    test: test_normal_when_over_value_limit
+  - name: 異常系（終了コードが 0 以外）
+    summary: env -0 が 0 以外で終わったときは文脈を追加せずそのまま返す
+    setup:
+      - name: Mock
+        description: 正常系と同じ。ただし `process.run` は終了コード 3 を返す。`ui.log` は届いた行を記録する
+      - name: ツールの結果
+        description: 正常系と同じ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>PR: env -0
+        PR-->>IF: 終了コード 3
+        IF->>IF: debug log に出す
+        IF-->>CC: 結果そのまま
+      ```
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で終了コード 3 を含む行が届いている
+    test: test_error_when_nonzero_exit
+  - name: 異常系（子プロセスの例外）
+    summary: 起動できない・待ちの上限を超えたときは文脈を追加せずそのまま返す
+    setup:
+      - name: Mock
+        description: 正常系と同じ。ただし `process.run` は、起動できない例外（`ENOENT`）と、待ちの上限を超えた例外を呼び出しごとに投げる。`ui.log` は届いた行を記録する
+      - name: ツールの結果
+        description: 正常系と同じ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>PR: env -0
+        PR-->>IF: 例外
+        IF->>IF: debug log に出す
+        IF-->>CC: 結果そのまま
+      ```
+    expected:
+      - どちらの例外も、返る結果が `next(e)` の結果と同じ
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が 2 行届いている
+    test: test_error_when_process_failed
+lead: ツールを実行させた結果の本文から `!{名前}` の変数参照を拾い、同じ名前の環境変数の値を本文を変えずに `context` に追加して返す。
+idempotent: true
+side_effects: 変数参照があるときだけ `$.process.run` で `env -0` の子プロセスを 1 回起こす。ファイルへの書き込み・`$.state` への記録・外への送信はしない
+callers:
+  - dev/設計書/外部ライブラリ/claude-code#
+exclusivity: ツールの呼び出しごとに独立し、状態を持たないため排他しない
+request:
+  - name: e
+    type: ToolCallEvent
+    required: true
+    location: argument
+    description: ツールの呼び出し。中身は読まず、そのまま `next(e)` に渡してツールを実行させる
+  - name: result.text
+    type: string
+    required: false
+    default: なし（文脈を追加せず結果をそのまま返す）
+    location: argument
+    description: '`next(e)` が返したツールの結果の本文。ここから変数参照を拾う'
+    notes: Read・Bash・MCP のツールを区別しない
+  - name: result.isError
+    type: boolean
+    required: false
+    default: 'false'
+    location: argument
+    description: '`true` のときはエラーの結果として、文脈を追加せずそのまま返す'
+  - name: result.deny
+    type: string
+    required: false
+    default: なし（ツールが実行された）
+    location: argument
+    description: 他のフックが実行を拒んだときに入る。入っているときはそのまま返す
+  - name: result.context
+    type: readonly string[]
+    required: false
+    default: なし（他のフックが追加していない）
+    location: argument
+    description: 他のフックが追加した文脈。そのまま残し、末尾に追加する
+response:
+  - name: '-'
+    type: ToolCallResult
+    description: '`next(e)` の結果を広げたもの。`context` だけを替え、`ref`・`result`・`text` はそのまま'
+  - name: context
+    type: readonly string[]
+    description: 受け取った `context` の末尾に、変数参照の値の行を改行でつないだ 1 要素を追加したもの。変数参照が無いとき・値を引けないときは受け取ったまま
+    constraints: 行は名前ごとに 1 行。名前は `max_variable_references` まで、値は `max_variable_reference_value_chars` 文字まで
+response_example: |-
+  ```text
+  変数参照の値: !{AI_MONITOR_ROOT} = /mnt/c/Users/shuhe/repo/ai-monitor/.claude/worktrees/develop
+  変数参照の値: !{DOCS_PORT} は環境変数が設定されていない
+  ```
+response_notes: '行の書式は、設定されている名前が `変数参照の値: !{名前} = {値}`、設定されていない名前が `変数参照の値: !{名前} は環境変数が設定されていない`。値に改行を含むときだけ、値を JSON の文字列リテラル（`"…\n…"`）で書いて 1 行に収める。上限で切った値は行の末尾に `（{全体の文字数} 文字のうち先頭 {上限} 文字）` を添え、上限で外した名前は最後に `変数参照の値: ほか {件数} 件の変数参照は値を追加していない` の 1 行を置く'
+exceptions:
+  - name: なし（正常終了）
+    condition: 値の行を追加したか、変数参照が無い・エラーの結果・`deny` のため結果をそのまま返した
+  - name: なし（子プロセスの終了コードが 0 以外）
+    condition: '`env -0` が 0 以外の終了コードで終わった'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で終了コードを debug log に出し、結果をそのまま返す。`$.process.run` は 0 以外の終了コードでは例外にならない'
+  - name: なし（子プロセスの例外）
+    condition: '`env` を起動できないか、待ちの上限を超えたか、想定しない例外が起きた'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で例外の理由を debug log に出し、結果をそのまま返す'
+constraints:
+  - item: 処理時間
+    constraint: 子プロセスを 500ms まで待つ（`timeoutMs` で渡す）
+    decided_by: dev/設計書/非機能要件/非機能要件#requirements[変数参照の値を引く子プロセスの待ちの上限]
+    notes: 変数参照が無い結果では子プロセスを起こさない
+  - item: 名前の拾い出し
+    constraint: '`!{[A-Za-z_][A-Za-z0-9_]*}` に当たる名前を本文に出た順に、重なりを除いて集める'
+    notes: 同じ名前が何度出ても行は 1 行
+  - item: 名前の数の上限
+    constraint: 50 名前まで。超えた名前は行を作らず、残りの件数の 1 行を置く
+    decided_by: dev/設計書/非機能要件/非機能要件#requirements[1 回に値を追加する変数参照の名前の上限]
+  - item: 値の長さの上限
+    constraint: 1 つの値を 1000 文字まで。超えた値は先頭だけを書き、全体の文字数を添える
+    decided_by: dev/設計書/非機能要件/非機能要件#requirements[変数参照の値の長さの上限]
+  - item: 値の取得
+    constraint: '`$.process.run(["env", "-0"])` の出力を NUL で区切り、最初の `=` で名前と値に分ける。出力に出てこない名前は設定されていない名前とする'
+    notes: '`$.env.get` は名前を文字列リテラルでしか受けないため'
+  - item: 設定
+    constraint: 設定ファイルのキーを追加しない。設定ファイルが無くても動く
+    notes: 止める・出所で絞る設定は要望に含まれない
+refs:
+  - dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加#
