@@ -12,8 +12,12 @@ const REFERENCE = /!\{([A-Za-z_][A-Za-z0-9_]*)\}/g
 
 /** 本文の `!{名前}` の名前を出た順に、重なりを除いて返す */
 export function findReferenceNames(text: string): string[] {
-  const names = [...text.matchAll(REFERENCE)].map((match) => match[1])
-  return [...new Set(names)]
+  const names = new Set<string>()
+  for (const match of text.matchAll(REFERENCE)) {
+    // 括弧の 1 つ目は必ず当たるが、型は未定義を含むため外す
+    if (match[1] !== undefined) names.add(match[1])
+  }
+  return [...names]
 }
 
 /** `env -0` の出力を名前 → 値に分ける */
