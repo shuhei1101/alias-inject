@@ -290,3 +290,4 @@ constraints:
     notes: 止める・出所で絞る設定は要望に含まれない
 refs:
   - dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加#
+test_file: tests/integration/hooks/tool-call.test.ts
