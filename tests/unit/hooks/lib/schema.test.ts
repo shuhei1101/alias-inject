@@ -47,15 +47,20 @@ test('test_check_keywords', () => {
 test('test_check_keywords_when_unsupported', () => {
   // 準備
   const unsupported = withIdSchema({ type: 'string', pattern: '^a' })
+  const unsupportedInAnyOf = withIdSchema({ anyOf: [{ type: 'string', pattern: '^a' }, { type: 'number' }] })
   const unresolved = withIdSchema({ $ref: '#/$defs/none' })
 
   // 実行
   const unsupportedError = thrown(() => checkKeywords(unsupported))
+  const unsupportedInAnyOfError = thrown(() => checkKeywords(unsupportedInAnyOf))
   const unresolvedError = thrown(() => checkKeywords(unresolved))
 
   // 検証
   expect(unsupportedError).toBeInstanceOf(SchemaError)
   expect((unsupportedError as SchemaError).message).toContain('pattern')
+  expect(unsupportedInAnyOfError).toBeInstanceOf(SchemaError)
+  expect((unsupportedInAnyOfError as SchemaError).message).toContain('pattern')
+  expect((unsupportedInAnyOfError as SchemaError).message).toContain('anyOf')
   expect(unresolvedError).toBeInstanceOf(SchemaError)
   expect((unresolvedError as SchemaError).message).toContain('#/$defs/none')
 })
@@ -72,13 +77,19 @@ test('test_validate_schema', () => {
       fields: { id: 'id', match: ['name'], command: 'command', cwd: 'cwd', description: 'description' },
     }),
     makeItem({ type: 'url', fields: { id: 'id', match: ['name'], url: 'url' } }),
+    makeItem({ type: 'skill', fields: { id: 'id', match: ['name'], skill: 'skill', description: 'description' } }),
+    makeItem({ type: 'tool', fields: { id: 'id', match: ['name'], tool: 'tool', description: 'description' } }),
+    makeItem({ type: 'path', fields: { id: 'id', match: ['name'], path: 'path', description: 'description' } }),
+    makeItem({ type: 'env', fields: { id: 'id', match: ['name'], url: 'url' } }),
+    makeItem({ type: 'env', fields: { id: 'id', match: ['name'], port: 'port' } }),
+    makeItem({ type: 'avoid', fields: { id: 'id', match: ['name'], replacement: 'replacement', title: 'title' } }),
   ]
 
   // 実行
   const results = items.map((item) => validateItem(item))
 
   // 検証
-  expect(results).toEqual([[], [], [], []])
+  expect(results).toEqual(items.map(() => []))
 })
 
 // 無い必須のキーをパスつきで返す（正常系）
@@ -140,4 +151,26 @@ test('test_validate_schema_when_if_not_matched', () => {
 
   // 検証
   expect(reasons).toEqual([])
+})
+
+// `anyOf` のどの要素にも合わないときだけ理由を返す（正常系）
+test('test_validate_schema_when_any_of_not_matched', () => {
+  // 準備
+  const withoutUrlAndPort = makeItem({
+    type: 'env',
+    fields: { id: 'id', match: ['name'], description: 'description' },
+  })
+  const withUrlAndPort = makeItem({
+    type: 'env',
+    fields: { id: 'id', match: ['name'], url: 'url', port: 'port' },
+  })
+
+  // 実行
+  const notMatchedReasons = validateItem(withoutUrlAndPort)
+  const matchedReasons = validateItem(withUrlAndPort)
+
+  // 検証
+  expect(notMatchedReasons.some((reason) => reason.includes('aliases[0].fields.url'))).toBe(true)
+  expect(notMatchedReasons.some((reason) => reason.includes('aliases[0].fields.port'))).toBe(true)
+  expect(matchedReasons).toEqual([])
 })
