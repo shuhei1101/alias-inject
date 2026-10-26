@@ -5,6 +5,7 @@ import {
   CONFIG_DIR,
   CONFIG_PATH,
   DEV_DOCS_PATH,
+  DOCS_DIR,
   KNOWLEDGE_DIR,
   SETTINGS,
   TERMS_DIR,
@@ -20,16 +21,17 @@ import {
 // 初めて出た語の文脈を追加し、記録に入れる（正常系）
 test('test_normal', async ($, on) => {
   // 準備
-  installWorld(on, { fs: makeFs(), settings: SETTINGS })
+  const fs = makeFs()
+  installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  // エイリアスで当てる
-  const first = await submit($, '用語エーを説明して')
+  // エイリアスで当てる。alias_type を持たない行の YAML（doc-z）は読まない
+  const first = await submit($, '用語エーと doc-z を説明して')
   // 大文字を含む語 Term-A が正規化で当たり、記録済みで追加されない
   const second = await submit($, 'term-a とは')
 
   // 検証
-  expect(first.text).toBe('用語エーを説明して')
+  expect(first.text).toBe('用語エーと doc-z を説明して')
   expect(first.context?.length).toBe(1)
   const context = first.context?.[0] ?? ''
   expect(context).toContain('# この発言に出る用語')
@@ -37,7 +39,9 @@ test('test_normal', async ($, on) => {
   expect(context).toContain('Term-A')
   expect(context).toContain('id: term-a')
   expect(context).toContain('description: 説明 Term-A')
-  expect(context).not.toContain('Term-B')
+  expect(context).not.toContain('term-b')
+  expect(context).not.toContain('doc-z')
+  expect(fs.reads).not.toContain(`${DOCS_DIR}/doc-z.yaml`)
   expect(second.context ?? []).toEqual([])
 })
 
@@ -52,8 +56,8 @@ test('test_normal_when_over_item_limit', async ($, on) => {
 
   // 検証
   expect(first.context?.[0]).toContain('Term-A')
-  expect(first.context?.[0]).not.toContain('Term-B')
-  expect(second.context?.[0]).toContain('Term-B')
+  expect(first.context?.[0]).not.toContain('id: term-b')
+  expect(second.context?.[0]).toContain('id: term-b')
 })
 
 // 足すと max_chars を超える語を飛ばし、後ろの収まる語を追加する（正常系）
@@ -72,7 +76,7 @@ test('test_normal_when_over_char_limit', async ($, on) => {
   // 検証
   const added = first.context?.[0] ?? ''
   expect(added).toContain('Term-A')
-  expect(added).toContain('Term-B')
+  expect(added).toContain('id: term-b')
   expect(added).not.toContain('Term-Long')
   expect([...added].length).toBeLessThanOrEqual(300)
   expect(second.context?.[0]).toContain('Term-Long')
@@ -126,22 +130,22 @@ test('test_normal_when_config_path_missing', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 当たった projects の aliases を global に重ね、同じ語を type ごとの両方のセクションに追加する（正常系）
+// 当たった projects の aliases の行を global に重ね、同じ語を alias_type ごとの両方のセクションに追加する（正常系）
 test('test_normal_when_project_matched', async ($, on) => {
   // 準備
   const config = makeConfig({
     projects: [
       '- match: sample',
       '  aliases:',
-      ...indent(aliasLines({ id: 'commands', type: 'command', paths: 'docs/command/*.yaml' }), 4),
+      ...indent(aliasLines({ id: 'commands', type: 'command', paths: 'docs/command.yaml', records: 'commands' }), 4),
       '- match: other',
       '  aliases:',
-      ...indent(aliasLines({ id: 'others', type: 'command', paths: 'docs/other/*.yaml' }), 4),
+      ...indent(aliasLines({ id: 'others', type: 'command', paths: 'docs/other.yaml', records: 'commands' }), 4),
     ],
   })
   const fs = makeFs(config)
-  fs.write('/repo/sample/docs/command/term-a.yaml', 'id: cmd-term-a\nname: term-a\ncommand: make term-a\n')
-  fs.write('/repo/sample/docs/other/term-a.yaml', 'id: other-term-a\nname: term-a\ncommand: make other\n')
+  fs.write('/repo/sample/docs/command.yaml', 'commands:\n  - id: term-a\n    command: make term-a\n')
+  fs.write('/repo/sample/docs/other.yaml', 'commands:\n  - id: other-a\n    command: make other\n')
   installWorld(on, { fs, settings: SETTINGS, projectRoot: '/repo/sample' })
 
   // 実行
@@ -152,9 +156,9 @@ test('test_normal_when_project_matched', async ($, on) => {
   expect(context).toContain('## 用語')
   expect(context).toContain('## コマンド')
   expect(context).toContain('- Term-A（id: term-a）')
-  expect(context).toContain('- term-a（id: cmd-term-a）')
+  expect(context).toContain('- term-a（id: term-a）')
   expect(context).toContain('command: `make term-a`')
-  expect(fs.reads).not.toContain('/repo/sample/docs/other/term-a.yaml')
+  expect(fs.reads).not.toContain('/repo/sample/docs/other.yaml')
 })
 
 // 更新時刻が変わった設定ファイルと YAML だけを読み直し、増えたファイルも読む（正常系）
@@ -172,7 +176,7 @@ test('test_normal_when_files_changed', async ($, on) => {
   const second = await submit($, 'term-a と term-c')
 
   // 検証
-  expect(first.context?.[0]).toContain('Term-B')
+  expect(first.context?.[0]).toContain('id: term-b')
   const context = second.context?.[0] ?? ''
   expect(context).toContain('description: 書き換え後の説明')
   expect(context).toContain('Term-C')
@@ -201,12 +205,12 @@ test('test_normal_when_same_id_across_repositories', async ($, on) => {
   expect(second.context ?? []).toEqual([])
 })
 
-// enabled: false の repositories の要素と aliases の要素を読まずに照合する（正常系）
+// enabled: false の repositories の要素と documents の行を読まずに照合する（正常系）
 test('test_normal_when_disabled', async ($, on) => {
   // 準備
   const otherDevDocsPath = '/repo/other/dev-docs.yaml'
   const config = makeConfig({ repositories: [`- config: ${DEV_DOCS_PATH}`, `- config: ${otherDevDocsPath}`, '  enabled: false'] })
-  const fs = makeFs(config, makeDevDocs({ aliasesExtra: termAliasLines({ id: 'drafts', paths: 'drafts/*.yaml', enabled: false }) }))
+  const fs = makeFs(config, makeDevDocs({ documentsExtra: termAliasLines({ id: 'drafts', paths: 'drafts/*.yaml', enabled: false }) }))
   fs.write(`${KNOWLEDGE_DIR}/drafts/term-x.yaml`, termYaml({ id: 'term-x', name: 'Term-X' }))
   fs.write(otherDevDocsPath, makeDevDocs())
   fs.write('/repo/other/terms/term-y.yaml', termYaml({ id: 'term-y', name: 'Term-Y' }))
@@ -225,7 +229,7 @@ test('test_normal_when_disabled', async ($, on) => {
   expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/drafts/term-x.yaml`)
 })
 
-// 更新時刻が変わった dev-docs.yaml を読み直し、追加した aliases の要素で照合する（正常系）
+// 更新時刻が変わった dev-docs.yaml を読み直し、追加した documents の行で照合する（正常系）
 test('test_normal_when_repository_config_changed', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -234,8 +238,8 @@ test('test_normal_when_repository_config_changed', async ($, on) => {
   const first = await submit($, 'term-a とは')
 
   // 実行
-  // dev-docs.yaml の aliases にコマンドの要素を追加する
-  fs.write(DEV_DOCS_PATH, makeDevDocs({ aliasesExtra: aliasLines({ id: 'commands', type: 'command', paths: 'commands/*.yaml' }) }))
+  // dev-docs.yaml の documents にコマンドの行を追加する
+  fs.write(DEV_DOCS_PATH, makeDevDocs({ documentsExtra: aliasLines({ id: 'commands', type: 'command', paths: 'commands/*.yaml' }) }))
   fs.reads.length = 0
   const second = await submit($, 'term-a と cmd-a')
 
@@ -249,7 +253,7 @@ test('test_normal_when_repository_config_changed', async ($, on) => {
   expect(fs.reads).toEqual([DEV_DOCS_PATH, `${KNOWLEDGE_DIR}/commands/cmd-a.yaml`])
 })
 
-// skill・tool・path・env・avoid の要素の語を、種類ごとのセクションと列で追加する（正常系）
+// skill・tool・path・env・avoid の行の語を、種類ごとのセクションとキーで追加する（正常系）
 test('test_normal_when_added_types', async ($, on) => {
   // 準備
   const config = makeConfig({
@@ -327,42 +331,52 @@ test('test_error_when_repository_unreadable', async ($, on) => {
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
-// スキーマに合わない要素と id の重なった後の要素だけを外し、他の要素の文脈は追加する（異常系）
+// スキーマに合わない行・知らない alias_type の行・id の重なった後の行だけを外し、他の行の文脈は追加する（異常系）
 test('test_error_when_alias_invalid', async ($, on) => {
   // 準備
-  // fields にスキーマに無いキー mcp を持つ id: bad の要素と、id: terms が重なる後の要素
+  // metadata.name を文字列で書いた id: bad の行、alias_type が custom の glossary の id: unknown の行、id: terms が重なる後の行
   const devDocs = makeDevDocs({
-    aliasesExtra: [
-      ...aliasLines({ id: 'bad', type: 'term', paths: 'bad/*.yaml', fields: ['mcp: rule-inject'] }),
+    documentsExtra: [
+      '- id: bad',
+      '  paths: [bad/*.yaml]',
+      '  metadata:',
+      '    alias_type:',
+      '      type: custom',
+      '      value: term',
+      '    name: title',
+      ...aliasLines({ id: 'unknown', type: 'glossary', paths: 'unknown/*.yaml' }),
       ...termAliasLines({ id: 'terms', paths: 'dup/*.yaml' }),
     ],
   })
   const fs = makeFs(makeConfig(), devDocs)
   fs.write(`${KNOWLEDGE_DIR}/bad/term-x.yaml`, termYaml({ id: 'term-x', name: 'Term-X' }))
+  fs.write(`${KNOWLEDGE_DIR}/unknown/term-v.yaml`, termYaml({ id: 'term-v', name: 'Term-V' }))
   fs.write(`${KNOWLEDGE_DIR}/dup/term-z.yaml`, termYaml({ id: 'term-z', name: 'Term-Z' }))
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  const result = await submit($, 'term-a・term-x・term-z')
+  const result = await submit($, 'term-a・term-x・term-v・term-z')
 
   // 検証
   const context = result.context?.[0] ?? ''
   expect(context).toContain('Term-A')
   expect(context).not.toContain('Term-X')
+  expect(context).not.toContain('Term-V')
   expect(context).not.toContain('Term-Z')
-  // dev-docs.yaml のパス・要素の id・理由を含む行と、id の重なりの行が debug log に届く
+  // dev-docs.yaml のパス・行の id・理由を含む行と、id の重なりの行が debug log に届く
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(DEV_DOCS_PATH))
-  expect(debugLines.some((line) => line.text.includes('bad') && line.text.includes('mcp'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('bad'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('unknown'))).toBe(true)
   expect(debugLines.some((line) => line.text.includes('terms') && line.text.includes('重なり'))).toBe(true)
 })
 
-// 書式の誤った YAML の項目だけを外し、他の aliases の要素の文脈は追加する（異常系）
+// 書式の誤った YAML の文書だけを外し、他の行の文脈は追加する（異常系）
 test('test_error_when_yaml_malformed', async ($, on) => {
   // 準備
-  const config = makeConfig({ aliases: aliasLines({ id: 'urls', type: 'url', paths: 'urls/*.yaml' }) })
+  const config = makeConfig({ aliases: aliasLines({ id: 'urls', type: 'url', paths: 'urls/*.yaml', metadata: ['name:', '  type: ref', '  field: title'] }) })
   const fs = makeFs(config)
-  const brokenPath = `${CONFIG_DIR}/urls/term-a.yaml`
-  fs.write(brokenPath, 'id: [url-a\nname: term-a\n')
+  const brokenPath = `${CONFIG_DIR}/urls/site.yaml`
+  fs.write(brokenPath, 'id: [url-a\ntitle: Site\n')
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
@@ -376,30 +390,77 @@ test('test_error_when_yaml_malformed', async ($, on) => {
   // YAML のパスと、パースに失敗した理由（行と列を含む）の行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath))
   expect(logged.length).toBeGreaterThan(0)
-  expect(logged.some((line) => line.text.includes('YAML を読めません') && /\d+:\d+/.test(line.text))).toBe(true)
+  expect(logged.some((line) => line.text.includes('照合から外しました') && /\d+:\d+/.test(line.text))).toBe(true)
 })
 
-// fields に url も port も無い env の要素をスキーマに合わない要素として外し、他の要素の文脈は追加する（異常系）
+// 解決した url も port も空の env の文書を外し、同じ行の他の文書の文脈は追加する（異常系）
 test('test_error_when_env_without_endpoint', async ($, on) => {
   // 準備
-  // fields に url も port も無い id: envs の要素
-  const config = makeConfig({
-    aliases: aliasLines({ id: 'envs', type: 'env', paths: 'envs/*.yaml', columns: ['match: [name]', 'description: description'] }),
-  })
+  const config = makeConfig({ aliases: aliasLines({ id: 'envs', type: 'env', paths: 'envs/*.yaml' }) })
   const fs = makeFs(config)
-  fs.write(`${CONFIG_DIR}/envs/env-x.yaml`, 'id: env-x\nname: env-x\nurl: http://127.0.0.1:8000\nport: 8000\ndescription: 開発サーバー\n')
+  const withoutEndpointPath = `${CONFIG_DIR}/envs/env-x.yaml`
+  fs.write(withoutEndpointPath, 'id: env-x\nname: env-x\ndescription: 開発サーバー\n')
+  fs.write(`${CONFIG_DIR}/envs/env-a.yaml`, 'id: env-a\nname: env-a\nurl: http://127.0.0.1:8000\n')
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  const result = await submit($, 'term-a と env-x')
+  const result = await submit($, 'term-a・env-a・env-x')
 
   // 検証
   const context = result.context?.[0] ?? ''
   expect(context).toContain('## 用語')
   expect(context).toContain('Term-A')
-  expect(context).not.toContain('## 環境')
+  expect(context).toContain('## 環境')
+  expect(context).toContain('- env-a（id: env-a）')
   expect(context).not.toContain('env-x')
-  // 設定ファイルのパス・要素の id・理由を含む行が debug log に届く
-  const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
-  expect(debugLines.some((line) => line.text.includes('envs') && line.text.includes('必須のキーがありません'))).toBe(true)
+  // env-x の YAML のパス・文書の id・空のキーを含む行が debug log に届く
+  const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(withoutEndpointPath))
+  expect(debugLines.some((line) => line.text.includes('env-x') && line.text.includes('url') && line.text.includes('port'))).toBe(true)
+})
+
+// 設定ファイルの旧い構造の要素をスキーマに合わない行として外し、dev-docs.yaml のトップレベルの aliases は読まない（異常系）
+test('test_error_when_legacy_aliases', async ($, on) => {
+  // 準備
+  // metadata を持たない旧い構造の要素
+  const legacyUrlRow = ['- id: urls', '  type: url', '  paths: [urls/*.yaml]', '  fields:', '    id: id', '    match: [name]', '    url: url']
+  const legacyTermRow = ['- id: legacy', '  type: term', '  paths: [legacy/*.yaml]']
+  const fs = makeFs(makeConfig({ aliases: legacyUrlRow }), makeDevDocs({ rootExtra: ['aliases:', ...indent(legacyTermRow, 2)] }))
+  fs.write(`${CONFIG_DIR}/urls/link-a.yaml`, 'id: link-a\nname: link-a\nurl: https://example.com\n')
+  fs.write(`${KNOWLEDGE_DIR}/legacy/term-y.yaml`, termYaml({ id: 'term-y', name: 'Term-Y' }))
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a・link-a・term-y')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('Term-A')
+  expect(context).not.toContain('link-a')
+  expect(context).not.toContain('Term-Y')
+  // 設定ファイルのパス・行の id・理由を含む行が debug log に届く
+  const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
+  expect(logged.some((line) => line.text.includes('urls') && line.text.includes('metadata'))).toBe(true)
+  expect(fs.reads).not.toContain(`${CONFIG_DIR}/urls/link-a.yaml`)
+  expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/legacy/term-y.yaml`)
+})
+
+// 必須のキーの値が空の文書だけを外し、同じ行の他の文書の文脈は追加する（異常系）
+test('test_error_when_required_value_missing', async ($, on) => {
+  // 準備
+  // description を持たない term-n
+  const fs = makeFs()
+  const missingPath = `${TERMS_DIR}/term-n.yaml`
+  fs.write(missingPath, 'id: term-n\nname: term-n\n')
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a と term-n')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('Term-A')
+  expect(context).not.toContain('term-n')
+  // term-n の YAML のパス・文書の id・空のキーを含む行が debug log に届く
+  const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
+  expect(debugLines.some((line) => line.text.includes('term-n') && line.text.includes('description'))).toBe(true)
 })
