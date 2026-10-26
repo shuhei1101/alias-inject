@@ -75,7 +75,7 @@ function hasValue(value: unknown): boolean {
 
 /** 値が `AliasType` の 9 つのどれかであるかを確かめる */
 export function isAliasType(value: unknown): value is AliasType {
-  return typeof value === 'string' && (ALIAS_TYPES as readonly string[]).includes(value)
+  return typeof value === 'string' && (ALIAS_TYPES as readonly string[]).indexOf(value) !== -1
 }
 
 /** 行の並びの各行をスキーマで検証し、有効な行を取り出す。合わない行は外して理由を残す */

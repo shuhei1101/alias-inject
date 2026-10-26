@@ -148,7 +148,8 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
   const failures: LoadedEntries['failures'] = []
   const kept: { itemIndex: number; type: AliasType; values: Record<AliasKey, unknown> }[] = []
 
-  for (const [itemIndex, document] of documents.entries()) {
+  for (let itemIndex = 0; itemIndex < documents.length; itemIndex++) {
+    const document = documents[itemIndex]
     const values = resolveMetadata(alias.metadata, document.value)
     // name が空なら、ファイルの文書はファイル名、records の要素は id を使う
     if (textOf(values.name) === undefined) values.name = document.index === null ? baseName(document.path) : values.id
@@ -210,13 +211,13 @@ export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias,
     }
     // records の配列が無い YAML も、その YAML だけを外す
     const parsed = parseDocuments(result.value, alias.records)
-    if (!parsed.ok) {
+    if ('reason' in parsed) {
       failures.push({ path: file.path, reason: parsed.reason })
       continue
     }
-    for (const [index, value] of parsed.documents.entries()) {
+    parsed.documents.forEach((value, index) => {
       documents.push({ path: file.path, index: alias.records === undefined ? null : index, value })
-    }
+    })
   }
 
   const built = buildEntries(documents, alias, aliasIndex)
