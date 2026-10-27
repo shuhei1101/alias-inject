@@ -1,0 +1,65 @@
+$ (rc=0; for f in tests/e2e/単一ユースケース/test_*.py tests/e2e/複合ユースケース/test_*.py; do python3 "$f" -v || rc=1; done; exit $rc)
+test_error_when_alias_invalid (__main__.PromptContextTest.test_error_when_alias_invalid)
+スキーマに合わない aliases の要素だけが外れ、他の要素の文脈は追加される（異常シナリオ（スキーマに合わない aliases の要素）） ... ok
+test_error_when_config_unreadable (__main__.PromptContextTest.test_error_when_config_unreadable)
+設定ファイルが読めなくても入力は止まらず、文脈は追加されない（異常シナリオ（設定ファイルが読めない）） ... ok
+test_error_when_repository_unreadable (__main__.PromptContextTest.test_error_when_repository_unreadable)
+読めない dev-docs.yaml のリポジトリだけが外れ、他のリポジトリと設定ファイルの aliases の文脈は追加される（異常シナリオ（dev-docs.yaml が読めない）） ... ok
+test_normal (__main__.PromptContextTest.test_normal)
+初めて出た語の文脈だけがモデルに届き、入力の文は変わらない（正常シナリオ） ... ok
+test_normal_when_config_aliases (__main__.PromptContextTest.test_normal_when_config_aliases)
+dev-docs.yaml と設定ファイルの aliases の両方の語の文脈が追加される（正常シナリオ（設定ファイルの aliases）） ... ok
+test_normal_when_only_recorded_terms (__main__.PromptContextTest.test_normal_when_only_recorded_terms)
+記録済みの語だけを含む入力には文脈が追加されない（正常シナリオ（記録済みの語だけ）） ... ok
+test_normal_when_origin_excluded (__main__.PromptContextTest.test_normal_when_origin_excluded)
+origins に無い出所の入力には追加されず、設定を戻した後の入力で追加される（正常シナリオ（出所が対象外）） ... ok
+test_normal_when_over_limit (__main__.PromptContextTest.test_normal_when_over_limit)
+max_items を超えた語は、その回には追加されず次の入力で追加される（正常シナリオ（上限を超える）） ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 50.173s
+
+OK
+test_error_when_yaml_malformed (__main__.ReloadTest.test_error_when_yaml_malformed)
+書式の誤った YAML の要素だけが外れ、もう一方の要素の文脈は追加される（異常シナリオ（YAML の書式の誤り）） ... ok
+test_normal (__main__.ReloadTest.test_normal)
+書き換えた直後の入力で、追加した語と追加した YAML の語の文脈が追加される（正常シナリオ） ... ok
+test_normal_when_repository_config_changed (__main__.ReloadTest.test_normal_when_repository_config_changed)
+書き換えた dev-docs.yaml の aliases に足した要素の語の文脈が、書き換えた直後の入力で追加される（正常シナリオ（dev-docs.yaml の書き換え）） ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 22.253s
+
+OK
+test_normal_when_cleared (__main__.ResetRecordTest.test_normal_when_cleared)
+/clear の後の入力で、同じ語の文脈がもう一度追加される（正常シナリオ（クリア）） ... ok
+test_normal_when_compacted (__main__.ResetRecordTest.test_normal_when_compacted)
+/compact の後の入力で、記録が消えて同じ語の文脈がもう一度追加される（正常シナリオ（圧縮）） ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 25.212s
+
+OK
+test_error_when_values_unavailable (__main__.VariableReferenceTest.test_error_when_values_unavailable)
+値を引く子プロセスを起動できなくても、ツールの結果の本文はそのまま届き、変数参照の値の行は追加されない（異常シナリオ（値を引けない）） ... ok
+test_normal (__main__.VariableReferenceTest.test_normal)
+Read で読んだ本文の変数参照の値が 1 行だけ文脈に追加され、本文は置き換わらない（正常シナリオ） ... ok
+test_normal_when_no_reference (__main__.VariableReferenceTest.test_normal_when_no_reference)
+変数参照を含まない本文には、変数参照の値の行が追加されない（正常シナリオ（変数参照が無い）） ... ok
+test_normal_when_read_by_bash (__main__.VariableReferenceTest.test_normal_when_read_by_bash)
+Bash の cat で読んだ本文の変数参照の値が 1 行だけ文脈に追加される（正常シナリオ（Bash で読む）） ... ok
+test_normal_when_unset (__main__.VariableReferenceTest.test_normal_when_unset)
+環境変数が設定されていない名前は、設定されていない旨の行が文脈に追加される（正常シナリオ（設定されていない名前）） ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 33.876s
+
+OK
+test_normal (__main__.SessionFlowTest.test_normal)
+入力を重ねる間に書き換え・圧縮・/clear を挟んでも、語ごとに 1 回だけ文脈が追加され、/clear の後に読んだ本文の変数参照の値が届く（正常シナリオ） ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 31.189s
+
+OK
+rc=0
