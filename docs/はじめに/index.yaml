@@ -2,3 +2,5 @@ summary: 概要・コアコンセプト・変更履歴
 items:
   - page: コアコンセプト/
     summary: 使い方を読む前に知っておく仕組み
+  - page: 変更履歴.md
+    summary: バージョンごとに入った PR の一覧
