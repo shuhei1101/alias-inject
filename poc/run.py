@@ -8,6 +8,7 @@ import shlex
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests" / "e2e"))
 
@@ -25,6 +26,23 @@ POC_PREFIX = "POC_"
 RUNS_PER_CASE = 3
 
 
+class PocSession(ClaudeSession):
+    """_drain だけを #22 の変更方針の読み方に差し替える（改行で終わった行だけを数える）"""
+
+    def _drain(self) -> list[dict[str, Any]]:
+        found: list[dict[str, Any]] = []
+        files = sorted((self.config_dir / "projects").glob("*/*.jsonl"), key=lambda path: path.stat().st_mtime)
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            complete = text[: text.rfind("\n") + 1].split("\n")[:-1]
+            consumed = self._seen.get(path, 0)
+            for line in complete[consumed:]:
+                if line.strip():
+                    found.append(json.loads(line))
+            self._seen[path] = len(complete)
+        return found
+
+
 def _start(session: ClaudeSession, *, path: str | None) -> None:
     """claude を起動する。path はコマンドの文字列の頭の PATH= で渡す（tmux の -e PATH= は使わない）"""
     claude = str(shutil.which("claude"))
@@ -33,6 +51,8 @@ def _start(session: ClaudeSession, *, path: str | None) -> None:
     # path の指定があるときだけ、claude を起動するシェルで PATH を差し替える
     if path is not None:
         command = f"PATH={shlex.quote(path)} {command}"
+    # 呼び出し元の Claude Code から継いだ印があると、空の PATH のとき transcript が保存されない
+    command = f"unset CLAUDE_CODE_CHILD_SESSION; {command}"
     session._tmux(
         "new-session", "-d", "-s", session.tmux_name, "-x", "200", "-y", "50", "-c", str(session.project_dir),
         "-e", f"CLAUDE_CONFIG_DIR={session.config_dir}",
@@ -53,7 +73,7 @@ def _claude_path(session: ClaudeSession) -> str:
 
 def run_case(name: str, *, path: str | None, settings_path: str | None) -> dict[str, object]:
     """1 回の起動で、claude の PATH・入力を受け付けたか・子プロセスの観測を記録する"""
-    session = ClaudeSession()
+    session = PocSession()
     record: dict[str, object] = {"case": name}
     try:
         settings: dict[str, object] = {"permissions": {"allow": ["Read"]}}
