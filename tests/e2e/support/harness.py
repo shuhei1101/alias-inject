@@ -130,16 +130,18 @@ class ClaudeSession:
         self.alias_dir = self.root / "alias-inject"
         self.urls_dir = self.alias_dir / "urls"
         self.config_path = self.alias_dir / "settings.yaml"
-        # 読むリポジトリのフォルダ。dev-docs.yaml の aliases の相対パスはここから解決される
+        # 読むリポジトリのフォルダ。dev-docs.yaml の documents の行の paths の相対パスはここから解決される
         self.repo_dir = self.root / "knowledge"
         self.terms_dir = self.repo_dir / "terms"
+        # alias_type を持たない行の YAML を置くフォルダ
+        self.docs_dir = self.repo_dir / "docs"
         self.dev_docs_path = self.repo_dir / "dev-docs.yaml"
         # 中身の無い PATH 用のフォルダ。`env` などのコマンドが見つからない PATH にするときに使う
         self.empty_bin_dir = self.root / "empty-bin"
         self.tmux_name = f"alias-inject-e2e-{os.getpid()}-{uuid.uuid4().hex[:6]}"
         self._seen: dict[Path, int] = {}
         self._clock = time.time()
-        for folder in (self.config_dir, self.project_dir, self.terms_dir, self.urls_dir, self.empty_bin_dir):
+        for folder in (self.config_dir, self.project_dir, self.terms_dir, self.docs_dir, self.urls_dir, self.empty_bin_dir):
             folder.mkdir(parents=True)
 
     # ---- 準備 ----
@@ -292,29 +294,47 @@ class ClaudeSession:
 
 # ---- 設定ファイル・dev-docs.yaml・照合の YAML ----
 
-# type ごとの fields のうち、id 以外の列の対応
-ALIAS_COLUMNS = {
-    "term": ["match: [name, aliases]", "title: name", "description: description"],
-    "command": ["match: [name]", "command: command"],
-    "url": ["match: [name]", "url: url"],
-}
+def alias_lines(
+    alias_id: str,
+    alias_type: str,
+    paths: str,
+    *,
+    records: str | None = None,
+    metadata: list[str] | None = None,
+) -> list[str]:
+    """エイリアスの元の行 1 つの行（`- id:` を字下げなしで始める）。alias_type は `metadata.alias_type` の custom の値、metadata は字下げなしで追加するキーの行"""
+    return [
+        f"- id: {alias_id}",
+        f"  paths: [{paths}]",
+        *([f"  records: {records}"] if records else []),
+        "  metadata:",
+        "    alias_type:",
+        "      type: custom",
+        f"      value: {alias_type}",
+        *[f"    {line}" for line in metadata or []],
+    ]
 
 
-def alias_lines(alias_id: str, alias_type: str, paths: str, *, extra_fields: list[str] | None = None) -> list[str]:
-    """aliases の要素 1 つの行（`- id:` を字下げなしで始める）。fields の列は元の YAML の `id`・`name` などに対応させる"""
+def legacy_alias_lines(alias_id: str, alias_type: str, paths: str) -> list[str]:
+    """`metadata` を持たない旧い構造の aliases の要素 1 つの行（`type` と `fields` で書く）"""
     return [
         f"- id: {alias_id}",
         f"  type: {alias_type}",
         f"  paths: [{paths}]",
         "  fields:",
         "    id: id",
-        *[f"    {line}" for line in [*ALIAS_COLUMNS[alias_type], *(extra_fields or [])]],
+        "    match: [name]",
     ]
 
 
-def term_alias_lines() -> list[str]:
-    """dev-docs.yaml の用語の aliases の要素（`terms/*.yaml` を読む）の行"""
-    return alias_lines("terms", "term", "terms/*.yaml")
+def plain_document_lines() -> list[str]:
+    """`metadata` に alias_type を持たない documents の行（`docs/*.yaml` に当たる。エイリアスの行ではない）"""
+    return ["- id: docs", "  paths: [docs/*.yaml]", "  metadata:", "    title:", "      type: ref", "      field: name"]
+
+
+def term_alias_lines(*, records: str | None = None) -> list[str]:
+    """dev-docs.yaml の用語の行（`terms/*.yaml` を読む）の行"""
+    return alias_lines("terms", "term", "terms/*.yaml", records=records)
 
 
 def config_text(
@@ -335,9 +355,9 @@ def config_text(
     return "\n".join(lines) + "\n"
 
 
-def dev_docs_text(aliases: list[str]) -> str:
-    """aliases を持つ dev-docs.yaml の本文。aliases は字下げなしの要素の行"""
-    return "\n".join(["aliases:", *[f"  {line}" for line in aliases]]) + "\n"
+def dev_docs_text(documents: list[str], *, extra: list[str] | None = None) -> str:
+    """documents を持つ dev-docs.yaml の本文。documents は字下げなしの行の並び、extra はトップレベルに足す行"""
+    return "\n".join(["documents:", *[f"  {line}" for line in documents], *(extra or [])]) + "\n"
 
 
 def term_text(term_id: str, *, aliases: list[str] | None = None, description: str | None = None) -> str:
@@ -350,9 +370,9 @@ def term_text(term_id: str, *, aliases: list[str] | None = None, description: st
 
 
 def term_list_text(*term_ids: str) -> str:
-    """複数の用語を 1 つの YAML の並びにした本文"""
-    items = ["- " + term_text(term_id).rstrip().replace("\n", "\n  ") for term_id in term_ids]
-    return "\n".join(items) + "\n"
+    """複数の用語を、配列 `terms` に並べた 1 つの YAML の本文"""
+    items = ["  - " + term_text(term_id).rstrip().replace("\n", "\n    ") for term_id in term_ids]
+    return "\n".join(["terms:", *items]) + "\n"
 
 
 def command_text(command_id: str) -> str:
@@ -368,6 +388,59 @@ def url_of(url_id: str) -> str:
 def url_text(url_id: str) -> str:
     """URL の YAML の本文。語（name）は ID と同じにする"""
     return f"id: {url_id}\nname: {url_id}\nurl: {url_of(url_id)}\n"
+
+
+def url_links_text(url_id: str) -> str:
+    """配列 `links` に URL の要素を 1 つ持つ YAML の本文。語は `title` の列から取る"""
+    return f"links:\n  - id: {url_id}\n    title: {url_id}\n    url: {url_of(url_id)}\n"
+
+
+def skill_of(skill_id: str) -> str:
+    """スキルの YAML が持つスキル名"""
+    return f"e2e-{skill_id}"
+
+
+def skill_text(skill_id: str) -> str:
+    """スキルの YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {skill_id}\nname: {skill_id}\nskill: {skill_of(skill_id)}\n"
+
+
+def tool_of(tool_id: str) -> str:
+    """ツールの YAML が持つ MCP のツール名"""
+    return f"mcp__e2e__{tool_id}"
+
+
+def tool_text(tool_id: str) -> str:
+    """ツールの YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {tool_id}\nname: {tool_id}\ntool: {tool_of(tool_id)}\n"
+
+
+def path_of(path_id: str) -> str:
+    """パスの YAML が持つパス（`~` を展開しない書き方）"""
+    return f"~/.config/e2e/{path_id}.yaml"
+
+
+def path_text(path_id: str) -> str:
+    """パスの YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {path_id}\nname: {path_id}\npath: {path_of(path_id)}\n"
+
+
+def env_url_of(env_id: str) -> str:
+    """環境の YAML が持つ URL"""
+    return f"http://127.0.0.1:8000/{env_id}"
+
+
+ENV_PORT = 8000
+
+
+def env_text(env_id: str) -> str:
+    """環境の YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {env_id}\nname: {env_id}\nurl: {env_url_of(env_id)}\nport: {ENV_PORT}\n"
+
+
+def avoid_text(avoid_id: str, replacement: str) -> str:
+    """避ける語の YAML の本文。語（name）は ID と同じにする"""
+    return f"id: {avoid_id}\nname: {avoid_id}\nreplacement: {replacement}\n"
 
 
 def reference_line(name: str, value: str) -> str:
@@ -403,8 +476,10 @@ class E2ETestCase(unittest.TestCase):
         self,
         *,
         global_extra: list[str] | None = None,
-        dev_docs_aliases: list[str] | None = None,
+        dev_docs_rows: list[str] | None = None,
+        dev_docs_extra: list[str] | None = None,
         config_aliases: list[str] | None = None,
+        term_records: bool = False,
         extra_repositories: list[Path] | None = None,
         config_exists: bool = True,
         env: dict[str, str] | None = None,
@@ -412,14 +487,26 @@ class E2ETestCase(unittest.TestCase):
     ) -> ClaudeSession:
         """term-a（エイリアス 用語エー）と term-b を持つ設定で Claude Code を起動する。
 
-        dev-docs.yaml は用語の aliases の要素に dev_docs_aliases を足して持ち、設定ファイルは
-        dev-docs.yaml（extra_repositories の後ろ）と config_aliases を持つ。
+        dev-docs.yaml は documents に、用語の行・alias_type を持たない行・dev_docs_rows を持ち、
+        トップレベルに dev_docs_extra を足す。設定ファイルは dev-docs.yaml（extra_repositories の後ろ）と
+        config_aliases を持つ。term_records が True のとき、用語は配列 `terms` を持つ 1 つの YAML に置き、
+        用語の行を `records: terms` にする（False のときは 1 ファイルに 1 語）。
         env は起動時に足す環境変数、path は claude を起動する PATH の差し替え
         """
         session = self.session
-        session.write_file(session.terms_dir / "term-a.yaml", term_text("term-a", aliases=["用語エー"]))
-        session.write_file(session.terms_dir / "term-b.yaml", term_text("term-b"))
-        session.write_file(session.dev_docs_path, dev_docs_text([*term_alias_lines(), *(dev_docs_aliases or [])]))
+        if term_records:
+            session.write_file(session.terms_dir / "terms.yaml", term_list_text("term-a", "term-b"))
+        else:
+            session.write_file(session.terms_dir / "term-a.yaml", term_text("term-a", aliases=["用語エー"]))
+            session.write_file(session.terms_dir / "term-b.yaml", term_text("term-b"))
+        session.write_file(session.docs_dir / "doc-z.yaml", "name: doc-z\n")
+        session.write_file(
+            session.dev_docs_path,
+            dev_docs_text(
+                [*term_alias_lines(records="terms" if term_records else None), *plain_document_lines(), *(dev_docs_rows or [])],
+                extra=dev_docs_extra,
+            ),
+        )
         if config_exists:
             session.write_file(
                 session.config_path,
@@ -447,6 +534,14 @@ class E2ETestCase(unittest.TestCase):
         self.assertIn(f"id: {entry_id}", text)
         for field_line in fields:
             self.assertIn(field_line, text)
+
+    def assert_sections_in_order(self, submission: Submission, *sections: str) -> None:
+        """見出しの下に、sections のセクションがこの順に並んでいる"""
+        text = submission.context_text
+        self.assertIn(f"# {HEADING}", text)
+        positions = [text.find(f"## {section}") for section in sections]
+        self.assertNotIn(-1, positions)
+        self.assertEqual(positions, sorted(positions))
 
     def assert_context_has_term(self, submission: Submission, term_id: str) -> None:
         """見出しと「用語」のセクションの下に、語の ID が並んでいる"""

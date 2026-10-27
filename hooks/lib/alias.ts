@@ -1,38 +1,63 @@
 import { validateSchema } from './schema'
 
-/** `aliases` の要素の `type`。文脈に並べる列とセクションが種類ごとに決まる */
-export type AliasType = 'term' | 'doc' | 'command' | 'url'
+const ALIAS_TYPES = ['term', 'doc', 'command', 'url', 'skill', 'tool', 'path', 'env', 'avoid'] as const
 
-/** `aliases` の要素の `fields`。項目のどの列を使うかの対応 */
-export type AliasFields = {
-  /** 項目の ID の列の名前 */
-  id: string
-  /** 照合する列の名前（1 つ以上） */
-  match: string[]
-  /** 文脈に出す語の列の名前 */
-  title?: string | undefined
-  description?: string | undefined
-  /** 関連する項目の列の名前（term） */
-  related?: string | undefined
-  /** 避ける言い方の列の名前（term）。読むが文脈には使わない */
-  avoid?: string | undefined
-  command?: string | undefined
-  cwd?: string | undefined
-  url?: string | undefined
+/** `metadata.alias_type` の値。文脈に並べる列とセクションが種類ごとに決まる */
+export type AliasType = (typeof ALIAS_TYPES)[number]
+
+/** `metadata` に書けるエイリアスのキー */
+export const ALIAS_KEYS = [
+  'alias_type',
+  'id',
+  'name',
+  'aliases',
+  'description',
+  'related',
+  'command',
+  'cwd',
+  'url',
+  'avoid',
+  'skill',
+  'tool',
+  'path',
+  'port',
+  'replacement',
+] as const
+
+export type AliasKey = (typeof ALIAS_KEYS)[number]
+
+/** 種類ごとに、文書で値が空であってはならないキー。env の `url`・`port` の 1 つ以上は含めず、`missingKeys` が別に確かめる */
+export const REQUIRED_KEYS: Record<AliasType, readonly AliasKey[]> = {
+  term: ['id', 'name', 'description'],
+  doc: ['id', 'name', 'description'],
+  command: ['id', 'name', 'command'],
+  url: ['id', 'name', 'url'],
+  skill: ['id', 'name', 'skill'],
+  tool: ['id', 'name', 'tool'],
+  path: ['id', 'name', 'path'],
+  env: ['id', 'name'],
+  avoid: ['id', 'name', 'replacement'],
 }
 
-/** スキーマの検証を通った有効な `aliases` の 1 要素 */
+/** `metadata` の 1 キーの値の取り方。`ref` は文書の列から取り、`custom` は行の全文書に同じ値を使う */
+export type MetadataValue = { type: 'ref'; field: string } | { type: 'custom'; value: unknown }
+
+/** 行の `metadata` のうち、エイリアスのキーだけを持つもの。書かないキーは同じ名前の列の `ref` とみなす */
+export type AliasMetadata = { alias_type: MetadataValue } & Partial<Record<AliasKey, MetadataValue>>
+
+/** スキーマの検証を通った有効なエイリアスの元の行 */
 export type AliasConfig = {
   id: string
-  type: AliasType
   /** 読む YAML のパスか glob。書いたまま（解決は読む側が行う） */
   paths: string[]
-  fields: AliasFields
+  /** 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書 */
+  records?: string | undefined
+  metadata: AliasMetadata
 }
 
-/** 出所を持ち、`paths` を絶対パスにした `aliases` の要素 */
+/** 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行 */
 export type ResolvedAlias = AliasConfig & {
-  /** 要素を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
+  /** 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
   origin: string
   /** `paths` を解決した絶対パスの glob */
   patterns: string[]
@@ -42,21 +67,37 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/** `aliases` の各要素をスキーマで検証し、有効な要素を取り出す。合わない要素は外して理由を残す */
+// 値が空でない文字列・数値・真偽値のいずれかか
+function hasValue(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim() !== ''
+  return typeof value === 'number' || typeof value === 'boolean'
+}
+
+/** 値が `AliasType` の 9 つのどれかであるかを確かめる */
+export function isAliasType(value: unknown): value is AliasType {
+  return typeof value === 'string' && (ALIAS_TYPES as readonly string[]).includes(value)
+}
+
+/** 行の並びの各行をスキーマで検証し、有効な行を取り出す。合わない行は外して理由を残す */
 export function parseAliases({
   items,
   schema,
   path,
+  aliasTypeOnly = false,
 }: {
   items: readonly unknown[]
   schema: Record<string, unknown>
   path: string
+  /** true のとき、`metadata` に `alias_type` のキーを持たない行を検証せずに飛ばす */
+  aliasTypeOnly?: boolean
 }): { aliases: AliasConfig[]; warnings: string[] } {
   const aliases: AliasConfig[] = []
   const warnings: string[] = []
 
   for (const [index, item] of items.entries()) {
-    // `enabled: false` の要素は検証せずに飛ばす
+    // `alias_type` を持たない行はエイリアスの行ではないため、検証せずに飛ばす
+    if (aliasTypeOnly && !(isRecord(item) && isRecord(item.metadata) && 'alias_type' in item.metadata)) continue
+    // `enabled: false` の行は検証せずに飛ばす
     if (isRecord(item) && item.enabled === false) continue
 
     const itemPath = `${path}[${index}]`
@@ -69,17 +110,22 @@ export function parseAliases({
 
     // スキーマの検証を通っているため、必須のキーは型どおりに揃っている
     const valid = item as Record<string, unknown>
+    const written = valid.metadata as Record<string, unknown>
+    const metadata: Record<string, unknown> = {}
+    for (const key of ALIAS_KEYS) {
+      if (key in written) metadata[key] = written[key]
+    }
     aliases.push({
       id: valid.id as string,
-      type: valid.type as AliasType,
       paths: valid.paths as string[],
-      fields: valid.fields as AliasFields,
+      records: valid.records as string | undefined,
+      metadata: metadata as AliasMetadata,
     })
   }
   return { aliases, warnings }
 }
 
-/** 同じ出所の `aliases` の要素のうち、先の要素と `id` が重なる要素を外す */
+/** 同じ出所の行のうち、先の行と `id` が重なる行を外す */
 export function dedupeAliases<T extends { id: string }>(aliases: readonly T[]): { aliases: T[]; warnings: string[] } {
   const kept: T[] = []
   const warnings: string[] = []
@@ -94,4 +140,25 @@ export function dedupeAliases<T extends { id: string }>(aliases: readonly T[]): 
     kept.push(alias)
   }
   return { aliases: kept, warnings }
+}
+
+/** 1 件の文書について、エイリアスのキーごとの値を行の `metadata` から取る */
+export function resolveMetadata(metadata: AliasMetadata, document: Record<string, unknown>): Record<AliasKey, unknown> {
+  const values = {} as Record<AliasKey, unknown>
+  for (const key of ALIAS_KEYS) {
+    const written = metadata[key]
+    // 書かないキーは、同じ名前の列の値を使う
+    if (written === undefined) values[key] = document[key]
+    else if (written.type === 'ref') values[key] = document[written.field]
+    else values[key] = written.value
+  }
+  return values
+}
+
+/** 解決した値のうち、種類の必須のキーで値が空のものを返す */
+export function missingKeys(type: AliasType, values: Record<AliasKey, unknown>): string[] {
+  const missing: string[] = REQUIRED_KEYS[type].filter((key) => !hasValue(values[key]))
+  // env は url・port の 1 つ以上を求める
+  if (type === 'env' && !hasValue(values.url) && !hasValue(values.port)) missing.push('url', 'port')
+  return missing
 }

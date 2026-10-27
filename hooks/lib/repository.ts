@@ -3,11 +3,11 @@ import { dedupeAliases, parseAliases } from './alias'
 import type { ResolvedAlias } from './alias'
 import { parentDir, parseYaml, readIfChanged, resolvePath } from './loader'
 
-/** 1 つの `dev-docs.yaml` から取り出した `aliases` の要素と、外した要素の理由 */
+/** 1 つの `dev-docs.yaml` の `documents` から取り出したエイリアスの元の行と、外した行の理由 */
 export type RepositoryAliases = {
-  /** 有効で検証を通った要素（並びの順）。`origin` は `dev-docs.yaml` の絶対パス */
+  /** `metadata.alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `dev-docs.yaml` の絶対パス */
   aliases: ResolvedAlias[]
-  /** スキーマに合わない要素と `id` の重なった要素の理由。呼び出し元が debug log に出す */
+  /** スキーマに合わない行と `id` の重なった行の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
@@ -28,7 +28,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/** `dev-docs.yaml` の文字列から `aliases` だけを取り出し、`paths` をそのフォルダから解決する */
+/** `dev-docs.yaml` の文字列から `documents` のうち `metadata.alias_type` を持つ行だけを取り出し、`paths` をそのフォルダから解決する */
 export function parseRepository({
   text,
   path,
@@ -43,14 +43,14 @@ export function parseRepository({
   const parsed = parseYaml(text)
   if (!parsed.ok) throw new RepositoryError(path, parsed.reason)
 
-  // 空の入力と `aliases` を持たないマッピングは、要素 0 件として扱う
+  // 空の入力と `documents` を持たないマッピングは、行 0 件として扱う。トップレベルの `aliases` と他のキーは読まない
   const { value } = parsed
   if (value === null) return { aliases: [], warnings: [] }
   if (!isRecord(value)) throw new RepositoryError(path, '最上位がマッピングではありません')
-  if (!Object.prototype.hasOwnProperty.call(value, 'aliases')) return { aliases: [], warnings: [] }
-  if (!Array.isArray(value.aliases)) throw new RepositoryError(path, 'aliases が並びではありません')
+  if (!Object.prototype.hasOwnProperty.call(value, 'documents')) return { aliases: [], warnings: [] }
+  if (!Array.isArray(value.documents)) throw new RepositoryError(path, 'documents が並びではありません')
 
-  const parsedAliases = parseAliases({ items: value.aliases, schema, path: 'aliases' })
+  const parsedAliases = parseAliases({ items: value.documents, schema, path: 'documents', aliasTypeOnly: true })
   const deduped = dedupeAliases(parsedAliases.aliases)
   const baseDir = parentDir(path)
   return {
@@ -63,7 +63,7 @@ export function parseRepository({
   }
 }
 
-/** `dev-docs.yaml` を更新時刻が変わったときだけ読み直し、取り出した `aliases` を返す */
+/** `dev-docs.yaml` を更新時刻が変わったときだけ読み直し、取り出した行を返す */
 export async function loadRepositoryAliases(
   $: EngineInterface,
   { path, schema, home }: { path: string; schema: Record<string, unknown>; home: string },

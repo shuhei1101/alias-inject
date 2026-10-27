@@ -1,5 +1,5 @@
 title: "プラグイン / スキーマ"
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、`aliases` の要素を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `dev-docs.yaml` の `documents` の行）を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
 directory: |-
   ```text
   hooks/
@@ -31,7 +31,7 @@ constants:
     container: hooks/lib/schema.ts
     usecase: 共通
     summary: 値の検証で解釈するキーワード
-    value: '`type`・`enum`・`const`・`required`・`properties`・`additionalProperties`・`items`・`minItems`・`minLength`・`allOf`・`if`・`then`・`$ref`・`$defs`'
+    value: '`type`・`enum`・`const`・`required`・`properties`・`additionalProperties`・`items`・`minItems`・`minLength`・`allOf`・`anyOf`・`if`・`then`・`$ref`・`$defs`'
   - name: ANNOTATION_KEYWORDS
     title: 読み飛ばすキーワード
     container: hooks/lib/schema.ts
@@ -93,7 +93,7 @@ functions:
         condition: 検証するキーワードにも読み飛ばすキーワードにも無いキーがある、または `$ref` が `#/$defs/{名前}` の形でない・指す要素が無い
     process: |-
       1. ルートからスキーマのマッピングをたどり、各キーが VALIDATION_KEYWORDS か ANNOTATION_KEYWORDS にあるかを確かめる
-      2. `properties`・`$defs` の値の各要素、`items`・`if`・`then`・マッピングの `additionalProperties`、`allOf` の各要素をスキーマとしてたどる。`enum`・`const`・`required`・`default`・`examples` の中はたどらない
+      2. `properties`・`$defs` の値の各要素、`items`・`if`・`then`・マッピングの `additionalProperties`、`allOf`・`anyOf` の各要素をスキーマとしてたどる。`enum`・`const`・`required`・`default`・`examples` の中はたどらない
       3. 無いキーは、そのキーまでのパスとキーの名前で SchemaError を投げる
       4. `$ref` は `#/$defs/{名前}` の形で、ルートの `$defs` にその名前があることを確かめ、無ければ SchemaError を投げる
     unit_tests:
@@ -106,9 +106,9 @@ functions:
       - name: test_check_keywords_when_unsupported
         case: 異常
         summary: 解釈しないキーワードと解けない `$ref` は例外
-        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
+        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`anyOf` の要素に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
         mock: なし
-        expected: どちらも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む
+        expected: どれも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む。`anyOf` の値のメッセージは `anyOf` を含むパスを持つ
         exception: 解釈しないキーワード・解けない `$ref`
   - name: validateSchema
     title: 値の検証
@@ -157,38 +157,45 @@ functions:
       5. 値が並びの場合、要素の数が `minItems` より少なければ理由を加え、`items` があれば各要素を `{パス}[{位置}]` で検証する
       6. 値が文字列の場合、コードポイントの数が `minLength` より少なければ理由を加える
       7. `allOf` の各要素で同じパスを検証した結果を加える。`if` で検証した結果が空なら、`then` で検証した結果を加える
-      8. 読み飛ばすキーワードは見ない
+      8. `anyOf` の各要素で同じパスを検証し、どれかの結果が空なら何も加えない。どれも空でなければ、全ての要素の結果を加える
+      9. 読み飛ばすキーワードは見ない
     unit_tests:
       - name: test_validate_schema
         case: 正常
-        summary: スキーマに合う要素は空を返す
-        condition: ALIAS_SCHEMAで、`type` が term・doc・command・url の要素をそれぞれ書いた値
+        summary: スキーマに合う行は空を返す
+        condition: 'ALIAS_SCHEMA で、`metadata.alias_type` が custom の term・doc・command・url・skill・tool・path・env・avoid の行と、`{type: ref, field: kind}` の行と、`records`・`enabled` と他のキー（行の `type: yaml`・`metadata.tags`）を持つ行'
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing
         case: 正常
         summary: 無い必須のキーをパスつきで返す
-        condition: '`fields` が無い要素、`type: command` で `fields.command` が無い要素'
+        condition: '`metadata` が無い行、`metadata` に `alias_type` が無い行'
         mock: なし
-        expected: '`aliases[0].fields` と `aliases[0].fields.command` を含む理由'
+        expected: '`aliases[0].metadata` と `aliases[0].metadata.alias_type` を含む理由'
       - name: test_validate_schema_when_type_mismatch
         case: 正常
         summary: 型・列挙・最小の数と長さに合わない値を返す
-        condition: '`id` が数値、`type` が `memo`、`paths` が `[]`、`id` が空文字'
+        condition: '`id` が数値、`metadata.alias_type` が `{type: custom, value: memo}`、`paths` が `[]`、`id` が空文字'
         mock: なし
-        expected: それぞれ `aliases[0].id`・`aliases[0].type`・`aliases[0].paths`・`aliases[0].id` の理由
+        expected: それぞれ `aliases[0].id`・`aliases[0].metadata.alias_type`・`aliases[0].paths`・`aliases[0].id` の理由
       - name: test_validate_schema_when_additional_property
         case: 正常
-        summary: 書けないキーを返す
-        condition: '`type: term` の `fields` に `mcp`、要素の最上位に `label`'
+        summary: 値の型に書けないキーを返し、行と metadata の他のキーは許す
+        condition: '`metadata.name` が `{type: ref, field: title, label: x}` の行と、行の最上位に `label`・`metadata` に `tags` を持つ行'
         mock: なし
-        expected: '`aliases[0].fields.mcp` と `aliases[0].label` の理由'
+        expected: '前者は `aliases[0].metadata.name.label` を含む理由、後者は空'
       - name: test_validate_schema_when_if_not_matched
         case: 正常
         summary: '`if` に合わないときは `then` を使わない'
         condition: '`allOf` の `if` が `type: { const: url }`、`then` が `required: [url]` のスキーマで、`type: term` の値'
         mock: なし
         expected: 空
+      - name: test_validate_schema_when_any_of_not_matched
+        case: 正常
+        summary: '`anyOf` のどの要素にも合わないときだけ理由を返す'
+        condition: 'ALIAS_SCHEMA で、`metadata.name` が文字列 `Term-A` の値と、`{type: ref, field: title}` の値'
+        mock: なし
+        expected: 前者は `aliases[0].metadata.name` を含む理由、後者は空
   - name: generateAliasSchema
     title: 同梱のスキーマの生成
     kind: 関数

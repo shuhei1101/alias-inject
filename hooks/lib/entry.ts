@@ -1,32 +1,43 @@
 import type { EngineInterface } from 'claude-code'
-import type { AliasFields, AliasType, ResolvedAlias } from './alias'
+import { isAliasType, missingKeys, resolveMetadata } from './alias'
+import type { AliasKey, AliasType, ResolvedAlias } from './alias'
 import { type YamlResult, expandFiles, parseYaml, readIfChanged } from './loader'
 import { normalize } from './match'
 
-/** `aliases` の要素が指す YAML の 1 項目。照合する語と、文脈に並べる列 */
+/** 行が指す YAML の 1 文書。照合する語と、文脈に並べる列 */
 export type Entry = {
-  /** 読む `aliases` の要素の並びでの位置 */
+  /** 読む行の並びでの位置 */
   aliasIndex: number
-  /** 要素の中の項目の並び（ファイルのパスの順、ファイルの中の順） */
+  /** 行の中の文書の並び（ファイルのパスの順、ファイルの中の `records` の順） */
   itemIndex: number
-  /** 要素を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
+  /** 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
   origin: string
   aliasId: string
   type: AliasType
   id: string
   /** 文脈に出す語 */
   word: string
-  /** 照合する語を正規化したもの。空文字と重複を除く */
+  /** 照合する語（`name` と `aliases`）を正規化したもの。空文字と重複を除く */
   keys: string[]
   /** 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ */
   fields: { name: string; value: string }[]
 }
 
-/** 1 つの `aliases` の要素から作った語と、読めなかった YAML */
+/** 1 つの行から作った語と、読めなかった YAML・外した文書 */
 export type LoadedEntries = {
   entries: Entry[]
-  /** 読めない・書式の誤った YAML の絶対パスと理由。呼び出し元が debug log に出す */
+  /** 読めない・書式の誤った YAML と、必須の値が空の文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す */
   failures: { path: string; reason: string }[]
+}
+
+/** YAML から取り出した 1 件の文書と、その出所 */
+export type SourceDocument = {
+  /** 文書を持つ YAML の絶対パス */
+  path: string
+  /** `records` の並びでの位置。ファイルを 1 件の文書にしたときは null */
+  index: number | null
+  /** 文書（ファイルの最上位か `records` の要素のマッピング） */
+  value: Record<string, unknown>
 }
 
 type Item = Record<string, unknown>
@@ -49,14 +60,17 @@ function textOf(value: unknown): string | undefined {
   return flattened === undefined || flattened === '' ? undefined : flattened
 }
 
-/** 1 つの YAML のパースの結果から、ID と照合する語を持つ項目を取り出す */
-export function parseItems(value: unknown, fields: AliasFields): Item[] {
-  const items = isItem(value) ? [value] : Array.isArray(value) ? value.filter(isItem) : []
-  return items.filter((item) => {
-    const id = item[fields.id]
-    const hasId = (typeof id === 'string' && id.trim() !== '') || typeof id === 'number'
-    return hasId && fields.match.some((column) => stringsOf(item[column]).length > 0)
-  })
+/** 1 つの YAML のパースの結果から、行の `records` に沿って文書を取り出す */
+export function parseDocuments(
+  value: unknown,
+  records: string | undefined,
+): { ok: true; documents: Item[] } | { ok: false; reason: string } {
+  if (records === undefined) {
+    return isItem(value) ? { ok: true, documents: [value] } : { ok: false, reason: '最上位がマッピングではありません' }
+  }
+  const list = isItem(value) ? value[records] : undefined
+  if (!Array.isArray(list)) return { ok: false, reason: `${records} の並びがありません` }
+  return { ok: true, documents: list.filter(isItem) }
 }
 
 // related の各要素の `to` を `{ID}（{名前}）` にして `, ` でつなぐ
@@ -72,60 +86,108 @@ function relatedText(value: unknown, wordOfId: Map<string, string>): string | un
   return texts.length === 0 ? undefined : texts.join(', ')
 }
 
-// type ごとに、文脈に並べる列を決められた順で作る
-function buildFields(item: Item, alias: ResolvedAlias, wordOfId: Map<string, string>) {
-  const { fields } = alias
-  const column = (name: string | undefined) => (name === undefined ? undefined : textOf(item[name]))
+// 種類ごとに、文脈に並べる列を決められた順で作る
+function buildFields(type: AliasType, values: Record<AliasKey, unknown>, wordOfId: Map<string, string>) {
+  const column = (key: AliasKey) => textOf(values[key])
+  // 値をバッククォートで囲んだ列の値
+  const code = (key: AliasKey) => {
+    const value = column(key)
+    return value === undefined ? undefined : `\`${value}\``
+  }
   const candidates: [string, string | undefined][] = []
-  switch (alias.type) {
+  switch (type) {
     case 'term':
-      candidates.push(['description', column(fields.description)])
-      candidates.push(['related', fields.related === undefined ? undefined : relatedText(item[fields.related], wordOfId)])
+      candidates.push(['description', column('description')])
+      candidates.push(['related', relatedText(values.related, wordOfId)])
       break
     case 'doc':
-      candidates.push(['description', column(fields.description)])
+      candidates.push(['description', column('description')])
       break
-    case 'command': {
-      const command = column(fields.command)
-      candidates.push(['command', command === undefined ? undefined : `\`${command}\``])
-      candidates.push(['cwd', column(fields.cwd)])
-      candidates.push(['description', column(fields.description)])
+    case 'command':
+      candidates.push(['command', code('command')])
+      candidates.push(['cwd', column('cwd')])
+      candidates.push(['description', column('description')])
       break
-    }
     case 'url':
-      candidates.push(['url', column(fields.url)])
-      candidates.push(['description', column(fields.description)])
+      candidates.push(['url', column('url')])
+      candidates.push(['description', column('description')])
+      break
+    case 'skill':
+      candidates.push(['skill', code('skill')])
+      candidates.push(['description', column('description')])
+      break
+    case 'tool':
+      candidates.push(['tool', code('tool')])
+      candidates.push(['description', column('description')])
+      break
+    case 'path':
+      candidates.push(['path', code('path')])
+      candidates.push(['description', column('description')])
+      break
+    case 'env':
+      candidates.push(['url', column('url')])
+      candidates.push(['port', column('port')])
+      candidates.push(['description', column('description')])
+      break
+    case 'avoid':
+      candidates.push(['replacement', column('replacement')])
       break
   }
   return candidates.flatMap(([name, value]) => (value === undefined ? [] : [{ name, value }]))
 }
 
-/** 1 つの `aliases` の要素の全ての項目から、照合する語と文脈に並べる列を持つ語を作る */
-export function buildEntries(items: Item[], alias: ResolvedAlias, aliasIndex: number): Entry[] {
-  // 照合する語を match の列の順に集める。文脈に出す語は title の列の値で、無ければ集めた最初の語
-  const collected = items.map((item) => alias.fields.match.flatMap((column) => stringsOf(item[column])))
-  const wordOf = items.map((item, index) => {
-    const title = alias.fields.title === undefined ? [] : stringsOf(item[alias.fields.title])
-    return title[0] ?? collected[index]?.[0] ?? ''
-  })
-
-  const wordOfId = new Map<string, string>()
-  items.forEach((item, index) => wordOfId.set(String(item[alias.fields.id]), wordOf[index] ?? ''))
-
-  return items.map((item, index) => ({
-    aliasIndex,
-    itemIndex: index,
-    origin: alias.origin,
-    aliasId: alias.id,
-    type: alias.type,
-    id: String(item[alias.fields.id]),
-    word: wordOf[index] ?? '',
-    keys: [...new Set((collected[index] ?? []).map(normalize).filter((key) => key !== ''))],
-    fields: buildFields(item, alias, wordOfId),
-  }))
+// 拡張子を除いたファイル名
+function baseName(path: string): string {
+  const file = path.split('/').pop() ?? ''
+  const dot = file.lastIndexOf('.')
+  return dot <= 0 ? file : file.slice(0, dot)
 }
 
-/** `aliases` の要素の `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す */
+/** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書は外す */
+export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, aliasIndex: number): LoadedEntries {
+  const failures: LoadedEntries['failures'] = []
+  const kept: { itemIndex: number; type: AliasType; values: Record<AliasKey, unknown> }[] = []
+
+  for (const [itemIndex, document] of documents.entries()) {
+    const values = resolveMetadata(alias.metadata, document.value)
+    // name が空なら、ファイルの文書はファイル名、records の要素は id を使う
+    if (textOf(values.name) === undefined) values.name = document.index === null ? baseName(document.path) : textOf(values.id)
+
+    const id = textOf(values.id)
+    // id が空のファイルの文書は、文書の名前と `: ` を付けない
+    const name = id ?? (alias.records !== undefined && document.index !== null ? `${alias.records}[${document.index}]` : undefined)
+    const label = name === undefined ? '' : `${name}: `
+    if (!isAliasType(values.alias_type)) {
+      failures.push({ path: document.path, reason: `${label}alias_type の値 ${String(values.alias_type)} は引用の種類にありません` })
+      continue
+    }
+    const missing = missingKeys(values.alias_type, values)
+    if (missing.length > 0) {
+      failures.push({ path: document.path, reason: `${label}${missing.join('、')} が空です` })
+      continue
+    }
+    kept.push({ itemIndex, type: values.alias_type, values })
+  }
+
+  // 関連する文書の名前を引くため、この行の残った文書の ID から語を引く表を作る
+  const wordOfId = new Map<string, string>()
+  for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
+
+  const entries = kept.map(({ itemIndex, type, values }) => ({
+    aliasIndex,
+    itemIndex,
+    origin: alias.origin,
+    aliasId: alias.id,
+    type,
+    id: String(values.id),
+    word: textOf(values.name) ?? '',
+    keys: [...new Set([...stringsOf(values.name), ...stringsOf(values.aliases)].map(normalize).filter((key) => key !== ''))],
+    fields: buildFields(type, values, wordOfId),
+  }))
+  return { entries, failures }
+}
+
+/** 行の `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す */
 export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias, aliasIndex: number): Promise<LoadedEntries> {
   const stamps = new Map<string, { path: string; mtimeMs: number }>()
   for (const pattern of alias.patterns) {
@@ -133,7 +195,7 @@ export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias,
   }
   const files = [...stamps.values()].sort((a, b) => (a.path < b.path ? -1 : 1))
 
-  const items: Item[] = []
+  const documents: SourceDocument[] = []
   const failures: LoadedEntries['failures'] = []
   for (const file of files) {
     // 読めない・書式の誤った YAML だけを外して続ける
@@ -148,7 +210,17 @@ export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias,
       failures.push({ path: file.path, reason: result.reason })
       continue
     }
-    items.push(...parseItems(result.value, alias.fields))
+    // records の配列が無い YAML も、その YAML だけを外す
+    const parsed = parseDocuments(result.value, alias.records)
+    if (!parsed.ok) {
+      failures.push({ path: file.path, reason: parsed.reason })
+      continue
+    }
+    for (const [index, value] of parsed.documents.entries()) {
+      documents.push({ path: file.path, index: alias.records === undefined ? null : index, value })
+    }
   }
-  return { entries: buildEntries(items, alias, aliasIndex), failures }
+
+  const built = buildEntries(documents, alias, aliasIndex)
+  return { entries: built.entries, failures: [...failures, ...built.failures] }
 }

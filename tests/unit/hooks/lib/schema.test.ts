@@ -5,18 +5,27 @@ import { thrown } from '../support/thrown'
 
 type Json = Record<string, unknown>
 
-// 種類ごとのスキーマに合う aliases の要素。上書きしたいキーだけ渡す
+// `alias_type` を custom で固定する metadata の値
+function customType(value: string): Json {
+  return { type: 'custom', value }
+}
+
+// スキーマに合う行。上書きしたいキーだけ渡す
 function makeItem(overrides: Json = {}): Json {
   return {
     id: 'terms',
-    type: 'term',
     paths: ['terms/*.yaml'],
-    fields: { id: 'id', match: ['name'], description: 'description' },
+    metadata: { alias_type: customType('term') },
     ...overrides,
   }
 }
 
-// aliases の 1 要素を、同梱のスキーマで検証する
+// `alias_type` だけを指定した metadata を持つ行
+function makeTypedItem(aliasType: string): Json {
+  return makeItem({ metadata: { alias_type: customType(aliasType) } })
+}
+
+// aliases の 1 行を、同梱のスキーマで検証する
 function validateItem(value: unknown): string[] {
   return validateSchema({ root: ALIAS_SCHEMA, schema: ALIAS_SCHEMA.items, value, path: 'aliases[0]' })
 }
@@ -47,53 +56,60 @@ test('test_check_keywords', () => {
 test('test_check_keywords_when_unsupported', () => {
   // 準備
   const unsupported = withIdSchema({ type: 'string', pattern: '^a' })
+  const unsupportedInAnyOf = withIdSchema({ anyOf: [{ type: 'string', pattern: '^a' }, { type: 'number' }] })
   const unresolved = withIdSchema({ $ref: '#/$defs/none' })
 
   // 実行
   const unsupportedError = thrown(() => checkKeywords(unsupported))
+  const unsupportedInAnyOfError = thrown(() => checkKeywords(unsupportedInAnyOf))
   const unresolvedError = thrown(() => checkKeywords(unresolved))
 
   // 検証
   expect(unsupportedError).toBeInstanceOf(SchemaError)
   expect((unsupportedError as SchemaError).message).toContain('pattern')
+  expect(unsupportedInAnyOfError).toBeInstanceOf(SchemaError)
+  expect((unsupportedInAnyOfError as SchemaError).message).toContain('pattern')
+  expect((unsupportedInAnyOfError as SchemaError).message).toContain('anyOf')
   expect(unresolvedError).toBeInstanceOf(SchemaError)
   expect((unresolvedError as SchemaError).message).toContain('#/$defs/none')
 })
 
-// スキーマに合う要素は空を返す（正常系）
+// スキーマに合う行は空を返す（正常系）
 test('test_validate_schema', () => {
   // 準備
   const items = [
-    makeItem(),
-    makeItem({ type: 'doc', fields: { id: 'id', match: ['name'], description: 'summary', title: 'title' } }),
+    ...['term', 'doc', 'command', 'url', 'skill', 'tool', 'path', 'env', 'avoid'].map((aliasType) =>
+      makeTypedItem(aliasType),
+    ),
+    makeItem({ metadata: { alias_type: { type: 'ref', field: 'kind' } } }),
     makeItem({
-      type: 'command',
       enabled: true,
-      fields: { id: 'id', match: ['name'], command: 'command', cwd: 'cwd', description: 'description' },
+      type: 'yaml',
+      records: 'terms',
+      metadata: { alias_type: customType('term'), tags: { type: 'ref', field: 'tags' } },
     }),
-    makeItem({ type: 'url', fields: { id: 'id', match: ['name'], url: 'url' } }),
   ]
 
   // 実行
   const results = items.map((item) => validateItem(item))
 
   // 検証
-  expect(results).toEqual([[], [], [], []])
+  expect(results).toEqual(items.map(() => []))
 })
 
 // 無い必須のキーをパスつきで返す（正常系）
 test('test_validate_schema_when_required_missing', () => {
   // 準備
-  const withoutFields = { id: 'terms', type: 'term', paths: ['terms/*.yaml'] }
-  const withoutCommand = makeItem({ type: 'command', fields: { id: 'id', match: ['name'] } })
+  const withoutMetadata = { id: 'terms', paths: ['terms/*.yaml'] }
+  const withoutAliasType = makeItem({ metadata: { name: { type: 'ref', field: 'title' } } })
 
   // 実行
-  const fieldsReasons = validateItem(withoutFields)
-  const commandReasons = validateItem(withoutCommand)
+  const metadataReasons = validateItem(withoutMetadata)
+  const aliasTypeReasons = validateItem(withoutAliasType)
 
   // 検証
-  expect(fieldsReasons.some((reason) => reason.includes('aliases[0].fields'))).toBe(true)
-  expect(commandReasons.some((reason) => reason.includes('aliases[0].fields.command'))).toBe(true)
+  expect(metadataReasons.some((reason) => reason.includes('aliases[0].metadata'))).toBe(true)
+  expect(aliasTypeReasons.some((reason) => reason.includes('aliases[0].metadata.alias_type'))).toBe(true)
 })
 
 // 型・列挙・最小の数と長さに合わない値を返す（正常系）
@@ -101,7 +117,7 @@ test('test_validate_schema_when_type_mismatch', () => {
   // 準備
   const cases: [string, Json][] = [
     ['aliases[0].id', makeItem({ id: 5 })],
-    ['aliases[0].type', makeItem({ type: 'memo' })],
+    ['aliases[0].metadata.alias_type', makeTypedItem('memo')],
     ['aliases[0].paths', makeItem({ paths: [] })],
     ['aliases[0].id', makeItem({ id: '' })],
   ]
@@ -113,19 +129,24 @@ test('test_validate_schema_when_type_mismatch', () => {
   }
 })
 
-// 書けないキーを返す（正常系）
+// 値の型に書けないキーを返し、行と metadata の他のキーは許す（正常系）
 test('test_validate_schema_when_additional_property', () => {
   // 準備
-  const withMcp = makeItem({ fields: { id: 'id', match: ['name'], description: 'description', mcp: 'rule-inject' } })
-  const withLabel = makeItem({ label: '用語' })
+  const withLabelInValue = makeItem({
+    metadata: { alias_type: customType('term'), name: { type: 'ref', field: 'title', label: 'x' } },
+  })
+  const withOtherKeys = makeItem({
+    label: '用語',
+    metadata: { alias_type: customType('term'), tags: { type: 'ref', field: 'tags' } },
+  })
 
   // 実行
-  const mcpReasons = validateItem(withMcp)
-  const labelReasons = validateItem(withLabel)
+  const valueReasons = validateItem(withLabelInValue)
+  const otherReasons = validateItem(withOtherKeys)
 
   // 検証
-  expect(mcpReasons.some((reason) => reason.includes('aliases[0].fields.mcp'))).toBe(true)
-  expect(labelReasons.some((reason) => reason.includes('aliases[0].label'))).toBe(true)
+  expect(valueReasons.some((reason) => reason.includes('aliases[0].metadata.name.label'))).toBe(true)
+  expect(otherReasons).toEqual([])
 })
 
 // `if` に合わないときは `then` を使わない（正常系）
@@ -140,4 +161,21 @@ test('test_validate_schema_when_if_not_matched', () => {
 
   // 検証
   expect(reasons).toEqual([])
+})
+
+// `anyOf` のどの要素にも合わないときだけ理由を返す（正常系）
+test('test_validate_schema_when_any_of_not_matched', () => {
+  // 準備
+  const withStringName = makeItem({ metadata: { alias_type: customType('term'), name: 'Term-A' } })
+  const withRefName = makeItem({
+    metadata: { alias_type: customType('term'), name: { type: 'ref', field: 'title' } },
+  })
+
+  // 実行
+  const notMatchedReasons = validateItem(withStringName)
+  const matchedReasons = validateItem(withRefName)
+
+  // 検証
+  expect(notMatchedReasons.some((reason) => reason.includes('aliases[0].metadata.name'))).toBe(true)
+  expect(matchedReasons).toEqual([])
 })

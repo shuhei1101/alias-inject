@@ -2,3 +2,5 @@ summary: セットアップと日々の操作
 items:
   - page: セットアップ.md
     summary: 前提条件と、マーケットプレイスからユーザースコープで入れて、設定ファイルを用意する手順
+  - page: 設定の移し替え.md
+    summary: 端末の設定と dev-docs.yaml を、旧い `aliases[]` の構造（`type`・`fields`）から行の構造へ移し替える手順

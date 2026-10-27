@@ -12,13 +12,12 @@ import {
 import { createFakeEngine, userSettingsWithConfig } from '../support/engine'
 import { thrown } from '../support/thrown'
 
-// 指定した id と paths の term の aliases の要素（設定ファイルに書く形）
+// 指定した id と paths の term の aliases の行（設定ファイルに記載する構造）
 function rawAlias(id: string, path: string) {
   return {
     id,
-    type: 'term',
     paths: [path],
-    fields: { id: 'id', match: ['name'], description: 'description' },
+    metadata: { alias_type: { type: 'custom', value: 'term' } },
   }
 }
 
@@ -69,15 +68,15 @@ test('test_parse_config', () => {
   // 準備
   const termAlias = {
     id: 'glossary',
-    type: 'term',
     paths: ['terms/*.yaml'],
-    fields: {
-      id: 'id',
-      match: ['name', 'aliases'],
-      description: 'description',
-      title: 'name',
-      related: 'related',
-      avoid: 'avoid',
+    records: 'terms',
+    metadata: {
+      alias_type: { type: 'custom', value: 'term' },
+      name: { type: 'ref', field: 'title' },
+      aliases: { type: 'ref', field: 'aliases' },
+      description: { type: 'ref', field: 'description' },
+      related: { type: 'ref', field: 'related' },
+      avoid: { type: 'ref', field: 'avoid' },
     },
   }
   const value = {
@@ -140,7 +139,7 @@ test('test_parse_config_when_keys_omitted', () => {
 // スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す（正常系）
 test('test_parse_config_when_alias_invalid', () => {
   // 準備
-  const invalid = { id: 'bad', type: 'memo', paths: ['a.yaml'], fields: {} }
+  const invalid = { id: 'bad', paths: ['a.yaml'], metadata: { alias_type: { type: 'custom', value: 'memo' } } }
 
   // 実行
   const config = parse({
