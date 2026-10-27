@@ -111,8 +111,8 @@ scenarios:
   - name: 異常シナリオ（値を引けない）
     setup:
       - name: Mock
-        description: 正常シナリオと同じ。ただし `claude` を、`env` を見つけられない `PATH` で起動する
-        notes: '`claude` は絶対パスで起動する'
+        description: 正常シナリオと同じ。ただし `claude` を、空のフォルダだけを `PATH` にして起動する。呼び出し元の Claude Code から継いだ `CLAUDE_CODE_CHILD_SESSION` は外す
+        notes: '`claude` は絶対パスで起動する。`PATH` は tmux の `-e` ではなく、起動するコマンドの文字列の頭の `PATH=` で渡す。hooks モジュールの子プロセスはこの `PATH` をそのまま継ぎ、`env` の起動が ENOENT で失敗する'
       - name: 読ませるファイル
         description: 正常シナリオと同じ
     flow: |-
