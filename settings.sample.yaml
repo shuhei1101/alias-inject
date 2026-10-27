@@ -1,0 +1,81 @@
+# alias-inject の設定ファイルのサンプル。実値は入れていない
+# ~/.config/alias-inject/settings.yaml にコピーし、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
+global:
+  # false のとき、何も追加しない
+  enabled: true
+
+  # 読むリポジトリの dev-docs.yaml。その aliases が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  repositories:
+    - config: ~/repo/knowledge/dev-docs.yaml
+    - config: ../old-notes/dev-docs.yaml
+      # false のとき、このリポジトリを読まない
+      enabled: false
+
+  # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml の aliases[] の要素と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
+  aliases:
+    - id: terms
+      type: term
+      paths: [terms/*.yaml]
+      fields:
+        id: id
+        match: [name, aliases]
+        description: description
+        title: name
+        related: related
+    - id: docs
+      type: doc
+      paths: [docs/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        description: description
+    - id: commands
+      type: command
+      paths: [commands/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        command: command
+        cwd: cwd
+        description: description
+    - id: urls
+      type: url
+      # false のとき、この要素を使わない
+      enabled: true
+      paths: [urls/*.yaml]
+      fields:
+        id: id
+        match: [name]
+        url: url
+        description: description
+
+  # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
+  origins: [user, plugin]
+
+  # 1 回に追加する語の上限
+  max_items: 20
+
+  # 1 回に追加する文脈全体（見出しを含む）の文字数の上限
+  max_chars: 4000
+
+  # 照合しない語
+  exclude: [それ]
+
+  # 文脈の先頭の見出し
+  heading: この発言に出る用語
+
+# match が当たったプロジェクトの要素だけを、並びの順に global へ重ねる
+projects:
+  # match は絶対パスかプロジェクト名。repositories・aliases の相対パスは、起動したプロジェクトの直下から解決する
+  - match: sample-project
+    max_items: 10
+    repositories:
+      - config: dev-docs.yaml
+    aliases:
+      - id: project-commands
+        type: command
+        paths: [docs/command/*.yaml]
+        fields:
+          id: id
+          match: [name]
+          command: command

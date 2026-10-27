@@ -1,0 +1,458 @@
+title: "プラグイン / 設定"
+lead: 設定ファイルのパスの取得、設定ファイルの検証と既定値の適用、起動したプロジェクトに当たる `projects` を重ねた実効の設定の組み立て、入力の出所の判定。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      config.ts          設定ファイルのパスの取得・検証・実効の設定の組み立て・出所の判定
+  tests/
+    unit/
+      hooks/
+        lib/
+          config.test.ts config.ts の単体テスト
+  ```
+enums:
+  - name: OriginKey
+    title: 対象にする出所
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: 設定の `origins` に書ける値
+    values:
+      - value: user
+        title: 利用者の入力
+        description: '`e.origin.kind` が `composer`・`bridge`・`sdk`'
+      - value: plugin
+        title: プラグインが送信した入力
+        description: '`e.origin.kind` が `plugin`'
+data_models:
+  - name: RepositoryConfig
+    title: 読むリポジトリの設定
+    container: hooks/lib/config.ts
+    usecase: 共通
+    role: DTO
+    summary: 検証を通った有効な `repositories` の 1 要素
+    properties:
+      - name: config
+        type: string
+        description: '`dev-docs.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う）'
+      - name: baseDir
+        type: "'config' | 'project'"
+        description: 相対パスの基準。`global` の要素は設定ファイルのフォルダ、`projects` の要素は起動したプロジェクトの直下
+  - name: Config
+    title: 設定ファイルの内容
+    container: hooks/lib/config.ts
+    usecase: 共通
+    role: DTO
+    summary: 検証して既定値を当てた設定ファイルの内容
+    properties:
+      - name: enabled
+        type: boolean
+        description: 全体のオンオフ。既定 true
+      - name: repositories
+        type: RepositoryConfig[]
+        description: '`global.repositories` のうち有効で検証を通ったもの（`baseDir` は `config`）'
+      - name: aliases
+        type: AliasConfig[]
+        description: '`global.aliases` のうち有効でスキーマの検証を通ったもの'
+      - name: origins
+        type: OriginKey[] | null
+        description: 対象にする出所。null はすべての出所が対象
+      - name: maxItems
+        type: number
+        description: 1 回に追加する語の上限。既定 20
+      - name: maxChars
+        type: number
+        description: 1 回に追加する文脈の文字数の上限。既定 4000
+      - name: exclude
+        type: string[]
+        description: 照合しない語（正規化前のまま）。既定 []
+      - name: heading
+        type: string
+        description: 文脈の先頭の見出し。既定 `この発言に出る用語`
+      - name: projects
+        type: ProjectConfig[]
+        description: '`projects` のうち `match` を持つ要素（設定ファイルの順）'
+      - name: warnings
+        type: string[]
+        description: 外した要素と無視した値の理由。呼び出し元が debug log に出す
+  - name: Settings
+    title: 実効の設定
+    container: hooks/lib/config.ts
+    usecase: 共通
+    role: DTO
+    summary: 起動したプロジェクトに当たる `projects` の要素を重ね、パスを絶対パスにした設定
+    properties:
+      - name: enabled
+        type: boolean
+        description: Config の enabled
+      - name: repositories
+        type: string[]
+        description: 読む `dev-docs.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す
+      - name: aliases
+        type: ResolvedAlias[]
+        description: 設定ファイルの `aliases` の要素。global の後ろに当たった projects を並べ、先の要素と `id` が重なる要素を外したもの。`origin` は設定ファイルの絶対パス
+      - name: origins
+        type: OriginKey[] | null
+        description: Config の origins
+      - name: maxItems
+        type: number
+        description: Config の maxItems
+      - name: maxChars
+        type: number
+        description: Config の maxChars
+      - name: exclude
+        type: string[]
+        description: Config の exclude
+      - name: heading
+        type: string
+        description: Config の heading
+      - name: warnings
+        type: string[]
+        description: '`id` が重なって外した `aliases` の要素の理由。呼び出し元が debug log に出す'
+  - name: ProjectConfig
+    title: プロジェクトの設定
+    container: hooks/lib/config.ts
+    usecase: 共通
+    role: DTO
+    summary: 検証を通った `projects` の 1 要素。書いたキーだけが値を持ち、書かないキー・誤った値は undefined
+    properties:
+      - name: match
+        type: string
+        description: プロジェクトの一致の条件
+      - name: enabled
+        type: boolean | undefined
+        description: 置き換える全体のオンオフ
+      - name: repositories
+        type: RepositoryConfig[]
+        description: 後ろに追加する読むリポジトリ（`baseDir` は `project`）。書かないときは []
+      - name: aliases
+        type: AliasConfig[]
+        description: 後ろに追加する `aliases` の要素。書かないときは []
+      - name: origins
+        type: OriginKey[] | null | undefined
+        description: 置き換える出所。null はすべての出所が対象（global と同じ規則）、undefined は書いていない
+      - name: maxItems
+        type: number | undefined
+        description: 置き換える語の上限
+      - name: maxChars
+        type: number | undefined
+        description: 置き換える文字数の上限
+      - name: exclude
+        type: string[]
+        description: 後ろに追加する照合しない語。書かないときは []
+      - name: heading
+        type: string | undefined
+        description: 置き換える見出し
+functions:
+  - name: readConfigPath
+    title: 設定ファイルのパスの取得
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG` を読み、`~` を展開した絶対パスを返す
+    scope: public
+    is_async: true
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: '`$.settings.read` と `$.env.get` を使う'
+    returns:
+      type: Promise<string | null>
+      description: 設定ファイルの絶対パス。値が無い・空・文字列でないときは null
+    process: |-
+      1. `$.settings.read({ source: "user" })` の `env.ALIAS_INJECT_CONFIG` を取る
+      2. 文字列でない・前後の空白を除いて空のときは null を返す
+      3. ホームの展開（`$.env.get("HOME")`）に通して返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
+    unit_tests:
+      - name: test_read_config_path
+        case: 正常
+        summary: '`~` を展開したパスを返す'
+        condition: '`env.ALIAS_INJECT_CONFIG` が `~/.config/alias-inject/settings.yaml`、`HOME` が `/home/u`'
+        mock: テストの `on` で `settings.read` を応答し、`mock.env` で `HOME` を渡す
+        expected: '`/home/u/.config/alias-inject/settings.yaml`'
+      - name: test_read_config_path_when_missing
+        case: 正常
+        summary: 値が無いときは null
+        condition: '`env` が無い・`ALIAS_INJECT_CONFIG` が無い・空文字・数値'
+        mock: 同上
+        expected: どれも null
+  - name: parseConfig
+    title: 設定ファイルの検証
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: パースした設定ファイルの値を検証し、既定値を当てる。誤った要素は外して理由を残す
+    scope: public
+    is_async: false
+    args:
+      - name: value
+        type: unknown
+        required: true
+        passing: positional
+        description: YAML のパースの結果
+      - name: schema
+        type: Record<string, unknown>
+        required: true
+        passing: positional
+        description: '`aliases` の要素を検証するスキーマのルート'
+    returns:
+      type: Config
+      description: 検証した設定
+    exceptions:
+      - name: ConfigError
+        condition: 最上位がマッピングでない（null を含む）
+    process: |-
+      1. 最上位がマッピングでなければ ConfigError を投げる
+      2. `global` がマッピングでなければ空のマッピングとして扱う
+      3. `enabled` が真偽値ならその値、それ以外は true
+      4. `repositories` の各要素を検証する（repositories の要素の検証）。無効の要素は飛ばし、外した要素は理由を warnings に入れる
+      5. `aliases` を aliases の取り出し（path は `global.aliases`）に通し、理由を warnings につなぐ
+      6. 4・5 で並びでない値を書いたときは、warnings に入れて [] にする。書かないときは []
+      7. `origins` が並びのとき、`user`・`plugin` だけを重複を除いて残す。残りが 0 件、または並びでない・書かないときは null（すべての出所が対象）。無視した値は warnings に入れる
+      8. `max_items`・`max_chars` は 1 以上の整数ならその値、それ以外は既定値（書いて誤っているときは warnings に入れる）
+      9. `exclude` は文字列の要素だけを残す。`heading` は空でない文字列ならその値、それ以外は既定値
+      10. `projects` の各要素のうち `match` が空でない文字列のものを残し、`match` の無い要素は warnings に入れる
+      11. 残した要素の `global` と同じキーを 3〜9 と同じ規則で検証して ProjectConfig にする（`repositories` の `baseDir` は `project`、`aliases` の path は `projects[{位置}].aliases`）。既定値は当てず、書かないキー・誤った値は undefined（`repositories`・`aliases`・`exclude` は []）にする。`origins` は書いたときだけ 7 の規則で null か並びにする
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[parseRepositoryConfig]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[parseAliases]
+    unit_tests:
+      - name: test_parse_config
+        case: 正常
+        summary: 全キーを書いた設定を読む
+        condition: settings.sample.yaml と同じ全キーを書いた値と、リポジトリのスキーマ
+        mock: なし
+        expected: 各値が書いたとおりで、warnings が空
+      - name: test_parse_config_when_keys_omitted
+        case: 正常
+        summary: 書かないキーは既定値になる
+        condition: '`global: {}` だけ'
+        mock: なし
+        expected: enabled が true、repositories・aliases が []、origins が null、maxItems が 20、maxChars が 4000、exclude が []、heading が `この発言に出る用語`、projects が []、warnings が空
+      - name: test_parse_config_when_alias_invalid
+        case: 正常
+        summary: スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す
+        condition: '`global.aliases` に `type: memo` の要素と正しい要素、`projects` の要素に `repositories: a` と `aliases: b`'
+        mock: なし
+        expected: aliases が正しい要素の 1 件、projects の repositories・aliases が []。warnings に `global.aliases[0]`・`repositories`・`aliases` の理由が入る
+      - name: test_parse_config_when_origins_empty
+        case: 正常
+        summary: 空の並び・許す値の無い並びはすべての出所が対象
+        condition: '`origins` が `[]`・`[foo]`・`[user, foo, user]`'
+        mock: なし
+        expected: null・null（warnings に foo）・`['user']`（warnings に foo）
+      - name: test_parse_config_when_limit_invalid
+        case: 正常
+        summary: 誤った上限は既定値を使う
+        condition: '`max_items` が 0・`-1`・`1.5`・`"10"`、`max_chars` が 0'
+        mock: なし
+        expected: maxItems が 20、maxChars が 4000 で、warnings に理由が入る
+      - name: test_parse_config_when_project_without_match
+        case: 正常
+        summary: '`match` の無い projects の要素は外し、残した要素は書いたキーだけを持つ'
+        condition: '`projects` に `match` の無い要素と、`match: sample`・`max_items: 5`・`max_chars: 0` の要素'
+        mock: なし
+        expected: 'projects が `match: sample` の 1 件で、maxItems が 5、maxChars・heading・origins・enabled が undefined、repositories・aliases・exclude が []。warnings に `match` の無い要素と `max_chars` の理由が入る'
+      - name: test_parse_config_when_not_mapping
+        case: 異常
+        summary: 最上位がマッピングでなければ例外
+        condition: null・`[]`・`"text"`
+        mock: なし
+        expected: どれも ConfigError
+        exception: 最上位がマッピングでない
+  - name: matchProject
+    title: プロジェクトの一致の判定
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: '`projects[].match` が起動したプロジェクトに当たるかを判定する'
+    scope: public
+    is_async: false
+    args:
+      - name: match
+        type: string
+        required: true
+        passing: positional
+        description: '`projects[].match` の値'
+      - name: repoRoot
+        type: string
+        required: true
+        passing: positional
+        description: 起動したプロジェクトの直下。worktree は本体の直下（`$.session.repo()?.root ?? $.session.root()`）
+      - name: home
+        type: string
+        required: true
+        passing: positional
+        description: ホームの絶対パス
+    returns:
+      type: boolean
+      description: 当たるとき true
+    process: |-
+      1. `match` をホームの展開に通し、末尾の `/` を除く
+      2. `/` で始まる場合、`repoRoot` がそれと同じか、それに `/` を続けた文字列で始まるとき true
+      3. それ以外はプロジェクト名として、`repoRoot` の最後の区切りと一致するとき true
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
+    unit_tests:
+      - name: test_match_project_when_absolute
+        case: 正常
+        summary: 絶対パスは同じパスと配下に当たる
+        condition: '`match` が `/repo/sample`、`repoRoot` が `/repo/sample`・`/repo/sample/sub`・`/repo/sample2`'
+        mock: なし
+        expected: true・true・false
+      - name: test_match_project_when_name
+        case: 正常
+        summary: プロジェクト名はフォルダ名の一致で当たる
+        condition: '`match` が `sample`、`repoRoot` が `/repo/sample`・`/repo/other`'
+        mock: なし
+        expected: true・false
+  - name: resolveSettings
+    title: 実効の設定の組み立て
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: 当たった projects の要素を global に重ね、`repositories` と `aliases` のパスを絶対パスに解決する
+    scope: public
+    is_async: false
+    args:
+      - name: config
+        type: Config
+        required: true
+        passing: positional
+        description: 検証した設定
+      - name: where
+        type: '{ configPath: string; projectRoot: string; repoRoot: string; home: string }'
+        required: true
+        passing: keyword
+        description: 設定ファイルの絶対パス・起動したプロジェクトの直下（`$.session.root()`）・一致の判定に使う直下・ホーム
+    returns:
+      type: Settings
+      description: 実効の設定
+    process: |-
+      1. `config.projects` のうちプロジェクトの一致の判定で当たる要素を、設定ファイルの順に選ぶ
+      2. global の値から始め、選んだ要素を順に重ねる。`repositories`・`aliases`・`exclude` は後ろに追加し、それ以外は undefined でない値で置き換える（`origins` の null も置き換える）
+      3. 各 `repositories` の `config` を、`baseDir` が `config` なら設定ファイルのフォルダ（親のフォルダ）、`project` なら `projectRoot` を基準にパスの解決に通し、同じパスは先の 1 つだけを残す
+      4. `aliases` を id の重なりの確認に通し、理由を warnings にする
+      5. 残した `aliases` の `paths` を、global の要素は設定ファイルのフォルダ、projects の要素は `projectRoot` を基準にパスの解決に通して `patterns` にし、`origin` を `configPath` にする
+      6. 重ねた値を返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/設定#functions[matchProject]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parentDir]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[resolvePath]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[dedupeAliases]
+    unit_tests:
+      - name: test_resolve_settings
+        case: 正常
+        summary: 当たった projects の repositories と aliases だけを後ろに重ねる
+        condition: 'global の repositories・aliases が 1 つずつ、`match: sample` と `match: other` の要素がそれぞれ 1 つずつ持つ、`repoRoot` が `/repo/sample`'
+        mock: なし
+        expected: repositories と aliases がどちらも global・sample の順の 2 件で、aliases の origin が configPath、warnings が空
+      - name: test_resolve_settings_when_relative_paths
+        case: 正常
+        summary: 相対パスは global では設定ファイルのフォルダ、projects では起動したプロジェクトの直下から解決する
+        condition: 'global の `config: ../knowledge/dev-docs.yaml` と `paths: [terms/*.yaml]`、sample の `config: dev-docs.yaml` と `paths: [docs/command/*.yaml]`、`configPath` が `/home/u/.config/alias-inject/settings.yaml`、`projectRoot` が `/repo/sample/wt`'
+        mock: なし
+        expected: repositories が `/home/u/.config/knowledge/dev-docs.yaml` と `/repo/sample/wt/dev-docs.yaml`、patterns が `/home/u/.config/alias-inject/terms/*.yaml` と `/repo/sample/wt/docs/command/*.yaml`
+      - name: test_resolve_settings_when_duplicated
+        case: 正常
+        summary: 同じ dev-docs.yaml は 1 つにし、同じ id の aliases の要素は後を外す
+        condition: 'global と当たる要素の両方が `/repo/knowledge/dev-docs.yaml` を指し（片方は `/repo/sample/../knowledge/dev-docs.yaml` と書く）、両方が `id: terms` の aliases の要素を持つ'
+        mock: なし
+        expected: repositories が 1 件、aliases が global の terms の 1 件で、warnings に `terms` を含む 1 件
+      - name: test_resolve_settings_when_project_overrides
+        case: 正常
+        summary: 当たった要素の exclude は追加し、max_items は置き換え、書かないキーは global のまま
+        condition: global の exclude が `[a]`・maxItems が 20・heading が既定、当たる 2 要素が順に exclude `[b]`・maxItems 5 と maxItems 3・origins null（global は `['user']`）
+        mock: なし
+        expected: exclude が `[a, b]`、maxItems が 3、origins が null、heading が既定
+  - name: isOriginAllowed
+    title: 出所の判定
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: 入力の出所が `origins` の対象かを判定する
+    scope: public
+    is_async: false
+    args:
+      - name: origins
+        type: OriginKey[] | null
+        required: true
+        passing: positional
+        description: 実効の設定の origins
+      - name: kind
+        type: PromptOrigin['kind']
+        required: true
+        passing: positional
+        description: '`e.origin.kind`'
+    returns:
+      type: boolean
+      description: 対象のとき true
+    process: |-
+      1. `origins` が null なら true
+      2. `kind` が `composer`・`bridge`・`sdk` なら `user`、`plugin` なら `plugin` を含むとき true
+      3. それ以外の `kind` は false
+    unit_tests:
+      - name: test_is_origin_allowed
+        case: 正常
+        summary: 出所を origins に対応づける
+        condition: "`origins` が `['plugin']` で `kind` が `composer`・`plugin`・`bridge`、`['user']` で `sdk`・`task-notification`"
+        mock: なし
+        expected: false・true・false、true・false
+      - name: test_is_origin_allowed_when_origins_null
+        case: 正常
+        summary: origins を書かないときはすべての出所が対象
+        condition: '`origins` が null で、`kind` が `composer`・`plugin`・`task-notification`'
+        mock: なし
+        expected: どれも true
+  - name: parseRepositoryConfig
+    title: repositories の要素の検証
+    kind: 関数
+    container: hooks/lib/config.ts
+    usecase: 共通
+    summary: '`repositories` の 1 要素を検証し、有効なら RepositoryConfig を返す'
+    scope: internal
+    is_async: false
+    args:
+      - name: value
+        type: unknown
+        required: true
+        passing: positional
+        description: '`repositories` の 1 要素'
+      - name: baseDir
+        type: "'config' | 'project'"
+        required: true
+        passing: positional
+        description: 相対パスの基準
+    returns:
+      type: RepositoryConfig | null | string
+      description: '検証を通った設定、`enabled: false` のとき null、外したときは理由'
+    process: |-
+      1. マッピングでなければ理由を返す
+      2. `enabled` を書いて真偽値でなければ理由を返し、false なら null を返す
+      3. `config` が空でない文字列でなければ、`config` を含む理由を返す
+      4. `config` と baseDir を返す
+    unit_tests:
+      - name: test_parse_repository_config
+        case: 正常
+        summary: '`config` を読み、`enabled` を書かない要素は有効'
+        condition: '`config: ../knowledge/dev-docs.yaml` と、それに `enabled: true` を足した要素'
+        mock: なし
+        expected: どちらも config が書いたままの RepositoryConfig
+      - name: test_parse_repository_config_when_disabled
+        case: 正常
+        summary: '`enabled: false` は null'
+        condition: '`config` と `enabled: false` を持つ要素'
+        mock: なし
+        expected: 'null'
+      - name: test_parse_repository_config_when_invalid
+        case: 正常
+        summary: 誤った要素は理由を返す
+        condition: "文字列 `a`、`config` が無い要素、`config: ''`、`enabled: 'no'`"
+        mock: なし
+        expected: どれも文字列の理由で、無い・誤ったキーの名前を含む
+test_files:
+  - tests/unit/hooks/lib/config.test.ts

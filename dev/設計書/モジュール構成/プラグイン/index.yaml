@@ -1,0 +1,25 @@
+summary: "プラグイン（hooks モジュール）のモジュール構成"
+docs_index: true
+items:
+  - page: 入口.yaml
+    summary: hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル
+  - page: 読み込み.yaml
+    summary: パスの展開・glob の展開・変わったファイルの読み込み・YAML のパース
+  - page: スキーマ.yaml
+    summary: 同梱のスキーマの読み込みと aliases の要素の検証
+  - page: 設定.yaml
+    summary: 設定ファイルのパスの取得・検証・実効の設定の組み立て・出所の判定
+  - page: エイリアス.yaml
+    summary: aliases の要素の取り出しと id の重なりの確認
+  - page: リポジトリ.yaml
+    summary: 読むリポジトリの dev-docs.yaml の読み込みと aliases の取り出し
+  - page: 項目.yaml
+    summary: aliases の要素が指す YAML の読み込みと語の一覧の組み立て
+  - page: 照合.yaml
+    summary: 入力と語の正規化と照合
+  - page: 文脈.yaml
+    summary: 追加する語の選択と文脈の組み立て
+  - page: 記録.yaml
+    summary: セッションごとの追加した語の記録
+  - page: 変数参照.yaml
+    summary: ツールの結果の変数参照の名前の拾い出し・env の出力の分割・値の行の組み立て

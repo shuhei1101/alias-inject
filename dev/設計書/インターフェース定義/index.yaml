@@ -1,0 +1,10 @@
+summary: サブシステムの外部インターフェースと処理フロー（サブシステム結合テストの元）
+items:
+  - page: 入力への引用の文脈の追加.yaml
+    summary: prompt.submit で入力を照合し、初めて出た語の文脈を context に追加する
+  - page: 圧縮の後の記録の消去.yaml
+    summary: session.compact の後にそのセッションの記録を消す
+  - page: クリアの後の記録の消去.yaml
+    summary: 'session.end（reason: clear）で終わるセッションの記録を消す'
+  - page: 読んだ本文への変数参照の値の追加.yaml
+    summary: tool.call でツールの結果の !{名前} を拾い、環境変数の値を context に追加する

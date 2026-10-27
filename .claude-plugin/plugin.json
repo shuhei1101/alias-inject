@@ -1,0 +1,5 @@
+{
+  "name": "alias-inject",
+  "description": "入力の語に当たる引用の文脈と、読んだ本文の変数参照の値をモデルへ渡す mod",
+  "types": "./types/index.d.ts"
+}

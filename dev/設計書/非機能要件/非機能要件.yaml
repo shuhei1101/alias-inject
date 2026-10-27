@@ -1,0 +1,104 @@
+title: "非機能要件"
+requirements:
+  - name: 対応 OS
+    english_name: supported_os
+    category: 動作環境
+    external_constraint: Claude Code（ターミナル版）が動く OS
+    source_kind: 実行基盤の制限
+    source: https://github.com/shuhei1101/alias-inject/pull/6
+    value: Linux（WSL2 を含む）
+    rationale: PoC 検証で hooks モジュールの読み込みを確かめたのは WSL2 の Ubuntu 24.04 だけのため、確かめた OS に限る
+    measurement: '`claude --plugin-dir {プラグインのフォルダ} -p` を流し、`prompt.submit` で追加した文脈がモデルに届くかを応答で確かめる'
+    verification:
+      device: Windows 11 の WSL2（Linux）の端末
+      version: Claude Code 2.1.311
+      date: '2026-10-27'
+      result: 合格
+  - name: 対応する Claude Code のバージョン
+    english_name: supported_claude_code_version
+    category: 動作環境
+    external_constraint: hooks モジュール（`hooks/hooks.json` の `modules`）は Claude Code の EARLY ACCESS の機能で、バージョンの間で予告なく変わる
+    source_kind: 実行基盤の制限
+    source: https://github.com/shuhei1101/alias-inject/pull/6
+    value: 2.1.310 以上
+    rationale: PoC 検証で読み込みとテスト・型の確認を確かめた最も古いバージョン。それより前のバージョンは確かめていない。新しいバージョンでは保証しない。Claude Code を上げたときに測り方の手順で確かめ直す
+    measurement: '`claude --version` のバージョンで、`claude plugin validate`・`claude plugin test`・`claude --plugin-dir {プラグインのフォルダ} -p` が通るかを確かめる'
+    verification:
+      device: Windows 11 の WSL2（Linux）の端末
+      version: Claude Code 2.1.311
+      date: '2026-10-27'
+      result: 合格
+  - name: 入力の送信で増える待ち時間
+    english_name: added_latency_on_submit
+    category: 性能
+    external_constraint: 10000ms（`HookBudget.ms`。hooks モジュールの処理を待つ上限で、超えると hook が無かった扱いになる）
+    source_kind: 実行基盤の制限
+    value: '200'
+    rationale: 'PoC の実測で `prompt.submit` 全体が 20.6〜97.6ms（照合だけなら 2,500 語でも p99.9 1.87ms）。実測の最大の 2 倍の余裕を持ち、体感で待ちを感じない値にする。照合する YAML が大きく増えたときは見直す'
+    source: https://github.com/shuhei1101/alias-inject/pull/7#discussion_r4367912268
+    unit: ms
+    measurement: 照合する YAML を持つ設定で `prompt.submit` を流し、処理が始まってから返るまでの時間を測る
+    verification:
+      device: Windows 11 の WSL2（Linux）の端末
+      version: Claude Code 2.1.311
+      date: '2026-10-27'
+      result: 合格
+  - name: 1 回に追加する語の上限
+    english_name: max_items
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '20'
+    unit: 語
+    rationale: 1 回の入力に追加する文脈の長さを抑える。設定ファイルの `max_items` の既定値
+    overflow: 上限を超えた語はその回に追加せず、記録にも入れない。次に出た入力で追加の対象になる
+    refs:
+      - dev/設計書/設定/プラグイン#settings[global.max_items]
+  - name: 1 回に追加する文脈の文字数の上限
+    english_name: max_chars
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '4000'
+    unit: 文字
+    rationale: 1 回の入力に追加する文脈（見出しを含む文字列全体）の長さを抑える。設定ファイルの `max_chars` の既定値
+    overflow: 上限を超える語は飛ばして、後ろの語で収まるものを続けて追加する。飛ばした語は記録に入れず、次に出た入力で追加の対象になる
+    refs:
+      - dev/設計書/設定/プラグイン#settings[global.max_chars]
+  - name: 変数参照の値を引く子プロセスの待ちの上限
+    english_name: variable_reference_timeout
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '20'
+    unit: ms
+    rationale: 規約『資源の値の決め方』の下流を待つタイムアウト（p99.9 + p99.9 の 50% の余裕）で導く。WSL2 の Ubuntu 24.04・Claude Code 2.1.310 で、`tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流す計測を 3 回行い、p50 は 2.02〜2.17ms、p99.9 は 10.82・12.69・12.77ms（最大 28.89ms）だった。最も大きい p99.9 の 12.77ms × 1.5 = 19.2ms を切り上げて 20ms にする。フックの予算（`HookBudget.ms`）は待ちを数えないため、外側の制約は無い。`$.process.run` の既定（30 秒）は使わず `timeoutMs` で渡す
+    measurement: '`!{名前}` を含む結果を返すツールの `tool.call` のフックの中から `$.process.run(["env", "-0"])` を 1000 回流し、1 回ごとに起こしてから返るまでの時間の p50・p99.9 を測る'
+    verification:
+      device: Windows 11 の WSL2（Linux）の端末
+      version: Claude Code 2.1.311
+      date: '2026-10-27'
+      result: 合格
+    overflow: 子プロセスを打ち切り、debug log に出して、文脈を追加せずにツールの結果をそのまま返す
+    status: planned
+  - name: 1 回に値を追加する変数参照の名前の上限
+    english_name: max_variable_references
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '50'
+    unit: 名前
+    rationale: 規約の 1 ページに出る変数参照の名前は多くて 10 前後。その 5 倍の余裕を持ち、1 回のツールの結果に追加する文脈の長さを抑える
+    overflow: 本文に出た順で 50 名前までの行を作り、残りの名前は行を作らず、最後に残りの件数を添えた 1 行を追加する
+    status: planned
+  - name: 変数参照の値の長さの上限
+    english_name: max_variable_reference_value_chars
+    category: 性能
+    external_constraint: 制限なし
+    source_kind: 制限なし
+    value: '1000'
+    unit: 文字
+    rationale: 変数参照に使う値はパス・URL・識別子で、長くて数百文字。`PATH` のような長い値が 1 行で文脈を占めないようにする
+    overflow: 値の先頭 1000 文字だけを書き、行の末尾に値の全体の文字数を添えて、切ったことを示す
+    status: planned
+lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。

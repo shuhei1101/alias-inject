@@ -1,0 +1,8 @@
+summary: 採用済みの外部ライブラリ / 外部ツールのリファレンス
+items:
+  - page: claude-code.yaml
+    summary: mod の hooks モジュールの型とテストの道具
+  - page: typescript.yaml
+    summary: 型の確認に使う TypeScript のコンパイラ
+  - page: js-yaml.yaml
+    summary: 設定ファイルと照合する YAML を読むパーサー

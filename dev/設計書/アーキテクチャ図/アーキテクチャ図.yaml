@@ -1,0 +1,101 @@
+title: "アーキテクチャ図"
+overview:
+  direction: LR
+  nodes:
+    - id: user
+      label: 利用者
+      kind: actor
+    - id: monitor
+      label: ai-monitor の自動のセッション
+      kind: actor
+    - id: cc
+      label: Claude Code（ターミナル版）
+      kind: external
+    - id: model
+      label: モデル
+      kind: external
+    - id: plugin
+      label: プラグイン（hooks モジュール）
+      kind: system
+    - id: settings
+      label: 設定ファイル
+      kind: store
+      shape: cylinder
+    - id: glossary
+      label: 照合に使う YAML
+      kind: store
+      shape: cylinder
+    - id: repo_config
+      label: 読むリポジトリの dev-docs.yaml
+      kind: store
+      shape: cylinder
+  edges:
+    - from: user
+      to: cc
+      label: 入力
+    - from: monitor
+      to: cc
+      label: 入力
+    - from: cc
+      to: plugin
+      label: 入力のイベント
+    - from: plugin
+      to: cc
+      label: 引用の文脈
+    - from: cc
+      to: plugin
+      label: ツールの結果
+    - from: plugin
+      to: cc
+      label: 変数参照の値
+    - from: plugin
+      to: settings
+      label: 読む
+    - from: plugin
+      to: glossary
+      label: 読む
+    - from: cc
+      to: model
+      label: 入力と文脈
+    - from: plugin
+      to: repo_config
+      label: 読む
+  subgraphs:
+    - id: alias_inject
+      label: alias-inject
+      nodes:
+        - plugin
+repository:
+  style: モノレポ
+  repositories:
+    - name: shuhei1101/alias-inject
+  layout: '`.claude-plugin/`（プラグインとマーケットプレイスの定義）・`hooks/`（`hooks.json` と hooks モジュール）・`schemas/`（他のリポジトリが取り込むスキーマ）・`tests/`・`dev/`（開発ドキュメント）・`docs/`（公開ドキュメント）'
+  notes: |-
+    リポジトリ自身をマーケットプレイスにして配る。
+    mdmark・dev-docs は、リリースのタグを指定して `schemas/aliases.schema.yaml` を取り込む。
+    プラグイン自身も、設定ファイルと読む `dev-docs.yaml` の `aliases` を検証する。検証に使うのは、`schemas/aliases.schema.yaml` から生成して同梱する `hooks/lib/aliases-schema.ts`。
+subsystems:
+  - name: プラグイン
+    scope: plugin
+    role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する。ツールで読んだ本文の `!{名前}` には、同じ名前の環境変数の値を文脈として追加する
+    runtime: TypeScript（Claude Code の mod のランタイムで動く）
+    runs_on: 利用者の手元の Claude Code（ターミナル版）。ユーザースコープで入れる
+    status: implemented
+    introduced:
+      pr: 7
+lead: alias-inject は利用者の手元の Claude Code が読み込む mod の単独のプラグインで、入力の語を設定の YAML と照合し、引用の文脈をモデルにだけ追加する。
+external_systems:
+  - name: Claude Code
+    purpose: hooks モジュールを読み込み、入力のイベントを渡して、返した文脈をモデルへの入力に加える
+    direction: 双方向
+    protocol: mod の hooks モジュール（`hooks/hooks.json` の `modules`）
+    cost: なし
+    status: implemented
+    notes:
+      事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確かめる相手ではない。設定ファイルと照合に使う YAML が読めないときは、文脈を追加せずに入力をそのまま渡す（#1 の D-74）。
+    detail: dev/設計書/外部ライブラリ/claude-code#
+    introduced:
+      pr: 7
+constraints: |-
+  - MCP サーバーと常駐するサーバーは持たない
+  - 設定は `ALIAS_INJECT_CONFIG` が指す `~/.config/alias-inject/settings.yaml`（`global`・`projects`）から読む

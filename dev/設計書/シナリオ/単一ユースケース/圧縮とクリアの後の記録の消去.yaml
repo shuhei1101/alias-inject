@@ -1,0 +1,62 @@
+title: "圧縮とクリアの後の記録の消去"
+scenarios:
+  - name: 正常シナリオ（圧縮）
+    setup:
+      - name: Mock
+        description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
+        notes: 自動の圧縮は再現させず、`/compact` で代表させる
+      - name: セッションの記録
+        description: term-a を含む入力を 1 回送信済み
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: /compact
+        CC->>P: session.compact（trigger は manual）
+        P->>CC: 圧縮を続ける
+        CC-->>P: 圧縮の結果
+        P->>P: そのセッションの記録を消す
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
+    test: test_normal_when_compacted
+  - name: 正常シナリオ（クリア）
+    setup:
+      - name: Mock
+        description: 正常シナリオ（圧縮）と同じ
+      - name: セッションの記録
+        description: term-a を含む入力を 1 回送信済み
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: /clear
+        CC->>P: session.end（reason は clear）
+        P->>P: 終わったセッションの記録を消す
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit（新しいセッション）
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - '`/clear` の後の term-a を含む入力に、term-a の文脈が追加されている'
+    test: test_normal_when_cleared
+lead: 圧縮か `/clear` の後は、それまでに文脈を追加した語の記録を消し、同じ語が出たらもう一度文脈を追加する。
+issue: 1
+primary_actor: 利用者
+trigger: 利用者が `/compact` か `/clear` を実行するか、自動の圧縮が起きる
+preconditions:
+  - 同じセッションで term-a の文脈を追加済み
+success_guarantee: 圧縮か `/clear` の後の最初の term-a を含む入力で、term-a の文脈がもう一度追加される。
+minimal_guarantee: 記録を消す処理が失敗しても、圧縮と `/clear` は止まらない。
+test_file: tests/e2e/単一ユースケース/test_reset_record.py
