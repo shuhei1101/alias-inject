@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -186,20 +187,27 @@ class ClaudeSession:
         return self._tmux("capture-pane", "-p", "-t", self.tmux_name)
 
     def start(self, *, env: dict[str, str] | None = None, path: str | None = None) -> None:
-        """Claude Code を起動し、入力を受け付ける状態まで待つ。env は起動時に足す環境変数、path は PATH の差し替え（claude は絶対パスで起動する）"""
+        """Claude Code を起動し、入力を受け付ける状態まで待つ。env は起動時に足す環境変数、path は PATH の差し替え（claude は絶対パスで起動する）。
+
+        コマンドの頭で CLAUDE_CODE_CHILD_SESSION を外す（Claude Code のセッションから流すと、継いだこの変数のせいで PATH が空の claude が transcript を保存しない）
+        """
         for tool in ("tmux", "claude"):
             if shutil.which(tool) is None:
                 raise RuntimeError(f"{tool} が PATH にありません")
         claude = str(shutil.which("claude"))
         self._prepare_config_dir()
         extra_env = [arg for name, value in (env or {}).items() for arg in ("-e", f"{name}={value}")]
+        command = f"{claude} --plugin-dir {PLUGIN_DIR} --model {MODEL}"
+        # PATH の差し替えは tmux の -e ではなくコマンドの頭で渡す（-e の PATH は claude に届かない）
+        if path is not None:
+            command = f"PATH={shlex.quote(path)} {command}"
+        command = f"unset CLAUDE_CODE_CHILD_SESSION; {command}"
         self._tmux(
             "new-session", "-d", "-s", self.tmux_name, "-x", "200", "-y", "50", "-c", str(self.project_dir),
             "-e", f"CLAUDE_CONFIG_DIR={self.config_dir}",
             "-e", f"HOME={os.environ['HOME']}",
-            "-e", f"PATH={os.environ['PATH'] if path is None else path}",
             *extra_env,
-            f"{claude} --plugin-dir {PLUGIN_DIR} --model {MODEL}",
+            command,
         )
         self._wait_for_prompt(STARTUP_TIMEOUT_SEC)
 
@@ -231,19 +239,14 @@ class ClaudeSession:
         found: list[dict[str, Any]] = []
         files = sorted((self.config_dir / "projects").glob("*/*.jsonl"), key=lambda path: path.stat().st_mtime)
         for path in files:
-            lines = path.read_text(encoding="utf-8").split("\n")
+            text = path.read_text(encoding="utf-8")
+            # 最後の改行までを読んだ行とする（改行で終わっていない末尾の書きかけの行は次の回に読む）
+            complete = text[: text.rfind("\n") + 1].split("\n")[:-1]
             consumed = self._seen.get(path, 0)
-            for line in lines[consumed:]:
-                if not line.strip():
-                    consumed += 1
-                    continue
-                try:
+            for line in complete[consumed:]:
+                if line.strip():
                     found.append(json.loads(line))
-                except json.JSONDecodeError:
-                    # 書きかけの行は次の回に読む
-                    break
-                consumed += 1
-            self._seen[path] = consumed
+            self._seen[path] = len(complete)
         return found
 
     def _wait_for(self, done: Callable[[list[dict[str, Any]]], bool], timeout_sec: float, what: str) -> list[dict[str, Any]]:
