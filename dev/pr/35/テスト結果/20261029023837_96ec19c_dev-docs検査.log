@@ -1,0 +1,69 @@
+# dev-docs.yaml の検査（PR #35・topic の追加）
+
+実行日時: 2026-10-29 02:38 JST
+確かめた dev-docs.yaml: alias-inject 96ec19c（docs/dev-docs/existing-docs-distribution）
+dev-docs のクローン: develop 440929e（/mnt/c/Users/shuhe/repo/dev-docs/.claude/worktrees/develop）
+検査のスクリプトと実行環境: [20261029021119_19f204f_dev-docs検査.log](./20261029021119_19f204f_dev-docs検査.log) と同じ（スクリプトは変えていない）
+
+## 実行（dev-docs.yaml）
+
+$ cd /mnt/c/Users/shuhe/repo/dev-docs/.claude/worktrees/develop
+$ CONFIG=/mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/docs-dev-docs-existing-docs-distribution/dev-docs.yaml
+$ $VENV/bin/python -I -c "import sys; sys.path.insert(0, 'src'); sys.argv = ['check', '$CONFIG']; exec(open('$SCRIPT', encoding='utf-8').read())"
+
+設定: /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/docs-dev-docs-existing-docs-distribution/dev-docs.yaml
+設定のスキーマの違反: 0 件
+読み込んだ文書: 36 件（読めなかったファイル 0 件）
+  flowchart: 1 件
+  docs: 7 件
+  architecture: 1 件
+  interface: 4 件
+  scenario: 5 件
+  test_procedure: 1 件
+  module: 11 件
+  library: 3 件
+  config: 1 件
+  dev_command: 1 件
+  nonfunctional: 1 件
+2 つ以上の行に載ったファイル: 0 件
+文書の検査の違反: 0 件
+ref の列の欠け: 0 件
+
+文書の名前とタグ:
+  [architecture] dev/設計書/アーキテクチャ図/アーキテクチャ図.yaml | アーキテクチャ図 | ['scope:設計書', 'topic:アーキテクチャ図']
+  [config] dev/設計書/設定/プラグイン.yaml | 設定: プラグイン | ['scope:設計書', 'topic:設定ファイル']
+  [dev_command] dev/設計書/開発コマンド/開発コマンド.yaml | 開発コマンド | ['scope:設計書', 'topic:開発コマンド']
+  [docs] docs/はじめに/コアコンセプト/変数参照の値.md | 変数参照の値 | ['scope:はじめに', 'topic:変数参照']
+  [docs] docs/はじめに/コアコンセプト/引用の文脈.md | 引用の文脈 | ['scope:はじめに', 'topic:引用の文脈']
+  [docs] docs/はじめに/変更履歴.md | 変更履歴 | ['scope:はじめに']
+  [docs] docs/リファレンス/エイリアスのスキーマ.md | エイリアスのスキーマ | ['scope:リファレンス', 'topic:エイリアス']
+  [docs] docs/リファレンス/設定ファイル.md | 設定ファイル | ['scope:リファレンス', 'topic:設定ファイル']
+  [docs] docs/使い方/セットアップ.md | セットアップ | ['scope:使い方', 'topic:セットアップ手順']
+  [docs] docs/使い方/設定の移し替え.md | 設定の移し替え | ['scope:使い方', 'topic:設定の移し替え']
+  [flowchart] docs/使い方/エイリアスを登録するかを決める.md | エイリアスを登録するかを決める | ['scope:判定フローチャート', 'topic:エイリアス']
+  [interface] dev/設計書/インターフェース定義/クリアの後の記録の消去.yaml | クリアの後の記録の消去 | ['topic:記録の消去', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/入力への引用の文脈の追加.yaml | 入力への引用の文脈の追加 | ['topic:引用の文脈', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/圧縮の後の記録の消去.yaml | 圧縮の後の記録の消去 | ['topic:記録の消去', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加.yaml | 読んだ本文への変数参照の値の追加 | ['topic:変数参照', 'scope:設計書', 'topic:インターフェース定義']
+  [library] dev/設計書/外部ライブラリ/claude-code.yaml | claude-code | ['scope:設計書', 'topic:外部ライブラリ']
+  [library] dev/設計書/外部ライブラリ/js-yaml.yaml | js-yaml | ['scope:設計書', 'topic:外部ライブラリ']
+  [library] dev/設計書/外部ライブラリ/typescript.yaml | typescript | ['scope:設計書', 'topic:外部ライブラリ']
+  [module] dev/設計書/モジュール構成/プラグイン/エイリアス.yaml | プラグイン / エイリアス | ['topic:エイリアス', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/スキーマ.yaml | プラグイン / スキーマ | ['topic:エイリアス', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml | プラグイン / リポジトリ | ['topic:設定の読み直し', 'topic:エイリアス', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/入口.yaml | プラグイン / 入口 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/変数参照.yaml | プラグイン / 変数参照 | ['topic:変数参照', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/文脈.yaml | プラグイン / 文脈 | ['topic:引用の文脈', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/照合.yaml | プラグイン / 照合 | ['topic:引用の文脈', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/記録.yaml | プラグイン / 記録 | ['topic:引用の文脈', 'topic:記録の消去', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/設定.yaml | プラグイン / 設定 | ['topic:設定ファイル', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/読み込み.yaml | プラグイン / 読み込み | ['topic:設定の読み直し', 'scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/項目.yaml | プラグイン / 項目 | ['topic:設定の読み直し', 'topic:エイリアス', 'scope:設計書', 'topic:モジュール構成']
+  [nonfunctional] dev/設計書/非機能要件/非機能要件.yaml | 非機能要件 | ['scope:設計書', 'topic:非機能要件']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加.yaml | 入力への引用の文脈の追加 | ['topic:単一ユースケース', 'topic:引用の文脈', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去.yaml | 圧縮とクリアの後の記録の消去 | ['topic:単一ユースケース', 'topic:記録の消去', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し.yaml | 設定とYAMLの読み直し | ['topic:単一ユースケース', 'topic:設定の読み直し', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加.yaml | 読んだ本文への変数参照の値の追加 | ['topic:単一ユースケース', 'topic:変数参照', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/複合ユースケース/セッションを通した引用の文脈の追加.yaml | セッションを通した引用の文脈の追加 | ['topic:複合ユースケース', 'topic:引用の文脈', 'scope:設計書', 'topic:シナリオ']
+  [test_procedure] dev/設計書/テスト/テスト実行方法.yaml | テスト実行方法 | ['scope:設計書', 'topic:テスト実行方法', 'topic:testing']
+exit=0
