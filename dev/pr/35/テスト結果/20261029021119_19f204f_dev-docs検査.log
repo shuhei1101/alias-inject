@@ -1,0 +1,176 @@
+# dev-docs.yaml の検査（PR #35）
+
+実行日時: 2026-10-29 02:11 JST
+確かめた dev-docs.yaml: alias-inject 19f204f（docs/dev-docs/existing-docs-distribution）
+dev-docs のクローン: develop 440929e（/mnt/c/Users/shuhe/repo/dev-docs/.claude/worktrees/develop）
+
+## 準備
+
+$ cd /mnt/c/Users/shuhe/repo/dev-docs/.claude/worktrees/develop
+$ export UV_PROJECT_ENVIRONMENT=$VENV   # 作業フォルダの外に実行環境を作る
+$ uv sync --frozen --no-dev
+$ $VENV/bin/python --version
+Python 3.14.3
+
+## 検査のスクリプト（$SCRIPT）
+
+dev-docs の読み込みの関数を呼ぶ。設定のスキーマ・行の参照・ファイルの有無（_assemble）、文書の読み込み（DocumentStore.load）、各文書の Schema の検査・関連の種類・タグ（DocumentChecker.check）、ref の列の欠け（check_sync）を通し、違反が 1 件でもあれば終了コード 1 を返す。
+
+```python
+"""dev-docs の読み込みで、配信元の設定と各文書の検査の違反を数える。"""
+
+from __future__ import annotations
+
+import sys
+import tempfile
+from collections import Counter
+from pathlib import Path
+
+from dev_docs.features.access.types import Target
+from dev_docs.features.documents.store import DocumentStore, check_sync
+from dev_docs.features.history.snapshot import SnapshotStore
+from dev_docs.features.sources.service import _assemble
+from dev_docs.features.validation.service import DocumentChecker
+
+CONFIG = Path(sys.argv[1]).resolve()
+TIMEOUT_SEC = 30
+
+# 設定をマージして、スキーマ・行の参照・ファイルの有無を確かめる
+served, config, violations = _assemble([CONFIG], source_id=None, scope_read=[], scope_write=None)
+print(f"設定: {CONFIG}")
+print(f"設定のスキーマの違反: {len(violations)} 件")
+for violation in violations:
+    print(f"  {violation.path}: {violation.rule} {violation.fix}")
+if served is None or config is None:
+    sys.exit(1)
+
+with tempfile.TemporaryDirectory() as state:
+    store = DocumentStore(SnapshotStore(Path(state)))
+    checker = DocumentChecker(store, TIMEOUT_SEC)
+    target = Target(served, served.root, None, None, "read")
+    result = store.load(target)
+    print(f"読み込んだ文書: {len(result.documents)} 件（読めなかったファイル {len(result.problems)} 件）")
+    for problem in result.problems:
+        print(f"  {problem.path}: {problem.reason}: {problem.detail}")
+
+    counts = Counter(document.kind for document in result.documents)
+    for table in config.documents:
+        print(f"  {table.id}: {counts.get(table.id, 0)} 件")
+
+    # 1 つのファイルが 2 つの行に載っていないか
+    owners: dict[str, list[str]] = {}
+    for document in result.documents:
+        owners.setdefault(document.path, []).append(document.kind)
+    duplicated = {path: kinds for path, kinds in owners.items() if len(kinds) > 1}
+    print(f"2 つ以上の行に載ったファイル: {len(duplicated)} 件")
+    for path, kinds in duplicated.items():
+        print(f"  {path}: {kinds}")
+
+    # 各文書に、スキーマ・関連の種類・タグの検査を通す
+    total = 0
+    for document in result.documents:
+        found = checker.check(target, document, on="read")
+        total += len(found)
+        for violation in found:
+            print(f"  {document.path}: {violation.path}: {violation.rule} {violation.fix}")
+    print(f"文書の検査の違反: {total} 件")
+
+    report = check_sync(store, served)
+    print(f"ref の列の欠け: {len(report.missing_refs)} 件")
+    for line in report.missing_refs:
+        print(f"  {line}")
+
+    print()
+    print("文書の名前とタグ:")
+    for document in sorted(result.documents, key=lambda item: (item.kind, item.path)):
+        print(
+            f"  [{document.kind}] {document.path} | {document.metadata.get('name')}"
+            f" | {document.metadata.get('tags')}"
+        )
+
+    failed = bool(violations or result.problems or duplicated or total)
+    sys.exit(1 if failed else 0)
+```
+
+## 実行（dev-docs.yaml）
+
+$ cd /mnt/c/Users/shuhe/repo/dev-docs/.claude/worktrees/develop
+$ CONFIG=/mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/docs-dev-docs-existing-docs-distribution/dev-docs.yaml
+$ $VENV/bin/python -I -c "import sys; sys.path.insert(0, 'src'); sys.argv = ['check', '$CONFIG']; exec(open('$SCRIPT', encoding='utf-8').read())"
+
+設定: /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/docs-dev-docs-existing-docs-distribution/dev-docs.yaml
+設定のスキーマの違反: 0 件
+読み込んだ文書: 36 件（読めなかったファイル 0 件）
+  flowchart: 1 件
+  docs: 7 件
+  architecture: 1 件
+  interface: 4 件
+  scenario: 5 件
+  test_procedure: 1 件
+  module: 11 件
+  library: 3 件
+  config: 1 件
+  dev_command: 1 件
+  nonfunctional: 1 件
+2 つ以上の行に載ったファイル: 0 件
+文書の検査の違反: 0 件
+ref の列の欠け: 0 件
+
+文書の名前とタグ:
+  [architecture] dev/設計書/アーキテクチャ図/アーキテクチャ図.yaml | アーキテクチャ図 | ['scope:設計書', 'topic:アーキテクチャ図']
+  [config] dev/設計書/設定/プラグイン.yaml | 設定: プラグイン | ['scope:設計書', 'topic:設定ファイル']
+  [dev_command] dev/設計書/開発コマンド/開発コマンド.yaml | 開発コマンド | ['scope:設計書', 'topic:開発コマンド']
+  [docs] docs/はじめに/コアコンセプト/変数参照の値.md | 変数参照の値 | ['scope:はじめに', 'topic:変数参照']
+  [docs] docs/はじめに/コアコンセプト/引用の文脈.md | 引用の文脈 | ['scope:はじめに', 'topic:引用の文脈']
+  [docs] docs/はじめに/変更履歴.md | 変更履歴 | ['scope:はじめに']
+  [docs] docs/リファレンス/エイリアスのスキーマ.md | エイリアスのスキーマ | ['scope:リファレンス', 'topic:エイリアス']
+  [docs] docs/リファレンス/設定ファイル.md | 設定ファイル | ['scope:リファレンス', 'topic:設定ファイル']
+  [docs] docs/使い方/セットアップ.md | セットアップ | ['scope:使い方', 'topic:セットアップ手順']
+  [docs] docs/使い方/設定の移し替え.md | 設定の移し替え | ['scope:使い方', 'topic:設定の移し替え']
+  [flowchart] docs/使い方/エイリアスを登録するかを決める.md | エイリアスを登録するかを決める | ['scope:判定フローチャート', 'topic:エイリアス']
+  [interface] dev/設計書/インターフェース定義/クリアの後の記録の消去.yaml | クリアの後の記録の消去 | ['topic:記録の消去', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/入力への引用の文脈の追加.yaml | 入力への引用の文脈の追加 | ['topic:引用の文脈', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/圧縮の後の記録の消去.yaml | 圧縮の後の記録の消去 | ['topic:記録の消去', 'scope:設計書', 'topic:インターフェース定義']
+  [interface] dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加.yaml | 読んだ本文への変数参照の値の追加 | ['topic:変数参照', 'scope:設計書', 'topic:インターフェース定義']
+  [library] dev/設計書/外部ライブラリ/claude-code.yaml | claude-code | ['scope:設計書', 'topic:外部ライブラリ']
+  [library] dev/設計書/外部ライブラリ/js-yaml.yaml | js-yaml | ['scope:設計書', 'topic:外部ライブラリ']
+  [library] dev/設計書/外部ライブラリ/typescript.yaml | typescript | ['scope:設計書', 'topic:外部ライブラリ']
+  [module] dev/設計書/モジュール構成/プラグイン/エイリアス.yaml | プラグイン / エイリアス | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/スキーマ.yaml | プラグイン / スキーマ | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml | プラグイン / リポジトリ | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/入口.yaml | プラグイン / 入口 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/変数参照.yaml | プラグイン / 変数参照 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/文脈.yaml | プラグイン / 文脈 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/照合.yaml | プラグイン / 照合 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/記録.yaml | プラグイン / 記録 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/設定.yaml | プラグイン / 設定 | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/読み込み.yaml | プラグイン / 読み込み | ['scope:設計書', 'topic:モジュール構成']
+  [module] dev/設計書/モジュール構成/プラグイン/項目.yaml | プラグイン / 項目 | ['scope:設計書', 'topic:モジュール構成']
+  [nonfunctional] dev/設計書/非機能要件/非機能要件.yaml | 非機能要件 | ['scope:設計書', 'topic:非機能要件']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加.yaml | 入力への引用の文脈の追加 | ['topic:単一ユースケース', 'topic:引用の文脈', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去.yaml | 圧縮とクリアの後の記録の消去 | ['topic:単一ユースケース', 'topic:記録の消去', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し.yaml | 設定とYAMLの読み直し | ['topic:単一ユースケース', 'topic:設定の読み直し', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加.yaml | 読んだ本文への変数参照の値の追加 | ['topic:単一ユースケース', 'topic:変数参照', 'scope:設計書', 'topic:シナリオ']
+  [scenario] dev/設計書/シナリオ/複合ユースケース/セッションを通した引用の文脈の追加.yaml | セッションを通した引用の文脈の追加 | ['topic:複合ユースケース', 'topic:引用の文脈', 'scope:設計書', 'topic:シナリオ']
+  [test_procedure] dev/設計書/テスト/テスト実行方法.yaml | テスト実行方法 | ['scope:設計書', 'topic:テスト実行方法']
+exit=0
+
+## 実行（検査が違反を出すことの確認）
+
+アーキテクチャ図の設計書から必須の `title` を除いたコピーと、アーキテクチャ図の行だけの設定（$NEGATIVE/dev-docs.yaml）を同じスクリプトにかける。
+
+$ CONFIG=$NEGATIVE/dev-docs.yaml
+$ $VENV/bin/python -I -c "import sys; sys.path.insert(0, 'src'); sys.argv = ['check', '$CONFIG']; exec(open('$SCRIPT', encoding='utf-8').read())"
+
+設定: $NEGATIVE/dev-docs.yaml
+設定のスキーマの違反: 0 件
+読み込んだ文書: 1 件（読めなかったファイル 0 件）
+  architecture: 1 件
+2 つ以上の行に載ったファイル: 0 件
+  dev/設計書/アーキテクチャ図/アーキテクチャ図.yaml: $: 'title' is a required property キー title を追加してください
+文書の検査の違反: 1 件
+ref の列の欠け: 0 件
+
+文書の名前とタグ:
+  [architecture] dev/設計書/アーキテクチャ図/アーキテクチャ図.yaml | アーキテクチャ図 | None
+negative exit=1
