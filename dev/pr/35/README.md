@@ -1,0 +1,1 @@
+# alias-inject の既存の文書を dev-docs.yaml に載せて dev-docs で配信する
