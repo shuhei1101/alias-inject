@@ -1,0 +1,10 @@
+version: "1"
+name: alias-inject
+documents:
+  - id: flowchart
+    type: markdown
+    paths: [docs/使い方/エイリアスを登録するかを決める.md]
+    metadata:
+      tags:
+        type: custom
+        value: [scope:判定フローチャート, topic:エイリアス]
