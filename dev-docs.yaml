@@ -110,7 +110,7 @@ documents:
         field: title
       tags:
         type: custom
-        value: [scope:設計書, topic:テスト実行方法]
+        value: [scope:設計書, topic:テスト実行方法, topic:testing]
   - id: module
     type: yaml
     title: モジュール構成
@@ -123,6 +123,29 @@ documents:
       tags:
         type: custom
         value: [scope:設計書, topic:モジュール構成]
+    defaults:
+      - paths:
+          - dev/設計書/モジュール構成/プラグイン/照合.yaml
+          - dev/設計書/モジュール構成/プラグイン/文脈.yaml
+          - dev/設計書/モジュール構成/プラグイン/記録.yaml
+        tags: [topic:引用の文脈]
+      - paths: [dev/設計書/モジュール構成/プラグイン/変数参照.yaml]
+        tags: [topic:変数参照]
+      - paths: [dev/設計書/モジュール構成/プラグイン/記録.yaml]
+        tags: [topic:記録の消去]
+      - paths:
+          - dev/設計書/モジュール構成/プラグイン/読み込み.yaml
+          - dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml
+          - dev/設計書/モジュール構成/プラグイン/項目.yaml
+        tags: [topic:設定の読み直し]
+      - paths:
+          - dev/設計書/モジュール構成/プラグイン/エイリアス.yaml
+          - dev/設計書/モジュール構成/プラグイン/スキーマ.yaml
+          - dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml
+          - dev/設計書/モジュール構成/プラグイン/項目.yaml
+        tags: [topic:エイリアス]
+      - paths: [dev/設計書/モジュール構成/プラグイン/設定.yaml]
+        tags: [topic:設定ファイル]
   - id: library
     type: yaml
     title: 外部ライブラリ
