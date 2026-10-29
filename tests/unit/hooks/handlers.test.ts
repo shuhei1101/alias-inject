@@ -8,17 +8,14 @@ const CONFIG_PATH = `${CONFIG_DIR}/settings.yaml`
 const DEV_DOCS_PATH = '/home/u/knowledge/dev-docs.yaml'
 const SETTINGS = userSettingsWithConfig('~/.config/alias-inject/settings.yaml')
 
-// `alias_type` を custom で固定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める
+// 行の `alias_type` を指定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める。`metadata` に足したい行を渡せる
 function aliasLines(id: string, paths: string, aliasType: string, indent: number, extraMetadata: string[] = []): string[] {
   const pad = ' '.repeat(indent)
   return [
     `${pad}- id: ${id}`,
     `${pad}  paths: ['${paths}']`,
-    `${pad}  metadata:`,
-    `${pad}    alias_type:`,
-    `${pad}      type: custom`,
-    `${pad}      value: ${aliasType}`,
-    ...extraMetadata.map((line) => `${pad}    ${line}`),
+    `${pad}  alias_type: ${aliasType}`,
+    ...(extraMetadata.length === 0 ? [] : [`${pad}  metadata:`, ...extraMetadata.map((line) => `${pad}    ${line}`)]),
   ]
 }
 
@@ -100,7 +97,7 @@ test('test_handle_prompt_submit_when_context_given', async ($, on) => {
 test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   // 準備
   const memoAlias = aliasLines('memo', 'memo/*.yaml', 'memo', 4)
-  const badAlias = aliasLines('bad', 'terms/*.yaml', 'term', 2, ['name: mcp'])
+  const badAlias = aliasLines('bad', 'terms/*.yaml', 'term', 2, ["name: ''"])
   const fs = makeFs({ extraAliases: memoAlias, devDocs: ['documents:', ...badAlias] })
   const world = installWorld(on, { fs, settings: SETTINGS })
 
