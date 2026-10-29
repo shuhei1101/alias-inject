@@ -5,24 +5,19 @@ import { thrown } from '../support/thrown'
 
 type Json = Record<string, unknown>
 
-// `alias_type` を custom で固定する metadata の値
-function customType(value: string): Json {
-  return { type: 'custom', value }
-}
-
 // スキーマに合う行。上書きしたいキーだけ渡す
 function makeItem(overrides: Json = {}): Json {
   return {
     id: 'terms',
     paths: ['terms/*.yaml'],
-    metadata: { alias_type: customType('term') },
+    alias_type: 'term',
     ...overrides,
   }
 }
 
-// `alias_type` だけを指定した metadata を持つ行
+// 行の `alias_type` だけを指定した行
 function makeTypedItem(aliasType: string): Json {
-  return makeItem({ metadata: { alias_type: customType(aliasType) } })
+  return makeItem({ alias_type: aliasType })
 }
 
 // aliases の 1 行を、同梱のスキーマで検証する
@@ -81,12 +76,13 @@ test('test_validate_schema', () => {
     ...['term', 'doc', 'command', 'url', 'skill', 'tool', 'path', 'env', 'avoid'].map((aliasType) =>
       makeTypedItem(aliasType),
     ),
-    makeItem({ metadata: { alias_type: { type: 'ref', field: 'kind' } } }),
+    makeItem({ metadata: { name: 'title', description: 'meta.summary' } }),
     makeItem({
       enabled: true,
-      type: 'yaml',
+      schema: 'terms.schema.yaml',
       records: 'terms',
-      metadata: { alias_type: customType('term'), tags: { type: 'ref', field: 'tags' } },
+      body_file: 'path',
+      metadata: { name: 'title', tags: 'tags' },
     }),
   ]
 
@@ -100,16 +96,16 @@ test('test_validate_schema', () => {
 // 無い必須のキーをパスつきで返す（正常系）
 test('test_validate_schema_when_required_missing', () => {
   // 準備
-  const withoutMetadata = { id: 'terms', paths: ['terms/*.yaml'] }
-  const withoutAliasType = makeItem({ metadata: { name: { type: 'ref', field: 'title' } } })
+  const withoutAliasType = { id: 'terms', paths: ['terms/*.yaml'] }
+  const withoutPaths = { id: 'terms', alias_type: 'term' }
 
   // 実行
-  const metadataReasons = validateItem(withoutMetadata)
   const aliasTypeReasons = validateItem(withoutAliasType)
+  const pathsReasons = validateItem(withoutPaths)
 
   // 検証
-  expect(metadataReasons.some((reason) => reason.includes('aliases[0].metadata'))).toBe(true)
-  expect(aliasTypeReasons.some((reason) => reason.includes('aliases[0].metadata.alias_type'))).toBe(true)
+  expect(aliasTypeReasons.some((reason) => reason.includes('aliases[0].alias_type'))).toBe(true)
+  expect(pathsReasons.some((reason) => reason.includes('aliases[0].paths'))).toBe(true)
 })
 
 // 型・列挙・最小の数と長さに合わない値を返す（正常系）
@@ -117,9 +113,9 @@ test('test_validate_schema_when_type_mismatch', () => {
   // 準備
   const cases: [string, Json][] = [
     ['aliases[0].id', makeItem({ id: 5 })],
-    ['aliases[0].metadata.alias_type', makeTypedItem('memo')],
+    ['aliases[0].alias_type', makeTypedItem('memo')],
     ['aliases[0].paths', makeItem({ paths: [] })],
-    ['aliases[0].id', makeItem({ id: '' })],
+    ['aliases[0].metadata.name', makeItem({ metadata: { name: '' } })],
   ]
 
   // 実行・検証
@@ -129,23 +125,18 @@ test('test_validate_schema_when_type_mismatch', () => {
   }
 })
 
-// 値の型に書けないキーを返し、行と metadata の他のキーは許す（正常系）
+// `additionalProperties: false` のスキーマは書けないキーを返し、行と metadata の他のキーは許す（正常系）
 test('test_validate_schema_when_additional_property', () => {
   // 準備
-  const withLabelInValue = makeItem({
-    metadata: { alias_type: customType('term'), name: { type: 'ref', field: 'title', label: 'x' } },
-  })
-  const withOtherKeys = makeItem({
-    label: '用語',
-    metadata: { alias_type: customType('term'), tags: { type: 'ref', field: 'tags' } },
-  })
+  const closed: Json = { type: 'object', additionalProperties: false, properties: { a: { type: 'integer' } } }
+  const withOtherKeys = makeItem({ label: '用語', metadata: { tags: 'tags' } })
 
   // 実行
-  const valueReasons = validateItem(withLabelInValue)
+  const closedReasons = validateSchema({ root: closed, schema: closed, value: { a: 1, b: 2 }, path: 'aliases[0]' })
   const otherReasons = validateItem(withOtherKeys)
 
   // 検証
-  expect(valueReasons.some((reason) => reason.includes('aliases[0].metadata.name.label'))).toBe(true)
+  expect(closedReasons.some((reason) => reason.includes('aliases[0].b'))).toBe(true)
   expect(otherReasons).toEqual([])
 })
 
@@ -166,16 +157,15 @@ test('test_validate_schema_when_if_not_matched', () => {
 // `anyOf` のどの要素にも合わないときだけ理由を返す（正常系）
 test('test_validate_schema_when_any_of_not_matched', () => {
   // 準備
-  const withStringName = makeItem({ metadata: { alias_type: customType('term'), name: 'Term-A' } })
-  const withRefName = makeItem({
-    metadata: { alias_type: customType('term'), name: { type: 'ref', field: 'title' } },
-  })
+  const schema: Json = { anyOf: [{ type: 'string' }, { type: 'integer' }] }
 
   // 実行
-  const notMatchedReasons = validateItem(withStringName)
-  const matchedReasons = validateItem(withRefName)
+  const notMatchedReasons = validateSchema({ root: schema, schema, value: true, path: 'aliases[0]' })
+  const matchedReasons = validateSchema({ root: schema, schema, value: 'a', path: 'aliases[0]' })
 
   // 検証
-  expect(notMatchedReasons.some((reason) => reason.includes('aliases[0].metadata.name'))).toBe(true)
+  expect(notMatchedReasons.length).toBe(2)
+  expect(notMatchedReasons.some((reason) => reason.includes('string'))).toBe(true)
+  expect(notMatchedReasons.some((reason) => reason.includes('integer'))).toBe(true)
   expect(matchedReasons).toEqual([])
 })

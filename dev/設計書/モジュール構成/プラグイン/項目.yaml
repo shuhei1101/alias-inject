@@ -33,7 +33,7 @@ data_models:
         description: 行の `id`
       - name: type
         type: AliasType
-        description: 文書ごとに解決した `alias_type`
+        description: 行の `alias_type`
       - name: id
         type: string
         description: 文書の ID。解決した `id` の値
@@ -149,8 +149,8 @@ functions:
       description: 語の一覧と、外した文書の YAML のパスと理由
     process: |-
       1. 各文書の値を `alias.metadata` で解決する（metadata の値の解決）
-      2. `name` が空なら、`index` が null の文書はファイル名（拡張子を除く）、それ以外は `id` の値を文字列にして `name` にする
-      3. 解決した `alias_type` が引用の種類でなければ、failures に `{path}` と `{文書の名前}: alias_type の値 {値} は引用の種類にありません` を入れて外す。引用の種類なら必須のキーの確認をし、空のキーがあれば `{文書の名前}: {空のキーを「、」でつなぐ} が空です` を入れて外す。文書の名前は `id` が空でなければ `id`、空なら `{records}[{index}]`。`id` が空のファイルの文書は、文書の名前と `: ` を付けない
+      2. `name` が空なら、`index` が null の文書はファイル名、それ以外は行の `body_file` が指す列の値のファイル名、それも空なら `id` の値を文字列にして `name` にする（ファイル名は拡張子を除く）
+      3. 行の `alias_type` で必須のキーの確認をし、空のキーがあれば failures に `{path}` と `{文書の名前}: {空のキーを「、」でつなぐ} が空です` を入れて外す。文書の名前は `id` が空でなければ `id`、空なら `{records}[{index}]`。`id` が空のファイルの文書は、文書の名前と `: ` を付けない
       4. `name` と `aliases`（文字列か文字列の並び）の順に照合する語を集め、正規化して `keys` にする（照合の正規化）。`word` は `name`
       5. ID から `word` を引く表をこの行の残った文書で作る
       6. type ごとに `fields` を作る。値が空の列は並べない
@@ -164,37 +164,36 @@ functions:
          - env: `url`、`port`、`description`
          - avoid: `replacement`
       7. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
-      8. `origin`・`aliasId` は alias の値、`type` は解決した `alias_type` を入れる
+      8. `origin`・`aliasId` は alias の値、`type` は行の `alias_type` を入れる
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[resolveMetadata]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[missingKeys]
-      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[isAliasType]
     unit_tests:
       - name: test_build_entries_when_term
         case: 正常
         summary: term は name を語にし、description と名前を引いた related を並べる
-        condition: 'metadata が `alias_type: {type: custom, value: term}` だけの行。term-a（`name: Term-A`、`aliases: [用語エー]`、`description`、`related: [{to: term-b}, {to: tpl-x}]`）と term-b（`name: Term-B`、`description`）'
+        condition: '`alias_type: term` で metadata を書かない行。term-a（`name: Term-A`、`aliases: [用語エー]`、`description`、`related: [{to: term-b}, {to: tpl-x}]`）と term-b（`name: Term-B`、`description`）'
         mock: なし
         expected: "term-a の word が `Term-A`、keys が `['term-a', '用語エー']`、fields が description と `related: term-b（Term-B）, tpl-x`。failures が空"
-      - name: test_build_entries_when_ref
+      - name: test_build_entries_when_metadata_column
         case: 正常
-        summary: ref は文書の列から値を取り、alias_type も文書ごとに決まる
-        condition: 'metadata が `alias_type: {type: ref, field: kind}`・`name: {type: ref, field: title}`。文書が `kind: command`・`title: Sync`・`command: uv sync` と `kind: url`・`title: Site`・`url: https://example.com`'
+        summary: metadata が指す列から値を取り、type は行の alias_type にする
+        condition: '`alias_type: command` で metadata が `name: title`・`description: meta.summary` の行。文書が `id: sync`・`title: Sync`・`command: uv sync`・`meta: {summary: 依存を入れる}`'
         mock: なし
-        expected: type が command と url の 2 件で、word が `Sync`・`Site`
+        expected: 'type が command で、word が `Sync`、fields が `command: `uv sync``・`description: 依存を入れる`'
       - name: test_build_entries_when_name_missing
         case: 正常
-        summary: name が空なら、ファイルの文書はファイル名、records の要素は id を語にする
-        condition: '`index` が null で path が `/d/term/term-b.yaml`、`name` を持たない文書と、`index` が 0 で `id: cmd-a`、`name` が空文字の文書'
+        summary: name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を語にする
+        condition: '`records: files`・`body_file: path` の行で、`index` が null で path が `/d/term/term-b.yaml`、`name` を持たない文書と、`index` が 0 で `id: doc-a`・`path: docs/使い方/セットアップ.md` の文書と、`index` が 1 で `id: cmd-a`、`name` が空文字で `path` を持たない文書'
         mock: なし
-        expected: word が `term-b` と `cmd-a`
+        expected: word が `term-b`・`セットアップ`・`cmd-a`
       - name: test_build_entries_when_required_missing
         case: 正常
-        summary: 必須の値が空・alias_type が引用の種類にない文書は外し、理由を返す
-        condition: 'term の行で `id: term-n` で `description` の無い文書と、`records: terms` の `index` が 1 で `id` の無い文書。ref の `alias_type` で値が `memo` の文書'
+        summary: 必須の値が空の文書は外し、理由を返す
+        condition: '`alias_type: term` の行で `id: term-n` で `description` の無い文書と、`records: terms` の `index` が 1 で `id` の無い文書'
         mock: なし
-        expected: 'entries が空。failures が 3 件で、`term-n: description が空です`・`terms[1]: id、description が空です` と `memo` を含む理由。path は各文書の path'
+        expected: 'entries が空。failures が 2 件で、`term-n: description が空です`・`terms[1]: id、description が空です`。path は各文書の path'
       - name: test_build_entries_when_command
         case: 正常
         summary: command は command・cwd・description の順で、値のある列だけ

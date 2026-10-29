@@ -8,8 +8,8 @@ files:
     manages: 読むリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
     notes: 置き場所は `ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
   - file: dev-docs.yaml
-    manages: リポジトリのエイリアス（`documents` のうち `metadata.alias_type` を持つ行だけを読む）
-    notes: 読むリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`metadata.alias_type` を持つ `documents` の行以外は読まない
+    manages: リポジトリのエイリアス（`documents` のうち `alias_type` を持つ行だけを読む）
+    notes: 読むリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`alias_type` を持つ `documents` の行以外は読まない
   - file: settings.sample.yaml
     manages: 設定ファイルの全キーのサンプル（実値を入れない）
     notes: プラグインの直下に置く
@@ -37,7 +37,7 @@ settings:
     type: object[]
     required: false
     default: '[]'
-    description: 読むリポジトリの `dev-docs.yaml` の並び。各リポジトリの `documents` のうち `metadata.alias_type` を持つ行が照合の定義になる。読めない `dev-docs.yaml` は、そのリポジトリの定義だけを照合から外し、理由を debug log に出す
+    description: 読むリポジトリの `dev-docs.yaml` の並び。各リポジトリの `documents` のうち `alias_type` を持つ行が照合の定義になる。`alias_type` を持たず `metadata.alias_type` を持つ行は旧い構造として照合から外し、移し替えが要ることが分かる理由を debug log に出す。読めない `dev-docs.yaml` は、そのリポジトリの定義だけを照合から外し、理由を debug log に出す
     notes:
       読み直し: '`dev-docs.yaml` も、更新時刻が変わったときだけ読み直すので、書き換えは次の入力から効く'
   - key: global.repositories[].config
@@ -45,7 +45,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: true
-    description: 読むリポジトリの `dev-docs.yaml` のパス。このファイルの `documents` のうち `metadata.alias_type` を持つ行を読む。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
+    description: 読むリポジトリの `dev-docs.yaml` のパス。このファイルの `documents` のうち `alias_type` を持つ行を読む。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
     missing: その要素を読まない
   - key: global.repositories[].enabled
     title: リポジトリの有効
@@ -59,7 +59,7 @@ settings:
     type: object[]
     required: false
     default: '[]'
-    description: 端末だけのエイリアスの行の並び。要素は `schemas/aliases.schema.yaml` の「エイリアスの元の行」と同じ構造で、各要素をそのスキーマで検証する。スキーマに合わない要素（旧い `type`・`fields` の構造を含む）と、先の要素と `id` が重なる要素は、照合から外して理由を debug log に出す
+    description: 端末だけのエイリアスの行の並び。要素は `schemas/aliases.schema.yaml` の「エイリアスの元の行」と同じ構造で、各要素をそのスキーマで検証する。スキーマに合わない要素（旧い `type`・`fields` の構造と、`metadata.alias_type` や判別子つきの `metadata` の値を持つ構造を含む）と、先の要素と `id` が重なる要素は、照合から外して理由を debug log に出す
   - key: global.aliases[].id
     title: 要素の ID
     file: ~/.config/alias-inject/settings.yaml
@@ -94,113 +94,113 @@ settings:
     title: エイリアスのキーの対応
     file: ~/.config/alias-inject/settings.yaml
     type: object
-    required: true
-    description: 'エイリアスのキーの値の取り方。キーは `alias_type`・`id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`。各キーの値は `{type: ref, field: 列名}`（文書の列から取る）か `{type: custom, value: 値}`（行の全文書に同じ値）。書かないキーは、同じ名前の列の `ref` とみなす。`tags`・`status` など他のキーは検証で弾かず、照合にも文脈にも使わない'
-    missing: その要素を照合から外す
-  - key: global.aliases[].metadata.alias_type
+    required: false
+    description: 'エイリアスのキーごとに、値を取る文書の列の名前。キーは `id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`。各キーの値は列名の文字列（`name: title`）で、入れ子の列は `meta.summary` のように `.` でつなぐ。書かないキーは、同じ名前の列から取る。`tags`・`status` など他のキーは検証で弾かず、照合にも文脈にも使わない'
+    missing: すべてのキーを同じ名前の列から取る
+  - key: global.aliases[].alias_type
     title: 引用の種類
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: true
-    description: 引用の種類の取り方。解決した値が、追加する列とセクションを決める。term は `description`・`related`、doc は `description`、command は `command`・`cwd`・`description`、url は `url`・`description`、skill は `skill`・`description`、tool は `tool`・`description`、path は `path`・`description`、env は `url`・`port`・`description`、avoid は `replacement` を追加する。セクションの見出しは term が `用語`、doc が `文書`、command が `コマンド`、url が `URL`、skill が `スキル`、tool が `ツール`、path が `パス`、env が `環境`、avoid が `避ける語`
+    description: 引用の種類。行の全文書に同じ種類を使う。追加する列とセクションを決める。term は `description`・`related`、doc は `description`、command は `command`・`cwd`・`description`、url は `url`・`description`、skill は `skill`・`description`、tool は `tool`・`description`、path は `path`・`description`、env は `url`・`port`・`description`、avoid は `replacement` を追加する。セクションの見出しは term が `用語`、doc が `文書`、command が `コマンド`、url が `URL`、skill が `スキル`、tool が `ツール`、path が `パス`、env が `環境`、avoid が `避ける語`
     missing: その要素を照合から外す
-    allowed: 解決した値が term / doc / command / url / skill / tool / path / env / avoid のどれかでない文書は、その文書を照合から外して理由を debug log に出す
+    allowed: term / doc / command / url / skill / tool / path / env / avoid のどれか。それ以外の値の要素は、スキーマに合わない要素として照合から外し、理由を debug log に出す
   - key: global.aliases[].metadata.id
     title: 文書の ID
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: 文書の ID の取り方。どの `alias_type` でも必須
+    description: '文書の ID を取る列の名前。どの `alias_type` でも必須。`id` の列を持たない要素の並び（`files.yaml`）を読む行は、`id: path` のように ID にする列を書く'
     missing: その文書を照合から外す
   - key: global.aliases[].metadata.name
     title: 文脈に出す語
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: 文脈に出す語の取り方。`aliases` と合わせて、照合する語にもなる。どの `alias_type` でも必須。値が空の文書は、`records` を書かない行ではファイル名（拡張子を除く）、`records` の要素では `id` の値を使う
+    description: 文脈に出す語を取る列の名前。`aliases` と合わせて、照合する語にもなる。どの `alias_type` でも必須。値が空の文書は、`records` を書かない行ではファイル名（拡張子を除く）、`records` の要素では行の `body_file` が指す列の値のファイル名（拡張子を除く）、それも空なら `id` の値を使う
     missing: 補った後も空なら、その文書を照合から外す
   - key: global.aliases[].metadata.aliases
     title: 別名
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: 照合する語（別名）の取り方。値は文字列か文字列の並びで、並びなら要素ごとに照合する。文脈には出さない。全ての `alias_type` で任意
+    description: 照合する語（別名）を取る列の名前。列の値は文字列か文字列の並びで、並びなら要素ごとに照合する。文脈には出さない。全ての `alias_type` で任意
     missing: 別名で照合しない
   - key: global.aliases[].metadata.description
     title: 説明
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: 文書の説明の取り方。term・doc では必須、command・url・skill・tool・path・env では任意。avoid では使わない
+    description: 文書の説明を取る列の名前。term・doc では必須、command・url・skill・tool・path・env では任意。avoid では使わない
     missing: term・doc ではその文書を照合から外す。command・url・skill・tool・path・env では説明を追加しない
   - key: global.aliases[].metadata.related
     title: 関連する文書
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が term のとき、関連する文書の並び（各要素の `to` が ID）の取り方。ID と、同じ行でその ID を持つ文書の名前を追加する'
+    description: '`alias_type` が term のとき、関連する文書の並び（各要素の `to` が ID）を取る列の名前。ID と、同じ行でその ID を持つ文書の名前を追加する'
     missing: 関連する文書を追加しない
   - key: global.aliases[].metadata.command
     title: コマンド
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が command のとき、コマンドの取り方。command では必須'
+    description: '`alias_type` が command のとき、コマンドを取る列の名前。command では必須'
     missing: command ではその文書を照合から外す
   - key: global.aliases[].metadata.cwd
     title: 実行する場所
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が command のとき、コマンドを実行するフォルダの取り方'
+    description: '`alias_type` が command のとき、コマンドを実行するフォルダを取る列の名前'
     missing: 実行する場所を追加しない
   - key: global.aliases[].metadata.url
     title: URL
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が url か env のとき、URL の取り方。url では必須。env では `port` と合わせて 1 つ以上が必須'
+    description: '`alias_type` が url か env のとき、URL を取る列の名前。url では必須。env では `port` と合わせて 1 つ以上が必須'
     missing: url ではその文書を照合から外す。env では `port` も無ければその文書を照合から外し、`port` があれば URL を追加しない
   - key: global.aliases[].metadata.avoid
     title: 避ける語
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が term のとき、用語ごとのやめた言い方の取り方。スキーマが受け付けるが、文脈には使わない'
+    description: '`alias_type` が term のとき、用語ごとのやめた言い方を取る列の名前。スキーマが受け付けるが、文脈には使わない'
   - key: global.aliases[].metadata.skill
     title: スキル
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が skill のとき、スキル名の取り方。skill では必須'
+    description: '`alias_type` が skill のとき、スキル名を取る列の名前。skill では必須'
     missing: skill ではその文書を照合から外す
   - key: global.aliases[].metadata.tool
     title: ツール
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が tool のとき、MCP のツール名の取り方。tool では必須'
+    description: '`alias_type` が tool のとき、MCP のツール名を取る列の名前。tool では必須'
     missing: tool ではその文書を照合から外す
   - key: global.aliases[].metadata.path
     title: パス
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が path のとき、ファイルかフォルダのパスの取り方。path では必須。値のパスは展開も解決もせず、そのまま追加する'
+    description: '`alias_type` が path のとき、ファイルかフォルダのパスを取る列の名前。path では必須。値のパスは展開も解決もせず、そのまま追加する'
     missing: path ではその文書を照合から外す
   - key: global.aliases[].metadata.port
     title: ポート
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が env のとき、ポートの取り方。env では `url` と合わせて 1 つ以上が必須。値が数値なら文字列にして追加する'
+    description: '`alias_type` が env のとき、ポートを取る列の名前。env では `url` と合わせて 1 つ以上が必須。値が数値なら文字列にして追加する'
     missing: '`url` も無ければその文書を照合から外し、`url` があればポートを追加しない'
   - key: global.aliases[].metadata.replacement
     title: 正しい語
     file: ~/.config/alias-inject/settings.yaml
-    type: object
+    type: string
     required: false
-    description: '`alias_type` が avoid のとき、やめた言い方（`name` と `aliases` の語）に代えて使う正しい語の取り方。avoid では必須'
+    description: '`alias_type` が avoid のとき、やめた言い方（`name` と `aliases` の語）に代えて使う正しい語を取る列の名前。avoid では必須'
     missing: avoid ではその文書を照合から外す
   - key: global.origins
     title: 対象にする入力の出所
@@ -260,5 +260,12 @@ settings:
     required: false
     default: '[]'
     description: '`match` が当たったときに `global.aliases` の後ろへ重ねるエイリアス。要素のキーは `global.aliases[]` と同じ。他のキーの重ね方は `projects[].match` の「重ね方」'
+  - key: global.aliases[].body_file
+    title: 本文のファイルの列
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: '`records` の要素の本文のファイルのパスを持つ列の名前。`name` が空の要素の名前に、この列の値のファイル名（拡張子を除く）を使う。`records` を書かない行では使わない'
+    missing: '`name` が空の要素は `id` の値を名前にする'
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]

@@ -17,7 +17,7 @@ function rawAlias(id: string, path: string) {
   return {
     id,
     paths: [path],
-    metadata: { alias_type: { type: 'custom', value: 'term' } },
+    alias_type: 'term',
   }
 }
 
@@ -69,14 +69,15 @@ test('test_parse_config', () => {
   const termAlias = {
     id: 'glossary',
     paths: ['terms/*.yaml'],
+    alias_type: 'term',
     records: 'terms',
+    body_file: 'path',
     metadata: {
-      alias_type: { type: 'custom', value: 'term' },
-      name: { type: 'ref', field: 'title' },
-      aliases: { type: 'ref', field: 'aliases' },
-      description: { type: 'ref', field: 'description' },
-      related: { type: 'ref', field: 'related' },
-      avoid: { type: 'ref', field: 'avoid' },
+      name: 'title',
+      aliases: 'aliases',
+      description: 'description',
+      related: 'related',
+      avoid: 'avoid',
     },
   }
   const value = {
@@ -139,7 +140,7 @@ test('test_parse_config_when_keys_omitted', () => {
 // スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す（正常系）
 test('test_parse_config_when_alias_invalid', () => {
   // 準備
-  const invalid = { id: 'bad', paths: ['a.yaml'], metadata: { alias_type: { type: 'custom', value: 'memo' } } }
+  const invalid = { id: 'bad', paths: ['a.yaml'], alias_type: 'memo' }
 
   // 実行
   const config = parse({

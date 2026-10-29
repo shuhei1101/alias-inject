@@ -1,0 +1,21 @@
+$ rc=0; npm run typecheck || rc=1; claude plugin validate . || rc=1; node scripts/gen-aliases-schema.mjs --check || rc=1; exit $rc
+
+## npm run typecheck
+
+> typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+## claude plugin validate .
+⚠ Found 3 warnings:
+⚠ Found 2 warnings:
+⚠ Found 1 warning:
+✘ Found 2 problems the plugin directory refuses a submission for:
+⚠ Found 1 plugin directory warning:
+✔ Validation passed with warnings
+
+## node scripts/gen-aliases-schema.mjs --check
+exit=0
+
+.claude-plugin/types/ は、他のセッションが書き出した同じプラグインの複製を .claude-plugin/types/ にコピーして用意した（コミットしない）。

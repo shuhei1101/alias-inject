@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../dev/テンプレート/files.schema.yaml
+files:
+  - path: はじめに/変更履歴.md
+    tags: [scope:はじめに]
+  - path: はじめに/コアコンセプト/引用の文脈.md
+    tags: [scope:はじめに, topic:引用の文脈]
+  - path: はじめに/コアコンセプト/変数参照の値.md
+    tags: [scope:はじめに, topic:変数参照]
+  - path: リファレンス/エイリアスのスキーマ.md
+    tags: [scope:リファレンス, topic:エイリアス]
+  - path: リファレンス/設定ファイル.md
+    tags: [scope:リファレンス, topic:設定ファイル]
+  - path: 使い方/エイリアスを登録するかを決める.md
+    tags: [scope:判定フローチャート, topic:エイリアス]
+  - path: 使い方/セットアップ.md
+    tags: [scope:使い方, topic:セットアップ手順]
+  - path: 使い方/設定の移し替え.md
+    tags: [scope:使い方, topic:設定の移し替え]

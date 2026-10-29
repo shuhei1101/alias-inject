@@ -163,27 +163,27 @@ functions:
       - name: test_validate_schema
         case: 正常
         summary: スキーマに合う行は空を返す
-        condition: 'ALIAS_SCHEMA で、`metadata.alias_type` が custom の term・doc・command・url・skill・tool・path・env・avoid の行と、`{type: ref, field: kind}` の行と、`records`・`enabled` と他のキー（行の `type: yaml`・`metadata.tags`）を持つ行'
+        condition: 'ALIAS_SCHEMA で、`alias_type` が term・doc・command・url・skill・tool・path・env・avoid の行と、`metadata` に列の名前（`name: title`・`description: meta.summary`）を書いた行と、`records`・`body_file`・`enabled` と他のキー（行の `schema`・`metadata.tags`）を持つ行'
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing
         case: 正常
         summary: 無い必須のキーをパスつきで返す
-        condition: '`metadata` が無い行、`metadata` に `alias_type` が無い行'
+        condition: '`alias_type` が無い行、`paths` が無い行'
         mock: なし
-        expected: '`aliases[0].metadata` と `aliases[0].metadata.alias_type` を含む理由'
+        expected: '`aliases[0].alias_type` と `aliases[0].paths` を含む理由'
       - name: test_validate_schema_when_type_mismatch
         case: 正常
         summary: 型・列挙・最小の数と長さに合わない値を返す
-        condition: '`id` が数値、`metadata.alias_type` が `{type: custom, value: memo}`、`paths` が `[]`、`id` が空文字'
+        condition: '`id` が数値、`alias_type` が `memo`、`paths` が `[]`、`metadata.name` が空文字'
         mock: なし
-        expected: それぞれ `aliases[0].id`・`aliases[0].metadata.alias_type`・`aliases[0].paths`・`aliases[0].id` の理由
+        expected: それぞれ `aliases[0].id`・`aliases[0].alias_type`・`aliases[0].paths`・`aliases[0].metadata.name` の理由
       - name: test_validate_schema_when_additional_property
         case: 正常
-        summary: 値の型に書けないキーを返し、行と metadata の他のキーは許す
-        condition: '`metadata.name` が `{type: ref, field: title, label: x}` の行と、行の最上位に `label`・`metadata` に `tags` を持つ行'
+        summary: '`additionalProperties: false` のスキーマは書けないキーを返し、行と metadata の他のキーは許す'
+        condition: '`additionalProperties: false` で `properties` に `a` だけを持つスキーマで `{a: 1, b: 2}` の値と、ALIAS_SCHEMA で行の最上位に `label`・`metadata` に `tags` を持つ行'
         mock: なし
-        expected: '前者は `aliases[0].metadata.name.label` を含む理由、後者は空'
+        expected: 前者は `aliases[0].b` を含む理由、後者は空
       - name: test_validate_schema_when_if_not_matched
         case: 正常
         summary: '`if` に合わないときは `then` を使わない'
@@ -193,9 +193,9 @@ functions:
       - name: test_validate_schema_when_any_of_not_matched
         case: 正常
         summary: '`anyOf` のどの要素にも合わないときだけ理由を返す'
-        condition: 'ALIAS_SCHEMA で、`metadata.name` が文字列 `Term-A` の値と、`{type: ref, field: title}` の値'
+        condition: '`anyOf` が `type: string` と `type: integer` のスキーマで、真偽値 true の値と、文字列 `a` の値'
         mock: なし
-        expected: 前者は `aliases[0].metadata.name` を含む理由、後者は空
+        expected: 前者は `anyOf` の両方の要素の理由、後者は空
   - name: generateAliasSchema
     title: 同梱のスキーマの生成
     kind: 関数

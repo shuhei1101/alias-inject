@@ -27,29 +27,29 @@ export function indent(lines: string[], width: number): string[] {
   return lines.map((line) => `${' '.repeat(width)}${line}`)
 }
 
-/** エイリアスの元の行 1 つの行。`- id:` を字下げなしで始める。`metadata.alias_type` を `type` の値にする */
+/** エイリアスの元の行 1 つの行。`- id:` を字下げなしで始める。行の `alias_type` を `type` の値にする */
 export function aliasLines(options: {
   id: string
-  /** `metadata.alias_type` の値（引用の種類にない値も書ける） */
+  /** 行の `alias_type` の値（引用の種類にない値も書ける） */
   type: string
   paths: string
   /** `false` のとき、この行を使わない */
   enabled?: boolean
   /** 文書の並びを持つ配列のキー */
   records?: string
-  /** `metadata` に追加するキーの行（字下げなし） */
+  /** `records` の要素の本文のファイルのパスを持つ列の名前 */
+  bodyFile?: string
+  /** `metadata` に追加するキーの行（字下げなし）。無ければ `metadata` を書かない */
   metadata?: string[]
 }): string[] {
   return [
     `- id: ${options.id}`,
     `  paths: [${options.paths}]`,
+    `  alias_type: ${options.type}`,
     ...(options.records === undefined ? [] : [`  records: ${options.records}`]),
+    ...(options.bodyFile === undefined ? [] : [`  body_file: ${options.bodyFile}`]),
     ...(options.enabled === undefined ? [] : [`  enabled: ${options.enabled}`]),
-    '  metadata:',
-    '    alias_type:',
-    '      type: custom',
-    `      value: ${options.type}`,
-    ...indent(options.metadata ?? [], 4),
+    ...(options.metadata === undefined ? [] : ['  metadata:', ...indent(options.metadata, 4)]),
   ]
 }
 
@@ -75,8 +75,8 @@ export function makeConfig(
   ].join('\n')
 }
 
-/** `metadata` に `alias_type` を持たない `documents` の行（エイリアスの行ではない） */
-const PLAIN_DOCUMENT_LINES = ['- id: docs', '  paths: [docs/*.yaml]', '  metadata:', '    title:', '      type: ref', '      field: name']
+/** `alias_type` を持たない `documents` の行（エイリアスの行ではない） */
+const PLAIN_DOCUMENT_LINES = ['- id: docs', '  paths: [docs/*.yaml]', '  metadata:', '    title: name']
 
 /** `dev-docs.yaml` の本文。`documents` に用語の行と `alias_type` を持たない行を持ち、字下げなしの行で他の行を追加できる */
 export function makeDevDocs(options: { documentsExtra?: string[]; rootExtra?: string[] } = {}): string {

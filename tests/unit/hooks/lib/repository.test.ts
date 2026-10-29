@@ -14,11 +14,8 @@ function termRowYaml(id: string, paths: string, extraMetadata: string[] = []): s
   return [
     `  - id: ${id}`,
     `    paths: [${paths}]`,
-    '    metadata:',
-    '      alias_type:',
-    '        type: custom',
-    '        value: term',
-    ...extraMetadata.map((line) => `      ${line}`),
+    '    alias_type: term',
+    ...(extraMetadata.length === 0 ? [] : ['    metadata:', ...extraMetadata.map((line) => `      ${line}`)]),
   ]
 }
 
@@ -27,12 +24,12 @@ function devDocs(...rowBlocks: string[][]): string {
   return ['documents:', ...rowBlocks.flat(), ''].join('\n')
 }
 
-// `documents` の `metadata.alias_type` を持つ行の `paths` を dev-docs.yaml のフォルダから解決し、他の行とキーは読まない（正常系）
+// `documents` の `alias_type` を持つ行の `paths` を dev-docs.yaml のフォルダから解決し、他の行とキーは読まない（正常系）
 test('test_parse_repository', () => {
   // 準備
   const text = [
     'enabled: false',
-    devDocs(termRowYaml('terms', 'terms/*.yaml'), ['  - id: doc-a', '    paths: [docs/*.yaml]', '    metadata:', '      tags: []']),
+    devDocs(termRowYaml('terms', 'terms/*.yaml'), ['  - id: doc-a', '    paths: [docs/*.yaml]', '    metadata:', '      tags: tags']),
   ].join('\n')
 
   // 実行
@@ -72,21 +69,23 @@ test('test_parse_repository_when_documents_missing', () => {
   ])
 })
 
-// スキーマに合わない行と id の重なった行を外す（正常系）
+// スキーマに合わない行・旧い構造の行・id の重なった行を外す（正常系）
 test('test_parse_repository_when_alias_invalid', () => {
   // 準備
-  const unknownRow = [
-    '  - id: unknown',
-    '    paths: [unknown/*.yaml]',
+  const unknownRow = ['  - id: unknown', '    paths: [unknown/*.yaml]', '    alias_type: glossary']
+  const oldRow = [
+    '  - id: old',
+    '    paths: [old/*.yaml]',
     '    metadata:',
     '      alias_type:',
     '        type: custom',
-    '        value: memo',
+    '        value: term',
   ]
   const text = devDocs(
     termRowYaml('terms', 'terms/*.yaml'),
-    termRowYaml('bad', 'bad/*.yaml', ['name: title']),
+    termRowYaml('bad', 'bad/*.yaml', ["name: ''"]),
     unknownRow,
+    oldRow,
     termRowYaml('terms', 'other/*.yaml'),
   )
 
@@ -95,9 +94,10 @@ test('test_parse_repository_when_alias_invalid', () => {
 
   // 検証
   expect(result.aliases.map((alias) => alias.patterns)).toEqual([['/repo/knowledge/terms/*.yaml']])
-  expect(result.warnings.length).toBe(3)
+  expect(result.warnings.length).toBe(4)
   expect(result.warnings.some((warning) => warning.startsWith('documents[1]') && warning.includes('bad'))).toBe(true)
   expect(result.warnings.some((warning) => warning.startsWith('documents[2]') && warning.includes('unknown'))).toBe(true)
+  expect(result.warnings.some((warning) => warning.startsWith('documents[3]') && warning.includes('old'))).toBe(true)
   expect(result.warnings.some((warning) => warning.includes('terms'))).toBe(true)
 })
 

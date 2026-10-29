@@ -1,5 +1,5 @@
 import { expect, test } from 'claude-code/testing'
-import type { AliasMetadata, ResolvedAlias } from '../../../../hooks/lib/alias'
+import type { ResolvedAlias } from '../../../../hooks/lib/alias'
 import { buildEntries, loadAliasEntries, parseDocuments } from '../../../../hooks/lib/entry'
 import type { SourceDocument } from '../../../../hooks/lib/entry'
 import { clearCache } from '../../../../hooks/lib/loader'
@@ -8,17 +8,13 @@ import { MemoryFs } from '../support/memory-fs'
 
 const ORIGIN = '/home/u/.config/alias-inject/settings.yaml'
 
-// `alias_type` を custom で固定する metadata。上書きしたいキーだけ渡す
-function makeMetadata(aliasType: string, overrides: Record<string, unknown> = {}): AliasMetadata {
-  return { alias_type: { type: 'custom', value: aliasType }, ...overrides } as AliasMetadata
-}
-
 // テスト用の行。上書きしたいキーだけ渡す
 function makeAlias(overrides: Partial<ResolvedAlias> = {}): ResolvedAlias {
   return {
     id: 'terms',
     paths: ['/d/term/*.yaml'],
-    metadata: makeMetadata('term'),
+    alias_type: 'term',
+    metadata: {},
     origin: ORIGIN,
     patterns: ['/d/term/*.yaml'],
     ...overrides,
@@ -108,71 +104,63 @@ test('test_build_entries_when_term', () => {
   expect(failures).toEqual([])
 })
 
-// ref は文書の列から値を取り、alias_type も文書ごとに決まる（正常系）
-test('test_build_entries_when_ref', () => {
+// metadata が指す列から値を取り、type は行の alias_type にする（正常系）
+test('test_build_entries_when_metadata_column', () => {
   // 準備
   const alias = makeAlias({
-    metadata: {
-      alias_type: { type: 'ref', field: 'kind' },
-      name: { type: 'ref', field: 'title' },
-    } as AliasMetadata,
+    alias_type: 'command',
+    metadata: { name: 'title', description: 'meta.summary' },
   })
   const documents = [
-    fileDocument({ id: 'cmd-a', kind: 'command', title: 'Sync', command: 'uv sync' }),
-    fileDocument({ id: 'url-a', kind: 'url', title: 'Site', url: 'https://example.com' }),
+    fileDocument({ id: 'sync', title: 'Sync', command: 'uv sync', meta: { summary: '依存を入れる' } }),
   ]
 
   // 実行
   const { entries } = buildEntries(documents, alias, 0)
 
   // 検証
-  expect(entries.map((entry) => entry.type)).toEqual(['command', 'url'])
-  expect(entries.map((entry) => entry.word)).toEqual(['Sync', 'Site'])
+  expect(entries[0]?.type).toBe('command')
+  expect(entries[0]?.word).toBe('Sync')
+  expect(entries[0]?.fields).toEqual([
+    { name: 'command', value: '`uv sync`' },
+    { name: 'description', value: '依存を入れる' },
+  ])
 })
 
-// name が空なら、ファイルの文書はファイル名、records の要素は id を語にする（正常系）
+// name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を語にする（正常系）
 test('test_build_entries_when_name_missing', () => {
   // 準備
   const documents = [
     fileDocument({ id: 'term-b', description: '説明 B' }, '/d/term/term-b.yaml'),
-    recordDocument({ id: 'cmd-a', name: '', description: '説明 C' }, 0),
+    recordDocument({ id: 'doc-a', path: 'docs/使い方/セットアップ.md', description: '説明 C' }, 0, '/d/files.yaml'),
+    recordDocument({ id: 'cmd-a', name: '', description: '説明 D' }, 1, '/d/files.yaml'),
   ]
 
   // 実行
-  const { entries } = buildEntries(documents, makeAlias({ records: 'commands' }), 0)
+  const { entries } = buildEntries(documents, makeAlias({ records: 'files', body_file: 'path' }), 0)
 
   // 検証
-  expect(entries.map((entry) => entry.word)).toEqual(['term-b', 'cmd-a'])
+  expect(entries.map((entry) => entry.word)).toEqual(['term-b', 'セットアップ', 'cmd-a'])
 })
 
-// 必須の値が空・alias_type が引用の種類にない文書は外し、理由を返す（正常系）
+// 必須の値が空の文書は外し、理由を返す（正常系）
 test('test_build_entries_when_required_missing', () => {
   // 準備
-  const termAlias = makeAlias({ records: 'terms' })
-  const termDocuments = [
+  const documents = [
     fileDocument({ id: 'term-n', name: 'Term-N' }, '/d/term-n.yaml'),
     recordDocument({ name: 'No-Id' }, 1, '/d/terms.yaml'),
   ]
-  const refAlias = makeAlias({
-    metadata: { alias_type: { type: 'ref', field: 'kind' } } as AliasMetadata,
-  })
-  const refDocuments = [fileDocument({ id: 'unknown-a', name: 'Unknown-A', kind: 'memo' }, '/d/unknown-a.yaml')]
 
   // 実行
-  const term = buildEntries(termDocuments, termAlias, 0)
-  const ref = buildEntries(refDocuments, refAlias, 1)
+  const { entries, failures } = buildEntries(documents, makeAlias({ records: 'terms' }), 0)
 
   // 検証
-  expect(term.entries).toEqual([])
-  expect(ref.entries).toEqual([])
-  expect(term.failures.length).toBe(2)
-  expect(term.failures[0]?.path).toBe('/d/term-n.yaml')
-  expect(term.failures[0]?.reason).toContain('term-n: description が空です')
-  expect(term.failures[1]?.path).toBe('/d/terms.yaml')
-  expect(term.failures[1]?.reason).toContain('terms[1]: id、description が空です')
-  expect(ref.failures.length).toBe(1)
-  expect(ref.failures[0]?.path).toBe('/d/unknown-a.yaml')
-  expect(ref.failures[0]?.reason).toContain('memo')
+  expect(entries).toEqual([])
+  expect(failures.length).toBe(2)
+  expect(failures[0]?.path).toBe('/d/term-n.yaml')
+  expect(failures[0]?.reason).toContain('term-n: description が空です')
+  expect(failures[1]?.path).toBe('/d/terms.yaml')
+  expect(failures[1]?.reason).toContain('terms[1]: id、description が空です')
 })
 
 // command は command・cwd・description の順で、値のある列だけを並べる（正常系）
@@ -181,7 +169,7 @@ test('test_build_entries_when_command', () => {
   const documents = [
     fileDocument({ id: 'cmd-setup', name: 'セットアップ', command: 'uv sync', description: '依存を入れる' }),
   ]
-  const alias = makeAlias({ metadata: makeMetadata('command') })
+  const alias = makeAlias({ alias_type: 'command' })
 
   // 実行
   const { entries } = buildEntries(documents, alias, 0)
@@ -200,8 +188,8 @@ test('test_build_entries_when_doc_and_url', () => {
   const urlDocuments = [fileDocument({ id: 'url-a', name: 'Url-A', url: 'https://example.com/a' })]
 
   // 実行
-  const docEntries = buildEntries(docDocuments, makeAlias({ metadata: makeMetadata('doc') }), 0).entries
-  const urlEntries = buildEntries(urlDocuments, makeAlias({ metadata: makeMetadata('url') }), 1).entries
+  const docEntries = buildEntries(docDocuments, makeAlias({ alias_type: 'doc' }), 0).entries
+  const urlEntries = buildEntries(urlDocuments, makeAlias({ alias_type: 'url' }), 1).entries
 
   // 検証
   expect(docEntries[0]?.fields).toEqual([{ name: 'description', value: '文書 A' }])
@@ -222,9 +210,9 @@ test('test_build_entries_when_skill_tool_path', () => {
   ]
 
   // 実行
-  const skillEntries = buildEntries(skillDocuments, makeAlias({ metadata: makeMetadata('skill') }), 0).entries
-  const toolEntries = buildEntries(toolDocuments, makeAlias({ metadata: makeMetadata('tool') }), 1).entries
-  const pathEntries = buildEntries(pathDocuments, makeAlias({ metadata: makeMetadata('path') }), 2).entries
+  const skillEntries = buildEntries(skillDocuments, makeAlias({ alias_type: 'skill' }), 0).entries
+  const toolEntries = buildEntries(toolDocuments, makeAlias({ alias_type: 'tool' }), 1).entries
+  const pathEntries = buildEntries(pathDocuments, makeAlias({ alias_type: 'path' }), 2).entries
 
   // 検証
   expect(skillEntries[0]?.fields).toEqual([
@@ -251,8 +239,8 @@ test('test_build_entries_when_env_and_avoid', () => {
   const avoidDocuments = [fileDocument({ id: 'avoid-a', name: '旧用語', replacement: 'term-a' })]
 
   // 実行
-  const envEntries = buildEntries(envDocuments, makeAlias({ metadata: makeMetadata('env') }), 0).entries
-  const avoidEntries = buildEntries(avoidDocuments, makeAlias({ metadata: makeMetadata('avoid') }), 1).entries
+  const envEntries = buildEntries(envDocuments, makeAlias({ alias_type: 'env' }), 0).entries
+  const avoidEntries = buildEntries(avoidDocuments, makeAlias({ alias_type: 'avoid' }), 1).entries
 
   // 検証
   expect(envEntries[0]?.fields).toEqual([
@@ -304,7 +292,7 @@ test('test_load_alias_entries_when_records', async () => {
   const { $ } = createFakeEngine({ fs })
   const alias = makeAlias({
     records: 'commands',
-    metadata: makeMetadata('command'),
+    alias_type: 'command',
     paths: ['/d/command.yaml'],
     patterns: ['/d/command.yaml'],
   })
