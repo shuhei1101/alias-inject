@@ -331,19 +331,13 @@ test('test_error_when_repository_unreadable', async ($, on) => {
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
-// スキーマに合わない行・知らない alias_type の行・id の重なった後の行だけを外し、他の行の文脈は追加する（異常系）
+// スキーマに合わない行・id の重なった後の行だけを外し、他の行の文脈は追加する（異常系）
 test('test_error_when_alias_invalid', async ($, on) => {
   // 準備
-  // metadata.name を文字列で書いた id: bad の行、alias_type が custom の glossary の id: unknown の行、id: terms が重なる後の行
+  // metadata.name を空の文字列で書いた id: bad の行、alias_type が glossary の id: unknown の行、id: terms が重なる後の行
   const devDocs = makeDevDocs({
     documentsExtra: [
-      '- id: bad',
-      '  paths: [bad/*.yaml]',
-      '  metadata:',
-      '    alias_type:',
-      '      type: custom',
-      '      value: term',
-      '    name: title',
+      ...aliasLines({ id: 'bad', type: 'term', paths: 'bad/*.yaml', metadata: ["name: ''"] }),
       ...aliasLines({ id: 'unknown', type: 'glossary', paths: 'unknown/*.yaml' }),
       ...termAliasLines({ id: 'terms', paths: 'dup/*.yaml' }),
     ],
@@ -363,17 +357,17 @@ test('test_error_when_alias_invalid', async ($, on) => {
   expect(context).not.toContain('Term-X')
   expect(context).not.toContain('Term-V')
   expect(context).not.toContain('Term-Z')
-  // dev-docs.yaml のパス・行の id・理由（bad は name、unknown は alias_type）を含む行と、id の重なりの行が debug log に届く
+  // dev-docs.yaml のパス・行の id・理由（bad は metadata.name、unknown は alias_type）を含む行と、id の重なりの行が debug log に届く
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(DEV_DOCS_PATH))
   expect(debugLines.some((line) => line.text.includes('id: bad') && line.text.includes('metadata.name'))).toBe(true)
-  expect(debugLines.some((line) => line.text.includes('id: unknown') && line.text.includes('metadata.alias_type'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('id: unknown') && line.text.includes('alias_type'))).toBe(true)
   expect(debugLines.some((line) => line.text.includes('terms') && line.text.includes('重なり'))).toBe(true)
 })
 
 // 書式の誤った YAML の文書だけを外し、他の行の文脈は追加する（異常系）
 test('test_error_when_yaml_malformed', async ($, on) => {
   // 準備
-  const config = makeConfig({ aliases: aliasLines({ id: 'urls', type: 'url', paths: 'urls/*.yaml', metadata: ['name:', '  type: ref', '  field: title'] }) })
+  const config = makeConfig({ aliases: aliasLines({ id: 'urls', type: 'url', paths: 'urls/*.yaml', metadata: ['name: title'] }) })
   const fs = makeFs(config)
   const brokenPath = `${CONFIG_DIR}/urls/site.yaml`
   fs.write(brokenPath, 'id: [url-a\ntitle: Site\n')
@@ -418,29 +412,43 @@ test('test_error_when_env_without_endpoint', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('env-x') && line.text.includes('url') && line.text.includes('port'))).toBe(true)
 })
 
-// 設定ファイルの旧い構造の要素をスキーマに合わない行として外し、dev-docs.yaml のトップレベルの aliases は読まない（異常系）
+// 設定ファイルの旧い構造の要素と dev-docs.yaml の metadata.alias_type を持つ行を外し、dev-docs.yaml のトップレベルの aliases は読まない（異常系）
 test('test_error_when_legacy_aliases', async ($, on) => {
   // 準備
-  // metadata を持たない旧い構造の要素
+  // metadata を持たない旧い構造の要素と、行の alias_type を持たず metadata.alias_type を持つ要素
   const legacyUrlRow = ['- id: urls', '  type: url', '  paths: [urls/*.yaml]', '  fields:', '    id: id', '    match: [name]', '    url: url']
+  const metadataAliasTypeRow = ['- id: old-terms', '  paths: [old/*.yaml]', '  metadata:', '    alias_type:', '      type: custom', '      value: term']
+  const oldDocsRow = ['- id: old-docs', '  paths: [old-docs/*.yaml]', '  metadata:', '    alias_type:', '      type: custom', '      value: term']
   const legacyTermRow = ['- id: legacy', '  type: term', '  paths: [legacy/*.yaml]']
-  const fs = makeFs(makeConfig({ aliases: legacyUrlRow }), makeDevDocs({ rootExtra: ['aliases:', ...indent(legacyTermRow, 2)] }))
+  const fs = makeFs(
+    makeConfig({ aliases: [...legacyUrlRow, ...metadataAliasTypeRow] }),
+    makeDevDocs({ documentsExtra: oldDocsRow, rootExtra: ['aliases:', ...indent(legacyTermRow, 2)] }),
+  )
   fs.write(`${CONFIG_DIR}/urls/link-a.yaml`, 'id: link-a\nname: link-a\nurl: https://example.com\n')
+  fs.write(`${CONFIG_DIR}/old/term-w.yaml`, termYaml({ id: 'term-w', name: 'Term-W' }))
+  fs.write(`${KNOWLEDGE_DIR}/old-docs/term-v.yaml`, termYaml({ id: 'term-v', name: 'Term-V' }))
   fs.write(`${KNOWLEDGE_DIR}/legacy/term-y.yaml`, termYaml({ id: 'term-y', name: 'Term-Y' }))
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  const result = await submit($, 'term-a・link-a・term-y')
+  const result = await submit($, 'term-a・link-a・term-y・term-w・term-v')
 
   // 検証
   const context = result.context?.[0] ?? ''
   expect(context).toContain('Term-A')
   expect(context).not.toContain('link-a')
   expect(context).not.toContain('Term-Y')
-  // 設定ファイルのパス・行の id・理由を含む行が debug log に届く
-  const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
-  expect(logged.some((line) => line.text.includes('urls') && line.text.includes('metadata'))).toBe(true)
+  expect(context).not.toContain('Term-W')
+  expect(context).not.toContain('Term-V')
+  // 設定ファイルのパス・行の id・理由を含む行と、dev-docs.yaml のパス・old-docs・metadata.alias_type を含む行が debug log に届く
+  const configLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
+  expect(configLines.some((line) => line.text.includes('urls'))).toBe(true)
+  expect(configLines.some((line) => line.text.includes('old-terms'))).toBe(true)
+  const devDocsLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(DEV_DOCS_PATH))
+  expect(devDocsLines.some((line) => line.text.includes('old-docs') && line.text.includes('metadata.alias_type'))).toBe(true)
   expect(fs.reads).not.toContain(`${CONFIG_DIR}/urls/link-a.yaml`)
+  expect(fs.reads).not.toContain(`${CONFIG_DIR}/old/term-w.yaml`)
+  expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/old-docs/term-v.yaml`)
   expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/legacy/term-y.yaml`)
 })
 
@@ -463,4 +471,33 @@ test('test_error_when_required_value_missing', async ($, on) => {
   // term-n の YAML のパス・文書の id・空のキーを含む行が debug log に届く
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(debugLines.some((line) => line.text.includes('term-n') && line.text.includes('description'))).toBe(true)
+})
+
+// body_file の列のファイル名を語にした records の行の文書を、alias_type の文書として追加する（正常系）
+test('test_normal_when_records_body_file', async ($, on) => {
+  // 準備
+  // id・name を持たない管理用の YAML の要素を、metadata.id の path の列で id にする
+  const config = makeConfig({
+    aliases: aliasLines({
+      id: 'guides',
+      type: 'doc',
+      paths: 'files.yaml',
+      records: 'files',
+      bodyFile: 'path',
+      metadata: ['id: path', 'description: meta.summary'],
+    }),
+  })
+  const fs = makeFs(config)
+  fs.write(`${CONFIG_DIR}/files.yaml`, 'files:\n  - path: docs/使い方/セットアップ.md\n    meta:\n      summary: 前提と手順\n')
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'セットアップとは')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('## 文書')
+  expect(context).toContain('- セットアップ（id: docs/使い方/セットアップ.md）')
+  expect(context).toContain('description: 前提と手順')
+  expect(world.logs).toEqual([])
 })
