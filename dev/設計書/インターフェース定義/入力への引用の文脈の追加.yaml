@@ -16,8 +16,8 @@ flows:
         description: '`global.repositories` に `config: /repo/knowledge/dev-docs.yaml` の要素を 1 つ持つ'
         notes: '-'
       - name: dev-docs.yaml
-        description: '`documents` に、`id: terms`・`paths: [terms/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の行と、`metadata` に `alias_type` を持たず `paths: [docs/*.yaml]` の行を持つ'
-        notes: 用語の行は `records` と他の `metadata` のキーを書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る。`paths` は `/repo/knowledge/` を起点に解決される
+        description: '`documents` に、`id: terms`・`paths: [terms/*.yaml]`・`alias_type: term` の行と、`alias_type` を持たず `paths: [docs/*.yaml]` の行を持つ'
+        notes: 用語の行は `records` と `metadata` を書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る。`paths` は `/repo/knowledge/` を起点に解決される
       - name: 用語の YAML
         description: '`/repo/knowledge/terms/term-a.yaml`（`id: term-a`・`name: Term-A`・`aliases: [用語エー]`・`description`）と `term-b.yaml`（`id: term-b`・`description`。`name` を持たない）'
         notes: term-b の語はファイル名の `term-b` になる
@@ -193,7 +193,7 @@ flows:
         description: 正常系に加え、起動したプロジェクトの直下を `/repo/sample` にする
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global` に加え、`projects` に `match: sample`（`aliases` に `id: commands`・`paths: [docs/command.yaml]`・`records: commands`・`metadata.alias_type: {type: custom, value: command}` の行）と、`match: other`（同じ構成で `paths: [docs/other.yaml]`）の要素を持つ'
+        description: '正常系の `global` に加え、`projects` に `match: sample`（`aliases` に `id: commands`・`paths: [docs/command.yaml]`・`records: commands`・`alias_type: command` の行）と、`match: other`（同じ構成で `paths: [docs/other.yaml]`）の要素を持つ'
         notes: '`paths` は相対パスで `/repo/sample/docs/` に解決される'
       - name: コマンドの YAML
         description: '`/repo/sample/docs/command.yaml` の配列 `commands` に要素 term-a（`id: term-a`・`command: make term-a`。`name` を持たない）'
@@ -329,7 +329,7 @@ flows:
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
         notes: '-'
       - name: dev-docs.yaml
-        description: '1 回目の入力の後に `mtimeMs` を進め、`documents` に `id: commands`・`paths: [commands/*.yaml]`・`metadata.alias_type: {type: custom, value: command}` の行を追加する'
+        description: '1 回目の入力の後に `mtimeMs` を進め、`documents` に `id: commands`・`paths: [commands/*.yaml]`・`alias_type: command` の行を追加する'
         notes: '-'
       - name: コマンドの YAML
         description: '`/repo/knowledge/commands/cmd-a.yaml`（`id: cmd-a`・`name: cmd-a`・`command: make cmd-a`）'
@@ -408,14 +408,14 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で `/repo/missing/dev-docs.yaml` と理由を含む行が届いている
     test: test_error_when_repository_unreadable
   - name: 異常系（スキーマに合わない行）
-    summary: スキーマに合わない行・知らない alias_type の行・id の重なった後の行だけを外し、他の行の文脈は追加する
+    summary: スキーマに合わない行・id の重なった後の行だけを外し、他の行の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
         notes: '-'
       - name: dev-docs.yaml
-        description: '`documents` に、正常系の用語の行に加え、`id: bad`・`paths: [bad/*.yaml]` で `metadata.name` を文字列 `title` で書いた term の行、`id: unknown`・`paths: [unknown/*.yaml]` で `metadata.alias_type` が `{type: custom, value: glossary}` の行、正常系の行と同じ `id: terms` で `paths: [dup/*.yaml]` の行を持つ'
-        notes: '`metadata` の値は `ref` か `custom` のオブジェクトだけを許す'
+        description: '`documents` に、正常系の用語の行に加え、`id: bad`・`paths: [bad/*.yaml]`・`alias_type: term` で `metadata.name` を空の文字列で書いた行、`id: unknown`・`paths: [unknown/*.yaml]` で `alias_type` が `glossary` の行、正常系の行と同じ `id: terms` で `paths: [dup/*.yaml]` の行を持つ'
+        notes: '`metadata` の値は 1 文字以上の列名の文字列だけを許し、`alias_type` は 9 つの値だけを許す'
       - name: 用語の YAML
         description: 正常系に加え、`/repo/knowledge/bad/` に文書 term-x、`/repo/knowledge/unknown/` に文書 term-v、`/repo/knowledge/dup/` に文書 term-z を持つ
         notes: '-'
@@ -431,7 +431,7 @@ flows:
 
         CC->>IF: term-a・term-x・term-v・term-z
         IF->>FS: dev-docs.yaml を読む
-        IF->>IF: id: bad はスキーマに合わず、id: unknown は alias_type が 9 つに無く、後の id: terms は重なるので外す
+        IF->>IF: id: bad と id: unknown はスキーマに合わず、後の id: terms は重なるので外す
         IF->>FS: 残った行の YAML を読む
         IF-->>CC: context に term-a だけ
       ```
@@ -447,7 +447,7 @@ flows:
         description: 正常系と同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: urls`・`paths: [urls/*.yaml]`・`metadata`（`alias_type: {type: custom, value: url}`・`name: {type: ref, field: title}`）の行を持つ'
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: urls`・`paths: [urls/*.yaml]`・`alias_type: url`・`metadata.name: title` の行を持つ'
         notes: '-'
       - name: URL の YAML
         description: 設定ファイルのフォルダの `urls/` に、閉じていない括弧を含む書式の誤った YAML
@@ -480,8 +480,8 @@ flows:
         description: 正常系と同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: skills`・`id: tools`・`id: paths`・`id: envs`・`id: avoids` の行を持ち、`metadata.alias_type` をそれぞれ `{type: custom, value: skill}`・`tool`・`path`・`env`・`avoid` にする'
-        notes: どの行も `alias_type` だけを書き、`paths` は設定フォルダの `{種類}/*.yaml`
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: skills`・`id: tools`・`id: paths`・`id: envs`・`id: avoids` の行を持ち、`alias_type` をそれぞれ `skill`・`tool`・`path`・`env`・`avoid` にする'
+        notes: どの行も `metadata` を書かず、`paths` は設定フォルダの `{種類}/*.yaml`
       - name: 種類ごとの YAML
         description: '文書 skill-a（`skill: code-review`）・tool-a（`tool: search_design_docs`）・path-a（`path: ~/.config/ai-monitor/settings.yaml`）・env-a（`url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー`）・avoid-a（`replacement: term-a`）。どの文書も `id`・`name` を持つ'
         notes: 'env-b（`port: 5432` だけを持ち `url` が無い）も envs の YAML に持つ'
@@ -519,7 +519,7 @@ flows:
         description: 正常系と同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: envs`・`paths: [envs/*.yaml]`・`metadata.alias_type: {type: custom, value: env}` の行を持つ'
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: envs`・`paths: [envs/*.yaml]`・`alias_type: env` の行を持つ'
         notes: '-'
       - name: 環境の YAML
         description: 設定フォルダの `envs/` に、文書 env-x（`id`・`name`・`description` だけを持つ）と env-a（`id`・`name`・`url` を持つ）
@@ -545,22 +545,22 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で env-x の YAML のパス・`env-x`・`url`・`port` を含む行が届いている
     test: test_error_when_env_without_endpoint
   - name: 異常系（旧い構造の aliases）
-    summary: 設定ファイルの旧い構造の要素をスキーマに合わない行として外し、dev-docs.yaml のトップレベルの aliases は読まない
+    summary: 設定ファイルの旧い構造の要素と、dev-docs.yaml の metadata.alias_type を持つ行を外し、dev-docs.yaml のトップレベルの aliases は読まない
     setup:
       - name: Mock
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に旧い構造の `id: urls`・`type: url`・`paths: [urls/*.yaml]`・`fields`（`id: id`・`match: [name]`・`url: url`）の要素を持つ'
-        notes: '`metadata` を持たない'
+        description: '正常系の `global.repositories` に加え、`global.aliases` に旧い構造の `id: urls`・`type: url`・`paths: [urls/*.yaml]`・`fields`（`id: id`・`match: [name]`・`url: url`）の要素と、行の `alias_type` を持たず `id: old-terms`・`paths: [old/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の要素を持つ'
+        notes: '`id: urls` は `metadata` を持たない'
       - name: dev-docs.yaml
-        description: '正常系の `documents` に加え、トップレベルの `aliases` に旧い構造の `id: legacy`・`type: term`・`paths: [legacy/*.yaml]` の要素を持つ'
+        description: '正常系の `documents` に加え、行の `alias_type` を持たず `id: old-docs`・`paths: [old-docs/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の行を持ち、トップレベルの `aliases` に旧い構造の `id: legacy`・`type: term`・`paths: [legacy/*.yaml]` の要素を持つ'
         notes: '-'
       - name: YAML
-        description: 設定フォルダの `urls/` に文書 link-a、`/repo/knowledge/legacy/` に文書 term-y を持つ
+        description: 設定フォルダの `urls/` に文書 link-a、`old/` に文書 term-w、`/repo/knowledge/old-docs/` に文書 term-v、`/repo/knowledge/legacy/` に文書 term-y を持つ
         notes: '-'
       - name: 入力
-        description: 「term-a・link-a・term-y」
+        description: 「term-a・link-a・term-y・term-w・term-v」
         notes: '-'
     flow: |-
       ```mermaid
@@ -569,18 +569,19 @@ flows:
         participant IF as prompt.submit
         participant FS as ファイル・settings
 
-        CC->>IF: term-a・link-a・term-y
+        CC->>IF: term-a・link-a・term-y・term-w・term-v
         IF->>FS: 設定ファイルと dev-docs.yaml を読む
         IF->>IF: dev-docs.yaml は documents だけを取り出す
-        IF->>IF: 設定ファイルの id: urls は metadata が無くスキーマに合わないので外す
+        IF->>IF: 設定ファイルの id: urls と id: old-terms はスキーマに合わないので外す
+        IF->>IF: dev-docs.yaml の id: old-docs は旧い構造の行なので外す
         IF->>FS: 残った行の YAML を読む
         IF-->>CC: context に term-a だけ
       ```
     expected:
-      - 返る `context` に term-a があり、link-a と term-y が無い
+      - 返る `context` に term-a があり、link-a・term-y・term-w・term-v が無い
       - フックが例外で終わらない
-      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパス・`urls`・理由を含む行が届いている
-      - 設定フォルダの `urls/` と `/repo/knowledge/legacy/` の YAML に `fs.read` が呼ばれていない
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスと理由を含む `urls`・`old-terms` の行と、`dev-docs.yaml` のパス・`old-docs`・`metadata.alias_type` を含む行が届いている
+      - 設定フォルダの `urls/`・`old/` と `/repo/knowledge/old-docs/`・`/repo/knowledge/legacy/` の YAML に `fs.read` が呼ばれていない
     test: test_error_when_legacy_aliases
   - name: 異常系（必須の値が空の文書）
     summary: 必須のキーの値が空の文書だけを外し、同じ行の他の文書の文脈は追加する
@@ -611,6 +612,40 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で term-n の YAML のパス・`term-n`・`description` を含む行が届いている
     test: test_error_when_required_value_missing
+  - name: 正常系（本文のファイルを指す records の行）
+    summary: name が空の records の要素に body_file の列のファイル名を付け、入れ子の列から description を取る
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: guides`・`paths: [files.yaml]`・`alias_type: doc`・`records: files`・`body_file: path`・`metadata.description: meta.summary` の行を持つ'
+        notes: '`paths` は設定フォルダの `files.yaml`'
+      - name: 管理用の YAML
+        description: '設定フォルダの `files.yaml` の配列 `files` に、`id: doc-setup`・`path: docs/使い方/セットアップ.md`・`meta.summary: 前提と手順` の要素（`name` を持たない）と、`id: doc-x`・`meta.summary: 本文のファイルが無い` の要素（`name`・`path` を持たない）を持つ'
+        notes: doc-setup の語は `path` のファイル名の `セットアップ`、doc-x の語は `id` の `doc-x` になる
+      - name: 入力
+        description: 「セットアップと doc-x」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+
+        CC->>IF: セットアップと doc-x
+        IF->>FS: files.yaml を読む
+        FS-->>IF: 配列 files の要素
+        IF->>IF: name が空の要素に、path の列のファイル名か id を付ける
+        IF->>IF: description を meta.summary の列から取る
+        IF-->>CC: context の「文書」にセットアップと doc-x
+      ```
+    expected:
+      - '返る `context` の `## 文書` に、`セットアップ（id: doc-setup）` と `description: 前提と手順` が並ぶ'
+      - '返る `context` の `## 文書` に、`doc-x（id: doc-x）` と `description: 本文のファイルが無い` が並ぶ'
+      - テストの `on` の `ui.log` に行が届いていない
+    test: test_normal_when_records_body_file
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
@@ -679,10 +714,10 @@ exceptions:
     condition: '`repositories` の要素の `config` が指す `dev-docs.yaml` が無い・読めない・書式が誤っているか、`documents` が並びでない'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で `dev-docs.yaml` のパスと理由を debug log に出し、そのリポジトリの行だけを照合から外す'
   - name: なし（スキーマに合わない行）
-    condition: '設定ファイルの `aliases` の行か、`dev-docs.yaml` の `documents` のうち `metadata.alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧い構造の要素を含む）か、`alias_type` が `custom` で 9 つのどれでもないか、同じ出所の中で先の行と `id` が重なる'
+    condition: '設定ファイルの `aliases` の行か、`dev-docs.yaml` の `documents` のうち `alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧い構造の要素・9 つに無い `alias_type`・列名の文字列でない `metadata` の値を含む）か、`dev-docs.yaml` の `documents` の行が行の `alias_type` を持たず `metadata.alias_type` を持つか、同じ出所の中で先の行と `id` が重なる'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で出所（`dev-docs.yaml` か設定ファイルのパス）・行の `id`（無ければ並びの位置）・理由を debug log に出し、その行だけを照合から外す'
   - name: なし（必須の値が空の文書）
-    condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空か（env は `url`・`port` の両方が空）、`alias_type` が `ref` で解決した値が 9 つのどれでもない
+    condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空（env は `url`・`port` の両方が空）
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`（空なら `records` の並びの位置）・空のキーを debug log に出し、その文書だけを照合から外す'
 constraints:
   - item: 処理時間
@@ -708,10 +743,10 @@ constraints:
     constraint: '`origins` を書かないときはすべての出所の入力に追加する。書いたときは、`origins` に対応づかない出所の入力には追加しない'
     decided_by: dev/設計書/設定/プラグイン#settings[global.origins]
   - item: 検証
-    constraint: '設定ファイルの `aliases` の行と、読んだ `dev-docs.yaml` の `documents` のうち `metadata.alias_type` を持つ行を、行ごとに `schemas/aliases.schema.yaml` で検証する。行と `metadata` の他のキーは弾かない。`enabled: false` の `repositories` の要素と行は読まない。`id` の重なりは出所ごとに確かめ、設定ファイルは `global` と当たった `projects` を重ねた並びで確かめる。種類ごとの必須のキーは、文書ごとに解決した値で確かめる'
-    notes: '`dev-docs.yaml` は `documents` だけを読み、トップレベルの `aliases` は読まない。`documents` を持たない `dev-docs.yaml` は行 0 件として扱い、`metadata.alias_type` を持たない行は検証せずに飛ばす。どちらもログを出さない'
+    constraint: '設定ファイルの `aliases` の行と、読んだ `dev-docs.yaml` の `documents` のうち `alias_type` を持つ行を、行ごとに `schemas/aliases.schema.yaml` で検証する。行と `metadata` の他のキーは弾かない。`enabled: false` の `repositories` の要素と行は読まない。`id` の重なりは出所ごとに確かめ、設定ファイルは `global` と当たった `projects` を重ねた並びで確かめる。種類ごとの必須のキーは、文書ごとに解決した値で確かめる'
+    notes: '`dev-docs.yaml` は `documents` だけを読み、トップレベルの `aliases` は読まない。`documents` を持たない `dev-docs.yaml` は行 0 件として扱い、`alias_type` も `metadata.alias_type` も持たない行は検証せずに飛ばす。どちらもログを出さない'
   - item: 文書の取り出し
-    constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は `ref` なら文書の `field` の列、`custom` なら `value`、書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名（拡張子を除く）、`records` の要素は `id` を使う'
+    constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使う（ファイル名は拡張子を除く）'
     notes: '-'
 refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#
