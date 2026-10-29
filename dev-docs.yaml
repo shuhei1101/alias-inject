@@ -1,196 +1,68 @@
 version: "1"
 name: alias-inject
 documents:
-  - id: flowchart
-    type: markdown
-    paths: [docs/使い方/エイリアスを登録するかを決める.md]
-    metadata:
-      tags:
-        type: custom
-        value: [scope:判定フローチャート, topic:エイリアス]
-  # README.md と index.yaml は目次なので、paths の先頭の文字の否定（[!R]・[!i]）で外す
   - id: docs
-    type: markdown
     title: 公開ドキュメント
-    paths:
-      - "docs/はじめに/[!R]*.md"
-      - "docs/はじめに/コアコンセプト/[!R]*.md"
-      - "docs/リファレンス/[!R]*.md"
-      - docs/使い方/セットアップ.md
-      - docs/使い方/設定の移し替え.md
-    defaults:
-      - paths: ["docs/はじめに/**"]
-        tags: [scope:はじめに]
-      - paths: ["docs/使い方/**"]
-        tags: [scope:使い方]
-      - paths: ["docs/リファレンス/**"]
-        tags: [scope:リファレンス]
-      - paths: [docs/はじめに/コアコンセプト/引用の文脈.md]
-        tags: [topic:引用の文脈]
-      - paths: [docs/はじめに/コアコンセプト/変数参照の値.md]
-        tags: [topic:変数参照]
-      - paths: [docs/リファレンス/エイリアスのスキーマ.md]
-        tags: [topic:エイリアス]
-      - paths: [docs/リファレンス/設定ファイル.md]
-        tags: [topic:設定ファイル]
-      - paths: [docs/使い方/セットアップ.md]
-        tags: [topic:セットアップ手順]
-      - paths: [docs/使い方/設定の移し替え.md]
-        tags: [topic:設定の移し替え]
+    paths: [docs/files.yaml]
+    records: files
+    body_file: path
+    schema: dev/テンプレート/files.schema.yaml
+    metadata:
+      id: path
+  # index.yaml は目次なので、paths の先頭の文字の否定（[!i]）で外す
   - id: architecture
-    type: yaml
     title: アーキテクチャ図
     paths: ["dev/設計書/アーキテクチャ図/[!i]*.yaml"]
     schema: dev/テンプレート/アーキテクチャ図.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:アーキテクチャ図]
+      name: title
   - id: interface
-    type: yaml
     title: インターフェース定義
     paths: ["dev/設計書/インターフェース定義/[!i]*.yaml"]
     schema: dev/テンプレート/インターフェース定義.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:インターフェース定義]
-    defaults:
-      - paths: [dev/設計書/インターフェース定義/入力への引用の文脈の追加.yaml]
-        tags: [topic:引用の文脈]
-      - paths: [dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加.yaml]
-        tags: [topic:変数参照]
-      - paths:
-          - dev/設計書/インターフェース定義/圧縮の後の記録の消去.yaml
-          - dev/設計書/インターフェース定義/クリアの後の記録の消去.yaml
-        tags: [topic:記録の消去]
+      name: title
   - id: scenario
-    type: yaml
     title: シナリオ
     paths:
       - "dev/設計書/シナリオ/単一ユースケース/[!i]*.yaml"
       - "dev/設計書/シナリオ/複合ユースケース/[!i]*.yaml"
     schema: dev/テンプレート/シナリオ.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:シナリオ]
-    defaults:
-      - paths: ["dev/設計書/シナリオ/単一ユースケース/*.yaml"]
-        tags: [topic:単一ユースケース]
-      - paths: ["dev/設計書/シナリオ/複合ユースケース/*.yaml"]
-        tags: [topic:複合ユースケース]
-      - paths:
-          - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加.yaml
-          - dev/設計書/シナリオ/複合ユースケース/セッションを通した引用の文脈の追加.yaml
-        tags: [topic:引用の文脈]
-      - paths: [dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加.yaml]
-        tags: [topic:変数参照]
-      - paths: [dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去.yaml]
-        tags: [topic:記録の消去]
-      - paths: [dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し.yaml]
-        tags: [topic:設定の読み直し]
+      name: title
   - id: test_procedure
-    type: yaml
     title: テスト実行方法
     paths: ["dev/設計書/テスト/[!i]*.yaml"]
     schema: dev/テンプレート/テスト実行方法.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:テスト実行方法, topic:testing]
+      name: title
   - id: module
-    type: yaml
     title: モジュール構成
     paths: ["dev/設計書/モジュール構成/**/[!i]*.yaml"]
     schema: dev/テンプレート/モジュール構成.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:モジュール構成]
-    defaults:
-      - paths:
-          - dev/設計書/モジュール構成/プラグイン/照合.yaml
-          - dev/設計書/モジュール構成/プラグイン/文脈.yaml
-          - dev/設計書/モジュール構成/プラグイン/記録.yaml
-        tags: [topic:引用の文脈]
-      - paths: [dev/設計書/モジュール構成/プラグイン/変数参照.yaml]
-        tags: [topic:変数参照]
-      - paths: [dev/設計書/モジュール構成/プラグイン/記録.yaml]
-        tags: [topic:記録の消去]
-      - paths:
-          - dev/設計書/モジュール構成/プラグイン/読み込み.yaml
-          - dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml
-          - dev/設計書/モジュール構成/プラグイン/項目.yaml
-        tags: [topic:設定の読み直し]
-      - paths:
-          - dev/設計書/モジュール構成/プラグイン/エイリアス.yaml
-          - dev/設計書/モジュール構成/プラグイン/スキーマ.yaml
-          - dev/設計書/モジュール構成/プラグイン/リポジトリ.yaml
-          - dev/設計書/モジュール構成/プラグイン/項目.yaml
-        tags: [topic:エイリアス]
-      - paths: [dev/設計書/モジュール構成/プラグイン/設定.yaml]
-        tags: [topic:設定ファイル]
+      name: title
   - id: library
-    type: yaml
     title: 外部ライブラリ
     paths: ["dev/設計書/外部ライブラリ/[!i]*.yaml"]
     schema: dev/テンプレート/外部ライブラリ.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:外部ライブラリ]
+      name: title
   - id: config
-    type: yaml
     title: 設定
     paths: ["dev/設計書/設定/[!i]*.yaml"]
     schema: dev/テンプレート/設定.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:設定ファイル]
+      name: title
   - id: dev_command
-    type: yaml
     title: 開発コマンド
     paths: ["dev/設計書/開発コマンド/[!i]*.yaml"]
     schema: dev/テンプレート/開発コマンド.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:開発コマンド]
+      name: title
   - id: nonfunctional
-    type: yaml
     title: 非機能要件
     paths: ["dev/設計書/非機能要件/[!i]*.yaml"]
     schema: dev/テンプレート/非機能要件.schema.yaml
     metadata:
-      name:
-        type: ref
-        field: title
-      tags:
-        type: custom
-        value: [scope:設計書, topic:非機能要件]
+      name: title
