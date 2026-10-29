@@ -9,60 +9,69 @@ documents:
     schema: dev/テンプレート/files.schema.yaml
     metadata:
       id: path
-  # index.yaml は目次なので、paths の先頭の文字の否定（[!i]）で外す
+  # index.yaml は目次なので、exclude で外す
   - id: architecture
     title: アーキテクチャ図
-    paths: ["dev/設計書/アーキテクチャ図/[!i]*.yaml"]
+    paths: ["dev/設計書/アーキテクチャ図/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/アーキテクチャ図.schema.yaml
     metadata:
       name: title
   - id: interface
     title: インターフェース定義
-    paths: ["dev/設計書/インターフェース定義/[!i]*.yaml"]
+    paths: ["dev/設計書/インターフェース定義/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/インターフェース定義.schema.yaml
     metadata:
       name: title
   - id: scenario
     title: シナリオ
     paths:
-      - "dev/設計書/シナリオ/単一ユースケース/[!i]*.yaml"
-      - "dev/設計書/シナリオ/複合ユースケース/[!i]*.yaml"
+      - "dev/設計書/シナリオ/単一ユースケース/*.yaml"
+      - "dev/設計書/シナリオ/複合ユースケース/*.yaml"
+    exclude: [index.yaml]
     schema: dev/テンプレート/シナリオ.schema.yaml
     metadata:
       name: title
   - id: test_procedure
     title: テスト実行方法
-    paths: ["dev/設計書/テスト/[!i]*.yaml"]
+    paths: ["dev/設計書/テスト/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/テスト実行方法.schema.yaml
     metadata:
       name: title
   - id: module
     title: モジュール構成
-    paths: ["dev/設計書/モジュール構成/**/[!i]*.yaml"]
+    paths: ["dev/設計書/モジュール構成/**/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/モジュール構成.schema.yaml
     metadata:
       name: title
   - id: library
     title: 外部ライブラリ
-    paths: ["dev/設計書/外部ライブラリ/[!i]*.yaml"]
+    paths: ["dev/設計書/外部ライブラリ/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/外部ライブラリ.schema.yaml
     metadata:
       name: title
   - id: config
     title: 設定
-    paths: ["dev/設計書/設定/[!i]*.yaml"]
+    paths: ["dev/設計書/設定/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/設定.schema.yaml
     metadata:
       name: title
   - id: dev_command
     title: 開発コマンド
-    paths: ["dev/設計書/開発コマンド/[!i]*.yaml"]
+    paths: ["dev/設計書/開発コマンド/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/開発コマンド.schema.yaml
     metadata:
       name: title
   - id: nonfunctional
     title: 非機能要件
-    paths: ["dev/設計書/非機能要件/[!i]*.yaml"]
+    paths: ["dev/設計書/非機能要件/*.yaml"]
+    exclude: [index.yaml]
     schema: dev/テンプレート/非機能要件.schema.yaml
     metadata:
       name: title
