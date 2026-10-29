@@ -1,5 +1,5 @@
 title: "プラグイン / リポジトリ"
-lead: 読むリポジトリの `dev-docs.yaml` を更新時刻が変わったときだけ読み、`documents` のうち `metadata.alias_type` を持つ行だけを取り出して `paths` をそのフォルダから解決する。
+lead: 読むリポジトリの `dev-docs.yaml` を更新時刻が変わったときだけ読み、`documents` のうち `alias_type` を持つ行だけを取り出して `paths` をそのフォルダから解決する。
 directory: |-
   ```text
   hooks/
@@ -21,10 +21,10 @@ data_models:
     properties:
       - name: aliases
         type: ResolvedAlias[]
-        description: '`metadata.alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `dev-docs.yaml` の絶対パス'
+        description: '`alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `dev-docs.yaml` の絶対パス'
       - name: warnings
         type: string[]
-        description: スキーマに合わない行と `id` の重なった行の理由。呼び出し元が debug log に出す
+        description: スキーマに合わない行・旧い構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す
 classes:
   - name: RepositoryError
     title: dev-docs.yaml の読み込みの失敗
@@ -45,7 +45,7 @@ functions:
     kind: 関数
     container: hooks/lib/repository.ts
     usecase: 共通
-    summary: '`dev-docs.yaml` の文字列から `documents` のうち `metadata.alias_type` を持つ行だけを取り出し、`paths` をそのフォルダから解決する'
+    summary: '`dev-docs.yaml` の文字列から `documents` のうち `alias_type` を持つ行だけを取り出し、`paths` をそのフォルダから解決する'
     scope: public
     is_async: false
     args:
@@ -91,7 +91,7 @@ functions:
       - name: test_parse_repository
         case: 正常
         summary: '`documents` の alias_type を持つ行の `paths` を `dev-docs.yaml` のフォルダから解決し、他の行とキーは読まない'
-        condition: 'path が `/repo/knowledge/dev-docs.yaml`。`enabled: false` と、`documents` に `paths: [terms/*.yaml]` で `metadata.alias_type: {type: custom, value: term}` の行と `metadata` に `alias_type` を持たない行を持つ'
+        condition: 'path が `/repo/knowledge/dev-docs.yaml`。`enabled: false` と、`documents` に `paths: [terms/*.yaml]` で `alias_type: term` の行と、`alias_type` も `metadata.alias_type` も持たない行を持つ'
         mock: なし
         expected: aliases が 1 件で、`patterns` が `['/repo/knowledge/terms/*.yaml']`、`origin` が path、warnings が空
       - name: test_parse_repository_when_documents_missing
@@ -102,10 +102,10 @@ functions:
         expected: どちらも aliases も warnings も空
       - name: test_parse_repository_when_alias_invalid
         case: 正常
-        summary: スキーマに合わない行と id の重なった行を外す
-        condition: '`documents` に、alias_type を持つ `id: terms` の行、`metadata.name` が文字列の `id: bad` の行、alias_type が custom の `memo` の `id: unknown` の行、同じ `id: terms` の行'
+        summary: スキーマに合わない行・旧い構造の行・id の重なった行を外す
+        condition: '`documents` に、`alias_type: term` の `id: terms` の行、`alias_type: term` で `metadata.name` が空文字の `id: bad` の行、`alias_type: glossary` の `id: unknown` の行、行の `alias_type` を持たず `metadata.alias_type` を持つ `id: old` の行、同じ `id: terms` の行'
         mock: なし
-        expected: aliases が先の terms の 1 件で、warnings に `bad`・`unknown`・`terms` の理由。理由のパスは `documents[{位置}]`
+        expected: aliases が先の terms の 1 件で、warnings に `bad`・`unknown`・`old`・`terms` の理由。理由のパスは `documents[{位置}]`
       - name: test_parse_repository_when_malformed
         case: 異常
         summary: 書式の誤り・`documents` が並びでない・最上位が並びなら例外

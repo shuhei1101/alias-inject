@@ -236,7 +236,7 @@ functions:
       - name: test_parse_config_when_alias_invalid
         case: 正常
         summary: スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す
-        condition: '`global.aliases` に `metadata.alias_type` が `{type: custom, value: memo}` の行と正しい要素、`projects` の要素に `repositories: a` と `aliases: b`'
+        condition: '`global.aliases` に `alias_type: memo` の行と正しい要素、`projects` の要素に `repositories: a` と `aliases: b`'
         mock: なし
         expected: aliases が正しい要素の 1 件、projects の repositories・aliases が []。warnings に `global.aliases[0]`・`repositories`・`aliases` の理由が入る
       - name: test_parse_config_when_origins_empty
