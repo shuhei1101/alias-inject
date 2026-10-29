@@ -613,19 +613,19 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で term-n の YAML のパス・`term-n`・`description` を含む行が届いている
     test: test_error_when_required_value_missing
   - name: 正常系（本文のファイルを指す records の行）
-    summary: name が空の records の要素に body_file の列のファイル名を付け、入れ子の列から description を取る
+    summary: name が空の records の要素に body_file の列のファイル名を付け、id と description を metadata の列から取る
     setup:
       - name: Mock
         description: 正常系と同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: guides`・`paths: [files.yaml]`・`alias_type: doc`・`records: files`・`body_file: path`・`metadata.description: meta.summary` の行を持つ'
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `id: guides`・`paths: [files.yaml]`・`alias_type: doc`・`records: files`・`body_file: path`・`metadata.id: path`・`metadata.description: meta.summary` の行を持つ'
         notes: '`paths` は設定フォルダの `files.yaml`'
       - name: 管理用の YAML
-        description: '設定フォルダの `files.yaml` の配列 `files` に、`id: doc-setup`・`path: docs/使い方/セットアップ.md`・`meta.summary: 前提と手順` の要素（`name` を持たない）と、`id: doc-x`・`meta.summary: 本文のファイルが無い` の要素（`name`・`path` を持たない）を持つ'
-        notes: doc-setup の語は `path` のファイル名の `セットアップ`、doc-x の語は `id` の `doc-x` になる
+        description: '設定フォルダの `files.yaml` の配列 `files` に、`path: docs/使い方/セットアップ.md`・`meta.summary: 前提と手順` の要素を持つ'
+        notes: dev-docs の `templates/files.schema.yaml` のとおり `id`・`name` を持たない。語は `path` のファイル名の `セットアップ` になる
       - name: 入力
-        description: 「セットアップと doc-x」
+        description: 「セットアップとは」
         notes: '-'
     flow: |-
       ```mermaid
@@ -634,16 +634,15 @@ flows:
         participant IF as prompt.submit
         participant FS as ファイル・settings
 
-        CC->>IF: セットアップと doc-x
+        CC->>IF: セットアップとは
         IF->>FS: files.yaml を読む
         FS-->>IF: 配列 files の要素
-        IF->>IF: name が空の要素に、path の列のファイル名か id を付ける
-        IF->>IF: description を meta.summary の列から取る
-        IF-->>CC: context の「文書」にセットアップと doc-x
+        IF->>IF: id を path の列、description を meta.summary の列から取る
+        IF->>IF: name が空なので path の列のファイル名を付ける
+        IF-->>CC: context の「文書」にセットアップ
       ```
     expected:
-      - '返る `context` の `## 文書` に、`セットアップ（id: doc-setup）` と `description: 前提と手順` が並ぶ'
-      - '返る `context` の `## 文書` に、`doc-x（id: doc-x）` と `description: 本文のファイルが無い` が並ぶ'
+      - '返る `context` の `## 文書` に、`セットアップ（id: docs/使い方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_records_body_file
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
