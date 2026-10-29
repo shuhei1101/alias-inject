@@ -302,16 +302,13 @@ def alias_lines(
     records: str | None = None,
     metadata: list[str] | None = None,
 ) -> list[str]:
-    """エイリアスの元の行 1 つの行（`- id:` を字下げなしで始める）。alias_type は `metadata.alias_type` の custom の値、metadata は字下げなしで追加するキーの行"""
+    """エイリアスの元の行 1 つの行（`- id:` を字下げなしで始める）。alias_type は行の `alias_type` の値、metadata は字下げなしで追加するキーの行（無ければ `metadata` を書かない）"""
     return [
         f"- id: {alias_id}",
         f"  paths: [{paths}]",
+        f"  alias_type: {alias_type}",
         *([f"  records: {records}"] if records else []),
-        "  metadata:",
-        "    alias_type:",
-        "      type: custom",
-        f"      value: {alias_type}",
-        *[f"    {line}" for line in metadata or []],
+        *(["  metadata:", *[f"    {line}" for line in metadata]] if metadata else []),
     ]
 
 
@@ -327,9 +324,21 @@ def legacy_alias_lines(alias_id: str, alias_type: str, paths: str) -> list[str]:
     ]
 
 
+def metadata_alias_type_lines(alias_id: str, alias_type: str, paths: str) -> list[str]:
+    """行の `alias_type` を持たず `metadata.alias_type` を持つ旧い構造の行 1 つの行（`{type: custom, value: 種類}` で書く）"""
+    return [
+        f"- id: {alias_id}",
+        f"  paths: [{paths}]",
+        "  metadata:",
+        "    alias_type:",
+        "      type: custom",
+        f"      value: {alias_type}",
+    ]
+
+
 def plain_document_lines() -> list[str]:
-    """`metadata` に alias_type を持たない documents の行（`docs/*.yaml` に当たる。エイリアスの行ではない）"""
-    return ["- id: docs", "  paths: [docs/*.yaml]", "  metadata:", "    title:", "      type: ref", "      field: name"]
+    """`alias_type` を持たない documents の行（`docs/*.yaml` に当たる。エイリアスの行ではない）"""
+    return ["- id: docs", "  paths: [docs/*.yaml]", "  metadata:", "    title: name"]
 
 
 def term_alias_lines(*, records: str | None = None) -> list[str]:
