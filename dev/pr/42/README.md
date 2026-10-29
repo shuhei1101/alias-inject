@@ -1,0 +1,1 @@
+# dev-docs.yaml の documents[] の否定の glob（[!i]*.yaml）を exclude[] へ書き換える
