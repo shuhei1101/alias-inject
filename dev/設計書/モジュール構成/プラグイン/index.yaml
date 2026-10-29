@@ -3,10 +3,16 @@ docs_index: true
 items:
   - page: 入口.yaml
     summary: hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル
+  - page: イベントの処理.yaml
+    summary: prompt.submit・session.compact・session.end・tool.call の処理
   - page: 読み込み.yaml
     summary: パスの展開・glob の展開・変わったファイルの読み込み・YAML のパース
   - page: スキーマ.yaml
     summary: 同梱のスキーマの読み込みと aliases の要素の検証
+  - page: 生成したスキーマ.yaml
+    summary: schemas/aliases.schema.yaml から生成して同梱するスキーマのオブジェクト
+  - page: スキーマの生成.yaml
+    summary: 同梱のスキーマの生成と一致の確認
   - page: 設定.yaml
     summary: 設定ファイルのパスの取得・検証・実効の設定の組み立て・出所の判定
   - page: エイリアス.yaml
@@ -21,5 +27,7 @@ items:
     summary: 追加する語の選択と文脈の組み立て
   - page: 記録.yaml
     summary: セッションごとの追加した語の記録
+  - page: 状態の型.yaml
+    summary: $.state に置く値の型の契約
   - page: 変数参照.yaml
     summary: ツールの結果の変数参照の名前の拾い出し・env の出力の分割・値の行の組み立て

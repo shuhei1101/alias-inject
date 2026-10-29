@@ -5,26 +5,12 @@ directory: |-
   hooks/
     lib/
       record.ts          セッションの記録の読み・追加・消去
-  types/
-    index.d.ts           $.state の型の契約（PluginState）
   tests/
     unit/
       hooks/
         lib/
           record.test.ts record.ts の単体テスト
   ```
-data_models:
-  - name: PluginState
-    title: プラグインの状態の契約
-    container: types/index.d.ts
-    usecase: 共通
-    role: 型の契約
-    summary: '`$.state` に置く値の宣言。plugin.json の `types` が指す'
-    description: "`interface PluginState { 'alias-inject': { recorded: StateFamily<string[]> } }` を `declare module 'claude-code'` の中で宣言する。"
-    properties:
-      - name: "'alias-inject'.recorded"
-        type: StateFamily<string[]>
-        description: セッション ID を `id` にした、文脈を追加した語の記録のキーの並び
 functions:
   - name: readRecorded
     title: 記録の読み出し

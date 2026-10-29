@@ -1,0 +1,38 @@
+title: "プラグイン / スキーマの生成"
+lead: '`schemas/aliases.schema.yaml` から `hooks/lib/aliases-schema.ts` を生成し、一致を確かめるスクリプト。'
+directory: |-
+  ```text
+  scripts/
+    gen-aliases-schema.mjs  aliases-schema.ts の生成と、YAML との一致の確認（--check）
+  ```
+functions:
+  - name: generateAliasSchema
+    title: 同梱のスキーマの生成
+    kind: 関数
+    container: scripts/gen-aliases-schema.mjs
+    usecase: 共通
+    summary: '`schemas/aliases.schema.yaml` から `hooks/lib/aliases-schema.ts` を書き出す。`--check` では書き出さずに一致を確かめる'
+    scope: public
+    is_async: false
+    side_effects: '`--check` が無いとき `hooks/lib/aliases-schema.ts` を書き換える'
+    args:
+      - name: check
+        type: boolean
+        required: true
+        passing: positional
+        description: コマンドラインに `--check` があるか
+    args_example: |-
+      ```bash
+      node scripts/gen-aliases-schema.mjs          # 書き出す
+      node scripts/gen-aliases-schema.mjs --check  # 一致を確かめる
+      ```
+    returns:
+      type: void
+      description: 終了コードで結果を返す（一致・書き出し済みは 0、`--check` で一致しなければ 1）
+    process: |-
+      1. `node:fs` でリポジトリの直下からの `schemas/aliases.schema.yaml` を読み、`hooks/vendor/js-yaml.mjs` の `load` でパースする
+      2. 先頭の行 `// schemas/aliases.schema.yaml から scripts/gen-aliases-schema.mjs が生成する。直接編集しない` と、`export const ALIAS_SCHEMA: Record<string, unknown> = {値の JSON.stringify（字下げ 2）}` を並べた本文を組む
+      3. `check` が false なら本文を `hooks/lib/aliases-schema.ts` に書く
+      4. `check` が true なら `hooks/lib/aliases-schema.ts` と本文を比べ、違うか無ければ `hooks/lib/aliases-schema.ts が schemas/aliases.schema.yaml と一致しません。node scripts/gen-aliases-schema.mjs を実行してください` を標準エラーに出して終了コード 1 で終える
+    notes:
+      テスト: '`claude plugin test` の環境は `node:fs` を import できないため単体テストを持たない。lint の `--check` が一致を確かめる'
