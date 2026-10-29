@@ -1,0 +1,15 @@
+title: "プラグイン / 生成したスキーマ"
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクト。手で書き換えない。'
+directory: |-
+  ```text
+  hooks/
+    lib/
+      aliases-schema.ts  schemas/aliases.schema.yaml から生成したスキーマのオブジェクト（ALIAS_SCHEMA。手で書き換えない）
+  ```
+constants:
+  - name: ALIAS_SCHEMA
+    title: 同梱のスキーマ
+    container: hooks/lib/aliases-schema.ts
+    usecase: 共通
+    summary: '`schemas/aliases.schema.yaml` をパースした値。`scripts/gen-aliases-schema.mjs` が生成する'
+    value: '`schemas/aliases.schema.yaml` の中身のオブジェクト（型は `Record<string, unknown>`）'
