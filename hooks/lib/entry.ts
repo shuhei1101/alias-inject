@@ -1,5 +1,5 @@
 import type { EngineInterface } from 'claude-code'
-import { isAliasType, missingKeys, resolveMetadata } from './alias'
+import { getColumn, missingKeys, resolveMetadata } from './alias'
 import type { AliasKey, AliasType, ResolvedAlias } from './alias'
 import { type YamlResult, expandFiles, parseYaml, readIfChanged } from './loader'
 import { normalize } from './match'
@@ -146,43 +146,42 @@ function baseName(path: string): string {
 /** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書は外す */
 export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, aliasIndex: number): LoadedEntries {
   const failures: LoadedEntries['failures'] = []
-  const kept: { itemIndex: number; type: AliasType; values: Record<AliasKey, unknown> }[] = []
+  const kept: { itemIndex: number; values: Record<AliasKey, unknown> }[] = []
 
   for (const [itemIndex, document] of documents.entries()) {
     const values = resolveMetadata(alias.metadata, document.value)
-    // name が空なら、ファイルの文書はファイル名、records の要素は id を使う
-    if (textOf(values.name) === undefined) values.name = document.index === null ? baseName(document.path) : textOf(values.id)
+    // name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を使う
+    if (textOf(values.name) === undefined) {
+      const bodyFile = document.index === null || alias.body_file === undefined ? undefined : textOf(getColumn(document.value, alias.body_file))
+      values.name = document.index === null ? baseName(document.path) : bodyFile === undefined ? textOf(values.id) : baseName(bodyFile)
+    }
 
     const id = textOf(values.id)
     // id が空のファイルの文書は、文書の名前と `: ` を付けない
     const name = id ?? (alias.records !== undefined && document.index !== null ? `${alias.records}[${document.index}]` : undefined)
     const label = name === undefined ? '' : `${name}: `
-    if (!isAliasType(values.alias_type)) {
-      failures.push({ path: document.path, reason: `${label}alias_type の値 ${String(values.alias_type)} は引用の種類にありません` })
-      continue
-    }
-    const missing = missingKeys(values.alias_type, values)
+    const missing = missingKeys(alias.alias_type, values)
     if (missing.length > 0) {
       failures.push({ path: document.path, reason: `${label}${missing.join('、')} が空です` })
       continue
     }
-    kept.push({ itemIndex, type: values.alias_type, values })
+    kept.push({ itemIndex, values })
   }
 
   // 関連する文書の名前を引くため、この行の残った文書の ID から語を引く表を作る
   const wordOfId = new Map<string, string>()
   for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
 
-  const entries = kept.map(({ itemIndex, type, values }) => ({
+  const entries = kept.map(({ itemIndex, values }) => ({
     aliasIndex,
     itemIndex,
     origin: alias.origin,
     aliasId: alias.id,
-    type,
+    type: alias.alias_type,
     id: String(values.id),
     word: textOf(values.name) ?? '',
     keys: [...new Set([...stringsOf(values.name), ...stringsOf(values.aliases)].map(normalize).filter((key) => key !== ''))],
-    fields: buildFields(type, values, wordOfId),
+    fields: buildFields(alias.alias_type, values, wordOfId),
   }))
   return { entries, failures }
 }

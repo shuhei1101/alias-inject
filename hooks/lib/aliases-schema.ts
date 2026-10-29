@@ -2,7 +2,7 @@
 export const ALIAS_SCHEMA: Record<string, unknown> = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "エイリアスの元の行",
-  "description": "用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は dev-docs.yaml の documents の行と同じ構造で、metadata にエイリアスのキーを置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。",
+  "description": "用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は dev-docs.yaml の documents の行と同じ構造で、行の alias_type に引用の種類、metadata にエイリアスのキーごとの列の名前を置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。",
   "type": "array",
   "items": {
     "$ref": "#/$defs/alias"
@@ -10,12 +10,12 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
   "$defs": {
     "alias": {
       "title": "エイリアスの元の行",
-      "description": "paths に当たる各ファイルを 1 件の文書にし、metadata でエイリアスのキーの値の取り方を定義する行。records を書いた行は、ファイルのその配列の各要素を 1 件の文書にする。id の一意はスキーマで表せないため、読む側が確かめる。行と metadata は他のキー（type・schema・tags・status など）も書ける。",
+      "description": "paths に当たる各ファイルを 1 件の文書にし、alias_type で引用の種類を決め、metadata でエイリアスのキーごとに値を取る列の名前を定義する行。records を書いた行は、ファイルのその配列の各要素を 1 件の文書にする。id の一意はスキーマで表せないため、読む側が確かめる。行と metadata は他のキー（schema・body_file・tags・status など）も書ける。",
       "type": "object",
       "required": [
         "id",
         "paths",
-        "metadata"
+        "alias_type"
       ],
       "properties": {
         "id": {
@@ -51,175 +51,9 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             ]
           ]
         },
-        "records": {
-          "title": "文書の並びのキー",
-          "description": "文書の並びを持つ配列のキー。書かないとき、各ファイルを 1 件の文書にする。",
-          "type": "string",
-          "minLength": 1,
-          "examples": [
-            "terms"
-          ]
-        },
-        "metadata": {
-          "title": "エイリアスのキーの値の取り方",
-          "description": "エイリアスのキーごとに、文書の列から取るか行の全文書に同じ値を使うかを定義する。書かないキーは、同じ名前の列の ref とみなす。alias_type だけは必ず書く。",
-          "type": "object",
-          "required": [
-            "alias_type"
-          ],
-          "properties": {
-            "alias_type": {
-              "title": "引用の種類",
-              "description": "引用の種類の取り方。custom のときは 9 つの種類のどれかを値にする。ref のときは、文書ごとに読む側が確かめる。",
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/refValue"
-                },
-                {
-                  "$ref": "#/$defs/aliasTypeValue"
-                }
-              ]
-            },
-            "id": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "name": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "aliases": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "description": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "related": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "command": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "cwd": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "url": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "avoid": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "skill": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "tool": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "path": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "port": {
-              "$ref": "#/$defs/metadataValue"
-            },
-            "replacement": {
-              "$ref": "#/$defs/metadataValue"
-            }
-          },
-          "examples": [
-            {
-              "alias_type": {
-                "type": "custom",
-                "value": "term"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "metadataValue": {
-      "title": "metadata の値",
-      "description": "metadata の 1 キーの値の取り方。type が判別子で、ref は文書の列から取り、custom は行の全文書に同じ値を使う。",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/refValue"
-        },
-        {
-          "$ref": "#/$defs/customValue"
-        }
-      ]
-    },
-    "refValue": {
-      "title": "文書の列から取る値",
-      "description": "文書の field の列の値を使う。",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "field"
-      ],
-      "properties": {
-        "type": {
-          "title": "値の取り方",
-          "description": "文書の列から取ることを表す。",
-          "const": "ref"
-        },
-        "field": {
-          "title": "列の名前",
-          "description": "値を取る文書の列の名前。",
-          "type": "string",
-          "minLength": 1
-        }
-      },
-      "examples": [
-        {
-          "type": "ref",
-          "field": "title"
-        }
-      ]
-    },
-    "customValue": {
-      "title": "行で固定する値",
-      "description": "行の全文書に同じ value を使う。",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "value"
-      ],
-      "properties": {
-        "type": {
-          "title": "値の取り方",
-          "description": "行の全文書に同じ値を使うことを表す。",
-          "const": "custom"
-        },
-        "value": {
-          "title": "値",
-          "description": "行の全文書に使う値。"
-        }
-      },
-      "examples": [
-        {
-          "type": "custom",
-          "value": "開発"
-        }
-      ]
-    },
-    "aliasTypeValue": {
-      "title": "固定する引用の種類",
-      "description": "行の全文書に同じ引用の種類を使う。値は 9 つの種類のどれか。",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "value"
-      ],
-      "properties": {
-        "type": {
-          "title": "値の取り方",
-          "description": "行の全文書に同じ値を使うことを表す。",
-          "const": "custom"
-        },
-        "value": {
+        "alias_type": {
           "title": "引用の種類",
-          "description": "引用の種類。文脈に並べる列とセクションが種類ごとに決まる。",
+          "description": "行の全文書に同じ引用の種類を使う。文脈に並べる列とセクションが種類ごとに決まる。",
           "enum": [
             "term",
             "doc",
@@ -230,15 +64,168 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             "path",
             "env",
             "avoid"
+          ],
+          "examples": [
+            "term"
+          ]
+        },
+        "records": {
+          "title": "文書の並びのキー",
+          "description": "文書の並びを持つ配列のキー。書かないとき、各ファイルを 1 件の文書にする。",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "terms"
+          ]
+        },
+        "body_file": {
+          "title": "本文のファイルの列",
+          "description": "records の要素の本文のファイルのパスを持つ列の名前。name が空の要素の名前に、その列の値のファイル名（拡張子を除く）を使う。",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "path"
+          ]
+        },
+        "metadata": {
+          "title": "エイリアスのキーの列",
+          "description": "エイリアスのキーごとに、値を取る文書の列の名前を書く。書かないキーは、同じ名前の列から取る。入れ子の列は meta.summary のように . でつなぐ。",
+          "type": "object",
+          "properties": {
+            "id": {
+              "title": "文書の IDの列",
+              "description": "文書の ID を取る列の名前。どの引用の種類でも必須。id の列を持たない要素の並び（files.yaml）を読む行は、id にする列を書く。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "path"
+              ]
+            },
+            "name": {
+              "title": "文脈に出す語の列",
+              "description": "文脈に出す語を取る列の名前。aliases と合わせて、照合する語にもなる。どの引用の種類でも必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "title"
+              ]
+            },
+            "aliases": {
+              "title": "別名の列",
+              "description": "照合する語（別名）を取る列の名前。列の値は文字列か文字列の並び。文脈には出さない。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "aliases"
+              ]
+            },
+            "description": {
+              "title": "説明の列",
+              "description": "文書の説明を取る列の名前。term と doc では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "meta.summary"
+              ]
+            },
+            "related": {
+              "title": "関連する文書の列",
+              "description": "term の関連する文書の並び（各要素の to が ID）を取る列の名前。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "related"
+              ]
+            },
+            "command": {
+              "title": "コマンドの列",
+              "description": "command のコマンドを取る列の名前。command では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "command"
+              ]
+            },
+            "cwd": {
+              "title": "実行する場所の列",
+              "description": "command のコマンドを実行するフォルダを取る列の名前。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "cwd"
+              ]
+            },
+            "url": {
+              "title": "URLの列",
+              "description": "url と env の URL を取る列の名前。url では必須。env では port と合わせて 1 つ以上が必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "url"
+              ]
+            },
+            "avoid": {
+              "title": "避ける語の列",
+              "description": "term の用語ごとのやめた言い方を取る列の名前。文脈には使わない。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "avoid"
+              ]
+            },
+            "skill": {
+              "title": "スキルの列",
+              "description": "skill のスキル名を取る列の名前。skill では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "skill"
+              ]
+            },
+            "tool": {
+              "title": "ツールの列",
+              "description": "tool の MCP のツール名を取る列の名前。tool では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "tool"
+              ]
+            },
+            "path": {
+              "title": "パスの列",
+              "description": "path のファイルかフォルダのパスを取る列の名前。path では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "path"
+              ]
+            },
+            "port": {
+              "title": "ポートの列",
+              "description": "env のポートを取る列の名前。env では url と合わせて 1 つ以上が必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "port"
+              ]
+            },
+            "replacement": {
+              "title": "正しい語の列",
+              "description": "avoid のやめた言い方に代えて使う正しい語を取る列の名前。avoid では必須。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "replacement"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "name": "title"
+            }
           ]
         }
-      },
-      "examples": [
-        {
-          "type": "custom",
-          "value": "term"
-        }
-      ]
+      }
     }
   }
 }

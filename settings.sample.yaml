@@ -4,7 +4,7 @@ global:
   # false のとき、何も追加しない
   enabled: true
 
-  # 読むリポジトリの dev-docs.yaml。その documents のうち metadata.alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  # 読むリポジトリの dev-docs.yaml。その documents のうち alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
   repositories:
     - config: ~/repo/knowledge/dev-docs.yaml
     - config: ../old-notes/dev-docs.yaml
@@ -12,75 +12,53 @@ global:
       enabled: false
 
   # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml のエイリアスの元の行と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
-  # metadata の各キーは、文書の列から取る {type: ref, field: 列名} か、行の全文書に同じ値を使う {type: custom, value: 値}。書かないキーは同じ名前の列の ref とみなす
+  # alias_type は引用の種類で、行の全文書に同じ種類を使う。metadata の各キーは、値を取る文書の列の名前。書かないキーは同じ名前の列から取る
   aliases:
     - id: terms
       paths: [terms/*.yaml]
+      alias_type: term
       metadata:
-        alias_type:
-          type: custom
-          value: term
         # 文脈に出す語を title の列から取る
-        name:
-          type: ref
-          field: title
+        name: title
     - id: docs
       paths: [docs/*.yaml]
-      metadata:
-        alias_type:
-          type: custom
-          value: doc
+      alias_type: doc
     - id: commands
       paths: [commands/*.yaml]
-      metadata:
-        alias_type:
-          type: custom
-          value: command
+      alias_type: command
     - id: urls
       paths: [urls/*.yaml]
       # false のとき、この行を使わない
       enabled: true
-      metadata:
-        alias_type:
-          type: custom
-          value: url
+      alias_type: url
     - id: skills
       paths: [skills/*.yaml]
-      metadata:
-        alias_type:
-          type: custom
-          value: skill
+      alias_type: skill
     - id: tools
       paths: [tools/*.yaml]
-      metadata:
-        alias_type:
-          type: custom
-          value: tool
+      alias_type: tool
     - id: paths
       paths: [paths/*.yaml]
-      metadata:
-        alias_type:
-          type: custom
-          value: path
+      alias_type: path
     - id: envs
       paths: [envs/*.yaml]
+      alias_type: env
+      # url と port は、どちらか 1 つ以上を指定する（書かなくても同じ名前の列から取る）
       metadata:
-        alias_type:
-          type: custom
-          value: env
-        # url と port は、どちらか 1 つ以上を指定する（書かなくても同じ名前の列から取る）
-        url:
-          type: ref
-          field: url
-        port:
-          type: ref
-          field: port
+        url: url
+        port: port
     - id: avoids
       paths: [avoids/*.yaml]
+      alias_type: avoid
+    - id: guides
+      paths: [guides/files.yaml]
+      alias_type: doc
+      # 文書の並びを持つ配列のキー。body_file は、その要素の本文のファイルのパスを持つ列で、name が空の要素の名前に使う
+      records: files
+      body_file: path
+      # files.yaml の要素は id を持たないため、path の列を id にする
       metadata:
-        alias_type:
-          type: custom
-          value: avoid
+        id: path
 
   # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
   origins: [user, plugin]
@@ -107,9 +85,6 @@ projects:
     aliases:
       - id: project-commands
         paths: [docs/command.yaml]
+        alias_type: command
         # 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書
         records: commands
-        metadata:
-          alias_type:
-            type: custom
-            value: command
