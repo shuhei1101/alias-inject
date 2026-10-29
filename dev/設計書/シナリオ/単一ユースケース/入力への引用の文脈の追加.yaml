@@ -9,8 +9,8 @@ scenarios:
         description: '`global.repositories` に、一時のリポジトリの `dev-docs.yaml` を指す要素を 1 つ持つ'
         notes: '-'
       - name: dev-docs.yaml
-        description: '`documents` に、`metadata.alias_type` が `{type: custom, value: term}` で `paths` の相対パスが用語の YAML に当たる行と、`alias_type` を持たず語 `doc-z` を持つ YAML に当たる行を持つ'
-        notes: 用語の行の `metadata` は `alias_type` だけを書き、`id`・`name`・`aliases`・`description` は同じ名前の列から取る
+        description: '`documents` に、`alias_type` が `term` で `paths` の相対パスが用語の YAML に当たる行と、`alias_type` を持たず語 `doc-z` を持つ YAML に当たる行を持つ'
+        notes: 用語の行は `metadata` を書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る
       - name: 用語の YAML
         description: 語 `term-a`（エイリアス `用語エー`）と `term-b` を、1 ファイルに 1 語ずつ持つ
         notes: '-'
@@ -126,8 +126,8 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に `metadata.alias_type` が `{type: custom, value: url}` で `records: links` の行を 1 つ持つ'
-        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。`metadata.name` は `{type: ref, field: title}`'
+        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `url` で `records: links` の行を 1 つ持つ'
+        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。`metadata.name` は `title`'
       - name: URL の YAML
         description: 配列 `links` に、`title` が `link-a` で URL を持つ要素を 1 つ持つ
         notes: '-'
@@ -177,7 +177,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: '`global.repositories` に無い `dev-docs.yaml` を指す要素を加え、`global.aliases` に `metadata.alias_type` が url の行を 1 つ持つ'
+        description: '`global.repositories` に無い `dev-docs.yaml` を指す要素を加え、`global.aliases` に `alias_type` が url の行を 1 つ持つ'
         notes: 書式の誤った `dev-docs.yaml` でも同じ結末になる
     flow: |-
       ```mermaid
@@ -202,7 +202,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: dev-docs.yaml
-        description: 正常シナリオの行に加え、`metadata.alias_type` が term で、`metadata.name` を `ref`・`custom` の構造にせず文字列 `name` で書いた行を 1 つ持つ
+        description: 正常シナリオの行に加え、`alias_type` が term で、`metadata.name` を空の文字列で書いた行を 1 つ持つ
         notes: 合わない行の `paths` は語 `term-x` を持つ YAML に当たる。`name` の列も持つので、スキーマで検証しなければ term-x が当たる
     flow: |-
       ```mermaid
@@ -228,7 +228,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `metadata.alias_type` が `skill`・`tool`・`path`・`env`・`avoid` の行を 1 つずつ持つ
+        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `skill`・`tool`・`path`・`env`・`avoid` の行を 1 つずつ持つ
         notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。env の行が当たる YAML は `url` と `port` の両方を持つ'
       - name: 種類ごとの YAML
         description: 語 `skill-a`（スキル名）・`tool-a`（ツール名）・`path-a`（パス）・`env-a`（URL とポート）・`avoid-a`（正しい語）を、それぞれの種類の YAML に 1 つずつ持つ
@@ -258,11 +258,11 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に旧い構造（`type: url` と `fields`）の要素を 1 つ持つ'
-        notes: 要素の `paths` は語 `link-a` を持つ URL の YAML に当たる
+        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に旧い構造（`type: url` と `fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の要素を 1 つずつ持つ'
+        notes: '`type: url` の要素の `paths` は語 `link-a` を持つ URL の YAML に、`metadata.alias_type` の要素の `paths` は語 `term-w` を持つ YAML に当たる'
       - name: dev-docs.yaml
-        description: '正常シナリオの `documents` の行に加え、トップレベルの `aliases` に旧い構造の `type: term` の要素を 1 つ持つ'
-        notes: 要素の `paths` は語 `term-y` を持つ YAML に当たる
+        description: '正常シナリオの `documents` の行に加え、トップレベルの `aliases` に旧い構造の `type: term` の要素と、`documents` に行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の行を 1 つずつ持つ'
+        notes: トップレベルの要素の `paths` は語 `term-y` を持つ YAML に、`documents` の行の `paths` は語 `term-v` を持つ YAML に当たる
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -270,16 +270,16 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>CC: term-a・link-a・term-y を含む入力を送信
+        U->>CC: term-a・link-a・term-y・term-w・term-v を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: dev-docs.yaml のトップレベルの aliases を読まない
-        P->>P: 設定ファイルの旧い構造の要素をスキーマに合わない行として照合から外す
+        P->>P: dev-docs.yaml のトップレベルの aliases と、alias_type を持たない documents の行を読まない
+        P->>P: 設定ファイルの旧い構造の 2 つの要素をスキーマに合わない行として照合から外す
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
       - term-a の文脈は追加されている
-      - link-a と term-y の文脈は追加されていない
+      - link-a・term-y・term-w・term-v の文脈は追加されていない
       - 入力の送信は止まっていない
     test: test_error_when_legacy_aliases
   - name: 異常シナリオ（必須の値が空の文書）

@@ -1,0 +1,90 @@
+$ rc=0; npm run typecheck || rc=1; claude plugin validate . || rc=1; node scripts/gen-aliases-schema.mjs --check || rc=1; exit $rc
+
+## npm run typecheck
+tests/unit/hooks/lib/loader.test.ts(167,40): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/loader.test.ts(189,30): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/loader.test.ts(207,49): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/loader.test.ts(226,48): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/loader.test.ts(281,35): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+tests/unit/hooks/lib/match.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(6,47): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/record.test.ts(14,35): error TS2583: Cannot find name 'Set'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/record.test.ts(19,27): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/record.test.ts(33,29): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/repository.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/repository.test.ts(24,38): error TS2550: Property 'flat' does not exist on type 'string[][]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2019' or later.
+tests/unit/hooks/lib/repository.test.ts(98,52): error TS2550: Property 'startsWith' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(98,90): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(99,52): error TS2550: Property 'startsWith' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(99,90): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(100,52): error TS2550: Property 'startsWith' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(100,90): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(101,52): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/repository.test.ts(122,38): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/repository.test.ts(142,51): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/lib/schema.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/schema.test.ts(107,51): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/schema.test.ts(108,47): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/schema.test.ts(124,44): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/schema.test.ts(139,48): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/schema.test.ts(168,52): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/schema.test.ts(169,52): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/variable.test.ts(48,22): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(60,22): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(72,20): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(72,35): error TS2550: Property 'repeat' does not exist on type '"x"'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(73,21): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(73,36): error TS2550: Property 'repeat' does not exist on type '"x"'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(81,48): error TS2550: Property 'repeat' does not exist on type '"x"'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(83,49): error TS2550: Property 'repeat' does not exist on type '"x"'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(91,22): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/lib/variable.test.ts(105,21): error TS2550: Property 'at' does not exist on type 'string[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2022' or later.
+tests/unit/hooks/register.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/register.test.ts(6,23): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+tests/unit/hooks/support/engine.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+tests/unit/hooks/support/engine.ts(1,32): error TS2305: Module '"claude-code"' has no exported member 'On'.
+tests/unit/hooks/support/engine.ts(2,22): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(3,29): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(49,24): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/engine.ts(196,16): error TS2550: Property 'from' does not exist on type 'ArrayConstructor'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/engine.ts(196,80): error TS2550: Property 'padStart' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2017' or later.
+tests/unit/hooks/support/memory-fs.ts(35,32): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(36,32): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(37,31): error TS2583: Cannot find name 'Set'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(40,39): error TS2550: Property 'entries' does not exist on type 'ObjectConstructor'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2017' or later.
+tests/unit/hooks/support/memory-fs.ts(98,25): error TS2583: Cannot find name 'Map'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(100,22): error TS2550: Property 'startsWith' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(102,31): error TS2550: Property 'includes' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/memory-fs.ts(137,33): error TS2550: Property 'startsWith' does not exist on type 'string'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2015' or later.
+tests/unit/hooks/support/thrown.ts(12,65): error TS2705: An async function or method in ES5 requires the 'Promise' constructor.  Make sure you have a declaration for the 'Promise' constructor or include 'ES2015' in your '--lib' option.
+types/index.d.ts(3,33): error TS2304: Cannot find name 'StateFamily'.
+
+## claude plugin validate .
+⚠ Found 3 warnings:
+⚠ Found 2 warnings:
+⚠ Found 1 warning:
+✘ Found 2 problems the plugin directory refuses a submission for:
+⚠ Found 1 plugin directory warning:
+✔ Validation passed with warnings
+
+## node scripts/gen-aliases-schema.mjs --check
+exit=0
+
+## base ブランチ（develop）で同じコマンド
+$ npm run typecheck
+error TS: 283 件（.claude-plugin/types/ が無いために出る。この作業 PR の変更ファイルの違反ではない）
+作業 PR: error TS 286 件
+
+作業 PR と base ブランチの error TS を、行と列を除いて突き合わせた差:
+- 作業 PR だけにある 4 件は、テストコードの `startsWith`・`includes`（`lib` が ES5 のままになるために出る `TS2550`）。base ブランチにも同じ種類の違反が多数ある
+- base ブランチだけにある 1 件（`hooks/lib/alias.ts` の `includes`）は、`isAliasType` の削除で無くなった
+- どれも `.claude-plugin/types/` が無いことによる。この前提は対話のセッションの起動で書き出されるため、ここでは満たせなかった
+
+## .claude-plugin/types/ を用意して回し直した型検査
+.claude-plugin/types/ は、他のセッションが書き出した同じプラグインの複製を .claude-plugin/types/ にコピーして用意した（コミットしない）。
+$ npm run typecheck
+> tsc -p tsconfig.json --noEmit
+exit=0（違反なし）

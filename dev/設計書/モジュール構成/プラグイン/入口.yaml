@@ -148,7 +148,7 @@ functions:
       - name: test_handle_prompt_submit_when_settings_warned
         case: 正常
         summary: 外した設定の値と aliases の要素は、読み込みの結果が変わらないうち 1 回だけ debug log に出す
-        condition: '設定ファイルの `global.aliases` に `metadata.alias_type` が `{type: custom, value: memo}` の行、`dev-docs.yaml` の `documents` に `metadata.name` が文字列 `mcp` で `alias_type` を持つ行を置いて 2 回入力する'
+        condition: '設定ファイルの `global.aliases` に `alias_type: memo` の行、`dev-docs.yaml` の `documents` に `alias_type: term` で `metadata.name` が空文字の行を置いて 2 回入力する'
         mock: 同上。`ui.log` は届いた行を記録する
         expected: '`ui.log` に `to` が `debug` で、設定ファイルのパスと `alias_type` を含む行と、`dev-docs.yaml` のパスと `metadata.name` を含む行が 1 回ずつだけ届く'
       - name: test_handle_prompt_submit_when_alias_paths_match_config

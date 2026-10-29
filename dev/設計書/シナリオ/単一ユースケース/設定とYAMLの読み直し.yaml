@@ -33,8 +33,8 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: dev-docs.yaml
-        description: '`documents` に `metadata.alias_type` が term の行を 1 つ持つ'
-        notes: 書き換えで、語 `cmd-a` を持つコマンドの YAML を指す `metadata.alias_type` が command の行を追加する
+        description: '`documents` に `alias_type` が term の行を 1 つ持つ'
+        notes: 書き換えで、語 `cmd-a` を持つコマンドの YAML を指す `alias_type` が command の行を追加する
     flow: |-
       ```mermaid
       sequenceDiagram

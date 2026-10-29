@@ -16,6 +16,7 @@ from support.harness import (
     env_text,
     env_url_of,
     legacy_alias_lines,
+    metadata_alias_type_lines,
     path_of,
     path_text,
     skill_of,
@@ -96,7 +97,7 @@ class PromptContextTest(E2ETestCase):
         # 配列 links を持つ行で、語は title の列から取る
         session = self.start_with_terms(
             config_aliases=alias_lines(
-                "urls", "url", "urls/*.yaml", records="links", metadata=["name:", "  type: ref", "  field: title"]
+                "urls", "url", "urls/*.yaml", records="links", metadata=["name: title"]
             ),
         )
         session.write_file(session.urls_dir / "link-a.yaml", url_links_text("link-a"))
@@ -181,9 +182,9 @@ class PromptContextTest(E2ETestCase):
     def test_error_when_alias_invalid(self) -> None:
         """スキーマに合わない行だけが外れ、他の行の文脈は追加される（異常シナリオ（スキーマに合わない行））"""
         # 準備
-        # metadata.name を ref・custom の構造にせず文字列で書いた term の行。name の列も持つので、スキーマで検証しなければ term-x が当たる
+        # metadata.name を空の文字列で書いた term の行。name の列も持つので、スキーマで検証しなければ term-x が当たる
         session = self.start_with_terms(
-            dev_docs_rows=alias_lines("bad", "term", "bad/*.yaml", metadata=["name: name"]),
+            dev_docs_rows=alias_lines("bad", "term", "bad/*.yaml", metadata=["name: ''"]),
         )
         session.write_file(session.repo_dir / "bad" / "term-x.yaml", term_text("term-x"))
         text = f"term-a と term-x について。{ANSWER_BRIEFLY}"
@@ -197,16 +198,22 @@ class PromptContextTest(E2ETestCase):
         self.assert_sent_unchanged(result, text)
 
     def test_error_when_legacy_aliases(self) -> None:
-        """旧い構造の aliases は設定ファイルでは外れ、dev-docs.yaml のトップレベルでは読まれない（異常シナリオ（旧い構造の aliases））"""
+        """旧い構造の aliases と metadata.alias_type を持つ行は外れ、dev-docs.yaml のトップレベルでは読まれない（異常シナリオ（旧い構造の aliases））"""
         # 準備
-        # 設定ファイルの旧い構造の url の要素と、dev-docs.yaml のトップレベルの旧い構造の term の要素
+        # 設定ファイルの旧い構造の url の要素と metadata.alias_type を持つ term の要素、dev-docs.yaml の metadata.alias_type を持つ term の行とトップレベルの旧い構造の term の要素
         session = self.start_with_terms(
-            config_aliases=legacy_alias_lines("urls", "url", "urls/*.yaml"),
+            config_aliases=[
+                *legacy_alias_lines("urls", "url", "urls/*.yaml"),
+                *metadata_alias_type_lines("old-terms", "term", "old/*.yaml"),
+            ],
+            dev_docs_rows=metadata_alias_type_lines("old-docs", "term", "old-docs/*.yaml"),
             dev_docs_extra=["aliases:", *[f"  {line}" for line in legacy_alias_lines("legacy", "term", "legacy/*.yaml")]],
         )
         session.write_file(session.urls_dir / "link-a.yaml", url_text("link-a"))
+        session.write_file(session.alias_dir / "old" / "term-w.yaml", term_text("term-w"))
+        session.write_file(session.repo_dir / "old-docs" / "term-v.yaml", term_text("term-v"))
         session.write_file(session.repo_dir / "legacy" / "term-y.yaml", term_text("term-y"))
-        text = f"term-a と link-a と term-y について。{ANSWER_BRIEFLY}"
+        text = f"term-a と link-a と term-y と term-w と term-v について。{ANSWER_BRIEFLY}"
 
         # 実行
         result = session.submit(text)
@@ -215,6 +222,8 @@ class PromptContextTest(E2ETestCase):
         self.assert_context_has_term(result, "term-a")
         self.assertNotIn("id: link-a", result.context_text)
         self.assertNotIn("id: term-y", result.context_text)
+        self.assertNotIn("id: term-w", result.context_text)
+        self.assertNotIn("id: term-v", result.context_text)
         self.assert_sent_unchanged(result, text)
 
     def test_error_when_required_value_missing(self) -> None:
