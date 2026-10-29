@@ -1,0 +1,1 @@
+# エイリアスの元の行の alias_type を行の属性に移し、metadata を列名だけにして dev-docs.yaml から defaults[]・custom をなくす
