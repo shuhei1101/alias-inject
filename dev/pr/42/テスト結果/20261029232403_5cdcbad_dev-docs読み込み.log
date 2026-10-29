@@ -1,0 +1,156 @@
+# dev-docs の develop のクローンで dev-docs.yaml を読み込む（書き換える前後の比較）
+# dev-docs: 1897d59 (develop) / 書き換えた commit: 5cdcbad / 書き換える前: cbcfe11
+# 検査のスクリプト（dev-docs の assemble_source で設定を検査し、DocumentStore で各行の文書を読み込む）:
+#   """dev-docs.yaml を dev-docs で読み込み、設定の違反と各行の文書の件数・読み込みの問題を出す。"""
+#   
+#   from __future__ import annotations
+#   
+#   import sys
+#   import tempfile
+#   from collections import Counter
+#   from pathlib import Path
+#   from typing import Any
+#   
+#   from dev_docs.features.access.types import Target
+#   from dev_docs.features.documents.store import DocumentStore
+#   from dev_docs.features.history.snapshot import SnapshotStore
+#   from dev_docs.features.sources.service import assemble_source
+#   from dev_docs.shared.yaml_io import dump_roundtrip, load_yaml
+#   
+#   
+#   def normalize(text: str) -> str:
+#       """検証用に、`type` と `metadata` の `{type: ref, field}` を補う（コミットする設定は変えない）。"""
+#       value: Any = load_yaml(text)
+#       for row in value["documents"]:
+#           row["type"] = "yaml"
+#           row["metadata"] = {
+#               key: {"type": "ref", "field": field} for key, field in row.get("metadata", {}).items()
+#           }
+#       return dump_roundtrip(value)  # type: ignore[no-any-return]
+#   
+#   
+#   def main(root: Path, config_text: str, *, apply_normalize: bool) -> int:
+#       """配信元のフォルダ `root` に対し `config_text` の設定を検査する。"""
+#       with tempfile.TemporaryDirectory() as state:
+#           config_file = Path(state) / "dev-docs.yaml"
+#           config_file.write_text(
+#               normalize(config_text) if apply_normalize else config_text, encoding="utf-8"
+#           )
+#           served, _, violations = assemble_source(
+#               [config_file], source_id=None, scope_read=[], scope_write=None, root_override=root
+#           )
+#           print(f"設定のスキーマの違反: {len(violations)} 件")
+#           for violation in violations:
+#               print(f"  {violation.path}: {violation.rule}")
+#           if served is None:
+#               return 1
+#           store = DocumentStore(SnapshotStore(Path(state) / "snapshots"))
+#           result = store.load(Target(served, root, None, None, "read"))
+#       print(f"各文書の Schema の検査・読み込みの問題: {len(result.problems)} 件")
+#       for problem in result.problems:
+#           print(f"  {problem.path}: {problem.reason}: {problem.detail}")
+#       counts = Counter(document.kind for document in result.documents)
+#       print("各行の文書の件数:")
+#       for table in served.config.documents:
+#           print(f"  {table.id}: {counts.get(table.id, 0)}")
+#       print(f"  合計: {sum(counts.values())}")
+#       return 1 if violations or result.problems else 0
+#   
+#   
+#   if __name__ == "__main__":
+#       sys.exit(
+#           main(
+#               Path(sys.argv[1]).resolve(),
+#               Path(sys.argv[2]).read_text(encoding="utf-8"),
+#               apply_normalize="--normalize" in sys.argv[3:],
+#           )
+#       )
+
+# --normalize: 書き換える前から dev-docs の develop のスキーマに合っていない 2 点（documents[].type が無い・metadata が列名の文字列）を、
+#   検査のスクリプトの中だけで補う（type: yaml・metadata の値を {type: ref, field: 列名}）。コミットした dev-docs.yaml は変えない。
+
+$ git -C <alias-inject worktree> show cbcfe11:dev-docs.yaml > before.yaml
+$ cd dev-docs/.claude/worktrees/develop && uv run --project . python -I check_dev_docs.py <alias-inject worktree> before.yaml 
+設定のスキーマの違反: 20 件
+  documents[0].type: 必須のキーが無い
+  documents[0].metadata.id: 型が違う（期待: object）
+  documents[1].type: 必須のキーが無い
+  documents[1].metadata.name: 型が違う（期待: object）
+  documents[2].type: 必須のキーが無い
+  documents[2].metadata.name: 型が違う（期待: object）
+  documents[3].type: 必須のキーが無い
+  documents[3].metadata.name: 型が違う（期待: object）
+  documents[4].type: 必須のキーが無い
+  documents[4].metadata.name: 型が違う（期待: object）
+  documents[5].type: 必須のキーが無い
+  documents[5].metadata.name: 型が違う（期待: object）
+  documents[6].type: 必須のキーが無い
+  documents[6].metadata.name: 型が違う（期待: object）
+  documents[7].type: 必須のキーが無い
+  documents[7].metadata.name: 型が違う（期待: object）
+  documents[8].type: 必須のキーが無い
+  documents[8].metadata.name: 型が違う（期待: object）
+  documents[9].type: 必須のキーが無い
+  documents[9].metadata.name: 型が違う（期待: object）
+(終了コード: 1)
+
+$ git -C <alias-inject worktree> show cbcfe11:dev-docs.yaml > before.yaml
+$ cd dev-docs/.claude/worktrees/develop && uv run --project . python -I check_dev_docs.py <alias-inject worktree> before.yaml --normalize
+設定のスキーマの違反: 0 件
+各文書の Schema の検査・読み込みの問題: 0 件
+各行の文書の件数:
+  docs: 8
+  architecture: 1
+  interface: 4
+  scenario: 5
+  test_procedure: 1
+  module: 11
+  library: 3
+  config: 1
+  dev_command: 1
+  nonfunctional: 1
+  合計: 36
+(終了コード: 0)
+
+$ git -C <alias-inject worktree> show 5cdcbad:dev-docs.yaml > after.yaml
+$ cd dev-docs/.claude/worktrees/develop && uv run --project . python -I check_dev_docs.py <alias-inject worktree> after.yaml 
+設定のスキーマの違反: 20 件
+  documents[0].type: 必須のキーが無い
+  documents[0].metadata.id: 型が違う（期待: object）
+  documents[1].type: 必須のキーが無い
+  documents[1].metadata.name: 型が違う（期待: object）
+  documents[2].type: 必須のキーが無い
+  documents[2].metadata.name: 型が違う（期待: object）
+  documents[3].type: 必須のキーが無い
+  documents[3].metadata.name: 型が違う（期待: object）
+  documents[4].type: 必須のキーが無い
+  documents[4].metadata.name: 型が違う（期待: object）
+  documents[5].type: 必須のキーが無い
+  documents[5].metadata.name: 型が違う（期待: object）
+  documents[6].type: 必須のキーが無い
+  documents[6].metadata.name: 型が違う（期待: object）
+  documents[7].type: 必須のキーが無い
+  documents[7].metadata.name: 型が違う（期待: object）
+  documents[8].type: 必須のキーが無い
+  documents[8].metadata.name: 型が違う（期待: object）
+  documents[9].type: 必須のキーが無い
+  documents[9].metadata.name: 型が違う（期待: object）
+(終了コード: 1)
+
+$ git -C <alias-inject worktree> show 5cdcbad:dev-docs.yaml > after.yaml
+$ cd dev-docs/.claude/worktrees/develop && uv run --project . python -I check_dev_docs.py <alias-inject worktree> after.yaml --normalize
+設定のスキーマの違反: 0 件
+各文書の Schema の検査・読み込みの問題: 0 件
+各行の文書の件数:
+  docs: 8
+  architecture: 1
+  interface: 4
+  scenario: 5
+  test_procedure: 1
+  module: 11
+  library: 3
+  config: 1
+  dev_command: 1
+  nonfunctional: 1
+  合計: 36
+(終了コード: 0)
