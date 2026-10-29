@@ -37,7 +37,7 @@ alias-inject の `dev-docs.yaml` も、Markdown のファイルごとのタグ�
 - [x] ~~画面設計~~（画面を持たない）
 - [x] モジュール構成設計
 - [x] ドキュメント修正（設計書/設定/プラグイン.yaml・設計書/アーキテクチャ図/アーキテクチャ図.yaml・docs/リファレンス/エイリアスのスキーマ.md・docs/リファレンス/設定ファイル.md・docs/はじめに/コアコンセプト/引用の文脈.md・docs/使い方/セットアップ.md・docs/使い方/設定の移し替え.md・docs/使い方/index.yaml・dev-docs.yaml・docs/files.yaml・dev/テンプレート/files.schema.yaml）
-- [ ] 単体テスト作成
+- [x] 単体テスト作成
 - [ ] 実装
 - [ ] 結合テスト作成
 - [ ] E2E テスト作成
