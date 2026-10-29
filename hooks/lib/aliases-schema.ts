@@ -93,7 +93,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
           "type": "object",
           "properties": {
             "id": {
-              "title": "文書の IDの列",
+              "title": "文書の ID の列",
               "description": "文書の ID を取る列の名前。どの引用の種類でも必須。id の列を持たない要素の並び（files.yaml）を読む行は、id にする列を書く。",
               "type": "string",
               "minLength": 1,
@@ -156,7 +156,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
               ]
             },
             "url": {
-              "title": "URLの列",
+              "title": "URL の列",
               "description": "url と env の URL を取る列の名前。url では必須。env では port と合わせて 1 つ以上が必須。",
               "type": "string",
               "minLength": 1,
