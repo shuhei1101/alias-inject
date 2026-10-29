@@ -1,0 +1,14 @@
+端末の設定の移し替え:
+  説明: 利用者の端末の設定ファイル（`ALIAS_INJECT_CONFIG` が指すファイル）の `aliases` の行と、読むリポジトリの `dev-docs.yaml` の `metadata.alias_type` を持つ行を、`docs/使い方/設定の移し替え.md` の手順で行の `alias_type` と列名の `metadata` へ移し替える。移し替える前にファイルのバックアップを取る（設定ファイルは利用者の端末にあり、エージェントが動くマシンには無いため AI が行えない）
+  タグ: [設定の移し替え, ユーザーの操作]
+  実行者: ユーザー
+  時期: master へ入った後
+  回数: 1 回限り
+  可逆: true
+  疎通確認: null
+  実行: null
+  確認: null
+  切り戻し: null
+  失敗時: 実行者が原因を確かめて依頼元へ返す
+  確認方法: "設定ファイルと `dev-docs.yaml` に `metadata.alias_type` と `type: ref`・`type: custom` の値が残っておらず、alias-inject の debug log に行を外した理由の行が出ていない。用語を含む文を入力すると、モデルに追加される文脈にその用語が出る"
+  状態: "-"
