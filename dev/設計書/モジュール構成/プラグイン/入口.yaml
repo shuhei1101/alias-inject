@@ -11,15 +11,15 @@ directory: |-
   hooks/
     hooks.json           { "modules": ["./register.tsx"] }
     register.tsx         hooks モジュールの入口（register）
-    handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理
-    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録・変数参照（各分類の設計書）
+    handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理（イベントの処理の設計書）
+    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録・変数参照・生成したスキーマ（各分類の設計書）
     vendor/              同梱する外部ライブラリ（js-yaml）
   schemas/
     aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
   scripts/
     gen-aliases-schema.mjs  hooks/lib/aliases-schema.ts の生成・一致の確認（スキーマの生成の設計書）
   types/
-    index.d.ts           $.state の型の契約（PluginState）
+    index.d.ts           $.state の型の契約（PluginState。状態の型の設計書）
   tests/
     unit/
       hooks/
