@@ -31,7 +31,7 @@ AI Monitor の `v0.2.0..v0.3.0` の配布物の差分（[比較](https://github.
 - [x] ~~部品設計~~（画面を持たない）
 - [x] ~~画面設計~~（画面を持たない）
 - [x] ~~モジュール構成設計~~（影響なし: プラグインの挙動を変えない）
-- [ ] ドキュメント修正（docs/_theme/・ai-monitor-theme.yaml・ai-monitor-version.ini・dev/設計書/ の Schema の変換）
+- [x] ドキュメント修正（docs/_theme/・ai-monitor-theme.yaml・ai-monitor-version.ini・dev/設計書/ の Schema の変換）
 - [x] ~~単体テスト作成~~（プラグインのコードを変えない）
 - [x] ~~実装~~（プラグインのコードを変えない）
 - [x] ~~結合テスト作成~~（プラグインのコードを変えない）
