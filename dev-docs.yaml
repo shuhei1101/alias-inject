@@ -1,9 +1,10 @@
-version: "1"
+version: "3"
 name: alias-inject
 documents:
   - id: docs
     title: 公開ドキュメント
     paths: [docs/files.yaml]
+    exclude: [index.yaml, nav.yml, nav.project.yml, "*.html", "*.css", "*.js", llms.txt, search.json]
     records: files
     body_file: path
     schema: dev/テンプレート/files.schema.yaml

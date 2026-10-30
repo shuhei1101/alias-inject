@@ -1,5 +1,15 @@
 # yaml-language-server: $schema=../dev/テンプレート/files.schema.yaml
 files:
+  - path: README.md
+    tags: [scope:はじめに]
+  - path: はじめに/README.md
+    tags: [scope:はじめに]
+  - path: はじめに/コアコンセプト/README.md
+    tags: [scope:はじめに]
+  - path: リファレンス/README.md
+    tags: [scope:リファレンス]
+  - path: 使い方/README.md
+    tags: [scope:使い方]
   - path: はじめに/変更履歴.md
     tags: [scope:はじめに]
   - path: はじめに/コアコンセプト/引用の文脈.md
