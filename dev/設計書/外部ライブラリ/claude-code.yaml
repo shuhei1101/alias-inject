@@ -263,7 +263,25 @@ catalogs:
           - name: e
             type: ToolCallInput
             required: true
-            description: ツールの呼び出し。中身は読まず、そのまま `next(e)` に渡す
+            description: ツールの呼び出し。そのまま `next(e)` に渡す
+          - name: e.tool
+            type: string
+            required: true
+            description: ツールの名前（`Read`・`Bash`・`mcp__{サーバー}__{ツール}` など）
+          - name: e.tool_use_id
+            type: string
+            required: true
+            description: ツールの呼び出しの ID
+          - name: e.{引数}
+            type: unknown
+            required: false
+            description: ツールの引数。`e` の直下に展開されて入る
+            notes: Read は `e.file_path`（読んだファイルの絶対パス）、Bash は `e.command`、MCP のツールは呼び出しの引数（dev-docs の `search_docs` なら `e.source`・`e.filter`・`e.view`・`e.limit`）
+          - name: e.agentId
+            type: string
+            required: false
+            description: サブエージェント・フォークの中の呼び出しのときに入る
+            notes: メインの会話の Agent の呼び出し自体には入らない
         returns:
           - name: text?
             type: string
@@ -289,5 +307,5 @@ used_in:
   - hooks/lib/record.ts
 verification:
   state: 済
-  date: '2026-10-26'
-  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた。PoC PR #16（commit 0a72f27）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで読め、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確かめた'
+  date: '2026-10-31'
+  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた。PoC PR #16（commit 0a72f27）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで読め、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確かめた。PoC PR #53（Claude Code 2.1.316）で、`tool.call` の `e` にツールの名前（`tool`）・呼び出しの ID（`tool_use_id`）・直下に展開したツールの引数（Read の `file_path`・Bash の `command`・MCP の引数）が入り、`agentId` がサブエージェントの中の呼び出しにだけ入ることと、`context` に並べた 2 つの文字列がどちらもモデルに届くことを確かめた'

@@ -90,6 +90,19 @@ class VariableReferenceTest(E2ETestCase):
         # モデルの返事が返っている
         self.assertTrue(any(line.get("type") == "assistant" for line in result.lines))
 
+    def test_normal_when_quote_context_added(self) -> None:
+        """本文の語の引用の文脈と変数参照の値の行が、どちらもツールの結果の後ろに届く（正常シナリオ（引用の文脈と合わせる））"""
+        # 準備
+        session = self.start_with_terms(env={REFERENCE_NAME: REFERENCE_VALUE})
+        text = read_prompt(self.write_note(f"{REFERENCE_NOTE}term-a についても書きます。\n"))
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_tool_context_has_term(result, "term-a", "Read")
+        self.assertEqual(result.tool_context_text("Read").count(reference_line(REFERENCE_NAME, REFERENCE_VALUE)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

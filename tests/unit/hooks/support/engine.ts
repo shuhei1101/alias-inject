@@ -16,6 +16,18 @@ export type LogLine = { text: string; to: string }
 
 type StateRef = { plugin: string; key: string; id?: string }
 
+/** `$.state.set` の結果 */
+export type FakeStateSetResult = { isSet: boolean; version: number }
+
+/** `$.state.set` の 1 回の呼び出し */
+export type FakeStateWrite = { ref: StateRef; value: unknown; ifVersion: number | undefined }
+
+/** `$.state.set` を横取りする処理。`store` を呼ぶとメモリの記録へ書く（`ifVersion` を渡すと、その version のときだけ書く） */
+export type FakeStateSetHook = (
+  write: FakeStateWrite,
+  store: (value: unknown, ifVersion: number | undefined) => FakeStateSetResult,
+) => FakeStateSetResult
+
 // settings.read の結果から、ドットでつないだキーの値を取り出す
 function pick(settings: unknown, key: string | undefined): unknown {
   if (key === undefined) return settings
@@ -33,6 +45,8 @@ export type FakeEngineOptions = {
   home?: string
   sessionId?: string
   projectRoot?: string
+  /** 渡すと `$.state.set` の呼び出しごとに呼ぶ */
+  onStateSet?: FakeStateSetHook
 }
 
 export type FakeEngine = {
@@ -61,10 +75,16 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     },
     state: {
       get: async (ref: StateRef) => versions.get(stateKey(ref)) ?? { value: undefined, version: 0 },
-      set: async (ref: StateRef, value: unknown) => {
-        const next = (versions.get(stateKey(ref))?.version ?? 0) + 1
-        versions.set(stateKey(ref), { value, version: next })
-        return { isSet: true, version: next }
+      set: async (ref: StateRef, value: unknown, opts?: { ifVersion?: number }) => {
+        const store = (stored: unknown, ifVersion: number | undefined): FakeStateSetResult => {
+          const current = versions.get(stateKey(ref))?.version ?? 0
+          // ifVersion が今の version と違えば書かない
+          if (ifVersion !== undefined && ifVersion !== current) return { isSet: false, version: current }
+          versions.set(stateKey(ref), { value: stored, version: current + 1 })
+          return { isSet: true, version: current + 1 }
+        }
+        const write = { ref, value, ifVersion: opts?.ifVersion }
+        return options.onStateSet === undefined ? store(value, write.ifVersion) : options.onStateSet(write, store)
       },
     },
     session: {
@@ -169,26 +189,38 @@ export type ToolWorld = {
   runs: ProcessRun[]
   /** `$.ui.log` に届いた行 */
   logs: LogLine[]
+  /** `options` を渡したときに登録したファイル表の応答（セッション ID・圧縮の結果を書き換えられる） */
+  files: World | undefined
 }
 
-/** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる */
-export function installToolWorld(on: On): ToolWorld {
-  const world: ToolWorld = { answer: { result: 'r' }, run: { value: { exitCode: 0, stdout: '' } }, runs: [], logs: [] }
+/** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる。`options` を渡すと設定ファイルと YAML のファイル表も登録し、渡さないと設定ファイルのパスの無い settings を返す */
+export function installToolWorld(on: On, options?: WorldOptions): ToolWorld {
+  const fileWorld = options === undefined ? undefined : installWorld(on, options)
+  const world: ToolWorld = {
+    answer: { result: 'r' },
+    run: { value: { exitCode: 0, stdout: '' } },
+    runs: [],
+    logs: fileWorld?.logs ?? [],
+    files: fileWorld,
+  }
   on('tool.call', () => world.answer as never)
   on('process.run', (_, e) => {
     world.runs.push({ argv: e.argv, timeoutMs: e.init?.timeoutMs })
     return world.run as never
   })
-  on('ui.log', (_, e) => {
-    world.logs.push({ text: e.text, to: e.to })
-    return { value: undefined }
-  })
+  if (fileWorld === undefined) {
+    on('settings.read', () => ({ value: {} }) as never)
+    on('ui.log', (_, e) => {
+      world.logs.push({ text: e.text, to: e.to })
+      return { value: undefined }
+    })
+  }
   return world
 }
 
-/** ツールを呼び、返ったツールの結果を返す */
-export async function callTool($: Engine) {
-  return $.tool.call({ tool: 'Read', file_path: '/repo/sample/note.md' })
+/** ツールを呼び、返ったツールの結果を返す。`input` を渡さないと Read の呼び出しにする */
+export async function callTool($: Engine, input: Record<string, unknown> = { tool: 'Read', file_path: '/repo/sample/note.md' }) {
+  return $.tool.call(input as never)
 }
 
 /** `NAME_01` の形の名前を `count` 個並べる */

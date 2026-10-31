@@ -20,12 +20,14 @@ function makeEntry(
     word: id,
     keys: [id],
     fields: options.description === undefined ? [] : [{ name: 'description', value: options.description }],
+    path: `/a/terms/${id}.yaml`,
+    bodyFile: undefined,
   }
 }
 
 // 照合の結果の形にする
 function makeHit(entry: Entry, position: number): Hit {
-  return { entry, position, length: entry.word.length }
+  return { entry, position, length: entry.word.length, count: 1 }
 }
 
 const LIMITS = { heading: HEADING, maxItems: 20, maxChars: 4000 }
@@ -63,6 +65,8 @@ test('test_render_context', () => {
       { name: 'cwd', value: '/mnt/c/Users/shuhe/repo/ai-monitor' },
       { name: 'description', value: '依存を入れる' },
     ],
+    path: '/mnt/c/Users/shuhe/repo/ai-monitor/commands.yaml',
+    bodyFile: undefined,
   }
   const usecase: Entry = {
     aliasIndex: 0,
@@ -77,6 +81,8 @@ test('test_render_context', () => {
       { name: 'description', value: '1 つの操作を始めから終わりまで書くシナリオの単位' },
       { name: 'related', value: 'tpl-scenario（シナリオのテンプレート）' },
     ],
+    path: '/mnt/c/Users/shuhe/repo/knowledge/terms/term-single-usecase.yaml',
+    bodyFile: undefined,
   }
 
   // 実行

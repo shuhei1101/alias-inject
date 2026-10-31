@@ -58,6 +58,8 @@ class Submission:
     lines: list[dict[str, Any]] = field(default_factory=list)
     # モデルに届いたツールの結果の本文
     tool_results: list[str] = field(default_factory=list)
+    # ツールの結果の後ろに追加された文脈（tool.call のフックの添付の本文）と、そのツールの名前の組
+    tool_contexts: list[tuple[str, str]] = field(default_factory=list)
 
     @property
     def context_text(self) -> str:
@@ -66,6 +68,10 @@ class Submission:
     @property
     def tool_result_text(self) -> str:
         return "\n".join(self.tool_results)
+
+    def tool_context_text(self, tool: str | None = None) -> str:
+        """ツールの結果の後ろに追加された文脈。tool を渡すとそのツールの結果の分だけ"""
+        return "\n".join(text for name, text in self.tool_contexts if tool is None or name == tool)
 
 
 def _user_text(line: dict[str, Any]) -> str | None:
@@ -90,6 +96,34 @@ def _context_of(line: dict[str, Any]) -> str | None:
         return None
     content = attachment.get("content")
     return "\n".join(content) if isinstance(content, list) else str(content)
+
+
+def _tool_names_of(lines: list[dict[str, Any]]) -> dict[str, str]:
+    """assistant の行の tool_use の ID からツールの名前を引く表"""
+    names: dict[str, str] = {}
+    for line in lines:
+        content = (line.get("message") or {}).get("content")
+        if line.get("type") != "assistant" or not isinstance(content, list):
+            continue
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "tool_use":
+                names[str(part.get("id"))] = str(part.get("name"))
+    return names
+
+
+def _tool_contexts_of(lines: list[dict[str, Any]]) -> list[tuple[str, str]]:
+    """tool.call のフックが追加した文脈を、ツールの名前と組にして取り出す"""
+    names = _tool_names_of(lines)
+    found: list[tuple[str, str]] = []
+    for line in lines:
+        text = _context_of(line)
+        attachment = line.get("attachment") or {}
+        if text is None or attachment.get("hookName") != "tool.call":
+            continue
+        # 添付の toolUseID は `{tool_use の ID}-context`
+        tool_use_id = str(attachment.get("toolUseID", "")).removesuffix("-context")
+        found.append((names.get(tool_use_id, ""), text))
+    return found
 
 
 def _tool_results_of(line: dict[str, Any]) -> list[str]:
@@ -275,7 +309,16 @@ class ClaudeSession:
         sent = next((value for value in map(_user_text, lines) if value is not None), None)
         contexts = [value for value in map(_context_of, lines) if value is not None]
         tool_results = [text for line in lines for text in _tool_results_of(line)]
-        return Submission(sent=sent, contexts=contexts, lines=lines, tool_results=tool_results)
+        return Submission(
+            sent=sent, contexts=contexts, lines=lines, tool_results=tool_results, tool_contexts=_tool_contexts_of(lines)
+        )
+
+    def subagent_tool_contexts(self) -> list[tuple[str, str]]:
+        """サブエージェントの transcript（`projects/*/{セッション}/subagents/*.jsonl`）に残った、ツールの結果の後ろの文脈"""
+        lines: list[dict[str, Any]] = []
+        for path in (self.config_dir / "projects").glob("*/*/subagents/*.jsonl"):
+            lines.extend(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+        return _tool_contexts_of(lines)
 
     def compact(self) -> None:
         """/compact を実行し、圧縮が終わるまで待つ"""
@@ -467,6 +510,14 @@ def read_prompt(path: Path) -> str:
     return f"{path} を Read ツールで読んで、読み終えたら「了」とだけ答えて。"
 
 
+def subagent_read_prompt(path: Path) -> str:
+    """Agent ツールで起動したサブエージェントに、ファイルを Read ツールで読ませる入力"""
+    return (
+        f"Agent ツールでサブエージェントを 1 つ起動し、{path} を Read ツールで読ませて。"
+        "サブエージェントには読み終えたら「了」とだけ答えさせ、あなたも「了」とだけ答えて。"
+    )
+
+
 def cat_prompt(path: Path) -> str:
     """ファイルを Bash ツールの cat で読ませる入力"""
     return f"Bash ツールで cat {path} を実行して、実行し終えたら「了」とだけ答えて。"
@@ -564,6 +615,17 @@ class E2ETestCase(unittest.TestCase):
         """文脈にもツールの結果にも、変数参照の値の行が無い"""
         self.assertNotIn(REFERENCE_PREFIX, submission.context_text)
         self.assertNotIn(REFERENCE_PREFIX, submission.tool_result_text)
+
+    def assert_tool_context_has_term(self, submission: Submission, term_id: str, tool: str | None = None) -> None:
+        """ツールの結果の後ろの文脈で、見出しと「用語」のセクションの下に語の ID が並んでいる"""
+        text = submission.tool_context_text(tool)
+        self.assertIn(f"# {HEADING}", text)
+        self.assertIn("## 用語", text)
+        self.assertIn(f"id: {term_id}", text)
+
+    def assert_no_tool_context(self, submission: Submission, tool: str | None = None) -> None:
+        """ツールの結果の後ろに引用の文脈が追加されていない"""
+        self.assertNotIn(HEADING, submission.tool_context_text(tool))
 
     def assert_no_context(self, submission: Submission) -> None:
         """文脈が追加されていない"""

@@ -245,7 +245,7 @@ settings:
     description: 絶対パスかプロジェクト名。絶対パスは起動したプロジェクトの直下がそのパスかその配下のとき、プロジェクト名はリポジトリのフォルダ名が一致したときに当たる。worktree は本体のパス・フォルダ名で見る
     missing: その要素を使わない
     notes:
-      重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`repositories`・`aliases`・`exclude` は後ろに追加し、それ以外は置き換える'
+      重ね方: '`projects[]` の要素は `global` と同じキーを持てる。当たった要素は並びの順に `global` へ重ね、`repositories`・`aliases`・`exclude`・`exclude_tools` は後ろに追加し、それ以外は置き換える'
   - key: projects[].repositories
     title: プロジェクトの読むリポジトリ
     file: ~/.config/alias-inject/settings.yaml
@@ -267,5 +267,18 @@ settings:
     required: false
     description: '`records` の要素の本文のファイルのパスを持つ列の名前。`name` が空の要素の名前に、この列の値のファイル名（拡張子を除く）を使う。`records` を書かない行では使わない'
     missing: '`name` が空の要素は `id` の値を名前にする'
+  - key: global.exclude_tools
+    title: 照合しないツール
+    file: ~/.config/alias-inject/settings.yaml
+    type: string[]
+    default: '[]'
+    description: 結果の本文を照合から外すツールの名前（`Bash`・`Agent`・`mcp__{サーバー}__{ツール}` など）。`tool.call` の `e.tool` と完全に一致するとき外す。書かないときは全てのツールの結果を照合する
+    reload: immediate
+    allowed: 文字列でない要素は無視する
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#constraints[照合から外すツール]
+    status: planned
+    introduced:
+      pr: 52
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]

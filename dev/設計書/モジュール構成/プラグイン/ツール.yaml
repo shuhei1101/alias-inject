@@ -1,0 +1,144 @@
+title: "プラグイン / ツール"
+lead: ツールの呼び出しの引数から、読んでいる文書そのものの語を照合の結果から外す。
+directory: |-
+  ```text
+  hooks/
+    lib/
+      tool.ts            読んでいる文書の判定
+  tests/
+    unit/
+      hooks/
+        lib/
+          tool.test.ts   tool.ts の単体テスト
+  ```
+functions:
+  - name: collectArgumentStrings
+    title: 引数の文字列の収集
+    kind: 関数
+    container: hooks/lib/tool.ts
+    usecase: ツールの結果への引用の文脈の追加
+    summary: ツールの引数を入れ子まで辿り、文字列の値を集める
+    scope: public
+    is_async: false
+    args:
+      - name: e
+        type: ToolCallInput
+        required: true
+        passing: positional
+        description: '`tool.call` の入力'
+    returns:
+      type: Set<string>
+      description: 引数の全ての文字列の値
+    process: |-
+      1. `e` のキーのうち `tool`・`tool_use_id`・`agentId`・`requestMeta` を除いた値を辿る
+      2. 文字列は集め、並びは要素を、オブジェクトは値を同じように辿る。それ以外の値は飛ばす
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#request[e.{引数}]
+    unit_tests:
+      - name: test_collect_argument_strings
+        case: 正常
+        summary: 入れ子のオブジェクトと並びの文字列を集め、予約したキーは集めない
+        condition: '`tool` が `mcp__plugin_dev-docs_dev-docs__search_docs`、`tool_use_id` が `t1`、`agentId` が `agent-1`、`source` が `knowledge`、`filter` が `{ and: [{ field: id, op: eq, values: [term-a] }] }`、`limit` が 5'
+        mock: なし
+        expected: '`knowledge`・`id`・`eq`・`term-a` だけを持ち、`t1`・`agent-1`・ツール名を持たない'
+    status: planned
+    introduced:
+      pr: 52
+  - name: documentPathOf
+    title: 文書のパス
+    kind: 関数
+    container: hooks/lib/tool.ts
+    usecase: ツールの結果への引用の文脈の追加
+    summary: 語の文書を Read で読むときの絶対パスを返す
+    scope: public
+    is_async: false
+    args:
+      - name: entry
+        type: Entry
+        required: true
+        passing: positional
+        description: 語
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームのフォルダ
+    returns:
+      type: string
+      description: bodyFile があればその絶対パス、無ければ entry.path
+    process: |-
+      1. entry.bodyFile が undefined なら entry.path を返す
+      2. それ以外は bodyFile を、entry.path の親のフォルダを基準にパスの解決に通して返す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parentDir]
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[resolvePath]
+    unit_tests:
+      - name: test_document_path_of
+        case: 正常
+        summary: body_file の無い語は YAML のパス、ある語は語を取り出した YAML のフォルダから解決したパス
+        condition: path が `/repo/knowledge/terms/term-a.yaml` で bodyFile が無い語と、origin が `/repo/knowledge/dev-docs.yaml`、path が `/repo/knowledge/hooks/files.yaml`、bodyFile が `hooks.json` の語
+        mock: なし
+        expected: '`/repo/knowledge/terms/term-a.yaml` と `/repo/knowledge/hooks/hooks.json`'
+    status: planned
+    introduced:
+      pr: 52
+  - name: excludeReadingDocuments
+    title: 読んでいる文書の除外
+    kind: 関数
+    container: hooks/lib/tool.ts
+    usecase: ツールの結果への引用の文脈の追加
+    summary: 照合の結果から、ツールが読んでいる文書そのものの語を外す
+    scope: public
+    is_async: false
+    args:
+      - name: hits
+        type: Hit[]
+        required: true
+        passing: positional
+        description: 照合の結果
+      - name: e
+        type: ToolCallInput
+        required: true
+        passing: keyword
+        description: '`tool.call` の入力'
+      - name: home
+        type: string
+        required: true
+        passing: keyword
+        description: ホームのフォルダ
+    returns:
+      type: Hit[]
+      description: 外した残り。並びは受け取ったまま
+    process: |-
+      1. `e.tool` が `Read` で `e.file_path` が文字列なら、文書のパスが `e.file_path` と一致する語を外す
+      2. `e.tool` が `mcp__` で始まるなら、引数の文字列の収集に entry.id がある語を外す
+      3. それ以外のツールは hits をそのまま返す
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#constraints[読んでいる文書そのもの]
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/ツール#functions[documentPathOf]
+      - dev/設計書/モジュール構成/プラグイン/ツール#functions[collectArgumentStrings]
+    unit_tests:
+      - name: test_exclude_reading_documents_when_read
+        case: 正常
+        summary: Read は文書のパスが file_path と一致する語を外す
+        condition: hits が term-a（path が `/repo/knowledge/terms/term-a.yaml`）と term-b、`e` が `Read` で `file_path` が `/repo/knowledge/terms/term-a.yaml`
+        mock: なし
+        expected: term-b だけ
+      - name: test_exclude_reading_documents_when_mcp
+        case: 正常
+        summary: MCP のツールは引数の文字列に ID がある語を外す
+        condition: 'hits が term-a と term-b、`e` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `filter` が `{ field: id, op: eq, values: [term-a] }`'
+        mock: なし
+        expected: term-b だけ
+      - name: test_exclude_reading_documents_when_other_tool
+        case: 正常
+        summary: Read と MCP 以外のツールは外さない
+        condition: hits が term-a と term-b、`e` が `Bash` で `command` が `cat /repo/knowledge/terms/term-a.yaml`
+        mock: なし
+        expected: term-a と term-b
+    status: planned
+    introduced:
+      pr: 52
+test_files:
+  - tests/unit/hooks/lib/tool.test.ts

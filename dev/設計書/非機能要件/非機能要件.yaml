@@ -101,4 +101,18 @@ requirements:
     rationale: 変数参照に使う値はパス・URL・識別子で、長くて数百文字。`PATH` のような長い値が 1 行で文脈を占めないようにする
     overflow: 値の先頭 1000 文字だけを書き、行の末尾に値の全体の文字数を添えて、切ったことを示す
     status: planned
+  - name: ツールの呼び出しで増える待ち時間
+    english_name: added_latency_on_tool_call
+    category: 性能
+    external_constraint: 10000ms（`HookBudget.ms`。hooks モジュールの処理を待つ上限で、超えると hook が無かった扱いになる）
+    source_kind: 実行基盤の制限
+    value: '200'
+    unit: ms
+    rationale: 照合と設定の読み込みは `prompt.submit` と同じで、入力の送信で増える待ち時間と同じ値に揃える。ツールの結果は入力より長いため、長い本文で測る。変数参照の値を引く子プロセスの待ち（上限 20ms）を含む
+    measurement: 語 2,500 を持つ用語の YAML を照合する設定で、本文 100,000 文字で語を 20 種類含む結果を返す `tool.call` を流し、`next(e)` が返ってからフックが返るまでの時間を測る
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#constraints[処理時間]
+    status: planned
+    introduced:
+      pr: 52
 lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして置く。

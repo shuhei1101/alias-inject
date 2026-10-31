@@ -141,6 +141,8 @@ test('test_build_entries_when_name_missing', () => {
 
   // 検証
   expect(entries.map((entry) => entry.word)).toEqual(['term-b', 'セットアップ', 'cmd-a'])
+  expect(entries.map((entry) => entry.bodyFile)).toEqual([undefined, 'docs/使い方/セットアップ.md', undefined])
+  expect(entries.map((entry) => entry.path)).toEqual(['/d/term/term-b.yaml', '/d/files.yaml', '/d/files.yaml'])
 })
 
 // 必須の値が空の文書は外し、理由を返す（正常系）

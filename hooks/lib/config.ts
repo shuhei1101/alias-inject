@@ -31,6 +31,8 @@ export type ProjectConfig = {
   maxChars: number | undefined
   exclude: string[]
   heading: string | undefined
+  /** 後ろに追加する結果を照合しないツールの名前 */
+  excludeTools: string[]
 }
 
 /** 検証して既定値を当てた設定ファイルの内容 */
@@ -43,6 +45,8 @@ export type Config = {
   maxChars: number
   exclude: string[]
   heading: string
+  /** 結果を照合しないツールの名前 */
+  excludeTools: string[]
   projects: ProjectConfig[]
   /** 外した要素と無視した値の理由。呼び出し元が debug log に出す */
   warnings: string[]
@@ -60,6 +64,8 @@ export type Settings = {
   maxChars: number
   exclude: string[]
   heading: string
+  /** 結果を照合しないツールの名前。global の後ろに当たった projects を並べたもの */
+  excludeTools: string[]
   /** `id` が重なって外した `aliases` の要素の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
@@ -162,6 +168,9 @@ function parseScope(
     return undefined
   }
 
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+
   return {
     enabled: typeof scope.enabled === 'boolean' ? scope.enabled : undefined,
     repositories: parseRepositories(scope.repositories, baseDir, prefix, warnings),
@@ -169,7 +178,8 @@ function parseScope(
     origins,
     maxItems: limit('max_items'),
     maxChars: limit('max_chars'),
-    exclude: Array.isArray(scope.exclude) ? scope.exclude.filter((word): word is string => typeof word === 'string') : [],
+    exclude: strings(scope.exclude),
+    excludeTools: strings(scope.exclude_tools),
     heading: isNonEmptyString(scope.heading) ? scope.heading : undefined,
   }
 }
@@ -201,6 +211,7 @@ export function parseConfig(value: unknown, schema: Record<string, unknown>): Co
     maxChars: global.maxChars ?? DEFAULT_MAX_CHARS,
     exclude: global.exclude,
     heading: global.heading ?? DEFAULT_HEADING,
+    excludeTools: global.excludeTools,
     projects,
     warnings,
   }
@@ -223,17 +234,19 @@ export function resolveSettings(
 
   let { enabled, origins, maxItems, maxChars, heading } = config
   const exclude = [...config.exclude]
+  const excludeTools = [...config.excludeTools]
   const repositories = [...config.repositories]
   // 相対パスの基準を決めるため、aliases は書いた場所（global か projects）とあわせて持つ
   const scopedAliases: { alias: AliasConfig; baseDir: 'config' | 'project' }[] = config.aliases.map((alias) => ({
     alias,
     baseDir: 'config',
   }))
-  // repositories・aliases・exclude は後ろに追加し、それ以外は書いた値で置き換える
+  // repositories・aliases・exclude・excludeTools は後ろに追加し、それ以外は書いた値で置き換える
   for (const project of matched) {
     repositories.push(...project.repositories)
     scopedAliases.push(...project.aliases.map((alias) => ({ alias, baseDir: 'project' as const })))
     exclude.push(...project.exclude)
+    excludeTools.push(...project.excludeTools)
     if (project.enabled !== undefined) enabled = project.enabled
     if (project.origins !== undefined) origins = project.origins
     if (project.maxItems !== undefined) maxItems = project.maxItems
@@ -264,6 +277,7 @@ export function resolveSettings(
     maxChars,
     exclude,
     heading,
+    excludeTools,
     warnings: deduped.warnings,
   }
 }

@@ -84,6 +84,7 @@ constraints:
     notes: '`$.state` への書き込み 1 回だけ'
   - item: 消す範囲
     constraint: '`sessionId` の記録だけ'
+    notes: サブエージェントの記録（セッション ID と `agentId` の組）は消さない。`/clear` の後は新しいセッション ID で記録するため、読まれない
 refs:
   - dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去#
   - dev/設計書/インターフェース定義/入力への引用の文脈の追加#

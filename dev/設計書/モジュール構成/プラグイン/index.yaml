@@ -26,8 +26,10 @@ items:
   - page: 文脈.yaml
     summary: 追加する語の選択と文脈の組み立て
   - page: 記録.yaml
-    summary: セッションごとの追加した語の記録
+    summary: 会話ごとの追加した語の記録
   - page: 状態の型.yaml
     summary: $.state に置く値の型の契約
   - page: 変数参照.yaml
     summary: ツールの結果の変数参照の名前の拾い出し・env の出力の分割・値の行の組み立て
+  - page: ツール.yaml
+    summary: ツールの引数から読んでいる文書の語を外す判定

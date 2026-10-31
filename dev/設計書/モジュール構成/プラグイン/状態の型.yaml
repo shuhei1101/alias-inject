@@ -16,4 +16,4 @@ data_models:
     properties:
       - name: "'alias-inject'.recorded"
         type: StateFamily<string[]>
-        description: セッション ID を `id` にした、文脈を追加した語の記録のキーの並び
+        description: 記録の ID（メインの会話はセッション ID、サブエージェントはセッション ID と `agentId` の組）を `id` にした、文脈を追加した語の記録のキーの並び
