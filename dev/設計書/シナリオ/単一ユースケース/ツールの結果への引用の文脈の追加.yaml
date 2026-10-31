@@ -153,6 +153,9 @@ scenarios:
     setup:
       - name: Mock
         description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定に、照合から外すツールとして `Agent` を指定する
+        notes: サブエージェントの答え（メインの会話の Agent の結果）に term-a が入っても、メインの会話の記録に入らないようにする
       - name: 読ませるファイル
         description: 正常シナリオと同じ
     flow: |-
@@ -171,7 +174,11 @@ scenarios:
         P->>P: サブエージェントの記録で照合し term-a を記録に入れる
         P->>CC: term-a の文脈を context に追加
         CC->>S: ツールの結果と文脈を送信
-        S-->>M: 答え
+        S-->>CC: 答え
+        CC->>P: tool.call（Agent、agentId なし）
+        P->>P: Agent は照合から外したツール
+        P->>CC: 結果をそのまま返す
+        CC->>M: Agent の結果を送信
         U->>CC: 同じファイルを Read で読ませる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
