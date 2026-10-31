@@ -36,5 +36,5 @@ Bash・Read・MCP などのツールで読んだ本文に登録した用語や�
 - [x] ドキュメント修正（設計書/アーキテクチャ図/アーキテクチャ図.yaml・設計書/外部ライブラリ/claude-code.yaml・設計書/非機能要件/非機能要件.yaml・docs/はじめに/コアコンセプト/引用の文脈.md・docs/リファレンス/設定ファイル.md・settings.sample.yaml・README.md・CLAUDE.md・.claude-plugin/plugin.json）
 - [x] 単体テスト作成
 - [x] 実装
-- [ ] 結合テスト作成
+- [x] 結合テスト作成
 - [ ] E2E テスト作成
