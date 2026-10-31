@@ -33,8 +33,8 @@ functions:
         description: '`tool.call`・`session.compact` の `e.agentId`。メインの会話は undefined'
     returns:
       type: string
-      description: メインの会話は `sessionId`、サブエージェントは `{sessionId}\u0000{agentId}`
-    process: 1. agentId が undefined なら sessionId、それ以外は sessionId と agentId を NUL 文字でつないで返す
+      description: メインの会話は `sessionId`、サブエージェントは `{sessionId}/{agentId}`
+    process: 1. agentId が undefined なら sessionId、それ以外は sessionId と agentId を `/` でつないで返す
     unit_tests:
       - name: test_record_id_of
         case: 正常

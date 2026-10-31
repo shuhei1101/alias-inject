@@ -68,17 +68,17 @@ functions:
       description: bodyFile があればその絶対パス、無ければ entry.path
     process: |-
       1. entry.bodyFile が undefined なら entry.path を返す
-      2. それ以外は bodyFile を、entry.origin の親のフォルダを基準にパスの解決に通して返す
+      2. それ以外は bodyFile を、entry.path の親のフォルダを基準にパスの解決に通して返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parentDir]
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[resolvePath]
     unit_tests:
       - name: test_document_path_of
         case: 正常
-        summary: body_file の無い語は YAML のパス、ある語は行のフォルダから解決したパス
-        condition: path が `/repo/knowledge/terms/term-a.yaml` で bodyFile が無い語と、origin が `/repo/knowledge/dev-docs.yaml`、path が `/repo/knowledge/files.yaml`、bodyFile が `docs/a.md` の語
+        summary: body_file の無い語は YAML のパス、ある語は語を取り出した YAML のフォルダから解決したパス
+        condition: path が `/repo/knowledge/terms/term-a.yaml` で bodyFile が無い語と、origin が `/repo/knowledge/dev-docs.yaml`、path が `/repo/knowledge/hooks/files.yaml`、bodyFile が `hooks.json` の語
         mock: なし
-        expected: '`/repo/knowledge/terms/term-a.yaml` と `/repo/knowledge/docs/a.md`'
+        expected: '`/repo/knowledge/terms/term-a.yaml` と `/repo/knowledge/hooks/hooks.json`'
     status: planned
     introduced:
       pr: 52

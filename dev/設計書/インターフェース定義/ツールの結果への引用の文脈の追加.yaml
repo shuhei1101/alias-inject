@@ -402,7 +402,7 @@ constraints:
     decided_by: dev/設計書/設定/プラグイン#settings[global.exclude_tools]
   - item: 読んでいる文書そのもの
     constraint: '`e.tool` が `Read` のとき、文書のパスが `e.file_path` と一致する語を外す。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する語を外す'
-    notes: 文書のパスは、`records` を書かない行では語を取り出した YAML、`records` と `body_file` を書いた行では `body_file` の列の値のパス（行の `dev-docs.yaml` か設定ファイルのフォルダから解決）、`records` だけを書いた行では語を取り出した YAML（その YAML の全ての語を外す）
+    notes: 文書のパスは、`records` を書かない行では語を取り出した YAML、`records` と `body_file` を書いた行では `body_file` の列の値のパス（語を取り出した YAML のフォルダから解決）、`records` だけを書いた行では語を取り出した YAML（その YAML の全ての語を外す）
   - item: 照合しない結果
     constraint: '`result.isError` が `true`・`result.deny` が入っている・`result.text` が文字列でない結果は照合しない'
   - item: 記録の単位
