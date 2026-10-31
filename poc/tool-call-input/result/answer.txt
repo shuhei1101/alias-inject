@@ -1,0 +1,25 @@
+5 つの手順をすべて実行し、どのツール呼び出しにも tool.call フックの追加の文脈が付きました。各回 `POC-MARK-QUOTE-…` と `POC-MARK-VAR-…` の 2 つで、末尾の文字列は 2 つで同じ、呼び出しごとには違う値です。
+
+| 手順 | ツール | POC-MARK で始まる文字列 |
+| --- | --- | --- |
+| 1 | Read（a.md） | `POC-MARK-QUOTE-zyuaPx`<br>`POC-MARK-VAR-zyuaPx` |
+| 2 | Bash（`cat` b.md） | `POC-MARK-QUOTE-2K3LuP`<br>`POC-MARK-VAR-2K3LuP` |
+| 3 | `mcp__plugin_dev-docs_dev-docs__search_docs` | `POC-MARK-QUOTE-u5DPeP`<br>`POC-MARK-VAR-u5DPeP` |
+| 4 | Read ×2 を並列（a.md） | `POC-MARK-QUOTE-tvJGSG`<br>`POC-MARK-VAR-tvJGSG` |
+| 4 | Read ×2 を並列（b.md） | `POC-MARK-QUOTE-Fir4SU`<br>`POC-MARK-VAR-Fir4SU` |
+| 5 | Agent（呼び出し側に付いた分） | `POC-MARK-QUOTE-PtTzUT`<br>`POC-MARK-VAR-PtTzUT` |
+
+手順 4 の 2 組は、2 つの結果の後ろにまとめて付いていました。どちらが a.md でどちらが b.md の分かは、並んだ順に当てただけです。
+
+**サブエージェントの答え（そのまま書き写し）:**
+
+> ツールの結果の後ろに付いた POC-MARK で始まる文字列は次の 2 つで、そのまま書き写しています。
+>
+> ```
+> POC-MARK-QUOTE-squuTQ
+> POC-MARK-VAR-squuTQ
+> ```
+>
+> どちらも b.md の本文には含まれていません。tool.call フックが追加した文脈（`tool.call hook additional context:`）として、Read の結果の後ろに付いていました。
+
+サブエージェントの中の Read にもフックの文脈が付きました。その値（`squuTQ`）は、私の側で Agent の呼び出しに付いた値（`PtTzUT`）とは別でした。

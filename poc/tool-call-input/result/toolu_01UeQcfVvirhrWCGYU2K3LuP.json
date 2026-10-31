@@ -1,0 +1,1 @@
+{"enteredAt":1793467541797,"leftAt":1793467542166,"e":{"command":"cat /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/poc-plugin-tool-call-input/poc/tool-call-input/fixture/b.md","description":"サンプル B の本文を表示","tool":"Bash","tool_use_id":"toolu_01UeQcfVvirhrWCGYU2K3LuP"},"isError":false,"hasText":true}
