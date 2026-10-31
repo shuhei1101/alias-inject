@@ -7,6 +7,11 @@ const CONFIG_DIR = '/home/u/.config/alias-inject'
 const CONFIG_PATH = `${CONFIG_DIR}/settings.yaml`
 const DEV_DOCS_PATH = '/home/u/knowledge/dev-docs.yaml'
 const SETTINGS = userSettingsWithConfig('~/.config/alias-inject/settings.yaml')
+const TERM_A_PATH = `${CONFIG_DIR}/terms/term-a.yaml`
+const VALUE_A_RUN = { value: { exitCode: 0, stdout: 'VALUE_A=value-a\0' } }
+const VALUE_A_LINE = '変数参照の値: !{VALUE_A} = value-a'
+// サブエージェント agent-1 の中の Read の呼び出し
+const AGENT_READ = { tool: 'Read', file_path: '/repo/sample/note.md', agentId: 'agent-1' }
 
 // 行の `alias_type` を指定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める。`metadata` に足したい行を渡せる
 function aliasLines(id: string, paths: string, aliasType: string, indent: number, extraMetadata: string[] = []): string[] {
@@ -47,7 +52,7 @@ function makeFs(options: FsOptions = {}): MemoryFs {
   ].join('\n')
   const fs = new MemoryFs({
     [CONFIG_PATH]: config,
-    [`${CONFIG_DIR}/terms/term-a.yaml`]: 'id: term-a\nname: Term-A\naliases: [用語エー]\ndescription: 説明 A\n',
+    [TERM_A_PATH]: 'id: term-a\nname: Term-A\naliases: [用語エー]\ndescription: 説明 A\n',
     [`${CONFIG_DIR}/terms/term-b.yaml`]: 'id: term-b\nname: Term-B\ndescription: 説明 B\n',
   })
   if (options.devDocs !== undefined) fs.write(DEV_DOCS_PATH, options.devDocs.join('\n'))
@@ -128,25 +133,46 @@ test('test_handle_session_compact', async ($, on) => {
   }
 })
 
-// 圧縮されなかったとき・サブエージェントの圧縮では記録を残す（正常系）
+// 圧縮されなかったときは記録を残す（正常系）
 test('test_handle_session_compact_when_not_compacted', async ($, on) => {
   // 準備
   const world = installWorld(on, { fs: makeFs(), settings: SETTINGS })
   const before = await submit($, 'term-a とは')
 
   // 実行
-  // 圧縮の事前の計算、圧縮の見送り、サブエージェントの圧縮の 3 通りを順に起こす
+  // 圧縮の事前の計算、圧縮の見送りの 2 通りを順に起こす
   await $.session.compact({ trigger: 'precompute', messages: [COMPACTED_MESSAGE] })
   world.compactResult = { skip: 'not compacted' }
   const skipped = await $.session.compact({ trigger: 'manual', messages: [COMPACTED_MESSAGE] })
-  world.compactResult = { messages: [COMPACTED_MESSAGE] }
-  await $.session.compact({ trigger: 'auto', agentId: 'sub1', messages: [COMPACTED_MESSAGE] })
   const after = await submit($, 'term-a とは')
 
   // 検証
   expect(before.context?.length).toBe(1)
   expect(skipped.skip).toBe('not compacted')
   expect(after.context ?? []).toEqual([])
+})
+
+// サブエージェントの圧縮はそのサブエージェントの記録だけを消去する（正常系）
+test('test_handle_session_compact_when_subagent', async ($, on) => {
+  // 準備
+  // s1 の記録と、s1 と agent-1 の組の記録に term-a を入れる
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = { result: 'r', text: 'term-a' }
+  await submit($, 'term-a とは')
+  const beforeAgent = await callTool($, AGENT_READ)
+
+  // 実行
+  await $.session.compact({ trigger: 'auto', agentId: 'agent-1', messages: [COMPACTED_MESSAGE] })
+  const afterAgent = await callTool($, AGENT_READ)
+  const afterMain = await submit($, 'term-a とは')
+
+  // 検証
+  // s1 と agent-1 の組の記録は消え、term-a の文脈がもう一度追加される
+  expect(beforeAgent.context?.length).toBe(1)
+  expect(afterAgent.context?.length).toBe(1)
+  expect(afterAgent.context?.[0]).toContain('Term-A')
+  // s1 の記録は残り、文脈は追加されない
+  expect(afterMain.context ?? []).toEqual([])
 })
 
 // aliases の行の glob が設定ファイルに当たっても、その行の他の語の文脈を追加する（正常系）
@@ -211,15 +237,16 @@ test('test_handle_tool_call_when_context_given', async ($, on) => {
   expect(world.runs).toEqual([{ argv: ['env', '-0'], timeoutMs: 20 }])
 })
 
-// deny・エラーの結果・本文が無い結果・変数参照が無い結果は子プロセスを起こさずそのまま返す（正常系）
+// deny・エラーの結果・本文が無い結果・語も変数参照も無い結果はそのまま返す（正常系）
 test('test_handle_tool_call_when_skipped', async ($, on) => {
   // 準備
-  const world = installToolWorld(on)
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.run = VALUE_A_RUN
   const answers = [
     { deny: 'no' },
-    { result: 'r', text: '本文 !{VALUE_A}', isError: true },
+    { result: 'r', text: 'term-a と !{VALUE_A}', isError: true },
     { result: 'r' },
-    { result: 'r', text: '変数参照の無い本文' },
+    { result: 'r', text: '語も変数参照も無い本文' },
   ]
 
   for (const answer of answers) {
@@ -231,6 +258,62 @@ test('test_handle_tool_call_when_skipped', async ($, on) => {
     expect(result).toEqual(answer)
   }
   expect(world.runs).toEqual([])
+  // 記録に入っていないため、入力の送信で term-a の文脈が追加される
+  expect((await submit($, 'term-a とは')).context?.length).toBe(1)
+})
+
+// 引用の文脈を先に、値の行を後に追加し、メインの会話の記録に入れる（正常系）
+test('test_handle_tool_call_when_quote_added', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = { result: 'r', text: 'term-a と !{VALUE_A}', context: ['other'] }
+  world.run = VALUE_A_RUN
+
+  // 実行
+  const result = await callTool($, { tool: 'Read', file_path: '/repo/sample/note.md' })
+
+  // 検証
+  expect(result.context?.length).toBe(3)
+  expect(result.context?.[0]).toBe('other')
+  expect(result.context?.[1]).toContain('Term-A')
+  expect(result.context?.[2]).toBe(VALUE_A_LINE)
+  // メインの会話の記録に入ったため、入力の送信では追加されない
+  expect((await submit($, 'term-a とは')).context ?? []).toEqual([])
+})
+
+// exclude_tools のツールは語を読み込まずにそのまま返す（正常系）
+test('test_handle_tool_call_when_tool_excluded', async ($, on) => {
+  // 準備
+  const fs = makeFs({ globalExtra: ['exclude_tools: [Bash]'] })
+  const world = installToolWorld(on, { fs, settings: SETTINGS })
+  const answer = { result: 'r', text: 'term-a を表示' }
+  world.answer = answer
+
+  // 実行
+  const result = await callTool($, { tool: 'Bash', command: 'cat note.md' })
+
+  // 検証
+  expect(result).toEqual(answer)
+  expect(fs.reads).not.toContain(TERM_A_PATH)
+})
+
+// agentId のある呼び出しはセッションと agentId の組の記録で照合する（正常系）
+test('test_handle_tool_call_when_in_subagent', async ($, on) => {
+  // 準備
+  // メインの会話（s1）の記録には term-a が入っている
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  await submit($, 'term-a とは')
+  world.answer = { result: 'r', text: 'term-a' }
+
+  // 実行
+  const result = await callTool($, AGENT_READ)
+  const again = await callTool($, AGENT_READ)
+
+  // 検証
+  expect(result.context?.length).toBe(1)
+  expect(result.context?.[0]).toContain('Term-A')
+  // s1 と agent-1 の組の記録に入ったため、同じサブエージェントでは再び追加されない
+  expect(again).toEqual(world.answer)
 })
 
 // 終了コードが 0 以外・例外のときは debug log に出してそのまま返す（異常系）
@@ -257,4 +340,24 @@ test('test_handle_tool_call_when_process_failed', async ($, on) => {
   expect(exitLogs.length).toBe(1)
   expect(failed).toEqual(answer)
   expect(failedLogs.length).toBe(1)
+})
+
+// 記録の書き込みが上限まで外れたら、引用の文脈を追加せずに値の行だけを追加する（異常系）
+test('test_handle_tool_call_when_record_conflicts_exhausted', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = { result: 'r', text: 'term-a と !{VALUE_A}', context: ['other'] }
+  world.run = VALUE_A_RUN
+  // ifVersion を付けた書き込みには常に外れたと返す
+  on('state.set', (_, e, next) => {
+    if (e.ifVersion !== undefined) return { value: { isSet: false, version: e.ifVersion + 1 } }
+    return next(e)
+  })
+
+  // 実行
+  const result = await callTool($, { tool: 'Read', file_path: '/repo/sample/note.md' })
+
+  // 検証
+  expect(result.context).toEqual(['other', VALUE_A_LINE])
+  expect(world.logs.filter((line) => line.to === 'debug').length).toBeGreaterThan(0)
 })

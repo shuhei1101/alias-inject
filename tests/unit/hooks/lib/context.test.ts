@@ -20,12 +20,14 @@ function makeEntry(
     word: id,
     keys: [id],
     fields: options.description === undefined ? [] : [{ name: 'description', value: options.description }],
+    path: `/a/terms/${id}.yaml`,
+    bodyFile: undefined,
   }
 }
 
 // 照合の結果の形にする
 function makeHit(entry: Entry, position: number): Hit {
-  return { entry, position, length: entry.word.length }
+  return { entry, position, length: entry.word.length, count: 1 }
 }
 
 const LIMITS = { heading: HEADING, maxItems: 20, maxChars: 4000 }

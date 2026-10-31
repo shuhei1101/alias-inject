@@ -1,10 +1,22 @@
 import { expect, test } from 'claude-code/testing'
-import { findHits, normalize } from '../../../../hooks/lib/match'
+import { findHits, normalize, sortByCount } from '../../../../hooks/lib/match'
 import type { Entry } from '../../../../hooks/lib/entry'
 
 // テスト用の語。照合に使う `keys` は正規化済みで渡す
 function makeEntry(id: string, word: string, keys: string[], itemIndex = 0): Entry {
-  return { aliasIndex: 0, itemIndex, origin: '/a/dev-docs.yaml', aliasId: 'terms', type: 'term', id, word, keys, fields: [] }
+  return {
+    aliasIndex: 0,
+    itemIndex,
+    origin: '/a/dev-docs.yaml',
+    aliasId: 'terms',
+    type: 'term',
+    id,
+    word,
+    keys,
+    fields: [],
+    path: `/a/terms/${id}.yaml`,
+    bodyFile: undefined,
+  }
 }
 
 // 全角・大文字・前後の空白をそろえる（正常系）
@@ -56,6 +68,23 @@ test('test_find_hits_when_excluded', () => {
   // 検証
   expect(hits.length).toBe(1)
   expect(hits[0]?.position).toBe(text.indexOf('用語エー'))
+  expect(hits[0]?.count).toBe(1)
+})
+
+// keys のどれかが始まる位置の数を数える（正常系）
+test('test_find_hits_when_counted', () => {
+  // 準備
+  const termA = makeEntry('term-a', 'Term-A', ['term-a', '用語エー'])
+  const review = makeEntry('review', 'レビュー', ['レビュー', 'レビュースレッド'])
+
+  // 実行
+  const termHits = findHits('term-a と用語エーと term-a', [termA], [])
+  // レビューとレビュースレッドは同じ位置から始まるため 1 回と数える
+  const reviewHits = findHits('レビュースレッド', [review], [])
+
+  // 検証
+  expect(termHits[0]?.count).toBe(3)
+  expect(reviewHits[0]?.count).toBe(1)
 })
 
 // 当たる語が無ければ空を返す（正常系）
@@ -68,4 +97,19 @@ test('test_find_hits_when_no_match', () => {
 
   // 検証
   expect(hits).toEqual([])
+})
+
+// 出た回数の多い語が先、同じ回数なら先に出た語が先になる（正常系）
+test('test_sort_by_count', () => {
+  // 準備
+  const termA = makeEntry('term-a', 'Term-A', ['term-a'])
+  const termB = makeEntry('term-b', 'Term-B', ['term-b'], 1)
+  const termC = makeEntry('term-c', 'Term-C', ['term-c'], 2)
+  const hits = findHits('term-a、term-b、term-b、term-c', [termA, termB, termC], [])
+
+  // 実行
+  const sorted = sortByCount(hits)
+
+  // 検証
+  expect(sorted.map((hit) => hit.entry.id)).toEqual(['term-b', 'term-a', 'term-c'])
 })

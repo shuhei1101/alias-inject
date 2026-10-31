@@ -89,6 +89,7 @@ test('test_parse_config', () => {
       max_items: 5,
       max_chars: 100,
       exclude: ['x'],
+      exclude_tools: ['Bash'],
       heading: '見出し',
     },
     projects: [
@@ -111,6 +112,7 @@ test('test_parse_config', () => {
   expect(config.maxItems).toBe(5)
   expect(config.maxChars).toBe(100)
   expect(config.exclude).toEqual(['x'])
+  expect(config.excludeTools).toEqual(['Bash'])
   expect(config.heading).toBe('見出し')
   expect(config.projects.length).toBe(1)
   expect(config.projects[0]?.match).toBe('sample')
@@ -132,6 +134,7 @@ test('test_parse_config_when_keys_omitted', () => {
   expect(config.maxItems).toBe(20)
   expect(config.maxChars).toBe(4000)
   expect(config.exclude).toEqual([])
+  expect(config.excludeTools).toEqual([])
   expect(config.heading).toBe('この発言に出る用語')
   expect(config.projects).toEqual([])
   expect(config.warnings).toEqual([])
@@ -212,6 +215,7 @@ test('test_parse_config_when_project_without_match', () => {
   expect(project?.repositories).toEqual([])
   expect(project?.aliases).toEqual([])
   expect(project?.exclude).toEqual([])
+  expect(project?.excludeTools).toEqual([])
   expect(config.warnings.some((warning) => warning.includes('match'))).toBe(true)
   expect(config.warnings.some((warning) => warning.includes('max_chars'))).toBe(true)
 })
@@ -331,13 +335,13 @@ test('test_resolve_settings_when_duplicated', () => {
   expect(settings.warnings[0]).toContain('terms')
 })
 
-// 当たった要素の exclude は追加し、max_items は置き換え、書かないキーは global のままにする（正常系）
+// 当たった要素の exclude・excludeTools は追加し、max_items は置き換え、書かないキーは global のままにする（正常系）
 test('test_resolve_settings_when_project_overrides', () => {
   // 準備
   const config = parse({
-    global: { exclude: ['a'], origins: ['user'] },
+    global: { exclude: ['a'], exclude_tools: ['Bash'], origins: ['user'] },
     projects: [
-      { match: 'sample', exclude: ['b'], max_items: 5 },
+      { match: 'sample', exclude: ['b'], exclude_tools: ['Grep'], max_items: 5 },
       { match: 'sample', max_items: 3, origins: [] },
     ],
   })
@@ -347,6 +351,7 @@ test('test_resolve_settings_when_project_overrides', () => {
 
   // 検証
   expect(settings.exclude).toEqual(['a', 'b'])
+  expect(settings.excludeTools).toEqual(['Bash', 'Grep'])
   expect(settings.maxItems).toBe(3)
   expect(settings.origins).toBeNull()
   expect(settings.heading).toBe('この発言に出る用語')
