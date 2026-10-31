@@ -71,7 +71,8 @@ flows:
       - name: Mock
         description: 正常系と同じ
       - name: ツールの呼び出し
-        description: 1 回目は `e.tool` が `Read` で `e.file_path` が `/repo/knowledge/terms/term-a.yaml`。2 回目は別のセッションで `e.tool` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `e.from_ids` が `[term-a]`
+        description: '1 回目は `e.tool` が `Read` で `e.file_path` が `/repo/knowledge/terms/term-a.yaml`。2 回目は別のセッションで `e.tool` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `e.filter` が `{ field: id, op: eq, values: [term-a] }`'
+        notes: ID が入れ子の並びの中にある呼び方
       - name: ツールの結果
         description: どちらも `text` が「Term-A と term-b」
     flow: |-
@@ -84,7 +85,7 @@ flows:
         CC-->>IF: ツールの結果
         IF->>IF: term-a と term-b が当たり、term-a を外す
         IF-->>CC: context に term-b の文脈
-        CC->>IF: e（MCP の from_ids が term-a）
+        CC->>IF: e（MCP の filter の values が term-a）
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
         IF->>IF: term-a と term-b が当たり、term-a を外す
@@ -304,7 +305,7 @@ idempotent: false
 side_effects: 追加した語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - dev/設計書/外部ライブラリ/claude-code#
-exclusivity: 並列に呼ばれた `tool.call` が同じ記録へ書くため、記録は `$.state.set` の `ifVersion` で書き、外れたら読み直して照合の結果から記録済みの語を除き直す
+exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ書くため、記録は `$.state.set` の `ifVersion` で書き、外れたら読み直して照合の結果から記録済みの語を除き直す。この書き方は `prompt.submit` と共有する
 request:
   - name: e.tool
     type: string
@@ -322,8 +323,8 @@ request:
     required: false
     default: なし（引数の無いツール）
     location: argument
-    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、文字列の値と文字列の並びの要素を読んでいる文書の ID の判定に使う
-    notes: 入れ子のオブジェクトの中は見ない
+    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、読んでいる文書の ID の判定に使う
+    notes: dev-docs の `search_docs` は ID を `filter` の条件の `values` に入れる。ID でない文字列（`source`・`op` など）が語の ID と一致したときはその語を外す
   - name: e.agentId
     type: string
     required: false
@@ -400,8 +401,8 @@ constraints:
     constraint: '`e.tool` が設定の `exclude_tools` の名前のどれかと完全に一致するとき照合しない。既定は空で、全てのツールを照合する'
     decided_by: dev/設計書/設定/プラグイン#settings[global.exclude_tools]
   - item: 読んでいる文書そのもの
-    constraint: '`e.tool` が `Read` のとき、語を取り出した YAML の絶対パスが `e.file_path` と一致する語を外す。`e.tool` が `mcp__` で始まるとき、`e` の直下の文字列の値か文字列の並びの要素が文書の `id` と一致する語を外す'
-    notes: '`records` を書いた行の YAML を Read で読んだときは、その YAML の全ての語を外す'
+    constraint: '`e.tool` が `Read` のとき、文書のパスが `e.file_path` と一致する語を外す。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する語を外す'
+    notes: 文書のパスは、`records` を書かない行では語を取り出した YAML、`records` と `body_file` を書いた行では `body_file` の列の値のパス（行の `dev-docs.yaml` か設定ファイルのフォルダから解決）、`records` だけを書いた行では語を取り出した YAML（その YAML の全ての語を外す）
   - item: 照合しない結果
     constraint: '`result.isError` が `true`・`result.deny` が入っている・`result.text` が文字列でない結果は照合しない'
   - item: 記録の単位

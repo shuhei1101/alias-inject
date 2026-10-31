@@ -650,7 +650,7 @@ idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - dev/設計書/外部ライブラリ/claude-code#
-exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶため排他しない
+exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](./ツールの結果への引用の文脈の追加.yaml) と同じく `$.state.set` の `ifVersion` で書き、外れたら読み直して記録済みの語を除き直す（3 回まで）。上限まで外れたら、debug log に出して文脈を追加せずに渡す
 request:
   - name: text
     type: string
