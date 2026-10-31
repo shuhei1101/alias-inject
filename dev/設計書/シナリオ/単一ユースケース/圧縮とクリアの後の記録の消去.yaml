@@ -51,6 +51,30 @@ scenarios:
     expected:
       - '`/clear` の後の term-a を含む入力に、term-a の文脈が追加されている'
     test: test_normal_when_cleared
+  - name: 正常シナリオ（ツールの結果で追加した語）
+    setup:
+      - name: Mock
+        description: 正常シナリオ（圧縮）と同じ
+      - name: セッションの記録
+        description: term-a を含むファイルを Read で 1 回読ませ、ツールの結果で term-a の文脈を追加済み
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: /compact
+        CC->>P: session.compact（trigger は manual）
+        P->>CC: 圧縮を続ける
+        CC-->>P: 圧縮の結果
+        P->>P: そのセッションの記録を消す
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+    expected:
+      - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
+    test: test_normal_when_compacted_after_tool_result
 lead: 圧縮か `/clear` の後は、それまでに文脈を追加した語の記録を消し、同じ語が出たらもう一度文脈を追加する。
 issue: 1
 primary_actor: 利用者

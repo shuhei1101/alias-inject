@@ -136,6 +136,33 @@ scenarios:
       - ツールの結果の本文がそのままモデルに届いている
       - ツールの結果の後ろに `変数参照の値` の行が無い
     test: test_error_when_values_unavailable
+  - name: 正常シナリオ（引用の文脈と合わせる）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: 設定ファイルは『ツールの結果への引用の文脈の追加』の正常シナリオと同じ
+      - name: 読ませるファイル
+        description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` と term-a を含むテキストファイル
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-a が当たる
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を拾い、子プロセスで値を引く
+        P->>CC: 本文はそのままに、term-a の文脈と値の行を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - ツールの結果の後ろの文脈に term-a の引用の文脈がある
+      - 'ツールの結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
+    test: test_normal_when_quote_context_added
 lead: Read・Bash・MCP のツールで読んだ本文に `!{名前}` の変数参照があると、本文は変えずに、同じ名前の環境変数の値をツールの結果の後ろの文脈としてモデルに追加する。
 issue: 11
 primary_actor: モデル

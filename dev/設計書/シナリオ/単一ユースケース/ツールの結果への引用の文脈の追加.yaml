@@ -1,0 +1,248 @@
+title: "ツールの結果への引用の文脈の追加"
+scenarios:
+  - name: 正常シナリオ
+    setup:
+      - name: Mock
+        description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
+        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
+      - name: 設定ファイル
+        description: 『入力への引用の文脈の追加』の正常シナリオと同じ（語 `term-a`・`term-b` を持つ用語の YAML を、一時のリポジトリの `dev-docs.yaml` の `documents` の行で読む）
+      - name: 読ませるファイル
+        description: 本文に term-a を含み、term-b を含まないテキストファイル
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 本文と語を正規化して照合し term-a が当たる
+        P->>P: term-a をセッションの記録に入れる
+        P->>CC: 本文はそのままに、term-a の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の語・`id`・`description` が並んでいる
+      - term-b の文脈は追加されていない
+      - Read の結果の本文は読ませたファイルのとおりのまま届いている
+    test: test_normal
+  - name: 正常シナリオ（記録済みの語だけ）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: セッションの記録
+        description: 同じセッションで term-a を含む入力を 1 回送信済み
+      - name: 読ませるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-a が当たるが、入力で記録済み
+        P->>CC: 結果をそのまま返す
+        CC->>M: ツールの結果だけを送信
+    expected:
+      - Read の結果の後ろに引用の文脈が追加されていない
+    test: test_normal_when_only_recorded_terms
+  - name: 正常シナリオ（照合から外したツール）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定に、照合から外すツールとして `Bash` を指定する
+        notes: キーの名前はインターフェース定義設計で決める
+      - name: 読ませるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを cat で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Bash を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: Bash は照合から外したツール
+        P->>CC: 結果をそのまま返す
+        CC->>M: ツールの結果だけを送信
+        U->>CC: 同じファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Bash の結果の後ろに引用の文脈が追加されていない
+      - その後の Read の結果の後ろに term-a の文脈が追加されている
+    test: test_normal_when_tool_excluded
+  - name: 正常シナリオ（読んでいる文書そのもの）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定に加え、`dev-docs.yaml` の `documents` に、`alias_type` が `doc` で `paths` が文書のファイルに当たる行を持つ
+        notes: 文書の語は `doc-x`
+      - name: 読ませるファイル
+        description: '`doc-x` の文書のファイル。本文に doc-x と term-a を含む'
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: doc-x の文書のファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で doc-x と term-a が当たる
+        P->>P: Read の file_path が doc-x の文書のファイルなので doc-x を外す
+        P->>CC: term-a の文脈だけを context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろの文脈に term-a の文脈がある
+      - doc-x の文脈は追加されていない
+    test: test_normal_when_reading_own_document
+    notes:
+      MCP で読んだ文書: MCP のツールの引数の文書の ID が語の ID に当たるときも同じく外す。E2E では MCP のサーバーを立てず、結合テストで確かめる
+  - name: 正常シナリオ（上限を超える）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定の `max_items` を 1 にする
+      - name: 読ませるファイル
+        description: 本文の先頭に term-a を 1 回、その後に term-b を 3 回含むテキストファイル
+        notes: 最初に出た位置は term-a が早く、出た回数は term-b が多い
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で 2 語が当たり、出た回数の多い term-b だけを選ぶ
+        P->>P: term-b だけを記録に入れる
+        P->>CC: term-b の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろの文脈に term-b の文脈だけがあり、term-a の文脈は追加されていない
+    test: test_normal_when_over_limit
+  - name: 正常シナリオ（サブエージェント）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 読ませるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant S as サブエージェント
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: サブエージェントにファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Agent を呼ぶ
+        CC->>S: サブエージェントを起動
+        S->>CC: Read を呼ぶ
+        CC->>P: tool.call（agentId あり）
+        P->>P: サブエージェントの記録で照合し term-a を記録に入れる
+        P->>CC: term-a の文脈を context に追加
+        CC->>S: ツールの結果と文脈を送信
+        S-->>M: 答え
+        U->>CC: 同じファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call（agentId なし）
+        P->>P: メインの会話の記録に term-a は無い
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - サブエージェントの Read の結果の後ろに term-a の文脈が追加されている
+      - その後のメインの会話の Read の結果の後ろにも term-a の文脈が追加されている
+    test: test_normal_when_in_subagent
+  - name: 正常シナリオ（エラーの結果）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 読ませるファイル
+        description: 無いファイルのパス。パスに term-a を含む
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: 無いファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: エラーの結果
+        P->>CC: 結果をそのまま返す
+        CC->>M: ツールの結果だけを送信
+    expected:
+      - Read のエラーの結果の後ろに引用の文脈が追加されていない
+    test: test_normal_when_error_result
+  - name: 異常シナリオ（設定ファイルが読めない）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: YAML の書式が崩れた設定ファイル
+      - name: 読ませるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 設定ファイルが読めない
+        P->>CC: 結果をそのまま返す
+        CC->>M: ツールの結果だけを送信
+    expected:
+      - Read の結果の本文がそのままモデルに届いている
+      - Read の結果の後ろに引用の文脈が追加されていない
+    test: test_error_when_config_unreadable
+lead: モデルが Read・Bash・MCP などのツールで読んだ本文を、入力と同じ語と照合し、そのセッションで初めて出た語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
+issue: 51
+primary_actor: モデル
+stakeholders:
+  - name: 利用者
+    interest: エージェントが読んだ文書・コマンドの出力に出た用語や文書の名前を、利用者が入力し直さなくてもモデルが知って作業できる
+  - name: モデル
+    interest: 同じ語の文脈を何度も受け取らず、長い出力でも多く出た語の文脈を受け取れる
+trigger: モデルがツールを呼び、本文を持つ結果が返る
+preconditions:
+  - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
+success_guarantee: ツールの結果の本文はそのままで、そのセッションで初めて出た語の引用の文脈が `heading` の見出しの下に並んで結果の後ろに届く。
+minimal_guarantee: どの異常でもツールの呼び出しは止まらず、ツールの結果の本文はそのままモデルに届く。
