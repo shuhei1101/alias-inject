@@ -213,7 +213,7 @@ idempotent: true
 side_effects: 変数参照があるときだけ `$.process.run` で `env -0` の子プロセスを 1 回起こす。ファイルへの書き込み・`$.state` への記録・外への送信はしない
 callers:
   - dev/設計書/外部ライブラリ/claude-code#
-exclusivity: ツールの呼び出しごとに独立し、状態を持たないため排他しない
+exclusivity: 変数参照の値はツールの呼び出しごとに独立し、状態を持たないため排他しない。同じ `tool.call` で追加する引用の文脈の記録の排他は [ツールの結果への引用の文脈の追加](./ツールの結果への引用の文脈の追加.yaml)
 request:
   - name: e
     type: ToolCallInput
@@ -251,7 +251,7 @@ response:
     description: '`next(e)` の結果を広げたもの。`context` だけを替え、`ref`・`result`・`text` はそのまま'
   - name: context
     type: readonly string[]
-    description: 受け取った `context` の末尾に、変数参照の値の行を改行でつないだ 1 要素を追加したもの。変数参照が無いとき・値を引けないときは受け取ったまま
+    description: 受け取った `context` の末尾（引用の文脈を追加するときはその後ろ）に、変数参照の値の行を改行でつないだ 1 要素を追加したもの。変数参照が無いとき・値を引けないときは受け取ったまま
     constraints: 行は名前ごとに 1 行。名前は `max_variable_references` まで、値は `max_variable_reference_value_chars` 文字まで
 response_example: |-
   ```text

@@ -1,0 +1,421 @@
+title: "ツールの結果への引用の文脈の追加"
+entry:
+  kind: trigger
+  value: '`tool.call`（ツールの呼び出しごと）'
+flows:
+  - name: 正常系
+    summary: 初めて出た語の文脈を追加し、メインの会話の記録に入れる
+    setup:
+      - name: Mock
+        description: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の正常系と同じファイル表。テストの `on` の `tool.call` は本文を含む結果を返す。`process.run` の呼ばれた回数を記録する'
+      - name: ツールの呼び出し
+        description: '`e.tool` が `Read`、`e.file_path` が `/work/note.md`'
+      - name: ツールの結果
+        description: '`text` が「用語エーの説明」。`context` に他のフックが追加した要素を 1 つ持つ'
+        notes: エイリアスで当てる
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant FS as ファイル・settings
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>FS: 設定ファイル・dev-docs.yaml・YAML を読む
+        FS-->>IF: 語の一覧
+        IF->>IF: 本文と語を正規化して照合し term-a が当たる
+        IF->>ST: セッションの記録を読む
+        ST-->>IF: 記録なし・version 0
+        IF->>ST: term-a を ifVersion 0 で書く
+        ST-->>IF: isSet true
+        IF-->>CC: 結果の context の末尾に term-a の文脈
+    expected:
+      - 返る `context` が 2 要素で、先頭が受け取った要素のまま
+      - 返る `context` の末尾が `# この発言に出る用語`・`## 用語`・term-a の語 `Term-A` を含む
+      - 返る `text` が `next(e)` の結果の `text` と同じ
+      - 同じセッションで `prompt.submit` に「term-a とは」を送ると、返る `context` が空
+      - '`process.run` が呼ばれていない'
+    test: test_normal
+  - name: 正常系（照合から外したツール）
+    summary: exclude_tools のツールの結果は照合しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 設定ファイル
+        description: 正常系に加え `exclude_tools` が `[Bash]`
+      - name: ツールの呼び出し
+        description: 1 回目は `e.tool` が `Bash`、2 回目は `Read`。どちらも結果の `text` が「term-a を表示」
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e（Bash）
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: Bash は exclude_tools にある
+        IF-->>CC: 結果そのまま
+        CC->>IF: e（Read）
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF-->>CC: context に term-a の文脈
+    expected:
+      - 1 回目の返る結果が `next(e)` の結果と同じ
+      - 2 回目の返る `context` に term-a が含まれる
+    test: test_normal_when_tool_excluded
+  - name: 正常系（読んでいる文書そのもの）
+    summary: Read の file_path と MCP の引数の ID に当たる語を外す
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの呼び出し
+        description: 1 回目は `e.tool` が `Read` で `e.file_path` が `/repo/knowledge/terms/term-a.yaml`。2 回目は別のセッションで `e.tool` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `e.from_ids` が `[term-a]`
+      - name: ツールの結果
+        description: どちらも `text` が「Term-A と term-b」
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e（Read の file_path が term-a の YAML）
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: term-a と term-b が当たり、term-a を外す
+        IF-->>CC: context に term-b の文脈
+        CC->>IF: e（MCP の from_ids が term-a）
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: term-a と term-b が当たり、term-a を外す
+        IF-->>CC: context に term-b の文脈
+    expected:
+      - どちらの呼び出しも、返る `context` に term-b が含まれ、term-a が含まれない
+    test: test_normal_when_reading_own_document
+  - name: 正常系（上限を超える）
+    summary: 出た回数の多い語から max_items 語だけを追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 設定ファイル
+        description: 正常系に加え `max_items` が 1
+      - name: ツールの結果
+        description: '`text` が「term-a、term-b、term-b、term-b」'
+        notes: 最初に出た位置は term-a が早く、出た回数は term-b が多い
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: 2 語が当たり、出た回数の多い term-b だけを選ぶ
+        IF->>ST: term-b だけを記録に入れる
+        IF-->>CC: context に term-b の文脈
+    expected:
+      - 返る `context` に term-b が含まれ、term-a が含まれない
+      - 同じセッションで `prompt.submit` に「term-a とは」を送ると、term-a の文脈が追加される
+    test: test_normal_when_over_limit
+  - name: 正常系（サブエージェント）
+    summary: agentId のある呼び出しはメインの会話と別の記録で照合する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: セッションの記録
+        description: '`prompt.submit` に「term-a とは」を送り、メインの会話で term-a が記録済み'
+      - name: ツールの呼び出し
+        description: '`e.agentId` が `agent-1`。結果の `text` が「term-a と term-b」。続けて同じ `agentId` で同じ結果をもう 1 回'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: e（agentId: agent-1）
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>ST: セッションと agent-1 の記録を読む
+        ST-->>IF: 記録なし
+        IF->>ST: term-a と term-b を agent-1 の記録に入れる
+        IF-->>CC: context に term-a と term-b の文脈
+        CC->>IF: e（agentId: agent-1）
+        IF->>IF: どちらも記録済み
+        IF-->>CC: 結果そのまま
+    expected:
+      - 1 回目の返る `context` に term-a と term-b が含まれる
+      - 2 回目の返る結果が `next(e)` の結果と同じ
+      - 続けて `prompt.submit` に「term-b とは」を送ると、term-b の文脈が追加される
+    test: test_normal_when_in_subagent
+  - name: 正常系（照合しない結果）
+    summary: エラーの結果・deny・本文の無い結果は照合しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの結果
+        description: '`isError` が `true` で `text` に term-a を含む結果、`deny` が入った結果、`text` が無い結果を呼び出しごとに返す'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: isError・deny・text の無い結果
+        IF-->>CC: 結果そのまま
+    expected:
+      - どの呼び出しも、返る結果が `next(e)` の結果と同じ
+      - 続けて `prompt.submit` に「term-a とは」を送ると、term-a の文脈が追加される
+    test: test_normal_when_not_matched_result
+  - name: 正常系（変数参照の値と合わせる）
+    summary: 引用の文脈を先に、変数参照の値の行を後に追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ。`process.run` は `env -0` に `VALUE_A=value-a` を含む出力を返す
+      - name: ツールの結果
+        description: '`text` が「term-a と !{VALUE_A}」。`context` が無い'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>IF: term-a が当たる
+        IF->>PR: env -0
+        PR-->>IF: 環境の一覧
+        IF-->>CC: context に term-a の文脈と値の行
+    expected:
+      - '返る `context` が 2 要素で、1 つ目が term-a の文脈、2 つ目が `変数参照の値: !{VALUE_A} = value-a`'
+    test: test_normal_when_variable_reference_added
+  - name: 正常系（記録の書き込みが競合する）
+    summary: ifVersion が外れたら読み直し、他の呼び出しで記録された語を除いて追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ。テストの `on` の `state.set` は 1 回目の書き込みの前に、同じ記録へ term-a を書き込んで version を進める
+      - name: ツールの結果
+        description: '`text` が「term-a と term-b」'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>ST: 記録を読む（version 0）
+        IF->>ST: term-a と term-b を ifVersion 0 で書く
+        ST-->>IF: isSet false
+        IF->>ST: 記録を読み直す（term-a が記録済み）
+        IF->>ST: term-b を足して ifVersion 1 で書く
+        ST-->>IF: isSet true
+        IF-->>CC: context に term-b の文脈
+    expected:
+      - 返る `context` に term-b が含まれ、term-a が含まれない
+      - 記録に term-a と term-b の両方が入っている
+    test: test_normal_when_record_conflicted
+  - name: 異常系（設定ファイルが読めない）
+    summary: 設定ファイルが読めないときは引用の文脈を追加せずに返す
+    setup:
+      - name: Mock
+        description: 正常系と同じ。ただし設定ファイルの中身が YAML の書式の誤ったもの。`ui.log` は届いた行を記録する
+      - name: ツールの結果
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant FS as ファイル・settings
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>FS: 設定ファイルを読む
+        FS-->>IF: 書式の誤り
+        IF->>IF: debug log に出す
+        IF-->>CC: 結果そのまま
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスを含む行が届いている
+    test: test_error_when_config_unreadable
+  - name: 異常系（記録の書き込みがやり直しの上限まで外れる）
+    summary: ifVersion が 3 回続けて外れたら引用の文脈を追加せずに返す
+    setup:
+      - name: Mock
+        description: '正常系と同じ。ただしテストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返す。`ui.log` は届いた行を記録する'
+      - name: ツールの結果
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        loop 3 回
+          IF->>ST: ifVersion で書く
+          ST-->>IF: isSet false
+        end
+        IF->>IF: debug log に出す
+        IF-->>CC: 結果そのまま
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - '`state.set` が 3 回呼ばれている'
+      - テストの `on` の `ui.log` に、`to` が `debug` の行が届いている
+    test: test_error_when_record_conflicts_exhausted
+  - name: 異常系（想定しない例外）
+    summary: 照合の途中の例外では引用の文脈を追加せず、変数参照の値の行だけを追加する
+    setup:
+      - name: Mock
+        description: 正常系（変数参照の値と合わせる）と同じ。ただしテストの `on` の `state.get` が例外を投げる。`ui.log` は届いた行を記録する
+      - name: ツールの結果
+        description: 正常系（変数参照の値と合わせる）と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+        participant PR as $.process.run
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: ツールの結果
+        IF->>ST: 記録を読む
+        ST-->>IF: 例外
+        IF->>IF: debug log に出す
+        IF->>PR: env -0
+        PR-->>IF: 環境の一覧
+        IF-->>CC: context に値の行だけ
+    expected:
+      - '返る `context` が 1 要素で、`変数参照の値: !{VALUE_A} = value-a`'
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が届いている
+    test: test_error_when_unexpected_exception
+lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ語と照合し、その会話で初めて出た語の引用の文脈を、本文を変えずに `context` に追加して返す。
+test_file: tests/integration/hooks/tool-call.test.ts
+idempotent: false
+side_effects: 追加した語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
+callers:
+  - dev/設計書/外部ライブラリ/claude-code#
+exclusivity: 並列に呼ばれた `tool.call` が同じ記録へ書くため、記録は `$.state.set` の `ifVersion` で書き、外れたら読み直して照合の結果から記録済みの語を除き直す
+request:
+  - name: e.tool
+    type: string
+    required: true
+    location: argument
+    description: ツールの名前（`Read`・`Bash`・`mcp__{サーバー}__{ツール}` など）。照合から外すツールの判定に使う
+  - name: e.file_path
+    type: string
+    required: false
+    default: なし（Read 以外のツール）
+    location: argument
+    description: Read の読んだファイルの絶対パス。読んでいる文書そのものの判定に使う
+  - name: e.{引数}
+    type: unknown
+    required: false
+    default: なし（引数の無いツール）
+    location: argument
+    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、文字列の値と文字列の並びの要素を読んでいる文書の ID の判定に使う
+    notes: 入れ子のオブジェクトの中は見ない
+  - name: e.agentId
+    type: string
+    required: false
+    default: なし（メインの会話）
+    location: argument
+    description: サブエージェント・フォークの中の呼び出しのときに入る。入っているときはセッションと `agentId` の組の記録で照合する
+  - name: result.text
+    type: string
+    required: false
+    default: なし（文脈を追加せず結果をそのまま返す）
+    location: argument
+    description: '`next(e)` が返したツールの結果の本文。ここを照合する'
+  - name: result.isError
+    type: boolean
+    required: false
+    default: 'false'
+    location: argument
+    description: '`true` のときはエラーの結果として、照合せずにそのまま返す'
+  - name: result.deny
+    type: string
+    required: false
+    default: なし（ツールが実行された）
+    location: argument
+    description: 他のフックが実行を拒んだときに入る。入っているときは照合せずにそのまま返す
+  - name: result.context
+    type: readonly string[]
+    required: false
+    default: なし（他のフックが追加していない）
+    location: argument
+    description: 他のフックが追加した文脈。そのまま残し、末尾に追加する
+response:
+  - name: '-'
+    type: ToolCallResult
+    description: '`next(e)` の結果を広げたもの。`context` だけを替え、`ref`・`result`・`text` はそのまま'
+  - name: context
+    type: readonly string[]
+    description: 受け取った `context` の末尾に、引用の文脈を 1 要素で追加したもの。変数参照の値の行があるときは、引用の文脈の後ろに置く。追加する語が無いときは受け取ったまま
+    constraints: 引用の文脈の要素は `max_chars` 文字まで
+response_notes: 文脈の書式（見出し・`alias_type` ごとのセクション・語ごとの箇条書き）は [入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) と同じ
+exceptions:
+  - name: なし（正常終了）
+    condition: 照合して文脈を追加したか、追加する語が無い・照合しない結果のため受け取ったまま返した
+  - name: なし（設定ファイルが読めない）
+    condition: 設定ファイルが無い・読めない・書式が誤っている
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無いときはログを出さない'
+  - name: なし（YAML・dev-docs.yaml が読めない・スキーマに合わない行）
+    condition: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の同じ名前の行と同じ'
+    notes: その YAML・リポジトリ・行だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる
+  - name: なし（記録の書き込みがやり直しの上限まで外れた）
+    condition: '`ifVersion` を付けた `$.state.set` が 3 回続けて外れた'
+    notes: 例外を外へ出さず、debug log に出し、引用の文脈を追加せずに返す
+  - name: なし（想定しない例外）
+    condition: 照合・記録の途中で想定しない例外が起きた
+    notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返す。変数参照の値の行は追加する
+constraints:
+  - item: 処理時間
+    constraint: ツールの呼び出しで増える待ち時間は 200ms まで
+    decided_by: dev/設計書/非機能要件/非機能要件#requirements[ツールの呼び出しで増える待ち時間]
+    notes: ファイルは更新時刻が変わったときだけ読み、語の一覧はモジュールの中に持つ
+  - item: 照合
+    constraint: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の照合と同じ（同じ設定ファイル・`dev-docs.yaml`・YAML・`exclude`）'
+    notes: 設定と語の読み込みは `prompt.submit` と共有する
+  - item: 並び
+    constraint: 語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い語を先にする
+    notes: '`prompt.submit` は今の最初に出た位置の順のまま'
+  - item: 語の数の上限
+    constraint: '`max_items` 語まで（既定 20）。並べた順に選ぶ'
+    decided_by: dev/設計書/設定/プラグイン#settings[global.max_items]
+  - item: 文字数の上限
+    constraint: 見出しを含む引用の文脈全体で `max_chars` 文字まで（既定 4,000）。足すと上限を超える語は飛ばして、後ろの語で収まるものを続けて足す
+    decided_by: dev/設計書/設定/プラグイン#settings[global.max_chars]
+    notes: 上限で外れた語は記録に入れない
+  - item: 照合から外すツール
+    constraint: '`e.tool` が設定の `exclude_tools` の名前のどれかと完全に一致するとき照合しない。既定は空で、全てのツールを照合する'
+    decided_by: dev/設計書/設定/プラグイン#settings[global.exclude_tools]
+  - item: 読んでいる文書そのもの
+    constraint: '`e.tool` が `Read` のとき、語を取り出した YAML の絶対パスが `e.file_path` と一致する語を外す。`e.tool` が `mcp__` で始まるとき、`e` の直下の文字列の値か文字列の並びの要素が文書の `id` と一致する語を外す'
+    notes: '`records` を書いた行の YAML を Read で読んだときは、その YAML の全ての語を外す'
+  - item: 照合しない結果
+    constraint: '`result.isError` が `true`・`result.deny` が入っている・`result.text` が文字列でない結果は照合しない'
+  - item: 記録の単位
+    constraint: '`e.agentId` が無いときはセッション ID（`$.session.id()`）、あるときはセッション ID と `agentId` の組ごとに記録する。メインの会話の記録は `prompt.submit` と共有する'
+    notes: ワークフローのエージェント・エンジンのフォーク（圧縮・メモリ）も `agentId` があればサブエージェントと同じに扱う
+  - item: 記録の書き込みのやり直し
+    constraint: '`ifVersion` が外れたら記録を読み直し、選んだ語から記録済みの語を除いて文脈を作り直す。3 回まで'
+    notes: 外れるのは同じ記録へ同時に書いたときだけで、並列のツールの呼び出しが続けて当たることはまれ
+  - item: 出所
+    constraint: '`origins` で絞らない'
+    decided_by: dev/設計書/設定/プラグイン#settings[global.origins]
+    notes: '`origins` は入力の出所の設定で、ツールの結果は出所を持たない'
+  - item: 変数参照の値との並び
+    constraint: 引用の文脈の要素を先に、変数参照の値の行の要素を後に追加する。片方が失敗しても、もう片方は追加する
+    notes: '[読んだ本文への変数参照の値の追加](./読んだ本文への変数参照の値の追加.yaml)'
+refs:
+  - dev/設計書/シナリオ/単一ユースケース/ツールの結果への引用の文脈の追加#
