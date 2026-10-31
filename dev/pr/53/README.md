@@ -1,0 +1,1 @@
+# PoC: tool.call の入力の値・並列の呼び出し・context の届き方を確かめる
