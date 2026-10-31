@@ -70,7 +70,10 @@ class ToolResultContextTest(E2ETestCase):
         session = self.session
         doc_path = session.repo_dir / "docs-x" / "doc-x.yaml"
         session.write_file(doc_path, "id: doc-x\nname: doc-x\ndescription: doc-x は term-a を説明する文書\n")
-        session = self.start_with_terms(dev_docs_rows=alias_lines("docs-x", "doc", "docs-x/*.yaml"))
+        # 入力の文のパスに出る doc-x が入力で記録されないよう、利用者の入力は照合しない
+        session = self.start_with_terms(
+            global_extra=["origins: [plugin]"], dev_docs_rows=alias_lines("docs-x", "doc", "docs-x/*.yaml")
+        )
 
         # 実行
         result = session.submit(read_prompt(doc_path))
