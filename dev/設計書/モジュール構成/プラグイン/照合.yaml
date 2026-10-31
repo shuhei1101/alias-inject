@@ -1,5 +1,5 @@
 title: "プラグイン / 照合"
-lead: 入力と語を同じ正規化でそろえ、部分文字列として含まれる語を入力に出た位置の順に返す。正規表現は使わない。
+lead: 入力と語を同じ正規化でそろえ、部分文字列として含まれる語を返し、出た位置か出た回数の順に並べる。正規表現は使わない。
 directory: |-
   ```text
   hooks/
@@ -28,6 +28,10 @@ data_models:
       - name: length
         type: number
         description: その位置で当たった key のうち最も長いものの長さ
+      - name: count
+        type: number
+        description: 正規化した入力で、その語の keys のどれかが始まる位置の数（同じ位置は 1 回）
+        notes: 'PR #52 で追加'
 functions:
   - name: normalize
     title: 照合の正規化
@@ -84,7 +88,8 @@ functions:
     process: |-
       1. `text` と `exclude` の各要素を照合の正規化に通す
       2. 各語の keys のうち exclude に無いものを `indexOf` で探し、最も小さい位置と、その位置で当たった最も長い key の長さを取る。どれも当たらない語は外す
-      3. 戻り値の順に並べて返す。同じ語は 1 回だけ返す
+      3. 当たった語ごとに、keys のどれかが始まる位置を入力の末尾まで集め、その数を count にする
+      4. 戻り値の順に並べて返す。同じ語は 1 回だけ返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
     unit_tests:
@@ -105,12 +110,49 @@ functions:
         summary: exclude の語は照合しない
         condition: exclude が `[ＴＥＲＭ－Ａ]`、term-a の keys が term-a・用語エー、入力「term-a と用語エー」
         mock: なし
-        expected: term-a が用語エーの位置で 1 件
+        expected: term-a が用語エーの位置で 1 件で、count が 1
+      - name: test_find_hits_when_counted
+        case: 正常
+        summary: keys のどれかが始まる位置の数を数える
+        condition: 'term-a（keys: term-a・用語エー）、入力「term-a と用語エーと term-a」。語「レビュー」（keys: レビュー・レビュースレッド）、入力「レビュースレッド」'
+        mock: なし
+        expected: term-a の count が 3、レビューの count が 1
+        notes: 'PR #52 で追加'
       - name: test_find_hits_when_no_match
         case: 正常
         summary: 当たらなければ空
         condition: 入力「こんにちは」
         mock: なし
         expected: 空
+  - name: sortByCount
+    title: 出た回数の順の並べ替え
+    kind: 関数
+    container: hooks/lib/match.ts
+    usecase: ツールの結果への引用の文脈の追加
+    summary: 照合の結果を、出た回数の多い順に並べ替える
+    scope: public
+    is_async: false
+    args:
+      - name: hits
+        type: Hit[]
+        required: true
+        passing: positional
+        description: 照合の結果
+    returns:
+      type: Hit[]
+      description: count の降順。同じ count なら findHits の順（位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順）
+    process: 1. hits を複製し、count の降順・位置の昇順・長さの降順・aliasIndex・itemIndex の順で並べて返す
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#constraints[並び]
+    unit_tests:
+      - name: test_sort_by_count
+        case: 正常
+        summary: 出た回数の多い語が先、同じ回数なら先に出た語が先
+        condition: 入力「term-a、term-b、term-b、term-c」の findHits の結果
+        mock: なし
+        expected: term-b・term-a・term-c の順
+    status: planned
+    introduced:
+      pr: 52
 test_files:
   - tests/unit/hooks/lib/match.test.ts

@@ -50,10 +50,12 @@ functions:
       7. enabled が false、または出所の判定が false なら `next(e)` を返す
       8. 実効の設定の repositories を順に dev-docs.yaml の読み込みで読む。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを外す。読めたリポジトリの warnings は、`dev-docs.yaml` のパスを添えて debug log に出す
       9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べる。各行を並びの位置とともに行の文書の読み込みで読み、failures は `照合から外しました（{YAML のパス}）: {理由}` を debug log に出す
-      10. 全ての語を照合し、`$.session.id()` の記録の読み出しの結果で語の選択をする
-      11. 選択が null なら `next(e)` を返す
-      12. 選んだキーを記録へ追加し、`next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
-      13. 3〜12 で想定しない例外（SchemaError を含む）が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
+      10. 全ての語を照合する
+      11. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は undefined）、select を記録済みのキーでの語の選択にして呼ぶ
+      12. 結果が null なら `next(e)`、それ以外は `next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
+      13. 3〜11 で想定しない例外（SchemaError・RecordConflictError を含む）が起きたら、理由を debug log に出して `next(e)` を返す（入力を止めない）
+
+      2〜6 の設定の読み込みと 8・9 の語の読み込みは、handleToolCall と共有する内部の関数に置く
 
       6・8 の warnings は、同じ読み込みの結果（設定ファイルは検証した設定、リポジトリは取り出した行）について同じ文言を 1 回だけ出す。読み直して結果が変われば、また出す
     callees:
@@ -67,9 +69,9 @@ functions:
       - dev/設計書/モジュール構成/プラグイン/リポジトリ#functions[loadRepositoryAliases]
       - dev/設計書/モジュール構成/プラグイン/項目#functions[loadAliasEntries]
       - dev/設計書/モジュール構成/プラグイン/照合#functions[findHits]
-      - dev/設計書/モジュール構成/プラグイン/記録#functions[readRecorded]
-      - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[recordIdOf]
       - dev/設計書/モジュール構成/プラグイン/記録#functions[addRecorded]
+      - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
     unit_tests:
       - name: test_handle_prompt_submit_when_disabled
         case: 正常
@@ -126,9 +128,10 @@ functions:
       description: '`next(e)` の結果そのまま'
     process: |-
       1. `r = await next(e)`
-      2. `e.trigger` が `precompute` でなく、`e.agentId` が無く、`r` に `skip` が無ければ、`$.session.id()` の記録の消去をする
+      2. `e.trigger` が `precompute` でなく、`r` に `skip` が無ければ、記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）の記録の消去をする
       3. `r` を返す
     callees:
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[recordIdOf]
       - dev/設計書/モジュール構成/プラグイン/記録#functions[clearRecorded]
     unit_tests:
       - name: test_handle_session_compact
@@ -139,10 +142,17 @@ functions:
         expected: どれも記録が空になり、結果が `next` の結果のまま
       - name: test_handle_session_compact_when_not_compacted
         case: 正常
-        summary: 圧縮されなかったとき・サブエージェントの圧縮では記録を残す
-        condition: '`trigger` が `precompute`、`next` が `{ skip }` を返す、`agentId` がある、の 3 通り'
+        summary: 圧縮されなかったときは記録を残す
+        condition: '`trigger` が `precompute`、`next` が `{ skip }` を返す、の 2 通り'
         mock: 同上
-        expected: どれも記録に term-a が残る
+        expected: どちらも記録に term-a が残る
+      - name: test_handle_session_compact_when_subagent
+        case: 正常
+        summary: サブエージェントの圧縮はそのサブエージェントの記録だけを消去する
+        condition: '`$.session.id()` が s1。s1 と、s1 と `agent-1` の記録に term-a を入れ、`agentId` が `agent-1`、`trigger` が `auto`'
+        mock: 同上
+        expected: s1 と `agent-1` の記録が空で、s1 の記録に term-a が残る
+        notes: 'PR #52 で追加'
   - name: handleSessionEnd
     title: クリアの後の記録の消去
     kind: フック
@@ -185,15 +195,15 @@ functions:
         mock: なし（`claude-code/testing` の `test` の `$.state`）
         expected: '`prompt_input_exit` では s2 に term-a が残り、`clear` では s2 だけが空になって s1 に term-a が残る'
   - name: handleToolCall
-    title: 読んだ本文への変数参照の値の追加
+    title: ツールの結果への引用の文脈の追加
     container: hooks/handlers.ts
-    usecase: 読んだ本文への変数参照の値の追加
-    summary: ツールの結果の本文の `!{名前}` に、同じ名前の環境変数の値を `context` の末尾に追加して返す
+    usecase: ツールの結果への引用の文脈の追加
+    summary: ツールの結果の本文を照合してその会話で初めて出た語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返す
     kind: フック
-    inherits: dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加#
+    inherits: dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#
     scope: public
     is_async: true
-    side_effects: 変数参照があるときだけ `env -0` の子プロセスを 1 回起こす。値を引けない理由を debug log に出す
+    side_effects: 追加した語を `$.state` の会話の記録に入れる。変数参照があるときだけ `env -0` の子プロセスを 1 回起こす。読めない設定・YAML、引用の文脈・値を追加できない理由を debug log に出す
     args:
       - name: $
         type: EngineInterface
@@ -212,39 +222,79 @@ functions:
         description: 下のプラグインとエンジンの処理（ツールの実行）
     returns:
       type: Promise<ToolCallResult>
-      description: '`next(e)` の結果。値の行を追加したときは `context` だけを替えたもの'
+      description: '`next(e)` の結果。引用の文脈か値の行を追加したときは `context` だけを替えたもの'
     process: |-
       1. `r = await next(e)`
       2. `r.deny` があるか、`r.isError` が true か、`r.text` が文字列でなければ `r` を返す
-      3. 変数参照の名前の拾い出しが空なら `r` を返す
-      4. `$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ
-      5. `exitCode` が 0 以外なら、終了コードを debug log に出して `r` を返す
-      6. env の出力の分割と値の行の組み立てをし、`{ ...r, context: [...(r.context ?? []), 行] }` を返す
-      7. 4〜6 で例外が起きたら（起動できない・待ちの上限の超過を含む）、理由を debug log に出して `r` を返す
-    unit_tests:
-      - name: test_handle_tool_call_when_context_given
-        case: 正常
-        summary: 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する
-        condition: "`next` が `text` に `!{VALUE_A}` を含み `context` が `['other']` の結果を返す"
-        mock: テストの `on` で `process.run` に `VALUE_A=value-a` を含む出力と終了コード 0 を返す
-        expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`text`・`ref` が `next` の結果のまま。`process.run` に `timeoutMs` 20 が渡る"
-      - name: test_handle_tool_call_when_skipped
-        case: 正常
-        summary: deny・エラーの結果・本文が無い結果・変数参照が無い結果は子プロセスを起こさずそのまま返す
-        condition: '`next` が `deny` あり、`isError: true`、`text` が無い、`text` に変数参照が無いの 4 通りを返す'
-        mock: 同上。`process.run` の呼ばれた回数を記録する
-        expected: どれも返る結果が `next` の結果のままで、`process.run` が呼ばれていない
-      - name: test_handle_tool_call_when_process_failed
-        case: 異常
-        summary: 終了コードが 0 以外・例外のときは debug log に出してそのまま返す
-        condition: '`process.run` が終了コード 3 を返すか、例外を投げるの 2 通り'
-        mock: 同上。`ui.log` は届いた行を記録する
-        expected: どちらも返る結果が `next` の結果のままで、`ui.log` に `to` が `debug` で終了コードか例外の理由を含む行が届く
+      3. 設定の読み込みをする（handlePromptSubmit の 2〜6 と同じ）。設定ファイルのパスが null・読めない設定のときは引用の文脈を追加しない（7 へ進む）
+      4. enabled が false か、`e.tool` が実効の設定の excludeTools のどれかと完全に一致するときは引用の文脈を追加しない（7 へ進む）。origins では絞らない
+      5. 語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、`r.text` と照合して、出た回数の順の並べ替えと読んでいる文書の除外（home は `$.env.get('HOME')`）に通す
+      6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの語の選択にして呼び、結果の text を引用の文脈にする
+      7. 3〜6 で想定しない例外（RecordConflictError を含む）が起きたら、理由を debug log に出し、引用の文脈を追加せずに続ける
+      8. 変数参照の名前の拾い出しが空でなければ、`$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ。`exitCode` が 0 なら env の出力の分割と値の行の組み立てをする。`exitCode` が 0 以外なら終了コードを、例外（起動できない・待ちの上限の超過を含む）なら理由を debug log に出し、値の行を追加しない
+      9. 引用の文脈も値の行も無ければ `r` を返す。あれば `{ ...r, context: [...(r.context ?? []), 引用の文脈, 値の行] }` を返す（無い方は並べない）
     refs:
+      - dev/設計書/インターフェース定義/読んだ本文への変数参照の値の追加#
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/照合#functions[findHits]
+      - dev/設計書/モジュール構成/プラグイン/照合#functions[sortByCount]
+      - dev/設計書/モジュール構成/プラグイン/ツール#functions[excludeReadingDocuments]
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[recordIdOf]
+      - dev/設計書/モジュール構成/プラグイン/記録#functions[addRecorded]
+      - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
       - dev/設計書/モジュール構成/プラグイン/変数参照#functions[findReferenceNames]
       - dev/設計書/モジュール構成/プラグイン/変数参照#functions[parseEnvOutput]
       - dev/設計書/モジュール構成/プラグイン/変数参照#functions[formatReferenceLines]
       - dev/設計書/モジュール構成/プラグイン/変数参照#constants[VARIABLE_REFERENCE_TIMEOUT_MS]
+    unit_tests:
+      - name: test_handle_tool_call_when_context_given
+        case: 正常
+        summary: 他のフックが追加した文脈を残し、本文と ref を変えずに末尾に追加する
+        condition: 設定ファイルのパスが無い。`next` が `text` に `!{VALUE_A}` を含み `context` が `['other']` の結果を返す
+        mock: テストの `on` で `process.run` に `VALUE_A=value-a` を含む出力と終了コード 0 を返す
+        expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`text`・`ref` が `next` の結果のまま。`process.run` に `timeoutMs` 20 が渡る"
+      - name: test_handle_tool_call_when_skipped
+        case: 正常
+        summary: deny・エラーの結果・本文が無い結果・語も変数参照も無い結果はそのまま返す
+        condition: '設定ファイルと term-a の YAML がある。`next` が `deny` あり、`isError: true`、`text` が無い、`text` に語も変数参照も無いの 4 通りを返す。前の 3 通りの `text` は term-a を含む'
+        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す。`process.run` の呼ばれた回数を記録する
+        expected: どれも返る結果が `next` の結果のままで、`process.run` が呼ばれていない。記録が空
+      - name: test_handle_tool_call_when_quote_added
+        case: 正常
+        summary: 引用の文脈を先に、値の行を後に追加し、メインの会話の記録に入れる
+        condition: 設定ファイルと term-a の YAML がある。`e.tool` が `Read`、`next` が `text` が「term-a と !{VALUE_A}」で `context` が `['other']` の結果を返す
+        mock: test_handle_tool_call_when_skipped と同じファイル表。`process.run` は test_handle_tool_call_when_context_given と同じ
+        expected: '返る `context` が 3 要素で、`other`・term-a の文脈・`変数参照の値: !{VALUE_A} = value-a` の順。`$.session.id()` の記録に term-a のキーが入る'
+        notes: 'PR #52 で追加'
+      - name: test_handle_tool_call_when_tool_excluded
+        case: 正常
+        summary: exclude_tools のツールは語を読み込まずにそのまま返す
+        condition: 設定ファイルの `global.exclude_tools` が `[Bash]`、`e.tool` が `Bash`、`next` の `text` が「term-a を表示」
+        mock: test_handle_tool_call_when_skipped と同じ
+        expected: 返る結果が `next` の結果のままで、YAML の `fs.read` が呼ばれていない
+        notes: 'PR #52 で追加'
+      - name: test_handle_tool_call_when_in_subagent
+        case: 正常
+        summary: agentId のある呼び出しはセッションと agentId の組の記録で照合する
+        condition: test_handle_tool_call_when_quote_added の設定で、`$.session.id()` が s1 で s1 の記録に term-a が入っている。`e.agentId` が `agent-1`、`text` が「term-a」
+        mock: test_handle_tool_call_when_skipped と同じ
+        expected: 返る `context` に term-a の文脈があり、s1 と `agent-1` の記録に term-a のキーが入る
+        notes: 'PR #52 で追加'
+      - name: test_handle_tool_call_when_process_failed
+        case: 異常
+        summary: 終了コードが 0 以外・例外のときは debug log に出してそのまま返す
+        condition: 設定ファイルのパスが無い。`process.run` が終了コード 3 を返すか、例外を投げるの 2 通り
+        mock: テストの `on` で `process.run` を応答する。`ui.log` は届いた行を記録する
+        expected: どちらも返る結果が `next` の結果のままで、`ui.log` に `to` が `debug` で終了コードか例外の理由を含む行が届く
+      - name: test_handle_tool_call_when_record_conflicts_exhausted
+        case: 異常
+        summary: 記録の書き込みが上限まで外れたら、引用の文脈を追加せずに値の行だけを追加する
+        condition: test_handle_tool_call_when_quote_added と同じ入力
+        mock: 'test_handle_tool_call_when_quote_added と同じ。ただしテストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返す。`ui.log` は届いた行を記録する'
+        expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`ui.log` に `to` が `debug` の行が届く"
+        notes: 'PR #52 で追加'
     status: planned
+    introduced:
+      pr: 52
 test_files:
   - tests/unit/hooks/handlers.test.ts

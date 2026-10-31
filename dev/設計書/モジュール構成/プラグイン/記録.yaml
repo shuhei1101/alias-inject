@@ -1,10 +1,10 @@
 title: "プラグイン / 記録"
-lead: セッションごとに文脈を追加した語のキーを `$.state` に持ち、読み・追加・消去を行う。
+lead: 会話ごとに文脈を追加した語のキーを `$.state` に持ち、読み・追加・消去を行う。会話はメインの会話がセッション、サブエージェントがセッションと `agentId` の組。
 directory: |-
   ```text
   hooks/
     lib/
-      record.ts          セッションの記録の読み・追加・消去
+      record.ts          会話の記録の読み・追加・消去
   tests/
     unit/
       hooks/
@@ -12,12 +12,45 @@ directory: |-
           record.test.ts record.ts の単体テスト
   ```
 functions:
+  - name: recordIdOf
+    title: 記録の ID
+    kind: 関数
+    container: hooks/lib/record.ts
+    usecase: 共通
+    summary: 会話の記録を引く `$.state` の `id` を返す
+    scope: public
+    is_async: false
+    args:
+      - name: sessionId
+        type: string
+        required: true
+        passing: keyword
+        description: セッション ID
+      - name: agentId
+        type: string | undefined
+        required: true
+        passing: keyword
+        description: '`tool.call`・`session.compact` の `e.agentId`。メインの会話は undefined'
+    returns:
+      type: string
+      description: メインの会話は `sessionId`、サブエージェントは `{sessionId}\u0000{agentId}`
+    process: 1. agentId が undefined なら sessionId、それ以外は sessionId と agentId を NUL 文字でつないで返す
+    unit_tests:
+      - name: test_record_id_of
+        case: 正常
+        summary: メインの会話はセッション ID、サブエージェントはセッションと agentId の組
+        condition: s1 と agentId なし、s1 と `agent-1`、s1 と `agent-2`
+        mock: なし
+        expected: 1 つ目が `s1`、3 つとも異なる
+    status: planned
+    introduced:
+      pr: 52
   - name: readRecorded
     title: 記録の読み出し
     kind: 関数
     container: hooks/lib/record.ts
     usecase: 共通
-    summary: セッションの記録済みのキーを返す
+    summary: 会話の記録済みのキーと、記録の version を返す
     scope: public
     is_async: true
     args:
@@ -26,92 +59,131 @@ functions:
         required: true
         passing: injected
         description: '`$.state.get` を使う'
-      - name: sessionId
+      - name: recordId
         type: string
         required: true
         passing: positional
-        description: セッション ID
+        description: 記録の ID の結果
     returns:
-      type: Promise<Set<string>>
-      description: 記録済みのキー。書いていないときは空
+      type: 'Promise<{ keys: Set<string>; version: number }>'
+      description: 記録済みのキーと version。書いていないときは空と 0
     process: |-
-      1. `$.state.get({ plugin: 'alias-inject', key: 'recorded', id: sessionId })` の `value` を取る
-      2. 並びでなければ空、並びなら文字列の要素の Set を返す
+      1. `$.state.get({ plugin: 'alias-inject', key: 'recorded', id: recordId })` の `value` と `version` を取る
+      2. `value` が並びでなければ空、並びなら文字列の要素の Set を、`version` とあわせて返す
     unit_tests:
       - name: test_read_recorded_when_never_written
         case: 正常
-        summary: 書いていないセッションは空
-        condition: 何も書いていないセッション ID
+        summary: 書いていない記録は空
+        condition: 何も書いていない記録の ID
         mock: なし（`claude-code/testing` の `test` の `$.state`）
-        expected: 空の Set
+        expected: keys が空の Set、version が 0
   - name: addRecorded
     title: 記録への追加
     kind: 関数
     container: hooks/lib/record.ts
     usecase: 共通
-    summary: セッションの記録にキーを追加する
+    summary: 記録済みのキーから語を選ばせ、選んだ語のキーを `ifVersion` で記録に追加する。外れたら読み直して選び直す
     scope: public
     is_async: true
-    side_effects: '`$.state` のそのセッションの記録を書き換える'
+    side_effects: '`$.state` のその会話の記録を書き換える'
     args:
       - name: $
         type: EngineInterface
         required: true
         passing: injected
         description: '`$.state.get` と `$.state.set` を使う'
-      - name: sessionId
+      - name: recordId
         type: string
         required: true
-        passing: positional
-        description: セッション ID
-      - name: keys
-        type: string[]
+        passing: keyword
+        description: 記録の ID の結果
+      - name: select
+        type: '(recorded: ReadonlySet<string>) => Selection | null'
         required: true
-        passing: positional
-        description: 追加するキー
+        passing: keyword
+        description: 記録済みのキーを受けて語を選ぶ。読み直すたびに呼ぶ
     returns:
-      type: Promise<void>
-      description: 何も返さない
-    process: 1. 記録の読み出しの結果に keys を加え、並びにして `$.state.set` で書く
+      type: Promise<Selection | null>
+      description: 記録に書けた選択。select が null を返したときは null
+    process: |-
+      1. RECORD_WRITE_ATTEMPTS 回まで次を繰り返す
+         1. 記録の読み出しをし、select に keys を渡す。null なら null を返す（書かない）
+         2. keys の後ろに選択の keys を並べ、`$.state.set` に `{ ifVersion: version }` を付けて書く
+         3. `isSet` が true なら選択を返す
+      2. 全て外れたら RecordConflictError を投げる
+    exceptions:
+      - name: RecordConflictError
+        condition: '`ifVersion` を付けた書き込みが RECORD_WRITE_ATTEMPTS 回続けて外れた'
     callees:
       - dev/設計書/モジュール構成/プラグイン/記録#functions[readRecorded]
     unit_tests:
       - name: test_add_recorded
         case: 正常
-        summary: 追加したキーがそのセッションだけに残る
-        condition: セッション s1 に a を、続けて a・b を追加する
+        summary: 選んだ語のキーがその会話の記録だけに残り、次の select に記録済みのキーが渡る
+        condition: 記録 s1 に a を選ぶ select で追加し、続けて受け取った keys に無い b を選ぶ select で追加する
         mock: なし（`claude-code/testing` の `test` の `$.state`）
-        expected: s1 の記録が a・b、s2 の記録が空
+        expected: 2 回目の select が a を受け取り、s1 の記録が a・b、s2 の記録が空
+      - name: test_add_recorded_when_nothing_selected
+        case: 正常
+        summary: select が null なら書かずに null を返す
+        condition: select が null を返す
+        mock: テストの `on` で `state.set` の呼ばれた回数を記録する
+        expected: null が返り、`state.set` が呼ばれていない
+      - name: test_add_recorded_when_conflicted
+        case: 正常
+        summary: '`ifVersion` が外れたら読み直して選び直す'
+        condition: select は受け取った keys に無い a・b を選ぶ
+        mock: テストの `on` の `state.set` は 1 回目の書き込みの前に、同じ記録へ a を書き込んで version を進める
+        expected: 2 回目の select が a を受け取り、返る選択の keys が b だけで、記録が a・b
+      - name: test_add_recorded_when_conflicts_exhausted
+        case: 異常
+        summary: 上限まで外れたら例外
+        condition: select が a を選ぶ
+        mock: 'テストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返す'
+        expected: RecordConflictError が投げられ、`state.set` が 3 回呼ばれている
+        exception: '`ifVersion` を付けた書き込みが RECORD_WRITE_ATTEMPTS 回続けて外れた'
   - name: clearRecorded
     title: 記録の消去
     kind: 関数
     container: hooks/lib/record.ts
     usecase: 共通
-    summary: セッションの記録を空にする
+    summary: 会話の記録を空にする
     scope: public
     is_async: true
-    side_effects: '`$.state` のそのセッションの記録を空の並びにする'
+    side_effects: '`$.state` のその会話の記録を空の並びにする'
     args:
       - name: $
         type: EngineInterface
         required: true
         passing: injected
         description: '`$.state.set` を使う'
-      - name: sessionId
+      - name: recordId
         type: string
         required: true
         passing: positional
-        description: セッション ID
+        description: 記録の ID の結果
     returns:
       type: Promise<void>
       description: 何も返さない
-    process: 1. `$.state.set` でそのセッションの記録に `[]` を書く（`undefined` は書けないため）
+    process: 1. `$.state.set` でその記録に `[]` を書く（`undefined` は書けないため）
     unit_tests:
       - name: test_clear_recorded
         case: 正常
-        summary: 消去したセッションの記録だけが空になる
+        summary: 消去した記録だけが空になる
         condition: s1・s2 に a を追加し、s1 を消去する
         mock: なし（`claude-code/testing` の `test` の `$.state`）
         expected: s1 が空、s2 が a
 test_files:
   - tests/unit/hooks/lib/record.test.ts
+constants:
+  - name: RECORD_WRITE_ATTEMPTS
+    title: 記録の書き込みの回数の上限
+    container: hooks/lib/record.ts
+    usecase: 共通
+    summary: '`ifVersion` を付けた記録の書き込みを試す回数'
+    value: '3'
+    refs:
+      - dev/設計書/インターフェース定義/ツールの結果への引用の文脈の追加#constraints[記録の書き込みのやり直し]
+    status: planned
+    introduced:
+      pr: 52

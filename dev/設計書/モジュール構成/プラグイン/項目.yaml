@@ -46,6 +46,14 @@ data_models:
       - name: fields
         type: '{ name: string; value: string }[]'
         description: 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ
+      - name: path
+        type: string
+        description: 文書を持つ YAML の絶対パス
+        notes: 'PR #52 で追加'
+      - name: bodyFile
+        type: string | undefined
+        description: '`records` の要素で、行の `body_file` が指す列の値（書いたまま）。それ以外は undefined'
+        notes: 'PR #52 で追加'
   - name: LoadedEntries
     title: 読んだ語
     container: hooks/lib/entry.ts
@@ -164,7 +172,7 @@ functions:
          - env: `url`、`port`、`description`
          - avoid: `replacement`
       7. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
-      8. `origin`・`aliasId` は alias の値、`type` は行の `alias_type` を入れる
+      8. `origin`・`aliasId` は alias の値、`type` は行の `alias_type`、`path` は文書の path を入れる。`bodyFile` は `index` が null でなく行に `body_file` があるとき、その列の値を入れる（空なら undefined）
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[resolveMetadata]
@@ -187,7 +195,7 @@ functions:
         summary: name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を語にする
         condition: '`records: files`・`body_file: path` の行で、`index` が null で path が `/d/term/term-b.yaml`、`name` を持たない文書と、`index` が 0 で `id: doc-a`・`path: docs/使い方/セットアップ.md` の文書と、`index` が 1 で `id: cmd-a`、`name` が空文字で `path` を持たない文書'
         mock: なし
-        expected: word が `term-b`・`セットアップ`・`cmd-a`
+        expected: word が `term-b`・`セットアップ`・`cmd-a`、bodyFile が undefined・`docs/使い方/セットアップ.md`・undefined。path はどれも文書の path
       - name: test_build_entries_when_required_missing
         case: 正常
         summary: 必須の値が空の文書は外し、理由を返す
