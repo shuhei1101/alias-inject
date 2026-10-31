@@ -253,3 +253,4 @@ preconditions:
   - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
 success_guarantee: ツールの結果の本文はそのままで、そのセッションで初めて出た語の引用の文脈が `heading` の見出しの下に並んで結果の後ろに届く。
 minimal_guarantee: どの異常でもツールの呼び出しは止まらず、ツールの結果の本文はそのままモデルに届く。
+test_file: tests/e2e/単一ユースケース/test_tool_result_context.py
