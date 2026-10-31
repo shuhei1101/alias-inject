@@ -140,3 +140,5 @@ functions:
     status: planned
     introduced:
       pr: 52
+test_files:
+  - tests/unit/hooks/lib/tool.test.ts
