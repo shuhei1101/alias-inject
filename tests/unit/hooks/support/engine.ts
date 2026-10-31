@@ -189,6 +189,8 @@ export type ToolWorld = {
   runs: ProcessRun[]
   /** `$.ui.log` に届いた行 */
   logs: LogLine[]
+  /** `options` を渡したときに登録したファイル表の応答（セッション ID・圧縮の結果を書き換えられる） */
+  files: World | undefined
 }
 
 /** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる。`options` を渡すと設定ファイルと YAML のファイル表も登録し、渡さないと設定ファイルのパスの無い settings を返す */
@@ -199,6 +201,7 @@ export function installToolWorld(on: On, options?: WorldOptions): ToolWorld {
     run: { value: { exitCode: 0, stdout: '' } },
     runs: [],
     logs: fileWorld?.logs ?? [],
+    files: fileWorld,
   }
   on('tool.call', () => world.answer as never)
   on('process.run', (_, e) => {
