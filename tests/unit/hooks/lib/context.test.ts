@@ -65,8 +65,6 @@ test('test_render_context', () => {
       { name: 'cwd', value: '/mnt/c/Users/shuhe/repo/ai-monitor' },
       { name: 'description', value: '依存を入れる' },
     ],
-    path: '/mnt/c/Users/shuhe/repo/ai-monitor/commands.yaml',
-    bodyFile: undefined,
   }
   const usecase: Entry = {
     aliasIndex: 0,
@@ -81,8 +79,6 @@ test('test_render_context', () => {
       { name: 'description', value: '1 つの操作を始めから終わりまで書くシナリオの単位' },
       { name: 'related', value: 'tpl-scenario（シナリオのテンプレート）' },
     ],
-    path: '/mnt/c/Users/shuhe/repo/knowledge/terms/term-single-usecase.yaml',
-    bodyFile: undefined,
   }
 
   // 実行
