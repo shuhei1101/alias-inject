@@ -1,5 +1,6 @@
 version: "3"
 name: alias-inject
+worktrees: [".claude/worktrees/*"]
 documents:
   - id: docs
     title: 公開ドキュメント
