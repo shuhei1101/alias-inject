@@ -74,7 +74,7 @@ functions:
          - `values` が 1 つ以上の空でない文字列の並びでなければ誤り
          - `match` は無ければ `any`。`any`・`all` でなければ誤り
          - `case_sensitive` は無ければ false。真偽値でなければ誤り
-         - `case_sensitive` が false なら `values` の各要素を照合の正規化に通す
+         - `case_sensitive` が false なら `values` の各要素を照合の正規化に通し、空になる要素があれば誤り
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
     refs:
@@ -89,9 +89,9 @@ functions:
       - name: test_parse_condition_when_invalid
         case: 正常
         summary: 誤りの箇所と理由を返す
-        condition: '`{and: []}`、`{and: [{field: text, op: regex, values: [f]}]}`、`{and: [...], or: [...]}`、`{field: name, op: contains, values: [a]}`、`{field: text, op: contains, values: []}`、`{field: text, op: contains, values: [a], match: some}`、`{field: text, op: contains, values: [a], case_sensitive: yes}`、`{field: text, op: contains, values: [a], value: b}`、4 レイヤーの束'
+        condition: '`{and: []}`、`{and: [{field: text, op: regex, values: [f]}]}`、`{and: [...], or: [...]}`、`{field: name, op: contains, values: [a]}`、`{field: text, op: contains, values: []}`、`{field: text, op: not_contains, values: [" "]}`、`{field: text, op: contains, values: [a], match: some}`、`{field: text, op: contains, values: [a], case_sensitive: yes}`、`{field: text, op: contains, values: [a], value: b}`、4 レイヤーの束'
         mock: なし
-        expected: 'どれも ok が false。path が順に `inject_when.and`・`inject_when.and[0].op`・`inject_when`・`inject_when.field`・`inject_when.values`・`inject_when.match`・`inject_when.case_sensitive`・`inject_when.value`・4 レイヤー目の束のパス'
+        expected: 'どれも ok が false。path が順に `inject_when.and`・`inject_when.and[0].op`・`inject_when`・`inject_when.field`・`inject_when.values`・`inject_when.values`・`inject_when.match`・`inject_when.case_sensitive`・`inject_when.value`・4 レイヤー目の束のパス'
     status: planned
     introduced:
       pr: 58

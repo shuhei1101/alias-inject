@@ -53,6 +53,7 @@ test('test_parse_condition_when_invalid', () => {
     [{ and: [valid], or: [valid] }, 'inject_when'],
     [{ field: 'name', op: 'contains', values: ['a'] }, 'inject_when.field'],
     [{ field: 'text', op: 'contains', values: [] }, 'inject_when.values'],
+    [{ field: 'text', op: 'not_contains', values: [' '] }, 'inject_when.values'],
     [{ ...valid, match: 'some' }, 'inject_when.match'],
     [{ ...valid, case_sensitive: 'yes' }, 'inject_when.case_sensitive'],
     [{ ...valid, value: 'b' }, 'inject_when.value'],
