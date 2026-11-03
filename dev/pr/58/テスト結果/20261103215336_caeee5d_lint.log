@@ -1,0 +1,13 @@
+$ npm run typecheck
+
+> typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+$ claude plugin validate .
+      /plugin install alias-inject --marketplace <owner>/<repo>
+
+✔ Validation passed with warnings
+exit=0
+$ node scripts/gen-aliases-schema.mjs --check
+exit=0
