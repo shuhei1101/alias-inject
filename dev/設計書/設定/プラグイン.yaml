@@ -95,7 +95,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: object
     required: false
-    description: 'エイリアスのキーごとに、値を取る文書の列の名前。キーは `id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`。各キーの値は列名の文字列（`name: title`）で、入れ子の列は `meta.summary` のように `.` でつなぐ。書かないキーは、同じ名前の列から取る。`tags`・`status` など他のキーは検証で弾かず、照合にも文脈にも使わない'
+    description: 'エイリアスのキーごとに、値を取る文書の列の名前。キーは `id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`・`inject_when`。各キーの値は列名の文字列（`name: title`）で、入れ子の列は `meta.summary` のように `.` でつなぐ。書かないキーは、同じ名前の列から取る。`tags`・`status` など他のキーは検証で弾かず、照合にも文脈にも使わない'
     missing: すべてのキーを同じ名前の列から取る
   - key: global.aliases[].alias_type
     title: 引用の種類
@@ -202,6 +202,13 @@ settings:
     required: false
     description: '`alias_type` が avoid のとき、やめた言い方（`name` と `aliases` の語）に代えて使う正しい語を取る列の名前。avoid では必須'
     missing: avoid ではその文書を照合から外す
+  - key: global.aliases[].metadata.inject_when
+    title: 照合条件
+    file: ~/.config/alias-inject/settings.yaml
+    type: string
+    required: false
+    description: 文書の照合条件（AND・OR・NOT の束と条件）を取る列の名前。全ての `alias_type` で任意。照合条件を持つ文書は、`name`・`aliases` が当たり、かつ照合条件にも当たったときだけ追加する。構造はインターフェース定義『入力への引用の文脈の追加』の制約の照合条件
+    missing: 照合条件を持たず、`name`・`aliases` が当たれば追加する
   - key: global.origins
     title: 対象にする入力の出所
     file: ~/.config/alias-inject/settings.yaml

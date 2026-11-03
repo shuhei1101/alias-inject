@@ -315,7 +315,7 @@ scenarios:
         notes: '-'
       - name: 用語の YAML
         description: 正常シナリオの用語の行の `paths` に当たるフォルダに、照合条件を持つ語 `term-c` の YAML を加える
-        notes: '照合条件は「`React` か `tsx` を含み、かつ `Python` を含まない」（`and` の束に `contains`（`match: any`）と `not_contains` の 2 条件）。キーの名前はインターフェース定義設計で決める'
+        notes: '照合条件は「`React` か `tsx` を含み、かつ `Python` を含まない」（`and` の束に `contains`（`match: any`）と `not_contains` の 2 条件）を `inject_when` に記載する'
     flow: |-
       ```mermaid
       sequenceDiagram
