@@ -23,6 +23,8 @@ items:
     summary: aliases の要素が指す YAML の読み込みと語の一覧の組み立て
   - page: 照合.yaml
     summary: 入力と語の正規化と照合
+  - page: 照合条件.yaml
+    summary: 文書の照合条件の検査・評価と、当たった語の絞り込み
   - page: 文脈.yaml
     summary: 追加する語の選択と文脈の組み立て
   - page: 記録.yaml

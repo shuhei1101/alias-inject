@@ -421,6 +421,24 @@ def term_text(term_id: str, *, aliases: list[str] | None = None, description: st
     return "\n".join(lines) + "\n"
 
 
+def term_with_condition_text(term_id: str) -> str:
+    """照合条件を持つ用語の YAML の本文。React か tsx を含み、Python を含まない本文でだけ追加される"""
+    return term_text(term_id) + "\n".join(
+        [
+            "inject_when:",
+            "  and:",
+            "    - field: text",
+            "      op: contains",
+            "      values: [React, tsx]",
+            "      match: any",
+            "    - field: text",
+            "      op: not_contains",
+            "      values: [Python]",
+            "",
+        ]
+    )
+
+
 def term_list_text(*term_ids: str) -> str:
     """複数の用語を、配列 `terms` に並べた 1 つの YAML の本文"""
     items = ["  - " + term_text(term_id).rstrip().replace("\n", "\n    ") for term_id in term_ids]

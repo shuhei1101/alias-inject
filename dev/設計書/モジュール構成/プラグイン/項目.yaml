@@ -54,6 +54,10 @@ data_models:
         type: string | undefined
         description: '`records` の要素で、行の `body_file` が指す列の値（書いたまま）。それ以外は undefined'
         notes: 'PR #52 で追加'
+      - name: condition
+        type: Condition | undefined
+        description: 解決した `inject_when` の値を照合条件の検査に通したもの。値が無い・null なら undefined
+        notes: 'PR #58 で追加'
   - name: LoadedEntries
     title: 読んだ語
     container: hooks/lib/entry.ts
@@ -66,7 +70,7 @@ data_models:
         description: 語の一覧
       - name: failures
         type: '{ path: string; reason: string }[]'
-        description: 読めない・書式の誤った YAML と、必須の値が空の文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す
+        description: 読めない・書式の誤った YAML と、必須の値が空の文書・照合条件が誤っている文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す
   - name: SourceDocument
     title: 文書
     container: hooks/lib/entry.ts
@@ -133,7 +137,7 @@ functions:
     kind: 関数
     container: hooks/lib/entry.ts
     usecase: 共通
-    summary: 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書は外す
+    summary: 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書と照合条件が誤っている文書は外す
     scope: public
     is_async: false
     args:
@@ -159,9 +163,10 @@ functions:
       1. 各文書の値を `alias.metadata` で解決する（metadata の値の解決）
       2. `name` が空なら、`index` が null の文書はファイル名、それ以外は行の `body_file` が指す列の値のファイル名、それも空なら `id` の値を文字列にして `name` にする（ファイル名は拡張子を除く）
       3. 行の `alias_type` で必須のキーの確認をし、空のキーがあれば failures に `{path}` と `{文書の名前}: {空のキーを「、」でつなぐ} が空です` を入れて外す。文書の名前は `id` が空でなければ `id`、空なら `{records}[{index}]`。`id` が空のファイルの文書は、文書の名前と `: ` を付けない
-      4. `name` と `aliases`（文字列か文字列の並び）の順に照合する語を集め、正規化して `keys` にする（照合の正規化）。`word` は `name`
-      5. ID から `word` を引く表をこの行の残った文書で作る
-      6. type ごとに `fields` を作る。値が空の列は並べない
+      4. `inject_when` の値が undefined・null でなければ照合条件の検査に通し、`ok` が false なら failures に `{path}` と `{文書の名前}: {誤りのパス}: {理由}` を入れて外す。文書の名前は 3 と同じ
+      5. `name` と `aliases`（文字列か文字列の並び）の順に照合する語を集め、正規化して `keys` にする（照合の正規化）。`word` は `name`
+      6. ID から `word` を引く表をこの行の残った文書で作る
+      7. type ごとに `fields` を作る。値が空の列は並べない
          - term: `description`、`related`（各要素の `to` を `{ID}（{名前}）` にして `, ` でつなぐ。名前が引けない ID は ID だけ）
          - doc: `description`
          - command: `command`（値をバッククォートで囲む）、`cwd`、`description`
@@ -171,12 +176,13 @@ functions:
          - path: `path`（値をバッククォートで囲む）、`description`
          - env: `url`、`port`、`description`
          - avoid: `replacement`
-      7. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
-      8. `origin`・`aliasId` は alias の値、`type` は行の `alias_type`、`path` は文書の path を入れる。`bodyFile` は `index` が null でなく行に `body_file` があるとき、その列の値を入れる（空なら undefined）
+      8. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
+      9. `origin`・`aliasId` は alias の値、`type` は行の `alias_type`、`path` は文書の path を入れる。`bodyFile` は `index` が null でなく行に `body_file` があるとき、その列の値を入れる（空なら undefined）。`condition` は 4 の照合条件を入れる
     callees:
       - dev/設計書/モジュール構成/プラグイン/照合#functions[normalize]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[resolveMetadata]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[missingKeys]
+      - dev/設計書/モジュール構成/プラグイン/照合条件#functions[parseCondition]
     unit_tests:
       - name: test_build_entries_when_term
         case: 正常
@@ -202,6 +208,13 @@ functions:
         condition: '`alias_type: term` の行で `id: term-n` で `description` の無い文書と、`records: terms` の `index` が 1 で `id` の無い文書'
         mock: なし
         expected: 'entries が空。failures が 2 件で、`term-n: description が空です`・`terms[1]: id、description が空です`。path は各文書の path'
+      - name: test_build_entries_when_inject_condition
+        case: 正常
+        summary: inject_when を照合条件にして語に持たせ、誤っている文書は外して理由を返す
+        condition: '`alias_type: term` で metadata が `inject_when: when` の行。term-c（`when: {field: text, op: not_contains, values: [Python]}`）、term-d（`when` が null）、term-e（`when: {and: []}`）'
+        mock: なし
+        expected: 'entries が term-c・term-d で、term-c の condition が照合条件、term-d の condition が undefined。failures が 1 件で `term-e: inject_when.and: 空の束です`'
+        notes: 'PR #58 で追加'
       - name: test_build_entries_when_command
         case: 正常
         summary: command は command・cwd・description の順で、値のある列だけ

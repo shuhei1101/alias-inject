@@ -299,6 +299,35 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が届いている
     test: test_error_when_unexpected_exception
+  - name: 正常系（照合条件を持つ文書）
+    summary: 照合条件をツールの結果の本文で評価し、当たらない文書を外す
+    setup:
+      - name: Mock
+        description: 正常系と同じファイル表に、[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の正常系（照合条件を持つ文書）の `term-c.yaml` を加える
+      - name: 入力
+        description: 同じセッションで、先に `prompt.submit` に「React の話」を送る
+        notes: 照合条件が入力の文ではなくツールの結果の本文で評価されることを確かめる
+      - name: ツールの結果
+        description: 1 回目は `text` が「term-c の説明」、2 回目は `text` が「term-c を tsx で使う」
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 本文「term-c の説明」
+        IF->>IF: 照合で term-c が当たり、照合条件を本文で評価して外す
+        IF-->>CC: 結果をそのまま
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 本文「term-c を tsx で使う」
+        IF->>IF: 照合で term-c が当たり、照合条件にも当たる
+        IF-->>CC: 結果の context の末尾に term-c の文脈
+    expected:
+      - 1 回目に返る `context` が受け取ったまま
+      - 2 回目に返る `context` の末尾に term-c の文脈がある
+    test: test_normal_when_inject_condition
 lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ語と照合し、その会話で初めて出た語の引用の文脈を、本文を変えずに `context` に追加して返す。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
@@ -370,9 +399,9 @@ exceptions:
   - name: なし（設定ファイルが読めない）
     condition: 設定ファイルが無い・読めない・書式が誤っている
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無いときはログを出さない'
-  - name: なし（YAML・dev-docs.yaml が読めない・スキーマに合わない行）
+  - name: なし（YAML・dev-docs.yaml が読めない・スキーマに合わない行・照合条件が誤っている文書）
     condition: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の同じ名前の行と同じ'
-    notes: その YAML・リポジトリ・行だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる
+    notes: その YAML・リポジトリ・行・文書だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる
   - name: なし（記録の書き込みがやり直しの上限まで外れた）
     condition: '`ifVersion` を付けた `$.state.set` が 3 回続けて外れた'
     notes: 例外を外へ出さず、debug log に出し、引用の文脈を追加せずに返す
@@ -390,6 +419,9 @@ constraints:
   - item: 並び
     constraint: 語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い語を先にする
     notes: '`prompt.submit` は今の最初に出た位置の順のまま'
+  - item: 照合条件
+    constraint: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の照合条件と同じ。`field` の `text` はツールの結果の本文（`result.text`）を指す'
+    notes: 照合条件で外した後に、出た回数の順に並べる
   - item: 語の数の上限
     constraint: '`max_items` 語まで（既定 20）。並べた順に選ぶ'
     decided_by: dev/設計書/設定/プラグイン#settings[global.max_items]

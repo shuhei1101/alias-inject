@@ -22,6 +22,7 @@ from support.harness import (
     skill_of,
     skill_text,
     term_text,
+    term_with_condition_text,
     tool_of,
     tool_text,
     url_links_text,
@@ -240,6 +241,41 @@ class PromptContextTest(E2ETestCase):
         # 検証
         self.assert_context_has_term(result, "term-a")
         self.assertNotIn("id: term-n", result.context_text)
+        self.assert_sent_unchanged(result, text)
+
+    def test_normal_when_inject_condition(self) -> None:
+        """名前が当たっても照合条件に当たらない文書の文脈は追加されず、記録にも入らない（正常シナリオ（照合条件を持つ文書））"""
+        # 準備
+        session = self.start_with_terms()
+        session.write_file(session.terms_dir / "term-c.yaml", term_with_condition_text("term-c"))
+        first_text = f"term-a と term-c を React と Python で使う。{ANSWER_BRIEFLY}"
+        second_text = f"term-c を tsx で使う。{ANSWER_BRIEFLY}"
+
+        # 実行
+        first = session.submit(first_text)
+        second = session.submit(second_text)
+
+        # 検証
+        self.assert_context_has_term(first, "term-a")
+        self.assertNotIn("id: term-c", first.context_text)
+        self.assert_context_has_term(second, "term-c")
+        self.assert_sent_unchanged(first, first_text)
+        self.assert_sent_unchanged(second, second_text)
+
+    def test_error_when_inject_condition_invalid(self) -> None:
+        """照合条件が誤っている文書だけが外れ、同じ行の他の文書の文脈は追加される（異常シナリオ（照合条件が誤っている文書））"""
+        # 準備
+        # 照合条件が空の and の束の term-e
+        session = self.start_with_terms()
+        session.write_file(session.terms_dir / "term-e.yaml", term_text("term-e") + "inject_when:\n  and: []\n")
+        text = f"term-a と term-e について。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assertNotIn("id: term-e", result.context_text)
         self.assert_sent_unchanged(result, text)
 
 

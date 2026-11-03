@@ -21,6 +21,7 @@ function makeEntry(id: string, overrides: Partial<Entry> = {}): Entry {
     fields: [],
     path: `/repo/knowledge/terms/${id}.yaml`,
     bodyFile: undefined,
+    condition: undefined,
     ...overrides,
   }
 }

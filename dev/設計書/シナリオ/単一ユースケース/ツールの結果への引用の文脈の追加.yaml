@@ -240,6 +240,45 @@ scenarios:
       - Read の結果の本文がそのままモデルに届いている
       - Read の結果の後ろに引用の文脈が追加されていない
     test: test_error_when_config_unreadable
+  - name: 正常シナリオ（照合条件を持つ文書）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: 正常シナリオの設定に加え、用語の YAML に照合条件を持つ語 `term-c` を加える
+        notes: 照合条件は『入力への引用の文脈の追加』の正常シナリオ（照合条件を持つ文書）と同じ
+      - name: 読ませるファイル
+        description: 本文に term-c を含み React・tsx を含まないファイルと、本文に term-c と tsx を含むファイル
+        notes: 読ませる入力の文には React・tsx を含めない
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: tsx を含まないファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-c が当たるが、照合条件を本文で評価して当たらないので外す
+        P->>CC: 結果をそのまま返す
+        CC->>M: ツールの結果だけを送信
+        U->>CC: tsx を含むファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-c が当たり、照合条件にも当たる
+        P->>CC: term-c の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - tsx を含まないファイルの Read の結果の後ろに term-c の文脈が追加されていない
+      - tsx を含むファイルの Read の結果の後ろに term-c の文脈が追加されている
+    test: test_normal_when_inject_condition
 lead: モデルが Read・Bash・MCP などのツールで読んだ本文を、入力と同じ語と照合し、そのセッションで初めて出た語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
 issue: 51
 primary_actor: モデル

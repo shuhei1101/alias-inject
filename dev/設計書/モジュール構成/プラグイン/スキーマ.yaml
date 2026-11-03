@@ -154,7 +154,7 @@ functions:
       - name: test_validate_schema
         case: 正常
         summary: スキーマに合う行は空を返す
-        condition: 'ALIAS_SCHEMA で、`alias_type` が term・doc・command・url・skill・tool・path・env・avoid の行と、`metadata` に列の名前（`name: title`・`description: meta.summary`）を書いた行と、`records`・`body_file`・`enabled` と他のキー（行の `schema`・`metadata.tags`）を持つ行'
+        condition: 'ALIAS_SCHEMA で、`alias_type` が term・doc・command・url・skill・tool・path・env・avoid の行と、`metadata` に列の名前（`name: title`・`description: meta.summary`・`inject_when: when`）を書いた行と、`records`・`body_file`・`enabled` と他のキー（行の `schema`・`metadata.tags`）を持つ行'
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing

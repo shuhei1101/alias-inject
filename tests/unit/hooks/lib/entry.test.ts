@@ -165,6 +165,31 @@ test('test_build_entries_when_required_missing', () => {
   expect(failures[1]?.reason).toContain('terms[1]: id、description が空です')
 })
 
+// inject_when を照合条件にして語に持たせ、誤っている文書は外して理由を返す（正常系）
+test('test_build_entries_when_inject_condition', () => {
+  // 準備
+  const alias = makeAlias({ metadata: { inject_when: 'when' } })
+  const documents = [
+    fileDocument(
+      { id: 'term-c', name: 'Term-C', description: '説明 C', when: { field: 'text', op: 'not_contains', values: ['Python'] } },
+      '/d/term/term-c.yaml',
+    ),
+    fileDocument({ id: 'term-d', name: 'Term-D', description: '説明 D', when: null }, '/d/term/term-d.yaml'),
+    fileDocument({ id: 'term-e', name: 'Term-E', description: '説明 E', when: { and: [] } }, '/d/term/term-e.yaml'),
+  ]
+
+  // 実行
+  const { entries, failures } = buildEntries(documents, alias, 0)
+
+  // 検証
+  expect(entries.map((entry) => entry.id)).toEqual(['term-c', 'term-d'])
+  expect(entries[0]?.condition).toEqual({ op: 'not_contains', values: ['python'], match: 'any', caseSensitive: false })
+  expect(entries[1]?.condition).toBe(undefined)
+  expect(failures.length).toBe(1)
+  expect(failures[0]?.path).toBe('/d/term/term-e.yaml')
+  expect(failures[0]?.reason).toContain('term-e: inject_when.and: ')
+})
+
 // command は command・cwd・description の順で、値のある列だけを並べる（正常系）
 test('test_build_entries_when_command', () => {
   // 準備

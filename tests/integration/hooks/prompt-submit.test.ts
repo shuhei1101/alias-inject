@@ -9,6 +9,7 @@ import {
   KNOWLEDGE_DIR,
   SETTINGS,
   TERMS_DIR,
+  TERM_C_WITH_CONDITION,
   aliasLines,
   indent,
   makeConfig,
@@ -500,4 +501,49 @@ test('test_normal_when_records_body_file', async ($, on) => {
   expect(context).toContain('- セットアップ（id: docs/使い方/セットアップ.md）')
   expect(context).toContain('description: 前提と手順')
   expect(world.logs).toEqual([])
+})
+
+// 名前が当たった文書のうち、照合条件に当たらない文書を外す（正常系）
+test('test_normal_when_inject_condition', async ($, on) => {
+  // 準備
+  const fs = makeFs()
+  fs.write(`${TERMS_DIR}/term-c.yaml`, TERM_C_WITH_CONDITION)
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  // contains に当たり、not_contains で外れる
+  const first = await submit($, 'term-a と term-c を React と Python で')
+  // 大文字の TSX が正規化で tsx に当たる
+  const second = await submit($, 'term-c を TSX で')
+
+  // 検証
+  const firstContext = first.context?.[0] ?? ''
+  expect(firstContext).toContain('Term-A')
+  expect(firstContext).not.toContain('term-c')
+  expect(second.context?.[0] ?? '').toContain('id: term-c')
+  expect(world.logs).toEqual([])
+})
+
+// 照合条件の誤った文書だけを外し、同じ行の他の文書の文脈は追加する（異常系）
+test('test_error_when_inject_condition_invalid', async ($, on) => {
+  // 準備
+  const fs = makeFs()
+  const emptyBundlePath = `${TERMS_DIR}/term-e.yaml`
+  const unknownOpPath = `${TERMS_DIR}/term-f.yaml`
+  fs.write(emptyBundlePath, `${termYaml({ id: 'term-e', name: 'term-e' })}inject_when:\n  and: []\n`)
+  fs.write(unknownOpPath, `${termYaml({ id: 'term-f', name: 'term-f' })}inject_when:\n  field: text\n  op: regex\n  values: [f]\n`)
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a と term-e と term-f')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('Term-A')
+  expect(context).not.toContain('term-e')
+  expect(context).not.toContain('term-f')
+  // YAML のパス・文書の id・誤りの箇所を含む行が debug log に届く
+  const debugOf = (path: string) => world.logs.filter((line) => line.to === 'debug' && line.text.includes(path))
+  expect(debugOf(emptyBundlePath).some((line) => line.text.includes('term-e') && line.text.includes('inject_when'))).toBe(true)
+  expect(debugOf(unknownOpPath).some((line) => line.text.includes('term-f') && line.text.includes('op'))).toBe(true)
 })

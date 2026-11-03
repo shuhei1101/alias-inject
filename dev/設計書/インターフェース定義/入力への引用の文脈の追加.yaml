@@ -645,6 +645,69 @@ flows:
       - '返る `context` の `## 文書` に、`セットアップ（id: docs/使い方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_records_body_file
+  - name: 正常系（照合条件を持つ文書）
+    summary: 名前が当たった文書のうち、照合条件に当たらない文書を外す
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: '正常系に加え、`/repo/knowledge/terms/term-c.yaml`（`id: term-c`・`name: term-c`・`description`・`inject_when`）を持つ'
+        notes: '`inject_when` は `and` の束に、`{field: text, op: contains, values: [React, tsx], match: any}` と `{field: text, op: not_contains, values: [Python]}` を並べたもの'
+      - name: 入力
+        description: 1 回目は「term-a と term-c を React と Python で」、2 回目は「term-c を TSX で」
+        notes: 1 回目は `contains` に当たり `not_contains` で外れる。2 回目は大文字の `TSX` が正規化で `tsx` に当たる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant ST as $.state
+
+        CC->>IF: term-a と term-c を React と Python で
+        IF->>IF: 照合で term-a と term-c が当たる
+        IF->>IF: term-c の照合条件を入力の文で評価し、not_contains で外す
+        IF->>ST: term-a を記録に入れる
+        IF-->>CC: context に term-a だけ
+        CC->>IF: term-c を TSX で
+        IF->>IF: 照合で term-c が当たり、照合条件にも当たる
+        IF->>ST: term-c を記録に入れる
+        IF-->>CC: context に term-c
+      ```
+    expected:
+      - 1 回目に返る `context` に term-a があり、term-c が無い
+      - 2 回目に返る `context` に term-c がある
+      - テストの `on` の `ui.log` に行が届いていない
+    test: test_normal_when_inject_condition
+  - name: 異常系（照合条件が誤っている文書）
+    summary: 照合条件の誤った文書だけを外し、同じ行の他の文書の文脈は追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: '正常系に加え、`term-e.yaml`（`inject_when: {and: []}`）と `term-f.yaml`（`inject_when: {field: text, op: regex, values: [f]}`）を持つ'
+        notes: 空の束と、知らない比べ方。4 レイヤー以上の入れ子・知らないキーも同じ結末になる
+      - name: 入力
+        description: 「term-a と term-e と term-f」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+
+        CC->>IF: term-a と term-e と term-f
+        IF->>FS: 用語の行の YAML を読む
+        IF->>IF: 文書ごとに照合条件を検査し、term-e と term-f を外す
+        IF-->>CC: context に term-a だけ
+      ```
+    expected:
+      - 返る `context` に term-a があり、term-e と term-f が無い
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で term-e の YAML のパス・`term-e`・`inject_when` を含む行と、term-f の YAML のパス・`term-f`・`op` を含む行が届いている
+    test: test_error_when_inject_condition_invalid
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
@@ -718,6 +781,9 @@ exceptions:
   - name: なし（必須の値が空の文書）
     condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空（env は `url`・`port` の両方が空）
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`（空なら `records` の並びの位置）・空のキーを debug log に出し、その文書だけを照合から外す'
+  - name: なし（照合条件が誤っている文書）
+    condition: '文書の `inject_when` の値が制約『照合条件』に合わない（例: 知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`・文字列でない `values` の要素・`any`・`all` 以外の `match`・真偽値でない `case_sensitive`）'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から外す'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで
@@ -747,6 +813,9 @@ constraints:
   - item: 文書の取り出し
     constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使う（ファイル名は拡張子を除く）'
     notes: '-'
+  - item: 照合条件
+    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前が当たった文書のうち照合条件に当たる文書だけを残す。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
+    notes: 照合条件の評価は、照合で当たった文書だけに行う。照合条件で外れた語は記録に入れず、次に出た入力で追加の対象になる
 refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#
   - dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し#
