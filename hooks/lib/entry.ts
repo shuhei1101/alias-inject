@@ -2,6 +2,8 @@ import type { EngineInterface } from 'claude-code'
 import { getColumn, missingKeys, resolveMetadata } from './alias'
 import type { AliasKey, AliasType, ResolvedAlias } from './alias'
 import { type YamlResult, expandFiles, parseYaml, readIfChanged } from './loader'
+import { parseCondition } from './condition'
+import type { Condition } from './condition'
 import { normalize } from './match'
 
 /** 行が指す YAML の 1 文書。照合する語と、文脈に並べる列 */
@@ -25,12 +27,14 @@ export type Entry = {
   path: string
   /** `records` の要素で、行の `body_file` が指す列の値（書いたまま）。それ以外は undefined */
   bodyFile: string | undefined
+  /** 解決した `inject_when` の値を照合条件の検査に通したもの。値が無い・null なら undefined */
+  condition: Condition | undefined
 }
 
 /** 1 つの行から作った語と、読めなかった YAML・外した文書 */
 export type LoadedEntries = {
   entries: Entry[]
-  /** 読めない・書式の誤った YAML と、必須の値が空の文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す */
+  /** 読めない・書式の誤った YAML と、必須の値が空の文書・照合条件が誤っている文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す */
   failures: { path: string; reason: string }[]
 }
 
@@ -147,10 +151,16 @@ function baseName(path: string): string {
   return dot <= 0 ? file : file.slice(0, dot)
 }
 
-/** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書は外す */
+/** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書と照合条件が誤っている文書は外す */
 export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, aliasIndex: number): LoadedEntries {
   const failures: LoadedEntries['failures'] = []
-  const kept: { itemIndex: number; values: Record<AliasKey, unknown>; path: string; bodyFile: string | undefined }[] = []
+  const kept: {
+    itemIndex: number
+    values: Record<AliasKey, unknown>
+    path: string
+    bodyFile: string | undefined
+    condition: Condition | undefined
+  }[] = []
 
   for (const [itemIndex, document] of documents.entries()) {
     const values = resolveMetadata(alias.metadata, document.value)
@@ -169,14 +179,23 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
       failures.push({ path: document.path, reason: `${label}${missing.join('、')} が空です` })
       continue
     }
-    kept.push({ itemIndex, values, path: document.path, bodyFile })
+    let condition: Condition | undefined
+    if (values.inject_when !== undefined && values.inject_when !== null) {
+      const parsed = parseCondition(values.inject_when)
+      if (!parsed.ok) {
+        failures.push({ path: document.path, reason: `${label}${parsed.path}: ${parsed.reason}` })
+        continue
+      }
+      condition = parsed.condition
+    }
+    kept.push({ itemIndex, values, path: document.path, bodyFile, condition })
   }
 
   // 関連する文書の名前を引くため、この行の残った文書の ID から語を引く表を作る
   const wordOfId = new Map<string, string>()
   for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
 
-  const entries = kept.map(({ itemIndex, values, path, bodyFile }) => ({
+  const entries = kept.map(({ itemIndex, values, path, bodyFile, condition }) => ({
     aliasIndex,
     itemIndex,
     origin: alias.origin,
@@ -188,6 +207,7 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
     fields: buildFields(alias.alias_type, values, wordOfId),
     path,
     bodyFile,
+    condition,
   }))
   return { entries, failures }
 }

@@ -12,6 +12,7 @@ import type {
 import type { ResolvedAlias } from './lib/alias'
 import { ConfigError, isOriginAllowed, parseConfig, readConfigPath, resolveSettings } from './lib/config'
 import type { Config, Settings } from './lib/config'
+import { filterByCondition } from './lib/condition'
 import { selectEntries } from './lib/context'
 import type { Selection } from './lib/context'
 import { loadAliasEntries } from './lib/entry'
@@ -148,7 +149,7 @@ export async function handlePromptSubmit(
     const { settings } = loaded
     if (!settings.enabled || !isOriginAllowed(settings.origins, e.origin.kind)) return next(e)
 
-    const hits = findHits(e.text, await loadEntries($, loaded), settings.exclude)
+    const hits = filterByCondition(findHits(e.text, await loadEntries($, loaded), settings.exclude), e.text)
     const recordId = recordIdOf({ sessionId: await $.session.id(), agentId: undefined })
     selection = await addSelected($, hits, settings, recordId)
   } catch (error) {
@@ -191,7 +192,7 @@ async function quoteToolResult($: EngineInterface, e: ToolCallInput, text: strin
     const { settings, home } = loaded
     if (!settings.enabled || settings.excludeTools.includes(e.tool)) return null
 
-    const hits = findHits(text, await loadEntries($, loaded), settings.exclude)
+    const hits = filterByCondition(findHits(text, await loadEntries($, loaded), settings.exclude), text)
     const remaining = excludeReadingDocuments(sortByCount(hits), { e, home })
     const recordId = recordIdOf({ sessionId: await $.session.id(), agentId: e.agentId })
     const selection = await addSelected($, remaining, settings, recordId)

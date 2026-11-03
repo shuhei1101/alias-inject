@@ -217,6 +217,15 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
               "examples": [
                 "replacement"
               ]
+            },
+            "inject_when": {
+              "title": "照合条件の列",
+              "description": "文書の照合条件（条件か and・or・not の束）を取る列の名前。name・aliases が当たっても、照合した本文が照合条件に当たらない文書は追加しない。どの引用の種類でも任意。",
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "inject_when"
+              ]
             }
           },
           "examples": [

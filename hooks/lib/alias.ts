@@ -21,6 +21,7 @@ export const ALIAS_KEYS = [
   'path',
   'port',
   'replacement',
+  'inject_when',
 ] as const
 
 export type AliasKey = (typeof ALIAS_KEYS)[number]
