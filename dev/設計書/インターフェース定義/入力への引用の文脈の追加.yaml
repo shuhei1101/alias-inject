@@ -782,7 +782,7 @@ exceptions:
     condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空（env は `url`・`port` の両方が空）
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`（空なら `records` の並びの位置）・空のキーを debug log に出し、その文書だけを照合から外す'
   - name: なし（照合条件が誤っている文書）
-    condition: 文書の `inject_when` の値が照合条件の構造に合わない（知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`）
+    condition: '文書の `inject_when` の値が制約『照合条件』に合わない（例: 知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`・文字列でない `values` の要素・`any`・`all` 以外の `match`・真偽値でない `case_sensitive`）'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から外す'
 constraints:
   - item: 処理時間

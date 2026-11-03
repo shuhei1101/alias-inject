@@ -274,7 +274,7 @@ constants:
     container: hooks/lib/alias.ts
     usecase: 共通
     summary: '`metadata` に書けるエイリアスのキー。型 `AliasKey` はこの要素の union'
-    value: '`id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`'
+    value: '`id`・`name`・`aliases`・`description`・`related`・`command`・`cwd`・`url`・`avoid`・`skill`・`tool`・`path`・`port`・`replacement`・`inject_when`'
   - name: REQUIRED_KEYS
     title: 種類ごとの必須のキー
     container: hooks/lib/alias.ts
