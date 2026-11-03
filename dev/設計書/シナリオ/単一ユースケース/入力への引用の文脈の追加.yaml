@@ -323,7 +323,7 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>CC: term-a・term-c・Python を含む入力を送信
+        U->>CC: term-a・term-c・React・Python を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 照合で term-a と term-c が当たる
         P->>P: term-c の照合条件を入力の文で評価し、当たらないので外す
