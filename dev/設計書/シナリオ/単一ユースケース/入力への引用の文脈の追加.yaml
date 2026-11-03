@@ -308,6 +308,66 @@ scenarios:
       - term-n の文脈は追加されていない
       - 入力の送信は止まっていない
     test: test_error_when_required_value_missing
+  - name: 正常シナリオ（照合条件を持つ文書）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: 正常シナリオの用語の行の `paths` に当たるフォルダに、照合条件を持つ語 `term-c` の YAML を加える
+        notes: '照合条件は「`React` か `tsx` を含み、かつ `Python` を含まない」（`and` の束に `contains`（`match: any`）と `not_contains` の 2 条件）。キーの名前はインターフェース定義設計で決める'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a・term-c・Python を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 照合で term-a と term-c が当たる
+        P->>P: term-c の照合条件を入力の文で評価し、当たらないので外す
+        P->>P: term-a だけを記録に入れる
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+        U->>CC: term-c と tsx を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 照合で term-c が当たり、照合条件にも当たる
+        P->>P: term-c を記録に入れる
+        P->>CC: term-c の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - 1 回目の入力では term-a の文脈だけが追加され、term-c の文脈は追加されていない
+      - 2 回目の入力で term-c の文脈が追加されている（1 回目の入力で記録に入っていない）
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_inject_condition
+  - name: 異常シナリオ（照合条件が誤っている文書）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: 正常シナリオの用語の行の `paths` に当たるフォルダに、照合条件が空の `and` の束の語 `term-e` の YAML を加える
+        notes: 4 レイヤー以上の入れ子・知らない比べ方の照合条件も同じ結末になる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と term-e を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 文書ごとに照合条件を検査し、term-e を照合から外す
+        P->>CC: term-a の文脈だけを追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a の文脈は追加されている
+      - term-e の文脈は追加されていない
+      - 入力の送信は止まっていない
+    test: test_error_when_inject_condition_invalid
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
