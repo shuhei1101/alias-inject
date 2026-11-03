@@ -73,11 +73,10 @@ function parseTerm(value: Record<string, unknown>, path: string): ParseResult {
   const caseSensitive = value.case_sensitive ?? false
   if (typeof caseSensitive !== 'boolean') return failure(`${path}.case_sensitive`, 'case_sensitive は真偽値で書きます')
 
-  const strings = values as string[]
-  return {
-    ok: true,
-    condition: { op: value.op, values: caseSensitive ? strings : strings.map(normalize), match, caseSensitive },
-  }
+  const strings = caseSensitive ? (values as string[]) : (values as string[]).map(normalize)
+  // 正規化で空になる値（空白だけの値）は、どの本文にも含まれるため空の値と同じく誤りにする
+  if (strings.includes('')) return failure(`${path}.values`, 'values は 1 つ以上の空でない文字列の並びで書きます')
+  return { ok: true, condition: { op: value.op, values: strings, match, caseSensitive } }
 }
 
 function parseNode(value: unknown, path: string, depth: number): ParseResult {
