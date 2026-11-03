@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 import { callTool, installToolWorld, numberedNames, submit } from '../../unit/hooks/support/engine'
-import { CONFIG_PATH, SETTINGS, TERMS_DIR, makeConfig, makeFs } from './support/fixtures'
+import { CONFIG_PATH, SETTINGS, TERMS_DIR, TERM_C_WITH_CONDITION, makeConfig, makeFs } from './support/fixtures'
 
 // `env -0` の出力。名前と値の組を NUL で区切る
 function envOutput(entries: Record<string, string>): string {
@@ -374,5 +374,27 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 検証
     expect(result.context).toEqual([VALUE_A_LINE])
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('state broken')).length).toBe(1)
+  })
+
+  // 照合条件をツールの結果の本文で評価し、当たらない文書を外す（正常系）
+  test('test_normal_when_inject_condition', async ($, on) => {
+    // 準備
+    const fs = makeFs()
+    fs.write(`${TERMS_DIR}/term-c.yaml`, TERM_C_WITH_CONDITION)
+    const world = installToolWorld(on, { fs, settings: SETTINGS })
+    // 入力の文は照合条件に当たるが、ツールの結果の本文で評価する
+    await submit($, 'React の話')
+    const firstAnswer = { result: 'r', text: 'term-c の説明', context: ['other'] }
+
+    // 実行
+    world.answer = firstAnswer
+    const first = await callTool($, readInput())
+    world.answer = { result: 'r', text: 'term-c を tsx で使う', context: ['other'] }
+    const second = await callTool($, readInput())
+
+    // 検証
+    expect(first).toEqual(firstAnswer)
+    expect(second.context?.length).toBe(2)
+    expect(second.context?.[1]).toContain('id: term-c')
   })
 })

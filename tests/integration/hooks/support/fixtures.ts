@@ -108,3 +108,18 @@ export function makeFs(config: string = makeConfig(), devDocs: string = makeDevD
     [`${DOCS_DIR}/doc-z.yaml`]: 'name: doc-z\n',
   })
 }
+
+/** 照合条件を持つ term-c の YAML の本文。`and` の束に、React か tsx を含む条件と Python を含まない条件を並べる */
+export const TERM_C_WITH_CONDITION = [
+  termYaml({ id: 'term-c', name: 'term-c' }).trimEnd(),
+  'inject_when:',
+  '  and:',
+  '    - field: text',
+  '      op: contains',
+  '      values: [React, tsx]',
+  '      match: any',
+  '    - field: text',
+  '      op: not_contains',
+  '      values: [Python]',
+  '',
+].join('\n')
