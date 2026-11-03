@@ -22,6 +22,7 @@ function makeEntry(
     fields: options.description === undefined ? [] : [{ name: 'description', value: options.description }],
     path: `/a/terms/${id}.yaml`,
     bodyFile: undefined,
+    condition: undefined,
   }
 }
 
@@ -67,6 +68,7 @@ test('test_render_context', () => {
     ],
     path: '/mnt/c/Users/shuhe/repo/ai-monitor/commands.yaml',
     bodyFile: undefined,
+    condition: undefined,
   }
   const usecase: Entry = {
     aliasIndex: 0,
@@ -83,6 +85,7 @@ test('test_render_context', () => {
     ],
     path: '/mnt/c/Users/shuhe/repo/knowledge/terms/term-single-usecase.yaml',
     bodyFile: undefined,
+    condition: undefined,
   }
 
   // 実行

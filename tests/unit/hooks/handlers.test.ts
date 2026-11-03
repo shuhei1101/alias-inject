@@ -115,6 +115,29 @@ test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   expect(debugLines(world.logs, DEV_DOCS_PATH, 'metadata.name').length).toBe(1)
 })
 
+// 照合条件に当たらない語の文脈を追加せず、記録にも入れない（正常系）
+test('test_handle_prompt_submit_when_inject_condition', async ($, on) => {
+  // 準備
+  const fs = makeFs()
+  fs.write(
+    `${CONFIG_DIR}/terms/term-c.yaml`,
+    'id: term-c\nname: Term-C\ndescription: 説明 C\ninject_when:\n  field: text\n  op: not_contains\n  values: [Python]\n',
+  )
+  installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const first = await submit($, 'term-a と term-c を Python で')
+  const second = await submit($, 'term-c を tsx で')
+
+  // 検証
+  expect(first.context?.length).toBe(1)
+  expect(first.context?.[0]).toContain('Term-A')
+  expect(first.context?.[0]).not.toContain('Term-C')
+  // 記録に入っていないため、次の入力で追加される
+  expect(second.context?.length).toBe(1)
+  expect(second.context?.[0]).toContain('Term-C')
+})
+
 // 圧縮されたら記録を消去する（正常系）
 test('test_handle_session_compact', async ($, on) => {
   // 準備
@@ -295,6 +318,29 @@ test('test_handle_tool_call_when_tool_excluded', async ($, on) => {
   // 検証
   expect(result).toEqual(answer)
   expect(fs.reads).not.toContain(TERM_A_PATH)
+})
+
+// ツールの結果の本文で照合条件を評価する（正常系）
+test('test_handle_tool_call_when_inject_condition', async ($, on) => {
+  // 準備
+  const fs = makeFs()
+  fs.write(
+    `${CONFIG_DIR}/terms/term-c.yaml`,
+    'id: term-c\nname: Term-C\ndescription: 説明 C\ninject_when:\n  field: text\n  op: contains\n  values: [tsx]\n',
+  )
+  const world = installToolWorld(on, { fs, settings: SETTINGS })
+  const firstAnswer = { result: 'r', text: 'term-c の説明' }
+
+  // 実行
+  world.answer = firstAnswer
+  const first = await callTool($)
+  world.answer = { result: 'r', text: 'term-c を tsx で使う' }
+  const second = await callTool($)
+
+  // 検証
+  expect(first).toEqual(firstAnswer)
+  expect(second.context?.length).toBe(1)
+  expect(second.context?.[0]).toContain('Term-C')
 })
 
 // agentId のある呼び出しはセッションと agentId の組の記録で照合する（正常系）

@@ -16,6 +16,7 @@ function makeEntry(id: string, word: string, keys: string[], itemIndex = 0): Ent
     fields: [],
     path: `/a/terms/${id}.yaml`,
     bodyFile: undefined,
+    condition: undefined,
   }
 }
 
