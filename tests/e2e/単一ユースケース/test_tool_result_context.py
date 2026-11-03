@@ -13,6 +13,7 @@ from support.harness import (
     cat_prompt,
     read_prompt,
     subagent_read_prompt,
+    term_with_condition_text,
 )
 
 # term-a を含み、term-b を含まない、読ませるファイルの本文
@@ -138,6 +139,24 @@ class ToolResultContextTest(E2ETestCase):
         # 検証
         self.assertIn(TERM_A_NOTE.strip(), result.tool_result_text)
         self.assert_no_tool_context(result)
+
+    def test_normal_when_inject_condition(self) -> None:
+        """照合条件をツールの結果の本文で評価し、当たる本文の結果にだけ文脈が届く（正常シナリオ（照合条件を持つ文書））"""
+        # 準備
+        session = self.start_with_terms()
+        session.write_file(session.terms_dir / "term-c.yaml", term_with_condition_text("term-c"))
+        # 読ませる入力の文には React・tsx を含めない
+        plain = self.write_note("このファイルは term-c について書いたメモです。\n")
+        with_tsx = self.session.project_dir / "note-tsx.txt"
+        session.write_file(with_tsx, "このファイルは term-c を tsx で使うメモです。\n")
+
+        # 実行
+        first = session.submit(read_prompt(plain))
+        second = session.submit(read_prompt(with_tsx))
+
+        # 検証
+        self.assert_no_tool_context(first, "Read")
+        self.assert_tool_context_has_term(second, "term-c", "Read")
 
 
 if __name__ == "__main__":
