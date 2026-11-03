@@ -147,7 +147,7 @@ class ToolResultContextTest(E2ETestCase):
         session.write_file(session.terms_dir / "term-c.yaml", term_with_condition_text("term-c"))
         # 読ませる入力の文には React・tsx を含めない
         plain = self.write_note("このファイルは term-c について書いたメモです。\n")
-        with_tsx = self.session.project_dir / "note-tsx.txt"
+        with_tsx = self.session.project_dir / "note-2.txt"
         session.write_file(with_tsx, "このファイルは term-c を tsx で使うメモです。\n")
 
         # 実行
