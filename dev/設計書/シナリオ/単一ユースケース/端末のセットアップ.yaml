@@ -54,7 +54,7 @@ scenarios:
         participant F as settings.json
         U->>S: /alias-inject:global-setup を実行
         S->>S: ALIAS_INJECT_CONFIG が指すパスに設定ファイルが無い
-        S->>U: 設定ファイルの場所を聞く
+        S->>U: 設定ファイルの場所（ALIAS_INJECT_CONFIG の値を推奨）・読むリポジトリの dev-docs.yaml・用語集の YAML を聞く
         U->>S: 既定のパスと違う場所を答える
         S->>S: 答えた場所に設定ファイルを作る
         S->>F: env の ALIAS_INJECT_CONFIG を答えた場所にする
@@ -69,7 +69,7 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 端末の設定
-        description: 既定のパスの設定ファイルの `global.aliases` に、旧い構造（`type`・`fields`）の要素を持つ
+        description: 既定のパスの設定ファイルの `global.aliases` に、旧い構造（`type`・`fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` を持つ要素を 1 つずつ持つ
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -109,7 +109,8 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 端末の設定
-        description: 既定のパスの設定ファイルの `global.repositories` が、無い `dev-docs.yaml` を指す
+        description: 既定のパスの設定ファイルの `global.aliases` に、`alias_type` が `memo` の行だけを持つ
+        notes: 行の `paths` は語 `term-a` を持つ用語の YAML に当たる。スキルはこの YAML から試しの入力に使う語を取得する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -118,7 +119,7 @@ scenarios:
         participant P as alias-inject
         U->>S: /alias-inject:global-setup を実行
         S->>P: claude -p で設定ファイルの語を含む文を送信
-        P->>P: dev-docs.yaml が読めず、文脈を追加しない
+        P->>P: スキーマに合わない行を照合から外し、理由を debug log に出して文脈を追加しない
         S->>U: debug log の場所と直し方を示して止まる
       ```
     expected:

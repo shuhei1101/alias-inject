@@ -153,7 +153,7 @@ scenarios:
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: '`ALIAS_INJECT_CONFIG` が無いファイルを指す'
-        notes: 書式の誤った YAML でも同じ結末になる
+        notes: 書式の誤った YAML でも同じ結末になる。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置く（`ALIAS_INJECT_CONFIG` が読めないときに既定のパスを参照しない）
     flow: |-
       ```mermaid
       sequenceDiagram

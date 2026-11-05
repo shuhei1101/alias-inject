@@ -219,6 +219,7 @@ scenarios:
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: YAML の書式が崩れた設定ファイル
+        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指す。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置く（`ALIAS_INJECT_CONFIG` が読めないときに既定のパスを参照しない）'
       - name: 読ませるファイル
         description: 正常シナリオと同じ
     flow: |-
