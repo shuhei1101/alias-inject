@@ -14,6 +14,9 @@ directory: |-
     handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理（イベントの処理の設計書）
     lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録・変数参照・ツール・生成したスキーマ（各分類の設計書）
     vendor/              同梱する外部ライブラリ（js-yaml）
+  skills/
+    global-setup/
+      SKILL.md           端末のセットアップの手順（単一ユースケース『端末のセットアップ』）
   schemas/
     aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
   scripts/

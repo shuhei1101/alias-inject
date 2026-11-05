@@ -161,7 +161,7 @@ functions:
     kind: 関数
     container: hooks/lib/config.ts
     usecase: 共通
-    summary: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG` を読み、`~` を展開した絶対パスを返す
+    summary: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、既定のパスの順に設定ファイルのパスを決め、`~` を展開した絶対パスを返す
     scope: public
     is_async: true
     args:
@@ -169,14 +169,16 @@ functions:
         type: EngineInterface
         required: true
         passing: injected
-        description: '`$.settings.read` と `$.env.get` を使う'
+        description: '`$.settings.read`・`$.env.get`・`$.fs.stat` を使う'
     returns:
       type: Promise<string | null>
-      description: 設定ファイルの絶対パス。値が無い・空・文字列でないときは null
+      description: 設定ファイルの絶対パス。`ALIAS_INJECT_CONFIG` が無く、既定のパスにファイルが無いときは null
     process: |-
       1. `$.settings.read({ source: "user" })` の `env.ALIAS_INJECT_CONFIG` を取る
-      2. 文字列でない・前後の空白を除いて空のときは null を返す
-      3. ホームの展開（`$.env.get("HOME")`）に通して返す
+      2. 文字列でない・前後の空白を除いて空のときは、`$.env.get("ALIAS_INJECT_CONFIG")` を取る
+      3. 1・2 のどちらかに値があれば、ホームの展開（`$.env.get("HOME")`）に通して返す（ファイルの有無は調べない）
+      4. `$.env.get("XDG_CONFIG_HOME")` が空でなければその値、空か値が無ければ `~/.config` を基準にして、ホームの展開に通した `{基準}/alias-inject/settings.yaml` を既定のパスにする
+      5. `$.fs.stat` が既定のパスで例外になったら null を返す。例外にならなければ既定のパスを返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
     unit_tests:
@@ -184,14 +186,40 @@ functions:
         case: 正常
         summary: '`~` を展開したパスを返す'
         condition: '`env.ALIAS_INJECT_CONFIG` が `~/.config/alias-inject/settings.yaml`、`HOME` が `/home/u`'
-        mock: テストの `on` で `settings.read` を応答し、`mock.env` で `HOME` を渡す
+        mock: テストの `on` で `settings.read`・`fs.stat` を応答し、`mock.env` で `HOME`・`ALIAS_INJECT_CONFIG`・`XDG_CONFIG_HOME` を渡す
         expected: '`/home/u/.config/alias-inject/settings.yaml`'
       - name: test_read_config_path_when_missing
         case: 正常
-        summary: 値が無いときは null
-        condition: '`env` が無い・`ALIAS_INJECT_CONFIG` が無い・空文字・数値'
+        summary: 値が無く、既定のパスにファイルが無いときは null
+        condition: '`env` が無い・`ALIAS_INJECT_CONFIG` が無い・空文字・数値で、環境変数 `ALIAS_INJECT_CONFIG` が無く、既定のパスにファイルが無い'
         mock: 同上
         expected: どれも null
+      - name: test_read_config_path_when_shell_env
+        case: 正常
+        summary: settings に値が無いときは環境変数の値を返す
+        condition: '`env` に `ALIAS_INJECT_CONFIG` が無く、環境変数 `ALIAS_INJECT_CONFIG` が `~/shell/settings.yaml`、`HOME` が `/home/u`'
+        mock: 同上
+        expected: '`/home/u/shell/settings.yaml`'
+      - name: test_read_config_path_when_settings_preferred
+        case: 正常
+        summary: settings と環境変数の両方に値があるときは settings の値を返す
+        condition: '`env.ALIAS_INJECT_CONFIG` が `/a/settings.yaml`、環境変数 `ALIAS_INJECT_CONFIG` が `/b/settings.yaml`'
+        mock: 同上
+        expected: '`/a/settings.yaml`'
+      - name: test_read_config_path_when_default_path
+        case: 正常
+        summary: '`ALIAS_INJECT_CONFIG` が無いときは既定のパスを返す'
+        condition: '`XDG_CONFIG_HOME` が `/xdg`・空文字・無い・`~/xdg` で、それぞれの既定のパスにファイルがある。`HOME` が `/home/u`'
+        mock: 同上
+        expected: '`/xdg/alias-inject/settings.yaml`・`/home/u/.config/alias-inject/settings.yaml`・`/home/u/.config/alias-inject/settings.yaml`・`/home/u/xdg/alias-inject/settings.yaml`'
+      - name: test_read_config_path_when_explicit_file_missing
+        case: 正常
+        summary: '`ALIAS_INJECT_CONFIG` が指すファイルが無くても既定のパスへ切り替えない'
+        condition: '`env.ALIAS_INJECT_CONFIG` が無いファイルを指し、既定のパスにファイルがある'
+        mock: 同上
+        expected: '`env.ALIAS_INJECT_CONFIG` の値'
+    notes:
+      例外の扱い: '`$.fs.stat` はファイルが無いときも権限が無いときも例外になり、値で見分けられない。既定のパスは利用者が指定していないので、どちらも設定なしとして null を返す'
   - name: parseConfig
     title: 設定ファイルの検証
     kind: 関数

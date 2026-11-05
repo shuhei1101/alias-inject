@@ -19,7 +19,7 @@ settings:
     file: ~/.claude/settings.json
     type: string
     required: false
-    description: 設定ファイルの絶対パス。先頭の `~` はホーム（`$.env.get("HOME")`）に展開する。ユーザースコープの settings に値が無いときは、環境変数 `ALIAS_INJECT_CONFIG`（`$.env.get`）を読む
+    description: 設定ファイルの絶対パス。先頭の `~` はホーム（`$.env.get("HOME")`）に展開する。ユーザースコープの settings に値が無いときは、環境変数 `ALIAS_INJECT_CONFIG`（`$.env.get`）を読む。この環境変数にはプロジェクトスコープの settings の `env` の値も入る
     missing: 既定のパスを読む。既定のパスに設定ファイルが無ければ、何も追加せず、入力をそのまま渡す
     reload: immediate
     notes:
