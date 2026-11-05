@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { callTool, installToolWorld, numberedNames, submit } from '../../unit/hooks/support/engine'
+import { callTool, installToolWorld, numberedNames, submit, userSettingsWithConfig } from '../../unit/hooks/support/engine'
 import {
-  CONFIG_PATH,
   SCOPED_PROJECT_ROOT,
   SETTINGS,
   TERMS_DIR,
@@ -334,7 +333,11 @@ describe('ツールの結果への引用の文脈の追加', () => {
   // 設定ファイルが読めないときは引用の文脈を追加せずに返す（異常系）
   test('test_error_when_config_unreadable', async ($, on) => {
     // 準備
-    const world = installToolWorld(on, { fs: makeFs('global: ['), settings: SETTINGS })
+    // ALIAS_INJECT_CONFIG が指す設定ファイルは書式が崩れている。既定のパスには term-a を照合できる設定ファイルがある
+    const brokenPath = '/broken/settings.yaml'
+    const fs = makeFs()
+    fs.write(brokenPath, 'global: [')
+    const world = installToolWorld(on, { fs, settings: userSettingsWithConfig(brokenPath) })
     const answer = { result: 'r', text: '用語エーの説明', context: ['other'] }
     world.answer = answer
 
@@ -343,7 +346,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
 
     // 検証
     expect(result).toEqual(answer)
-    expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH)).length).toBeGreaterThan(0)
+    expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath)).length).toBeGreaterThan(0)
   })
 
   // ifVersion が 3 回続けて外れたら引用の文脈を追加せずに返す（異常系）

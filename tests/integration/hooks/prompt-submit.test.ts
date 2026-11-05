@@ -1,5 +1,5 @@
 import { expect, test } from 'claude-code/testing'
-import { installWorld, submit } from '../../unit/hooks/support/engine'
+import { installWorld, submit, userSettingsWithConfig } from '../../unit/hooks/support/engine'
 import { MemoryFs } from '../../unit/hooks/support/memory-fs'
 import {
   CONFIG_DIR,
@@ -22,6 +22,12 @@ import {
   termAliasLines,
   termYaml,
 } from './support/fixtures'
+
+// 読まれると何も追加しない設定ファイル。読んだ設定ファイルが違うことを文脈の有無で確かめる
+const DISABLED_CONFIG = 'global: { enabled: false }\n'
+
+// 環境変数 ALIAS_INJECT_CONFIG が指す設定ファイル
+const SHELL_CONFIG_PATH = '/shell/settings.yaml'
 
 // 初めて出た語の文脈を追加し、記録に入れる（正常系）
 test('test_normal', async ($, on) => {
@@ -300,8 +306,9 @@ test('test_normal_when_added_types', async ($, on) => {
 // 設定ファイルが読めないときは何も追加せずに渡す（異常系）
 test('test_error_when_config_unreadable', async ($, on) => {
   // 準備
-  // 設定ファイルが無い（fs.stat と fs.read が例外になる）
-  const world = installWorld(on, { fs: new MemoryFs(), settings: SETTINGS })
+  // ALIAS_INJECT_CONFIG が指す設定ファイルが無い（fs.stat と fs.read が例外になる）。既定のパスには term-a を照合できる設定ファイルがある
+  const missingPath = '/missing/settings.yaml'
+  const world = installWorld(on, { fs: makeFs(), settings: userSettingsWithConfig(missingPath) })
 
   // 実行
   const result = await submit($, 'term-a とは')
@@ -310,7 +317,7 @@ test('test_error_when_config_unreadable', async ($, on) => {
   expect(result.text).toBe('term-a とは')
   expect(result.context ?? []).toEqual([])
   // 設定ファイルのパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
-  const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
+  const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
@@ -606,4 +613,68 @@ test('test_error_when_cwd_scope_invalid', async ($, on) => {
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
   expect(debugLines.some((line) => line.text.includes('empty-scope') && line.text.includes('scope.cwd'))).toBe(true)
   expect(debugLines.some((line) => line.text.includes('string-scope') && line.text.includes('scope.cwd'))).toBe(true)
+})
+
+// ALIAS_INJECT_CONFIG が無いとき、XDG_CONFIG_HOME の下の設定ファイルを読む（正常系）
+test('test_normal_when_default_config_path', async ($, on) => {
+  // 準備
+  const fs = makeFs(DISABLED_CONFIG)
+  fs.write('/xdg/alias-inject/settings.yaml', makeConfig())
+  installWorld(on, { fs, settings: { env: {} }, env: { XDG_CONFIG_HOME: '/xdg' } })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.text).toBe('term-a とは')
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(result.context?.[0]).toContain('term-a')
+  expect(result.context?.[0]).toContain('説明 Term-A')
+})
+
+// XDG_CONFIG_HOME が空のときは ~/.config の下の設定ファイルを読む（正常系）
+test('test_normal_when_xdg_config_home_empty', async ($, on) => {
+  // 準備
+  installWorld(on, { fs: makeFs(), settings: { env: {} }, env: { XDG_CONFIG_HOME: '' } })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(result.context?.[0]).toContain('term-a')
+  expect(result.context?.[0]).toContain('説明 Term-A')
+})
+
+// settings に値が無いとき、環境変数 ALIAS_INJECT_CONFIG が指す設定ファイルを読む（正常系）
+test('test_normal_when_config_from_shell_env', async ($, on) => {
+  // 準備
+  const fs = makeFs(DISABLED_CONFIG)
+  fs.write(SHELL_CONFIG_PATH, makeConfig())
+  installWorld(on, { fs, settings: { env: {} }, env: { ALIAS_INJECT_CONFIG: SHELL_CONFIG_PATH } })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(result.context?.[0]).toContain('term-a')
+  expect(result.context?.[0]).toContain('説明 Term-A')
+})
+
+// settings と環境変数の両方に値があるときは settings の値を使う（正常系）
+test('test_normal_when_settings_env_preferred', async ($, on) => {
+  // 準備
+  const fs = makeFs()
+  fs.write(SHELL_CONFIG_PATH, DISABLED_CONFIG)
+  installWorld(on, { fs, settings: SETTINGS, env: { ALIAS_INJECT_CONFIG: SHELL_CONFIG_PATH } })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(result.context?.[0]).toContain('term-a')
+  expect(result.context?.[0]).toContain('説明 Term-A')
+  expect(fs.reads).not.toContain(SHELL_CONFIG_PATH)
 })
