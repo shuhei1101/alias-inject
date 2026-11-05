@@ -1,5 +1,5 @@
 話し合いの端末の設定への作業場所の絞りの追加:
-  説明: "端末の設定（`~/.config/alias-inject/settings.yaml`）の `global.aliases` の `mindstella-nandemo-terms` の行に、作業場所の絞りを追加する。値は Issue #62 の一案の glob（`/mnt/c/Users/shuhe/repo/tmp/何でも会話/**`・`/mnt/c/Users/shuhe/repo/aituber/**`・`/mnt/c/Users/shuhe/repo/claude-balancer/**`）で、キーはインターフェース定義設計で決めた名前にする"
+  説明: "端末の設定（`~/.config/alias-inject/settings.yaml`）の `global.aliases` の `mindstella-nandemo-terms` の行に、作業場所の絞り `scope.cwd` を追加する。値は Issue #62 の一案の glob（`/mnt/c/Users/shuhe/repo/tmp/何でも会話/**`・`/mnt/c/Users/shuhe/repo/aituber/**`・`/mnt/c/Users/shuhe/repo/claude-balancer/**`）"
   タグ: [設定の書き換え]
   実行者: tester
   時期: master へ入った後
@@ -10,5 +10,5 @@
   確認: null
   切り戻し: null
   失敗時: 既定の対処を 1 回、2 回連続で失敗したら依頼元へ返す
-  確認方法: 端末の設定の `mindstella-nandemo-terms` の行に作業場所の絞りの 3 つの glob があり、alias-inject のプラグインの debug log にその行を外した理由の行が出ていない
+  確認方法: 端末の設定の `mindstella-nandemo-terms` の行の `scope.cwd` に 3 つの glob があり、alias-inject のプラグインの debug log にその行を外した理由の行が出ていない
   状態: "-"
