@@ -177,7 +177,7 @@ functions:
       1. `$.settings.read({ source: "user" })` の `env.ALIAS_INJECT_CONFIG` を取る
       2. 文字列でない・前後の空白を除いて空のときは、`$.env.get("ALIAS_INJECT_CONFIG")` を取る
       3. 2 の値も文字列でない・前後の空白を除いて空のときは値が無いものとし、1・2 のどちらかに値があれば、ホームの展開（`$.env.get("HOME")`）に通して返す（ファイルの有無は調べない）
-      4. `$.env.get("XDG_CONFIG_HOME")` が空でなければその値、空か値が無ければ `~/.config` を基準にして、ホームの展開に通した `{基準}/alias-inject/settings.yaml` を既定のパスにする
+      4. `$.env.get("XDG_CONFIG_HOME")` が空でなければその値、空か値が無ければ `~/.config` を基準にして（値の末尾の `/` は取り除く）、ホームの展開に通した `{基準}/alias-inject/settings.yaml` を既定のパスにする
       5. `$.fs.stat` が既定のパスで例外になったら null を返す。例外にならなければ既定のパスを返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[expandHome]
@@ -220,6 +220,7 @@ functions:
         expected: '`env.ALIAS_INJECT_CONFIG` の値'
     notes:
       例外の扱い: '`$.fs.stat` はファイルが無いときも権限が無いときも例外になり、値で見分けられない。既定のパスは利用者が指定していないので、どちらも設定なしとして null を返す'
+      HOME が無いとき: '`$.env.get("HOME")` は値の有無に関わらず最初に取り、無ければ例外を投げる。例外は `loadSettings` の外側の `catch` で debug log に出るので、`ALIAS_INJECT_CONFIG` が無く既定のパスにも設定ファイルが無い場合でもログが出る例外になる'
   - name: parseConfig
     title: 設定ファイルの検証
     kind: 関数
