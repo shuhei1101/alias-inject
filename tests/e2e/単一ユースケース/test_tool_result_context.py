@@ -160,7 +160,6 @@ class ToolResultContextTest(E2ETestCase):
         self.assert_no_tool_context(first, "Read")
         self.assert_tool_context_has_term(second, "term-c", "Read")
 
-
     def test_normal_when_cwd_scoped(self) -> None:
         """作業場所が scope.cwd の glob に当たらない行の語は、Read の結果に出ても文脈が追加されない（正常シナリオ（作業場所で絞った行））"""
         # 準備
