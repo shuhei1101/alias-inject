@@ -176,7 +176,7 @@ functions:
     process: |-
       1. `$.settings.read({ source: "user" })` の `env.ALIAS_INJECT_CONFIG` を取る
       2. 文字列でない・前後の空白を除いて空のときは、`$.env.get("ALIAS_INJECT_CONFIG")` を取る
-      3. 1・2 のどちらかに値があれば、ホームの展開（`$.env.get("HOME")`）に通して返す（ファイルの有無は調べない）
+      3. 2 の値も文字列でない・前後の空白を除いて空のときは値が無いものとし、1・2 のどちらかに値があれば、ホームの展開（`$.env.get("HOME")`）に通して返す（ファイルの有無は調べない）
       4. `$.env.get("XDG_CONFIG_HOME")` が空でなければその値、空か値が無ければ `~/.config` を基準にして、ホームの展開に通した `{基準}/alias-inject/settings.yaml` を既定のパスにする
       5. `$.fs.stat` が既定のパスで例外になったら null を返す。例外にならなければ既定のパスを返す
     callees:
@@ -191,7 +191,7 @@ functions:
       - name: test_read_config_path_when_missing
         case: 正常
         summary: 値が無く、既定のパスにファイルが無いときは null
-        condition: '`env` が無い・`ALIAS_INJECT_CONFIG` が無い・空文字・数値で、環境変数 `ALIAS_INJECT_CONFIG` が無く、既定のパスにファイルが無い'
+        condition: '`env` が無い・`ALIAS_INJECT_CONFIG` が無い・空文字・数値で、環境変数 `ALIAS_INJECT_CONFIG` が無い・空文字・空白だけで、既定のパスにファイルが無い'
         mock: 同上
         expected: どれも null
       - name: test_read_config_path_when_shell_env
