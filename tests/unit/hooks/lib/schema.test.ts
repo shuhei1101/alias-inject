@@ -140,6 +140,20 @@ test('test_validate_schema_when_additional_property', () => {
   expect(otherReasons).toEqual([])
 })
 
+// `scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返す（正常系）
+test('test_validate_schema_when_scope', () => {
+  // 準備
+  const scopes: unknown[] = [{ cwd: ['/repo/a/**'] }, { cwd: [] }, { cwd: '/repo/a/**' }, { cwd: [1] }, { path: ['/repo/a'] }]
+
+  // 実行
+  const results = scopes.map((scope) => validateItem(makeItem({ scope })))
+
+  // 検証
+  expect(results[0]).toEqual([])
+  for (const reasons of results.slice(1, 4)) expect(reasons.some((reason) => reason.includes('aliases[0].scope.cwd'))).toBe(true)
+  expect((results[4] ?? []).some((reason) => reason.includes('aliases[0].scope'))).toBe(true)
+})
+
 // `if` に合わないときは `then` を使わない（正常系）
 test('test_validate_schema_when_if_not_matched', () => {
   // 準備

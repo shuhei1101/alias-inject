@@ -335,6 +335,27 @@ test('test_resolve_settings_when_duplicated', () => {
   expect(settings.warnings[0]).toContain('terms')
 })
 
+// `scope.cwd` を `paths` と同じ基準で解決し、記載しない行は undefined（正常系）
+test('test_resolve_settings_when_cwd_scope', () => {
+  // 準備
+  const config = parse({
+    global: {
+      aliases: [{ ...rawAlias('home-scoped', 'a/*.yaml'), scope: { cwd: ['~/repo/a/**'] } }, rawAlias('unscoped', 'b/*.yaml')],
+    },
+    projects: [{ match: 'sample', aliases: [{ ...rawAlias('project-scoped', 'c/*.yaml'), scope: { cwd: ['sub/**'] } }] }],
+  })
+
+  // 実行
+  const settings = resolveSettings(config, { where: { ...WHERE, projectRoot: '/repo/sample/wt' } })
+
+  // 検証
+  expect(settings.aliases.map((alias) => alias.cwdPatterns)).toEqual([
+    ['/home/u/repo/a/**'],
+    undefined,
+    ['/repo/sample/wt/sub/**'],
+  ])
+})
+
 // 当たった要素の exclude・excludeTools は追加し、max_items は置き換え、書かないキーは global のままにする（正常系）
 test('test_resolve_settings_when_project_overrides', () => {
   // 準備

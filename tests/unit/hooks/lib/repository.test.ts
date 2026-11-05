@@ -152,3 +152,19 @@ test('test_load_repository_aliases_when_missing', async () => {
   expect(error).toBeInstanceOf(RepositoryError)
   expect((error as RepositoryError).path).toBe(path)
 })
+
+// `documents` の行の `scope.cwd` を dev-docs.yaml のフォルダから解決する（正常系）
+test('test_parse_repository_when_cwd_scope', () => {
+  // 準備
+  const text = devDocs(
+    [...termRowYaml('scoped', 'terms/*.yaml'), '    scope:', '      cwd: [../sample/**]'],
+    termRowYaml('unscoped', 'others/*.yaml'),
+  )
+
+  // 実行
+  const result = parseRepository({ text, path: DEV_DOCS, schema: ALIAS_SCHEMA, home: HOME })
+
+  // 検証
+  expect(result.aliases.map((alias) => alias.cwdPatterns)).toEqual([['/repo/sample/**'], undefined])
+  expect(result.warnings).toEqual([])
+})
