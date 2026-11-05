@@ -9,6 +9,7 @@ import type {
   ToolCallInput,
   ToolCallResult,
 } from 'claude-code'
+import { filterByScope } from './lib/alias'
 import type { ResolvedAlias } from './lib/alias'
 import { ConfigError, isOriginAllowed, parseConfig, readConfigPath, resolveSettings } from './lib/config'
 import type { Config, Settings } from './lib/config'
@@ -90,7 +91,7 @@ async function loadRepositories(
 // 設定ファイルを読み、実効の設定を組み立てる。設定ファイルのパスが無いとき、読めない設定のときは null
 async function loadSettings(
   $: EngineInterface,
-): Promise<{ settings: Settings; schema: Record<string, unknown>; home: string } | null> {
+): Promise<{ settings: Settings; schema: Record<string, unknown>; home: string; projectRoot: string } | null> {
   const configPath = await readConfigPath($)
   if (configPath === null) return null
 
@@ -110,15 +111,23 @@ async function loadSettings(
     where: { configPath, projectRoot, repoRoot: (await $.session.repo())?.root ?? projectRoot, home },
   })
   logWarningsOnce($, config, configPath, [...config.warnings, ...settings.warnings])
-  return { settings, schema, home }
+  return { settings, schema, home, projectRoot }
 }
 
-// 読むリポジトリの行の後ろに、設定ファイルの aliases の行を並べて語を読む。読めない YAML と必須の値が空の文書だけを外す
+// 読むリポジトリの行の後ろに、設定ファイルの aliases の行を並べ、作業場所に当たる行だけの語を読む。読めない YAML と必須の値が空の文書だけを外す
 async function loadEntries(
   $: EngineInterface,
-  { settings, schema, home }: { settings: Settings; schema: Record<string, unknown>; home: string },
+  {
+    settings,
+    schema,
+    home,
+    projectRoot,
+  }: { settings: Settings; schema: Record<string, unknown>; home: string; projectRoot: string },
 ): Promise<Entry[]> {
-  const aliases = [...(await loadRepositories($, settings.repositories, schema, home)), ...settings.aliases]
+  const aliases = filterByScope({
+    aliases: [...(await loadRepositories($, settings.repositories, schema, home)), ...settings.aliases],
+    cwd: projectRoot,
+  })
   const entries: Entry[] = []
   for (const [index, alias] of aliases.entries()) {
     const loaded = await loadAliasEntries($, alias, index)

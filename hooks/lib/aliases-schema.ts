@@ -87,6 +87,39 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             "path"
           ]
         },
+        "scope": {
+          "title": "行の使用範囲",
+          "description": "行を照合に使用する範囲。cwd に作業場所の glob を並べた行は、セッションを起動したプロジェクトの直下がどれかの glob に当たるときだけ照合に使用する。/** で終わる glob はそのフォルダと配下のフォルダ、/** を付けないパスはそのフォルダだけに当たる。書かないとき、全ての作業場所で使用する。",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cwd"
+          ],
+          "properties": {
+            "cwd": {
+              "title": "行を使用する作業場所",
+              "description": "作業場所の glob の並び。先頭の ~ と相対パスは paths と同じ基準で解決する。",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "examples": [
+                [
+                  "~/repo/aituber/**"
+                ]
+              ]
+            }
+          },
+          "examples": [
+            {
+              "cwd": [
+                "~/repo/aituber/**"
+              ]
+            }
+          ]
+        },
         "metadata": {
           "title": "エイリアスのキーの列",
           "description": "エイリアスのキーごとに、値を取る文書の列の名前を書く。書かないキーは、同じ名前の列から取る。入れ子の列は meta.summary のように . でつなぐ。",
