@@ -78,6 +78,10 @@ export class ConfigError extends Error {
   }
 }
 
+// 既定のパスの基準のフォルダと、その下の設定ファイル
+const DEFAULT_CONFIG_HOME = '~/.config'
+const CONFIG_FILE = 'alias-inject/settings.yaml'
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -86,15 +90,26 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== ''
 }
 
-/** ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG` を読み、`~` を展開した絶対パスを返す */
+/** ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、既定のパスの順に設定ファイルのパスを決め、`~` を展開した絶対パスを返す */
 export async function readConfigPath($: EngineInterface): Promise<string | null> {
   const settings: unknown = await $.settings.read({ source: 'user' })
   const env = isRecord(settings) ? settings.env : undefined
-  const value = isRecord(env) ? env.ALIAS_INJECT_CONFIG : undefined
-  if (!isNonEmptyString(value)) return null
+  const fromSettings = isRecord(env) ? env.ALIAS_INJECT_CONFIG : undefined
   const home = await $.env.get('HOME')
   if (home === undefined) throw new Error('環境変数 HOME がありません')
-  return expandHome({ path: value, home })
+
+  const explicit = [fromSettings, await $.env.get('ALIAS_INJECT_CONFIG')].find(isNonEmptyString)
+  if (explicit !== undefined) return expandHome({ path: explicit, home })
+
+  const xdgConfigHome = await $.env.get('XDG_CONFIG_HOME')
+  const base = isNonEmptyString(xdgConfigHome) ? xdgConfigHome.replace(/\/+$/, '') : DEFAULT_CONFIG_HOME
+  const defaultPath = expandHome({ path: `${base}/${CONFIG_FILE}`, home })
+  try {
+    await $.fs.stat(defaultPath)
+  } catch {
+    return null
+  }
+  return defaultPath
 }
 
 /** `repositories` の 1 要素を検証し、有効なら RepositoryConfig を返す。`enabled: false` のときは null、外すときは理由を返す */

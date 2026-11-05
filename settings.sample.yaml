@@ -1,5 +1,5 @@
 # alias-inject の設定ファイルのサンプル。実値は入れていない
-# ~/.config/alias-inject/settings.yaml にコピーし、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
+# ~/.config/alias-inject/settings.yaml にコピーする。別の場所に置くときは、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
 global:
   # false のとき、何も追加しない
   enabled: true
