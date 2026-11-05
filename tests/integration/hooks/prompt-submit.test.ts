@@ -119,10 +119,10 @@ test('test_normal_when_slash_command', async ($, on) => {
   expect(after.context?.[0]).toContain('Term-A')
 })
 
-// ALIAS_INJECT_CONFIG が無いときはそのまま渡す（正常系）
+// ALIAS_INJECT_CONFIG が無く、既定のパスにも設定ファイルが無いときはそのまま渡す（正常系）
 test('test_normal_when_config_path_missing', async ($, on) => {
   // 準備
-  const fs = makeFs()
+  const fs = new MemoryFs()
   const world = installWorld(on, { fs, settings: { env: {} } })
 
   // 実行
