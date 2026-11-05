@@ -224,6 +224,7 @@ flows:
     setup:
       - name: Mock
         description: 正常系と同じ。ただし設定ファイルの中身が YAML の書式の誤ったもの。`ui.log` は届いた行を記録する
+        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指し、既定のパス `~/.config/alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置き、既定のパスへ切り替えないことを固定する'
       - name: ツールの結果
         description: 正常系と同じ
     flow: |-
@@ -421,7 +422,7 @@ exceptions:
     condition: 照合して文脈を追加したか、追加する語が無い・照合しない結果のため受け取ったまま返した
   - name: なし（設定ファイルが読めない）
     condition: 設定ファイルが無い・読めない・書式が誤っている
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無いときはログを出さない'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
   - name: なし（YAML・dev-docs.yaml が読めない・スキーマに合わない行・照合条件が誤っている文書）
     condition: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の同じ名前の行と同じ'
     notes: その YAML・リポジトリ・行・文書だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる

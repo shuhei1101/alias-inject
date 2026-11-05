@@ -3,10 +3,10 @@ lead: プラグイン（hooks モジュール）が読む設定値の一覧。�
 files:
   - file: ~/.claude/settings.json
     manages: 設定ファイルのパス（`env` の `ALIAS_INJECT_CONFIG`）
-    notes: 'ユーザースコープだけを読む（`$.settings.read({ source: "user" })`）。プロジェクトスコープの `env` は読まない'
+    notes: 'ユーザースコープだけを読む（`$.settings.read({ source: "user" })`）'
   - file: ~/.config/alias-inject/settings.yaml
     manages: 読むリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
-    notes: 置き場所は `ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
+    notes: 既定の置き場所は `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` で、`ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
   - file: dev-docs.yaml
     manages: リポジトリのエイリアス（`documents` のうち `alias_type` を持つ行だけを読む）
     notes: 読むリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`alias_type` を持つ `documents` の行以外は読まない
@@ -19,8 +19,8 @@ settings:
     file: ~/.claude/settings.json
     type: string
     required: false
-    description: 設定ファイルの絶対パス。先頭の `~` はホーム（`$.env.get("HOME")`）に展開する
-    missing: 何も追加せず、入力をそのまま渡す
+    description: 設定ファイルの絶対パス。先頭の `~` はホーム（`$.env.get("HOME")`）に展開する。ユーザースコープの settings に値が無いときは、環境変数 `ALIAS_INJECT_CONFIG`（`$.env.get`）を読む
+    missing: 既定のパスを読む。既定のパスに設定ファイルが無ければ、何も追加せず、入力をそのまま渡す
     reload: immediate
     notes:
       反映: 入力の送信ごとにユーザースコープの settings を読み直すので、次の入力から効く
@@ -306,5 +306,13 @@ settings:
       書式: dev-docs の端末の設定の `sources[].scope` と同じ glob の書式
       projects との使い分け: '`projects[].match` は設定のキー全体を起動したプロジェクトごとに重ねる。`scope.cwd` は 1 つの行を複数の作業場所に絞る'
       metadata.cwd との違い: '`metadata.cwd` は command のコマンドを実行するフォルダを取る列の名前で、行の絞りには使用しない'
+  - key: XDG_CONFIG_HOME
+    title: 設定のフォルダの基準
+    file: 環境変数
+    type: string
+    required: false
+    default: ~/.config
+    description: 既定のパス `{XDG_CONFIG_HOME}/alias-inject/settings.yaml` の基準のフォルダ。`$.env.get` で読む
+    missing: 空のときも `~/.config` を使う
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]
