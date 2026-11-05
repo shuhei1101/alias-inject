@@ -279,6 +279,37 @@ scenarios:
       - tsx を含まないファイルの Read の結果の後ろに term-c の文脈が追加されていない
       - tsx を含むファイルの Read の結果の後ろに term-c の文脈が追加されている
     test: test_normal_when_inject_condition
+  - name: 正常シナリオ（作業場所で絞った行）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ。`claude` は一時の作業場所のフォルダで起動する
+        notes: '-'
+      - name: 設定ファイル
+        description: 正常シナリオの設定に加え、`global.aliases` に、作業場所の絞りに起動したフォルダに当たらない別のフォルダの glob を記載した `alias_type` が `term` の行を 1 つ持つ
+        notes: 行の `paths` は語 `term-s` を持つ YAML に当たる。キーの名前はインターフェース定義設計で決める
+      - name: 読ませるファイル
+        description: 本文に term-a と term-s を含むテキストファイル
+        notes: 読ませる入力の文には term-a・term-s を含めない
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で読ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 作業場所が絞りの glob に当たらない term-s の行を照合から外す
+        P->>P: 照合で term-a が当たる
+        P->>CC: term-a の文脈だけを context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろの文脈に term-a の文脈がある
+      - term-s の文脈は追加されていない
+    test: test_normal_when_cwd_scoped
 lead: モデルが Read・Bash・MCP などのツールで読んだ本文を、入力と同じ語と照合し、そのセッションで初めて出た語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
 issue: 51
 primary_actor: モデル
