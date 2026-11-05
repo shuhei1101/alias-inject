@@ -187,5 +187,11 @@ functions:
         condition: '`anyOf` が `type: string` と `type: integer` のスキーマで、真偽値 true の値と、文字列 `a` の値'
         mock: なし
         expected: 前者は `anyOf` の両方の要素の理由、後者は空
+      - name: test_validate_schema_when_scope
+        case: 正常
+        summary: '`scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返す'
+        condition: 'ALIAS_SCHEMA で、`scope: {cwd: [/repo/a/**]}`・`scope: {cwd: []}`・`scope: {cwd: /repo/a/**}`・`scope: {cwd: [1]}`・`scope: {path: [/repo/a]}` の行'
+        mock: なし
+        expected: 1 件目は空。2〜4 件目は `aliases[0].scope.cwd` を含む理由、5 件目は `aliases[0].scope` を含む理由
 test_files:
   - tests/unit/hooks/lib/schema.test.ts

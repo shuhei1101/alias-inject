@@ -49,7 +49,7 @@ functions:
       6. 実効の設定の組み立てをする（configPath は設定ファイルのパス、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）。設定ファイルの検証と組み立ての warnings を、設定ファイルのパスを添えて debug log に出す
       7. enabled が false、または出所の判定が false なら `next(e)` を返す
       8. 実効の設定の repositories を順に dev-docs.yaml の読み込みで読む。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを外す。読めたリポジトリの warnings は、`dev-docs.yaml` のパスを添えて debug log に出す
-      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べる。各行を並びの位置とともに行の文書の読み込みで読み、failures は `照合から外しました（{YAML のパス}）: {理由}` を debug log に出す
+      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べ、作業場所での絞り込み（cwd は `$.session.root()`）に通す。残った各行を並びの位置とともに行の文書の読み込みで読み、failures は `照合から外しました（{YAML のパス}）: {理由}` を debug log に出す
       10. 全ての語を照合し、`e.text` で照合条件での絞り込みに通す
       11. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は undefined）、select を記録済みのキーでの語の選択にして呼ぶ
       12. 結果が null なら `next(e)`、それ以外は `next({ ...e, context: [...(e.context ?? []), selection.text] })` を返す
@@ -73,6 +73,7 @@ functions:
       - dev/設計書/モジュール構成/プラグイン/記録#functions[recordIdOf]
       - dev/設計書/モジュール構成/プラグイン/記録#functions[addRecorded]
       - dev/設計書/モジュール構成/プラグイン/文脈#functions[selectEntries]
+      - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[filterByScope]
     unit_tests:
       - name: test_handle_prompt_submit_when_disabled
         case: 正常
@@ -105,6 +106,12 @@ functions:
         mock: 同上
         expected: 1 回目の `context` の末尾が term-a の文脈だけで、記録に term-c のキーが無い。2 回目の `context` の末尾が term-c の文脈
         notes: 'PR #58 で追加'
+      - name: test_handle_prompt_submit_when_cwd_scoped
+        case: 正常
+        summary: 作業場所が scope.cwd に当たらない行の YAML を読み込まず、その語の文脈を追加しない
+        condition: '`$.session.root()` が `/repo/sample`。設定ファイルの `global.aliases` に `scope.cwd: [/repo/other/**]` で term-s の YAML を指す term の行。入力「term-a と term-s」'
+        mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す。`fs.read` の呼ばれたパスを記録する
+        expected: 返る `context` の末尾が term-a の文脈だけで、term-s の YAML に `fs.read` が呼ばれていない
   - name: handleSessionCompact
     title: 圧縮の後の記録の消去
     kind: フック

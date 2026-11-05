@@ -377,6 +377,55 @@ functions:
         condition: '`/repo/knowledge/dev-docs.yaml` と `/dev-docs.yaml`'
         mock: なし
         expected: '`/repo/knowledge` と `/`'
+  - name: matchPathGlob
+    title: パスと glob の照合
+    kind: 関数
+    container: hooks/lib/loader.ts
+    usecase: 共通
+    summary: 絶対パスのフォルダが、`*`・`**` を含む絶対パスの glob に当たるかを判定する
+    scope: public
+    is_async: false
+    args:
+      - name: pattern
+        type: string
+        required: true
+        passing: keyword
+        description: パスの解決を通した絶対パスの glob
+      - name: path
+        type: string
+        required: true
+        passing: keyword
+        description: 判定するフォルダの絶対パス（`$.session.root()`）
+    returns:
+      type: boolean
+      description: 当たるとき true
+    process: |-
+      1. `pattern` と `path` の末尾の `/` を除き、`/` で区切って空の区切りを除く
+      2. `pattern` の区切りを先頭から順に `path` の区切りと照合する。`**` は `path` の 0 個以上の区切りに当たり、`*` を含む区切りは名前と glob の区切りの照合、それ以外は文字列の一致で当てる
+      3. `pattern` と `path` の区切りを全て当て終えたとき true を返す（正規表現は使用しない）
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[matchSegment]
+    refs:
+      - dev/設計書/インターフェース定義/入力への引用の文脈の追加#constraints[作業場所の絞り]
+    unit_tests:
+      - name: test_match_path_glob_when_descendants
+        case: 正常
+        summary: '`/**` で終わる glob はそのフォルダと配下のフォルダに当たる'
+        condition: '`pattern` が `/repo/sample/**`、`path` が `/repo/sample`・`/repo/sample/.claude/worktrees/feat-x`・`/repo/sample2`・`/repo`'
+        mock: なし
+        expected: true・true・false・false
+      - name: test_match_path_glob_when_folder_only
+        case: 正常
+        summary: '`/**` を付けないパスはそのフォルダだけに当たる'
+        condition: '`pattern` が `/repo/sample/`、`path` が `/repo/sample`・`/repo/sample/sub`'
+        mock: なし
+        expected: true・false
+      - name: test_match_path_glob_when_stars
+        case: 正常
+        summary: '`*` は 1 つの区切り、途中の `**` は任意の深さに当たる'
+        condition: '`pattern` が `/repo/*/docs` で `path` が `/repo/a/docs`・`/repo/a/b/docs`。`pattern` が `/repo/**/wt` で `path` が `/repo/wt`・`/repo/a/b/wt`・`/repo/a/wt2`'
+        mock: なし
+        expected: true・false、true・true・false
 notes:
   キャッシュ: 変わったファイルの読み込みのキャッシュはモジュールの変数に持つ。mod のホットリロードで空に戻り、次の入力で読み直す。単体テストではテストごとに空に戻す関数 `clearCache` を使う
 test_files:

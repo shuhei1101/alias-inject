@@ -71,13 +71,16 @@ data_models:
       - name: metadata
         type: AliasMetadata
         description: エイリアスのキーごとの、値を取る列の名前
+      - name: scope
+        type: "'{ cwd: string[] } | undefined'"
+        description: 行を照合に使用する作業場所の glob。記載したまま（解決は読み込む側が行う）。記載しないときは undefined
   - name: ResolvedAlias
     title: 読む行
     container: hooks/lib/alias.ts
     usecase: 共通
     role: DTO
     summary: 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行
-    description: '`AliasConfig & { origin: string; patterns: string[] }`。'
+    description: '`AliasConfig & { origin: string; patterns: string[]; cwdPatterns: string[] | undefined }`。'
     properties:
       - name: origin
         type: string
@@ -85,6 +88,9 @@ data_models:
       - name: patterns
         type: string[]
         description: '`paths` を解決した絶対パスの glob'
+      - name: cwdPatterns
+        type: string[] | undefined
+        description: '`scope.cwd` を `paths` と同じ基準で解決した絶対パスの glob。`scope` を記載しない行は undefined'
   - name: AliasMetadata
     title: エイリアスのキー
     container: hooks/lib/alias.ts
@@ -135,7 +141,7 @@ functions:
       2. マッピングで `enabled` が false の行は、検証せずに飛ばす
       3. 他の行を、スキーマのルートの `items` で `{path}[{位置}]` をパスにして検証する（値の検証）。位置は飛ばした行を含む元の並びでの位置
       4. 理由があれば行を外し、`{path}[{位置}]（id: {id}）: {理由を「、」でつなぐ}` を warnings に入れる。`（id: {id}）` は `id` が空でない文字列のときだけ付ける
-      5. 理由の無い行は `id`・`paths`・`alias_type`・`records`・`body_file` と、`metadata` のうち ALIAS_KEYS のキーだけを AliasConfig にする
+      5. 理由の無い行は `id`・`paths`・`alias_type`・`records`・`body_file`・`scope` と、`metadata` のうち ALIAS_KEYS のキーだけを AliasConfig にする
     callees:
       - dev/設計書/モジュール構成/プラグイン/スキーマ#functions[validateSchema]
     unit_tests:
@@ -163,6 +169,12 @@ functions:
         condition: '`path` が `global.aliases`。旧い構造（`type: url`・`fields`）の `id: urls` の行と、`metadata.alias_type` が `{type: custom, value: term}` で行の `alias_type` を持たない行と、`alias_type: memo` の行と、`metadata.name` が `{type: ref, field: title}` の行と、文字列 `x`'
         mock: なし
         expected: 'aliases が空。warnings が 5 件で、`global.aliases[0]（id: urls）`・`global.aliases[1]`・`global.aliases[2]`・`global.aliases[3]`・`global.aliases[4]` で始まり、1〜3 件目に `alias_type`、4 件目に `metadata.name` を含む'
+      - name: test_parse_aliases_when_scope
+        case: 正常
+        summary: '`scope` を記載した行は scope を持ち、記載しない行は undefined'
+        condition: '`alias_type: url` で `scope: {cwd: [/repo/a/**]}` の行と、`scope` を記載しない行'
+        mock: なし
+        expected: "1 件目の scope が `{cwd: ['/repo/a/**']}`、2 件目の scope が undefined。warnings が空"
   - name: dedupeAliases
     title: id の重なりの確認
     kind: 関数
@@ -266,6 +278,42 @@ functions:
         condition: env で `port` だけを持つ値と、`url`・`port` をどちらも持たない値
         mock: なし
         expected: 前者は空、後者は `['url', 'port']`
+  - name: filterByScope
+    title: 作業場所での絞り込み
+    kind: 関数
+    container: hooks/lib/alias.ts
+    usecase: 共通
+    summary: 読み込む行のうち、作業場所が `scope.cwd` のどの glob にも当たらない行を除外する
+    scope: public
+    is_async: false
+    args:
+      - name: aliases
+        type: readonly ResolvedAlias[]
+        required: true
+        passing: keyword
+        description: 読むリポジトリの行と設定ファイルの aliases の行を並べたもの
+      - name: cwd
+        type: string
+        required: true
+        passing: keyword
+        description: セッションを起動したプロジェクトの直下（`$.session.root()`）
+    returns:
+      type: ResolvedAlias[]
+      description: '`cwdPatterns` が undefined の行と、`cwd` が `cwdPatterns` のどれかに当たる行。aliases の順のまま'
+    process: |-
+      1. `cwdPatterns` が undefined の行は残す
+      2. それ以外の行は、`cwdPatterns` のどれかでパスと glob の照合（path は `cwd`）が true のときだけ残す
+    callees:
+      - dev/設計書/モジュール構成/プラグイン/読み込み#functions[matchPathGlob]
+    refs:
+      - dev/設計書/インターフェース定義/入力への引用の文脈の追加#constraints[作業場所の絞り]
+    unit_tests:
+      - name: test_filter_by_scope
+        case: 正常
+        summary: 絞りを持たない行は残し、作業場所が当たらない行を除外する
+        condition: "`cwd` が `/repo/sample/wt`。`cwdPatterns` が undefined の行、`['/repo/sample/**']` の行、`['/repo/other/**', '/repo/sample']` の行"
+        mock: なし
+        expected: 1 件目と 2 件目の行だけが、この順に残る
 test_files:
   - tests/unit/hooks/lib/alias.test.ts
 constants:

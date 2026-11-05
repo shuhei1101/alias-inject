@@ -345,7 +345,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: 本文「term-a と link-a と link-b」
-        IF->>IF: $.session.root() が scope.cwd に当たらない other-links を除外する
+        IF->>IF: $.session.root() が scope.cwd に当たらない other-links と root-links を除外する
         IF->>IF: 照合で term-a と link-a が当たる
         IF-->>CC: 結果の context の末尾に term-a と link-a の文脈
     expected:
