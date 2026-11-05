@@ -320,7 +320,7 @@ stakeholders:
     interest: 同じ語の文脈を何度も受け取らず、長い出力でも多く出た語の文脈を受け取れる
 trigger: モデルがツールを呼び、本文を持つ結果が返る
 preconditions:
-  - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
+  - 設定ファイルのパス（ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG`、無ければシェルの環境変数の `ALIAS_INJECT_CONFIG`、どちらも無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`）に設定ファイルがある
 success_guarantee: ツールの結果の本文はそのままで、そのセッションで初めて出た語の引用の文脈が `heading` の見出しの下に並んで結果の後ろに届く。
 minimal_guarantee: どの異常でもツールの呼び出しは止まらず、ツールの結果の本文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_tool_result_context.py

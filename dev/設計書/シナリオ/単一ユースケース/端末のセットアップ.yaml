@@ -1,0 +1,128 @@
+title: 端末のセットアップ
+lead: 利用者がスキル `global-setup` を実行すると、端末の設定（設定ファイル）を作るか今の構造へ移し、引用の文脈が追加されることを確かめる。
+issue: 63
+primary_actor: 利用者
+trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで `/alias-inject:global-setup` を実行する
+preconditions:
+  - alias-inject をユーザースコープで入れている
+  - '`claude` のコマンドが `PATH` にある'
+success_guarantee: 設定ファイルのパスの決め方で決まるパスに今の構造の設定ファイルがあり、試しの入力で引用の文脈が追加されることを確かめた結果が利用者に示される。
+minimal_guarantee: 利用者が断った書き換えはしない。`settings.json` の `env` の `ALIAS_INJECT_CONFIG` のほかのキーと、ファイルのほかの内容は変わらない。
+scenarios:
+  - name: 正常シナリオ
+    setup:
+      - name: Mock
+        description: 差し替えない。`claude` を起動し、スキルの実行と質問への回答を手で入力する
+        notes: '環境変数 `CLAUDE_CONFIG_DIR` と `XDG_CONFIG_HOME` を一時のフォルダにして `claude` を起動する'
+      - name: 端末の設定
+        description: settings.json の `env` とシェルの環境変数に `ALIAS_INJECT_CONFIG` が無く、既定のパスに設定ファイルが無い
+      - name: 読むリポジトリ
+        description: 一時のリポジトリの `dev-docs.yaml` が、語 `term-a` を持つ用語の YAML を `alias_type` が `term` の行で指す
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant S as global-setup
+        participant P as alias-inject
+        U->>CC: /alias-inject:global-setup を実行
+        CC->>S: スキルの手順を実行
+        S->>S: 既定のパスに設定ファイルが無い
+        S->>U: 設定ファイルの場所（既定のパスを推奨）・読むリポジトリの dev-docs.yaml・用語集の YAML を聞く
+        U->>S: 既定のパスと dev-docs.yaml のパスを答える
+        S->>S: settings.sample.yaml を元に、答えたパスを記載した設定ファイルを既定のパスに作る
+        S->>P: claude -p で term-a を含む文を送信
+        P->>CC: term-a の文脈を追加
+        S->>U: 作った設定ファイルのパスと、term-a の説明が回答に反映された結果を示す
+      ```
+    expected:
+      - 既定のパスに、`global.repositories` が答えた `dev-docs.yaml` を指す設定ファイルがある
+      - settings.json の `env` に `ALIAS_INJECT_CONFIG` が追加されていない
+      - スキルの結果に、作った設定ファイルのパスと、引用の文脈が追加されたことが示されている
+  - name: 正常シナリオ（既定と違う場所）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 端末の設定
+        description: 正常シナリオと同じ。settings.json の `env` に `ALIAS_INJECT_CONFIG` と別のキーを 1 つ持つ
+        notes: '`ALIAS_INJECT_CONFIG` は無いファイルを指す'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant S as global-setup
+        participant F as settings.json
+        U->>S: /alias-inject:global-setup を実行
+        S->>S: ALIAS_INJECT_CONFIG が指すパスに設定ファイルが無い
+        S->>U: 設定ファイルの場所を聞く
+        U->>S: 既定のパスと違う場所を答える
+        S->>S: 答えた場所に設定ファイルを作る
+        S->>F: env の ALIAS_INJECT_CONFIG を答えた場所にする
+        S->>U: 作った設定ファイルのパスと env に記載したキーを示す
+      ```
+    expected:
+      - 答えた場所に設定ファイルがある
+      - settings.json の `env` の `ALIAS_INJECT_CONFIG` が答えた場所を指している
+      - settings.json の `env` の別のキーと、ファイルのほかの内容が変わっていない
+  - name: 正常シナリオ（旧い構造の設定ファイル）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 端末の設定
+        description: 既定のパスの設定ファイルの `global.aliases` に、旧い構造（`type`・`fields`）の要素を持つ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant S as global-setup
+        U->>S: /alias-inject:global-setup を実行
+        S->>S: 既定のパスの設定ファイルに旧い構造の要素がある
+        S->>U: 『設定の移し替え』の手順で移す内容を示し、移してよいかを聞く
+        U->>S: 移してよいと答える
+        S->>S: 旧い構造の要素を今の構造へ移す
+        S->>U: 移した要素と確かめた結果を示す
+      ```
+    expected:
+      - 設定ファイルの `global.aliases` に旧い構造の要素が残っていない
+      - 移した要素の語の引用の文脈が追加されることが示されている
+  - name: 正常シナリオ（今の構造の設定ファイル）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 端末の設定
+        description: 既定のパスに、今の構造の設定ファイルがある
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant S as global-setup
+        U->>S: /alias-inject:global-setup を実行
+        S->>S: 既定のパスの設定ファイルが今の構造
+        S->>S: claude -p で引用の文脈が追加されることを確かめる
+        S->>U: 書き換えなかったことと確かめた結果を示す
+      ```
+    expected:
+      - 設定ファイルと settings.json が変わっていない
+      - スキルの結果に、引用の文脈が追加されたことが示されている
+  - name: 異常シナリオ（引用の文脈が追加されない）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 端末の設定
+        description: 既定のパスの設定ファイルの `global.repositories` が、無い `dev-docs.yaml` を指す
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant S as global-setup
+        participant P as alias-inject
+        U->>S: /alias-inject:global-setup を実行
+        S->>P: claude -p で設定ファイルの語を含む文を送信
+        P->>P: dev-docs.yaml が読めず、文脈を追加しない
+        S->>U: debug log の場所と直し方を示して止まる
+      ```
+    expected:
+      - スキルの結果に、引用の文脈が追加されなかったことと、debug log の場所と直し方が示されている
+      - 設定ファイルと settings.json が変わっていない
+notes:
+  E2E を持たない: スキルの手順はモデルが実行し、質問の文面と順序が決定的でないため、対応テストファイルを持たない。シナリオの結末は、スキルを手で実行して確かめる。
