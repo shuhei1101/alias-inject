@@ -148,8 +148,8 @@ class PromptContextTest(E2ETestCase):
     def test_error_when_config_unreadable(self) -> None:
         """設定ファイルが読めなくても入力は止まらず、文脈は追加されない（異常シナリオ（設定ファイルが読めない））"""
         # 準備
-        # ALIAS_INJECT_CONFIG が、無いファイルを指す
-        session = self.start_with_terms(config_exists=False)
+        # ALIAS_INJECT_CONFIG が、無いファイルを指す。既定のパスには term-a を照合できる設定ファイルがある
+        session = self.start_with_terms(config_exists=False, default_config=True)
         text = f"term-a について。{ANSWER_BRIEFLY}"
 
         # 実行
@@ -326,6 +326,65 @@ class PromptContextTest(E2ETestCase):
         self.assert_context_has_term(result, "term-a")
         self.assertNotIn("id: link-e", result.context_text)
         self.assert_sent_unchanged(result, text)
+
+
+    def test_normal_when_default_config_path(self) -> None:
+        """ALIAS_INJECT_CONFIG が無くても既定のパスの設定ファイルの文脈が追加される（正常シナリオ（既定のパスの設定ファイル））"""
+        # 準備
+        session = self.start_with_terms(config_source="default")
+        text = f"term-a について説明して。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assertIn("description: E2E 用の用語 term-a", result.context_text)
+        self.assert_sent_unchanged(result, text)
+
+    def test_normal_when_config_from_shell_env(self) -> None:
+        """シェルの環境変数が指す設定ファイルの文脈が追加される（正常シナリオ（シェルの環境変数の設定ファイル））"""
+        # 準備
+        session = self.start_with_terms(config_source="shell")
+        text = f"term-a について説明して。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assertIn("description: E2E 用の用語 term-a", result.context_text)
+        self.assert_sent_unchanged(result, text)
+
+    def test_normal_when_settings_env_preferred(self) -> None:
+        """settings.json の env とシェルの環境変数の両方があるときは settings.json の設定ファイルを読む（正常シナリオ（settings.json の env を優先））"""
+        # 準備
+        # シェルの環境変数が指す 2 つ目の設定ファイルは、link-a の行だけを持つ
+        shell_config = self.session.alias_dir / "shell-settings.yaml"
+        self.session.write_file(self.session.urls_dir / "link-a.yaml", url_text("link-a"))
+        self.session.write_file(shell_config, config_text(repositories=[], aliases=alias_lines("urls", "url", "urls/*.yaml")))
+        session = self.start_with_terms(env={"ALIAS_INJECT_CONFIG": str(shell_config)})
+
+        # 実行
+        result = session.submit(f"term-a と link-a について。{ANSWER_BRIEFLY}")
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assertNotIn("link-a", result.context_text)
+
+    def test_normal_when_config_missing(self) -> None:
+        """どこにも設定ファイルが無いときは入力が止まらず、文脈は追加されない（正常シナリオ（設定ファイルが無い））"""
+        # 準備
+        session = self.start_with_terms(config_exists=False, config_source="default")
+        text = f"term-a について。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_no_context(result)
+        # モデルの返事が返っている
+        self.assertTrue(any(line.get("type") == "assistant" for line in result.lines))
 
 
 if __name__ == "__main__":
