@@ -1,3 +1,4 @@
+import { matchPathGlob } from './loader'
 import { validateSchema } from './schema'
 
 const ALIAS_TYPES = ['term', 'doc', 'command', 'url', 'skill', 'tool', 'path', 'env', 'avoid'] as const
@@ -54,6 +55,8 @@ export type AliasConfig = {
   /** `records` の要素の本文のファイルのパスを持つ列の名前。`name` が空の要素の名前に使う */
   body_file?: string | undefined
   metadata: AliasMetadata
+  /** 行を照合に使用する作業場所の glob。書いたまま（解決は読む側が行う）。書かないときは undefined */
+  scope?: { cwd: string[] } | undefined
 }
 
 /** 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行 */
@@ -62,6 +65,8 @@ export type ResolvedAlias = AliasConfig & {
   origin: string
   /** `paths` を解決した絶対パスの glob */
   patterns: string[]
+  /** `scope.cwd` を `paths` と同じ基準で解決した絶対パスの glob。`scope` を書かない行は undefined */
+  cwdPatterns?: string[] | undefined
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -123,6 +128,7 @@ export function parseAliases({
       records: valid.records as string | undefined,
       body_file: valid.body_file as string | undefined,
       metadata: metadata as AliasMetadata,
+      scope: valid.scope as { cwd: string[] } | undefined,
     })
   }
   return { aliases, warnings }
@@ -143,6 +149,13 @@ export function dedupeAliases<T extends { id: string }>(aliases: readonly T[]): 
     kept.push(alias)
   }
   return { aliases: kept, warnings }
+}
+
+/** 読む行のうち、作業場所が `scope.cwd` のどの glob にも当たらない行を外す */
+export function filterByScope({ aliases, cwd }: { aliases: readonly ResolvedAlias[]; cwd: string }): ResolvedAlias[] {
+  return aliases.filter(
+    (alias) => alias.cwdPatterns === undefined || alias.cwdPatterns.some((pattern) => matchPathGlob({ pattern, path: cwd })),
+  )
 }
 
 /** 文書から列の名前が指す値を取る。`.` を含む列の名前は入れ子の列をたどり、途中でマッピングでない値に当たれば undefined */

@@ -287,5 +287,24 @@ settings:
     status: planned
     introduced:
       pr: 52
+  - key: global.aliases[].scope
+    title: 行の使用範囲
+    file: ~/.config/alias-inject/settings.yaml
+    type: object
+    required: false
+    description: 行を照合に使用する範囲。キーは `cwd` だけ。`dev-docs.yaml` の `documents` の行にも記載できる
+    missing: 全ての作業場所で行を使用する
+  - key: global.aliases[].scope.cwd
+    title: 行を使用する作業場所
+    file: ~/.config/alias-inject/settings.yaml
+    type: string[]
+    required: false
+    description: 行を照合に使用する作業場所の glob の並び。セッションを起動したプロジェクトの直下（worktree のセッションは worktree のパス）がどれかの glob に当たるときだけ、行の YAML を読み込んで照合する。`/**` で終わる glob はそのフォルダと配下のフォルダ、`/**` を付けないパスはそのフォルダだけに当たる。`*` はフォルダの区切りを除く任意の文字列。先頭の `~` はホームに展開し、相対パスは `paths` と同じ基準で解決する
+    missing: '`scope` を記載した行で `cwd` が無いときは、スキーマに合わない行として照合から除外し、理由を debug log に出す'
+    allowed: 1 件以上の空でない文字列。空の並び・並びでない値・文字列でない要素の行は、スキーマに合わない行として照合から除外し、理由を debug log に出す
+    notes:
+      書式: dev-docs の端末の設定の `sources[].scope` と同じ glob の書式
+      projects との使い分け: '`projects[].match` は設定のキー全体を起動したプロジェクトごとに重ねる。`scope.cwd` は 1 つの行を複数の作業場所に絞る'
+      metadata.cwd との違い: '`metadata.cwd` は command のコマンドを実行するフォルダを取る列の名前で、行の絞りには使用しない'
 refs:
   - dev/設計書/アーキテクチャ図/アーキテクチャ図#subsystems[plugin]

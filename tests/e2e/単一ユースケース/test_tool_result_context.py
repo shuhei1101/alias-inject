@@ -12,7 +12,9 @@ from support.harness import (
     alias_lines,
     cat_prompt,
     read_prompt,
+    scope_lines,
     subagent_read_prompt,
+    term_text,
     term_with_condition_text,
 )
 
@@ -157,6 +159,27 @@ class ToolResultContextTest(E2ETestCase):
         # 検証
         self.assert_no_tool_context(first, "Read")
         self.assert_tool_context_has_term(second, "term-c", "Read")
+
+    def test_normal_when_cwd_scoped(self) -> None:
+        """作業場所が scope.cwd の glob に当たらない行の語は、Read の結果に出ても文脈が追加されない（正常シナリオ（作業場所で絞った行））"""
+        # 準備
+        # term-s の行は起動したフォルダに当たらない別のフォルダだけに当たる
+        session = self.start_with_terms(
+            config_aliases=[
+                *alias_lines("scoped-terms", "term", "scoped/*.yaml"),
+                *scope_lines(f"{self.session.root}/other/**"),
+            ]
+        )
+        session.write_file(session.alias_dir / "scoped" / "term-s.yaml", term_text("term-s"))
+        # 読ませる入力の文には term-a・term-s を含めない
+        text = read_prompt(self.write_note("このファイルは term-a と term-s について書いたメモです。\n"))
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_tool_context_has_term(result, "term-a", "Read")
+        self.assertNotIn("id: term-s", result.tool_context_text("Read"))
 
 
 if __name__ == "__main__":

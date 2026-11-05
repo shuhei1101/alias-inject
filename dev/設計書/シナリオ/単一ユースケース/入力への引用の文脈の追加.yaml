@@ -368,6 +368,62 @@ scenarios:
       - term-e の文脈は追加されていない
       - 入力の送信は止まっていない
     test: test_error_when_inject_condition_invalid
+  - name: 正常シナリオ（作業場所で絞った行）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ。`claude` は一時の作業場所のフォルダで起動する
+        notes: '-'
+      - name: 設定ファイル
+        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `url` の行を 2 つ持つ。1 つ目の行は作業場所の絞りに起動したフォルダに当たる glob を、2 つ目の行は起動したフォルダに当たらない別のフォルダの glob を記載する
+        notes: キーの名前と glob の書き方はインターフェース定義設計で決める
+      - name: URL の YAML
+        description: 1 つ目の行が語 `link-a`、2 つ目の行が語 `link-b` を持つ YAML に当たる
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a・link-a・link-b を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 作業場所が絞りの glob に当たらない 2 つ目の行を照合から外す
+        P->>P: 照合で term-a と link-a が当たる
+        P->>CC: term-a と link-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a と link-a の文脈は追加されている
+      - link-b の文脈は追加されていない
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_cwd_scoped
+  - name: 異常シナリオ（作業場所の絞りが誤っている行）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に、作業場所の絞りを空の並びで記載した `alias_type` が `url` の行を 1 つ持つ
+        notes: 行の `paths` は語 `link-e` を持つ YAML に当たる。並びでない値・文字列でない要素も同じ結末になる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と link-e を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 作業場所の絞りが誤っている行を照合から外す
+        P->>CC: term-a の文脈だけを追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a の文脈は追加されている
+      - link-e の文脈は追加されていない
+      - 入力の送信は止まっていない
+    test: test_error_when_cwd_scope_invalid
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者

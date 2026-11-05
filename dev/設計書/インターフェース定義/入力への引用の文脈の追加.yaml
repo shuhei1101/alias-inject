@@ -708,6 +708,73 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で term-e の YAML のパス・`term-e`・`inject_when` を含む行と、term-f の YAML のパス・`term-f`・`op` を含む行が届いている
     test: test_error_when_inject_condition_invalid
+  - name: 正常系（作業場所で絞った行）
+    summary: 作業場所が scope.cwd の glob に当たらない行を、YAML を読み込まずに照合から除外する
+    setup:
+      - name: Mock
+        description: 正常系に加え、起動したプロジェクトの直下（`$.session.root()`）を `/repo/sample/.claude/worktrees/feat-x` にする。`fs.read` の呼ばれたパスを記録する
+        notes: worktree のセッションは worktree のパスで判定することを確認する
+      - name: 設定ファイル
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `alias_type: url`・`records: links` の行を 3 つ持つ。`id: sample-links`（`scope.cwd: [/repo/sample/**]`・`paths: [/repo/links/sample.yaml]`）、`id: other-links`（`scope.cwd: [/repo/other/**]`・`paths: [/repo/links/other.yaml]`）、`id: root-links`（`scope.cwd: [/repo/sample]`・`paths: [/repo/links/root.yaml]`）'
+        notes: '`/**` を付けない `/repo/sample` は、そのフォルダだけに当たり、配下の worktree には当たらない'
+      - name: URL の YAML
+        description: '`sample.yaml`・`other.yaml`・`root.yaml` の配列 `links` に、それぞれ `id: link-a`・`id: link-b`・`id: link-c` の要素（`url` を持つ）を 1 つ持つ'
+        notes: '-'
+      - name: 入力
+        description: 「term-a と link-a と link-b と link-c」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+
+        CC->>IF: term-a と link-a と link-b と link-c
+        IF->>FS: 設定ファイルと dev-docs.yaml を読み込む
+        FS-->>IF: aliases と documents
+        IF->>IF: $.session.root() が scope.cwd に当たらない other-links と root-links を除外する
+        IF->>FS: 残った行の YAML だけを読み込む
+        FS-->>IF: 文書
+        IF-->>CC: context に term-a と link-a
+      ```
+    expected:
+      - 返る `context` に term-a と link-a があり、link-b と link-c が無い
+      - '`/repo/links/other.yaml` と `/repo/links/root.yaml` に `fs.read` が呼ばれていない'
+      - テストの `on` の `ui.log` に行が届いていない
+    test: test_normal_when_cwd_scoped
+  - name: 異常系（作業場所の絞りが誤っている行）
+    summary: scope.cwd が 1 つ以上の文字列の並びでない行を、スキーマに合わない行として照合から除外する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 設定ファイル
+        description: '正常系の `global.repositories` に加え、`global.aliases` に `alias_type: url`・`records: links` の行を 2 つ持つ。`id: empty-scope`（`scope.cwd: []`）と `id: string-scope`（`scope.cwd: /repo/sample/**`）'
+        notes: 文字列でない要素・`scope` の未知のキーも同じ結末になる
+      - name: URL の YAML
+        description: '2 つの行の `paths` が、それぞれ `id: link-e`・`id: link-f` の要素を持つ YAML に当たる'
+        notes: '-'
+      - name: 入力
+        description: 「term-a と link-e と link-f」
+        notes: '-'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+
+        CC->>IF: term-a と link-e と link-f
+        IF->>FS: 設定ファイルを読み込む
+        IF->>IF: aliases の行をスキーマで検証し、empty-scope と string-scope を除外する
+        IF-->>CC: context に term-a だけ
+      ```
+    expected:
+      - 返る `context` に term-a があり、link-e と link-f が無い
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパス・`empty-scope`・`scope.cwd` を含む行と、`string-scope`・`scope.cwd` を含む行が届いている
+    test: test_error_when_cwd_scope_invalid
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
@@ -776,7 +843,7 @@ exceptions:
     condition: '`repositories` の要素の `config` が指す `dev-docs.yaml` が無い・読めない・書式が誤っているか、`documents` が並びでない'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で `dev-docs.yaml` のパスと理由を debug log に出し、そのリポジトリの行だけを照合から外す'
   - name: なし（スキーマに合わない行）
-    condition: '設定ファイルの `aliases` の行か、`dev-docs.yaml` の `documents` のうち `alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧い構造の要素・9 つに無い `alias_type`・列名の文字列でない `metadata` の値を含む）か、`dev-docs.yaml` の `documents` の行が行の `alias_type` を持たず `metadata.alias_type` を持つか、同じ出所の中で先の行と `id` が重なる'
+    condition: '設定ファイルの `aliases` の行か、`dev-docs.yaml` の `documents` のうち `alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧い構造の要素・9 つに無い `alias_type`・列名の文字列でない `metadata` の値・1 つ以上の文字列の並びでない `scope.cwd` を含む）か、`dev-docs.yaml` の `documents` の行が行の `alias_type` を持たず `metadata.alias_type` を持つか、同じ出所の中で先の行と `id` が重なる'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で出所（`dev-docs.yaml` か設定ファイルのパス）・行の `id`（無ければ並びの位置）・理由を debug log に出し、その行だけを照合から外す'
   - name: なし（必須の値が空の文書）
     condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空（env は `url`・`port` の両方が空）
@@ -816,6 +883,10 @@ constraints:
   - item: 照合条件
     constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前が当たった文書のうち照合条件に当たる文書だけを残す。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
     notes: 照合条件の評価は、照合で当たった文書だけに行う。照合条件で外れた語は記録に入れず、次に出た入力で追加の対象になる
+  - item: 作業場所の絞り
+    constraint: エイリアスの元の行（設定ファイルの `aliases` の行と `dev-docs.yaml` の `documents` の行）が `scope.cwd` に glob を 1 つ以上並べたとき、セッションを起動したプロジェクトの直下（`$.session.root()`）がどれかの glob に当たる場合だけ、その行を照合に使用する。`scope` を記載しない行は全ての作業場所で使用する。glob は先頭の `~` をホームに展開し、相対パスは `paths` と同じ基準で解決する。`/**` で終わる glob はそのフォルダと配下のフォルダに当たり、`/**` を付けないパスはそのフォルダだけに当たる。`*` はフォルダの区切りを除く任意の文字列に当たる
+    decided_by: dev/設計書/設定/プラグイン#settings[global.aliases[].scope.cwd]
+    notes: 書式は dev-docs の `sources[].scope` と同じ。worktree のセッションは worktree のパスで判定する。当たらない行の YAML は読み込まない
 refs:
   - dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加#
   - dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し#

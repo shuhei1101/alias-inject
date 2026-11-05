@@ -349,7 +349,7 @@ functions:
       2. global の値から始め、選んだ要素を順に重ねる。`repositories`・`aliases`・`exclude`・`excludeTools` は後ろに追加し、それ以外は undefined でない値で置き換える（`origins` の null も置き換える）
       3. 各 `repositories` の `config` を、`baseDir` が `config` なら設定ファイルのフォルダ（親のフォルダ）、`project` なら `projectRoot` を基準にパスの解決に通し、同じパスは先の 1 つだけを残す
       4. `aliases` を id の重なりの確認に通し、理由を warnings にする
-      5. 残した `aliases` の `paths` を、global の要素は設定ファイルのフォルダ、projects の要素は `projectRoot` を基準にパスの解決に通して `patterns` にし、`origin` を `configPath` にする
+      5. 残した `aliases` の `paths` を、global の要素は設定ファイルのフォルダ、projects の要素は `projectRoot` を基準にパスの解決に通して `patterns` にし、`scope` を持つ行は `scope.cwd` を同じ基準でパスの解決に通して `cwdPatterns` にし（持たない行は undefined）、`origin` を `configPath` にする
       6. 重ねた値を返す
     callees:
       - dev/設計書/モジュール構成/プラグイン/設定#functions[matchProject]
@@ -381,6 +381,12 @@ functions:
         condition: global の exclude が `[a]`・excludeTools が `[Bash]`・maxItems が 20・heading が既定、当たる 2 要素が順に exclude `[b]`・excludeTools `[Grep]`・maxItems 5 と maxItems 3・origins null（global は `['user']`）
         mock: なし
         expected: exclude が `[a, b]`、excludeTools が `[Bash, Grep]`、maxItems が 3、origins が null、heading が既定
+      - name: test_resolve_settings_when_cwd_scope
+        case: 正常
+        summary: '`scope.cwd` を `paths` と同じ基準で解決し、記載しない行は undefined'
+        condition: 'global の aliases に `scope.cwd: [~/repo/a/**]` の行と `scope` を記載しない行、当たる sample の aliases に `scope.cwd: [sub/**]` の行。`home` が `/home/u`、`projectRoot` が `/repo/sample/wt`'
+        mock: なし
+        expected: cwdPatterns が順に `['/home/u/repo/a/**']`・undefined・`['/repo/sample/wt/sub/**']`
   - name: isOriginAllowed
     title: 出所の判定
     kind: 関数

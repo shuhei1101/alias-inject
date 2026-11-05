@@ -72,6 +72,29 @@ export function matchSegment(name: string, segment: string): boolean {
   return true
 }
 
+// 区切りの並びの `index` 以降が、パスの区切りの並びの `position` 以降に当たるか
+function matchSegments(patternParts: string[], index: number, pathParts: string[], position: number): boolean {
+  if (index === patternParts.length) return position === pathParts.length
+  const part = patternParts[index] as string
+  if (part === '**') {
+    // `**` は 0 個以上の区切りに当たる
+    for (let next = position; next <= pathParts.length; next++) {
+      if (matchSegments(patternParts, index + 1, pathParts, next)) return true
+    }
+    return false
+  }
+  const name = pathParts[position]
+  if (name === undefined) return false
+  const matched = part.includes('*') ? matchSegment(name, part) : name === part
+  return matched && matchSegments(patternParts, index + 1, pathParts, position + 1)
+}
+
+/** 絶対パスのフォルダが、`*`・`**` を含む絶対パスの glob に当たるかを判定する */
+export function matchPathGlob({ pattern, path }: { pattern: string; path: string }): boolean {
+  const split = (value: string) => value.split('/').filter((part) => part !== '')
+  return matchSegments(split(pattern), 0, split(path), 0)
+}
+
 // リンクの指す先まで調べた項目の種類と更新時刻。指す先が無いリンクは undefined
 async function inspect(
   $: EngineInterface,

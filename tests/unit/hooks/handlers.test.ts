@@ -138,6 +138,24 @@ test('test_handle_prompt_submit_when_inject_condition', async ($, on) => {
   expect(second.context?.[0]).toContain('Term-C')
 })
 
+// 作業場所が scope.cwd に当たらない行の YAML を読み込まず、その語の文脈を追加しない（正常系）
+test('test_handle_prompt_submit_when_cwd_scoped', async ($, on) => {
+  // 準備
+  const termSPath = `${CONFIG_DIR}/scoped/term-s.yaml`
+  const fs = makeFs({ extraAliases: [...termAliasLines('scoped', 'scoped/*.yaml', 4), '      scope:', '        cwd: [/repo/other/**]'] })
+  fs.write(termSPath, 'id: term-s\nname: Term-S\ndescription: 説明 S\n')
+  installWorld(on, { fs, settings: SETTINGS, projectRoot: '/repo/sample' })
+
+  // 実行
+  const result = await submit($, 'term-a と term-s')
+
+  // 検証
+  expect(result.context?.length).toBe(1)
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(result.context?.[0]).not.toContain('Term-S')
+  expect(fs.reads).not.toContain(termSPath)
+})
+
 // 圧縮されたら記録を消去する（正常系）
 test('test_handle_session_compact', async ($, on) => {
   // 準備

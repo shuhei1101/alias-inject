@@ -1,0 +1,14 @@
+話し合いの端末の設定への作業場所の絞りの追加:
+  説明: "端末の設定（`~/.config/alias-inject/settings.yaml`）の `global.aliases` の `mindstella-nandemo-terms` の行に、作業場所の絞り `scope.cwd` を追加する。値は Issue #62 の一案の glob（`/mnt/c/Users/shuhe/repo/tmp/何でも会話/**`・`/mnt/c/Users/shuhe/repo/aituber/**`・`/mnt/c/Users/shuhe/repo/claude-balancer/**`）"
+  タグ: [設定の書き換え]
+  実行者: tester
+  時期: master へ入った後
+  回数: 1 回限り
+  可逆: true
+  疎通確認: 話し合いの端末の設定への作業場所の絞りの追加/疎通確認.py
+  実行: 話し合いの端末の設定への作業場所の絞りの追加/実行.py
+  確認: 話し合いの端末の設定への作業場所の絞りの追加/確認.py
+  切り戻し: 話し合いの端末の設定への作業場所の絞りの追加/切り戻し.py
+  失敗時: 既定の対処を 1 回、2 回連続で失敗したら依頼元へ返す
+  確認方法: 端末の設定の `mindstella-nandemo-terms` の行の `scope.cwd` に 3 つの glob があり、alias-inject のプラグインの debug log にその行を外した理由の行が出ていない
+  状態: "-"

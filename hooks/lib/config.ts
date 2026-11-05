@@ -259,6 +259,7 @@ export function resolveSettings(
     ...alias,
     origin: where.configPath,
     patterns: alias.paths.map((path) => resolvePath({ path, home: where.home, baseDir: baseDirOf(baseDir) })),
+    cwdPatterns: alias.scope?.cwd.map((path) => resolvePath({ path, home: where.home, baseDir: baseDirOf(baseDir) })),
   }))
   const deduped = dedupeAliases(resolvedAliases)
 

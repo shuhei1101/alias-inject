@@ -328,6 +328,29 @@ flows:
       - 1 回目に返る `context` が受け取ったまま
       - 2 回目に返る `context` の末尾に term-c の文脈がある
     test: test_normal_when_inject_condition
+  - name: 正常系（作業場所で絞った行）
+    summary: 作業場所が scope.cwd の glob に当たらない行の語を、ツールの結果の本文に出ても追加しない
+    setup:
+      - name: Mock
+        description: 正常系と同じファイル表に、[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の正常系（作業場所で絞った行）の設定ファイル・URL の YAML と起動したプロジェクトの直下を加える
+        notes: '-'
+      - name: ツールの結果
+        description: '`text` が「term-a と link-a と link-b」'
+        notes: '-'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 本文「term-a と link-a と link-b」
+        IF->>IF: $.session.root() が scope.cwd に当たらない other-links と root-links を除外する
+        IF->>IF: 照合で term-a と link-a が当たる
+        IF-->>CC: 結果の context の末尾に term-a と link-a の文脈
+    expected:
+      - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
+    test: test_normal_when_cwd_scoped
 lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ語と照合し、その会話で初めて出た語の引用の文脈を、本文を変えずに `context` に追加して返す。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
@@ -450,5 +473,9 @@ constraints:
   - item: 変数参照の値との並び
     constraint: 引用の文脈の要素を先に、変数参照の値の行の要素を後に追加する。片方が失敗しても、もう片方は追加する
     notes: '[読んだ本文への変数参照の値の追加](./読んだ本文への変数参照の値の追加.yaml)'
+  - item: 作業場所の絞り
+    constraint: '[入力への引用の文脈の追加](./入力への引用の文脈の追加.yaml) の作業場所の絞りと同じ'
+    decided_by: dev/設計書/設定/プラグイン#settings[global.aliases[].scope.cwd]
+    notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
 refs:
   - dev/設計書/シナリオ/単一ユースケース/ツールの結果への引用の文脈の追加#

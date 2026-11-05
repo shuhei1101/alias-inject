@@ -1,7 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 import { ALIAS_SCHEMA } from '../../../../hooks/lib/aliases-schema'
-import { dedupeAliases, missingKeys, parseAliases, resolveMetadata } from '../../../../hooks/lib/alias'
-import type { AliasKey, AliasMetadata } from '../../../../hooks/lib/alias'
+import { dedupeAliases, filterByScope, missingKeys, parseAliases, resolveMetadata } from '../../../../hooks/lib/alias'
+import type { AliasKey, AliasMetadata, ResolvedAlias } from '../../../../hooks/lib/alias'
 
 // スキーマに合う term の行（設定ファイルや dev-docs.yaml の documents に記載する構造）。
 // 行の `enabled` と `schema`、`metadata` の `tags` はエイリアスの元の行が持たないキーで、取り出すときに外れる
@@ -209,4 +209,48 @@ test('test_missing_keys_when_env', () => {
   // 検証
   expect(portOnlyMissing).toEqual([])
   expect(neitherMissing).toEqual(['url', 'port'])
+})
+
+// `scope` を記載した行は scope を持ち、記載しない行は undefined（正常系）
+test('test_parse_aliases_when_scope', () => {
+  // 準備
+  const scoped = { id: 'links', paths: ['links.yaml'], alias_type: 'url', scope: { cwd: ['/repo/a/**'] } }
+  const unscoped = { id: 'others', paths: ['others.yaml'], alias_type: 'url' }
+
+  // 実行
+  const result = parseAliases({ items: [scoped, unscoped], schema: ALIAS_SCHEMA, path: 'aliases' })
+
+  // 検証
+  expect(result.aliases[0]?.scope).toEqual({ cwd: ['/repo/a/**'] })
+  expect(result.aliases[1]?.scope).toBeUndefined()
+  expect(result.warnings).toEqual([])
+})
+
+// 読む行。`cwdPatterns` だけを変える
+function scopedRow(id: string, cwdPatterns: string[] | undefined): ResolvedAlias {
+  return {
+    id,
+    paths: [`${id}.yaml`],
+    alias_type: 'term',
+    metadata: {},
+    origin: '/home/u/.config/alias-inject/settings.yaml',
+    patterns: [`/home/u/.config/alias-inject/${id}.yaml`],
+    cwdPatterns,
+  }
+}
+
+// 絞りを持たない行は残し、作業場所が当たらない行を除外する（正常系）
+test('test_filter_by_scope', () => {
+  // 準備
+  const aliases = [
+    scopedRow('unscoped', undefined),
+    scopedRow('sample', ['/repo/sample/**']),
+    scopedRow('other', ['/repo/other/**', '/repo/sample']),
+  ]
+
+  // 実行
+  const result = filterByScope({ aliases, cwd: '/repo/sample/wt' })
+
+  // 検証
+  expect(result.map((alias) => alias.id)).toEqual(['unscoped', 'sample'])
 })

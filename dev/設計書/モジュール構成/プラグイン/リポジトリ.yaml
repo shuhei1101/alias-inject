@@ -80,7 +80,7 @@ functions:
       2. 値が null、または `documents` を持たないマッピングなら、行も理由も空で返す。それ以外のマッピングでない値は RepositoryError を投げる
       3. `documents` が並びでなければ RepositoryError を投げる。トップレベルの `aliases` と他のキーは読まない
       4. 行の取り出し（path は `documents`、`aliasTypeOnly` は true）と id の重なりの確認をし、両方の理由を warnings につなぐ
-      5. 各行の `paths` を `dev-docs.yaml` のフォルダ（親のフォルダ）を基準にパスの解決に通して `patterns` にし、`origin` を path にする
+      5. 各行の `paths` を `dev-docs.yaml` のフォルダ（親のフォルダ）を基準にパスの解決に通して `patterns` にし、`scope` を持つ行は `scope.cwd` を同じ基準でパスの解決に通して `cwdPatterns` にし（持たない行は undefined）、`origin` を path にする
     callees:
       - dev/設計書/モジュール構成/プラグイン/読み込み#functions[parseYaml]
       - dev/設計書/モジュール構成/プラグイン/エイリアス#functions[parseAliases]
@@ -113,6 +113,12 @@ functions:
         mock: なし
         expected: どれも RepositoryError で、path が `dev-docs.yaml` のパス
         exception: 書式の誤り・`documents` が並びでない
+      - name: test_parse_repository_when_cwd_scope
+        case: 正常
+        summary: '`documents` の行の `scope.cwd` を `dev-docs.yaml` のフォルダから解決する'
+        condition: 'path が `/repo/knowledge/dev-docs.yaml`。`documents` に `scope.cwd: [../sample/**]` の term の行と、`scope` を記載しない term の行'
+        mock: なし
+        expected: cwdPatterns が順に `['/repo/sample/**']`・undefined
   - name: loadRepositoryAliases
     title: dev-docs.yaml の読み込み
     kind: 関数

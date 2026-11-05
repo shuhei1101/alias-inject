@@ -123,3 +123,40 @@ export const TERM_C_WITH_CONDITION = [
   '      values: [Python]',
   '',
 ].join('\n')
+
+/** 作業場所で絞った行のテストの、起動したプロジェクトの直下（worktree のパス） */
+export const SCOPED_PROJECT_ROOT = '/repo/sample/.claude/worktrees/feat-x'
+
+/** 作業場所で絞った行のテストの URL の YAML のパス */
+export const SCOPED_LINKS = {
+  sample: '/repo/links/sample.yaml',
+  other: '/repo/links/other.yaml',
+  root: '/repo/links/root.yaml',
+} as const
+
+/** `scope.cwd` の glob で絞った URL の行（sample-links・other-links・root-links）の `aliases` の行 */
+export const CWD_SCOPED_ALIASES = [
+  ...aliasLines({ id: 'sample-links', type: 'url', paths: SCOPED_LINKS.sample, records: 'links' }),
+  '  scope:',
+  '    cwd: [/repo/sample/**]',
+  ...aliasLines({ id: 'other-links', type: 'url', paths: SCOPED_LINKS.other, records: 'links' }),
+  '  scope:',
+  '    cwd: [/repo/other/**]',
+  ...aliasLines({ id: 'root-links', type: 'url', paths: SCOPED_LINKS.root, records: 'links' }),
+  '  scope:',
+  '    cwd: [/repo/sample]',
+]
+
+/** 配列 `links` に `id` の要素を 1 つ持つ URL の YAML の本文 */
+export function linksYaml(id: string): string {
+  return `links:\n  - id: ${id}\n    url: https://example.com/${id}\n`
+}
+
+/** `CWD_SCOPED_ALIASES` の行を設定ファイルに持ち、それぞれの URL の YAML（link-a・link-b・link-c）を加えたファイル表 */
+export function makeCwdScopedFs(): MemoryFs {
+  const fs = makeFs(makeConfig({ aliases: CWD_SCOPED_ALIASES }))
+  fs.write(SCOPED_LINKS.sample, linksYaml('link-a'))
+  fs.write(SCOPED_LINKS.other, linksYaml('link-b'))
+  fs.write(SCOPED_LINKS.root, linksYaml('link-c'))
+  return fs
+}

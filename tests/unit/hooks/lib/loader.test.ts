@@ -3,6 +3,7 @@ import {
   clearCache,
   expandFiles,
   expandHome,
+  matchPathGlob,
   matchSegment,
   parentDir,
   parseYaml,
@@ -300,4 +301,35 @@ test('test_parent_dir', () => {
   // 検証
   expect(nested).toBe('/repo/knowledge')
   expect(root).toBe('/')
+})
+
+// `/**` で終わる glob はそのフォルダと配下のフォルダに当たる（正常系）
+test('test_match_path_glob_when_descendants', () => {
+  // 実行
+  const results = ['/repo/sample', '/repo/sample/.claude/worktrees/feat-x', '/repo/sample2', '/repo'].map((path) =>
+    matchPathGlob({ pattern: '/repo/sample/**', path }),
+  )
+
+  // 検証
+  expect(results).toEqual([true, true, false, false])
+})
+
+// `/**` を付けないパスはそのフォルダだけに当たる（正常系）
+test('test_match_path_glob_when_folder_only', () => {
+  // 実行
+  const results = ['/repo/sample', '/repo/sample/sub'].map((path) => matchPathGlob({ pattern: '/repo/sample/', path }))
+
+  // 検証
+  expect(results).toEqual([true, false])
+})
+
+// `*` は 1 つの区切り、途中の `**` は任意の深さに当たる（正常系）
+test('test_match_path_glob_when_stars', () => {
+  // 実行
+  const single = ['/repo/a/docs', '/repo/a/b/docs'].map((path) => matchPathGlob({ pattern: '/repo/*/docs', path }))
+  const deep = ['/repo/wt', '/repo/a/b/wt', '/repo/a/wt2'].map((path) => matchPathGlob({ pattern: '/repo/**/wt', path }))
+
+  // 検証
+  expect(single).toEqual([true, false])
+  expect(deep).toEqual([true, true, false])
 })

@@ -50,6 +50,9 @@ global:
     - id: avoids
       paths: [avoids/*.yaml]
       alias_type: avoid
+      # 行を照合に使用する作業場所の glob。/** で終わる glob はそのフォルダと配下のフォルダに当たる。記載しないときは全ての作業場所で使用する
+      scope:
+        cwd: [~/repo/sample/**]
     - id: guides
       paths: [guides/files.yaml]
       alias_type: doc

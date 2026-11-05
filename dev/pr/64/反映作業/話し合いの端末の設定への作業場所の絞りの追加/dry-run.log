@@ -1,0 +1,11 @@
+前提確認: ok
+--- /home/shuhei2441/.config/alias-inject/settings.yaml
++++ /home/shuhei2441/.config/alias-inject/settings.yaml
+@@ -32,3 +32,5 @@
+         aliases: aliases
+         description: meaning
+         avoid: avoid
++      scope:
++        cwd: ["/mnt/c/Users/shuhe/repo/tmp/何でも会話/**", "/mnt/c/Users/shuhe/repo/aituber/**", "/mnt/c/Users/shuhe/repo/claude-balancer/**"]
+検証: ok
+scope.cwd の追加: changed

@@ -58,6 +58,7 @@ export function parseRepository({
       ...alias,
       origin: path,
       patterns: alias.paths.map((pattern) => resolvePath({ path: pattern, home, baseDir })),
+      cwdPatterns: alias.scope?.cwd.map((pattern) => resolvePath({ path: pattern, home, baseDir })),
     })),
     warnings: [...parsedAliases.warnings, ...deduped.warnings],
   }
