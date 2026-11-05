@@ -327,7 +327,6 @@ class PromptContextTest(E2ETestCase):
         self.assertNotIn("id: link-e", result.context_text)
         self.assert_sent_unchanged(result, text)
 
-
     def test_normal_when_default_config_path(self) -> None:
         """ALIAS_INJECT_CONFIG が無くても既定のパスの設定ファイルの文脈が追加される（正常シナリオ（既定のパスの設定ファイル））"""
         # 準備
