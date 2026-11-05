@@ -66,7 +66,7 @@ export type ResolvedAlias = AliasConfig & {
   /** `paths` を解決した絶対パスの glob */
   patterns: string[]
   /** `scope.cwd` を `paths` と同じ基準で解決した絶対パスの glob。`scope` を書かない行は undefined */
-  cwdPatterns: string[] | undefined
+  cwdPatterns?: string[] | undefined
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
