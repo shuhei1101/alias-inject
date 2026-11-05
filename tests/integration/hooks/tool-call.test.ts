@@ -1,6 +1,15 @@
 import { describe, expect, test } from 'claude-code/testing'
 import { callTool, installToolWorld, numberedNames, submit } from '../../unit/hooks/support/engine'
-import { CONFIG_PATH, SETTINGS, TERMS_DIR, TERM_C_WITH_CONDITION, makeConfig, makeFs } from './support/fixtures'
+import {
+  CONFIG_PATH,
+  SCOPED_PROJECT_ROOT,
+  SETTINGS,
+  TERMS_DIR,
+  TERM_C_WITH_CONDITION,
+  makeConfig,
+  makeCwdScopedFs,
+  makeFs,
+} from './support/fixtures'
 
 // `env -0` の出力。名前と値の組を NUL で区切る
 function envOutput(entries: Record<string, string>): string {
@@ -396,5 +405,22 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(first).toEqual(firstAnswer)
     expect(second.context?.length).toBe(2)
     expect(second.context?.[1]).toContain('id: term-c')
+  })
+
+  // 作業場所が scope.cwd の glob に当たらない行の語を、ツールの結果の本文に出ても追加しない（正常系）
+  test('test_normal_when_cwd_scoped', async ($, on) => {
+    // 準備
+    const world = installToolWorld(on, { fs: makeCwdScopedFs(), settings: SETTINGS, projectRoot: SCOPED_PROJECT_ROOT })
+    world.answer = { result: 'r', text: 'term-a と link-a と link-b', context: ['other'] }
+
+    // 実行
+    const result = await callTool($, readInput())
+
+    // 検証
+    expect(result.context?.length).toBe(2)
+    const context = result.context?.[1] ?? ''
+    expect(context).toContain('Term-A')
+    expect(context).toContain('link-a')
+    expect(context).not.toContain('link-b')
   })
 })

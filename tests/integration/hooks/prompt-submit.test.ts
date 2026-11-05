@@ -7,12 +7,16 @@ import {
   DEV_DOCS_PATH,
   DOCS_DIR,
   KNOWLEDGE_DIR,
+  SCOPED_LINKS,
+  SCOPED_PROJECT_ROOT,
   SETTINGS,
   TERMS_DIR,
   TERM_C_WITH_CONDITION,
   aliasLines,
   indent,
+  linksYaml,
   makeConfig,
+  makeCwdScopedFs,
   makeDevDocs,
   makeFs,
   termAliasLines,
@@ -546,4 +550,60 @@ test('test_error_when_inject_condition_invalid', async ($, on) => {
   const debugOf = (path: string) => world.logs.filter((line) => line.to === 'debug' && line.text.includes(path))
   expect(debugOf(emptyBundlePath).some((line) => line.text.includes('term-e') && line.text.includes('inject_when'))).toBe(true)
   expect(debugOf(unknownOpPath).some((line) => line.text.includes('term-f') && line.text.includes('op'))).toBe(true)
+})
+
+// 作業場所が scope.cwd の glob に当たらない行を、YAML を読み込まずに照合から除外する（正常系）
+test('test_normal_when_cwd_scoped', async ($, on) => {
+  // 準備
+  // worktree のセッションは worktree のパスで判定する
+  const fs = makeCwdScopedFs()
+  const world = installWorld(on, { fs, settings: SETTINGS, projectRoot: SCOPED_PROJECT_ROOT })
+
+  // 実行
+  const result = await submit($, 'term-a と link-a と link-b と link-c')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('Term-A')
+  expect(context).toContain('link-a')
+  expect(context).not.toContain('link-b')
+  // /** を付けない /repo/sample は、配下の worktree に当たらない
+  expect(context).not.toContain('link-c')
+  expect(fs.reads).not.toContain(SCOPED_LINKS.other)
+  expect(fs.reads).not.toContain(SCOPED_LINKS.root)
+  expect(world.logs).toEqual([])
+})
+
+// scope.cwd が 1 つ以上の文字列の並びでない行を、スキーマに合わない行として照合から除外する（異常系）
+test('test_error_when_cwd_scope_invalid', async ($, on) => {
+  // 準備
+  const emptyPath = `${CONFIG_DIR}/links/empty.yaml`
+  const stringPath = `${CONFIG_DIR}/links/string.yaml`
+  const config = makeConfig({
+    aliases: [
+      ...aliasLines({ id: 'empty-scope', type: 'url', paths: emptyPath, records: 'links' }),
+      '  scope:',
+      '    cwd: []',
+      ...aliasLines({ id: 'string-scope', type: 'url', paths: stringPath, records: 'links' }),
+      '  scope:',
+      '    cwd: /repo/sample/**',
+    ],
+  })
+  const fs = makeFs(config)
+  fs.write(emptyPath, linksYaml('link-e'))
+  fs.write(stringPath, linksYaml('link-f'))
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a と link-e と link-f')
+
+  // 検証
+  const context = result.context?.[0] ?? ''
+  expect(context).toContain('Term-A')
+  expect(context).not.toContain('link-e')
+  expect(context).not.toContain('link-f')
+  // 設定ファイルのパス・行の id・scope.cwd を含む行が debug log に届く
+  const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
+  expect(debugLines.some((line) => line.text.includes('empty-scope') && line.text.includes('scope.cwd'))).toBe(true)
+  expect(debugLines.some((line) => line.text.includes('string-scope') && line.text.includes('scope.cwd'))).toBe(true)
 })
