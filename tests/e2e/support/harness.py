@@ -355,6 +355,11 @@ def alias_lines(
     ]
 
 
+def scope_lines(*globs: str) -> list[str]:
+    """エイリアスの元の行に続ける作業場所の絞り `scope.cwd` の行（字下げなし）"""
+    return ["  scope:", f"    cwd: [{', '.join(globs)}]"]
+
+
 def legacy_alias_lines(alias_id: str, alias_type: str, paths: str) -> list[str]:
     """`metadata` を持たない旧い構造の aliases の要素 1 つの行（`type` と `fields` で書く）"""
     return [

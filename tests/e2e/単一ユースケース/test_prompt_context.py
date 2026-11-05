@@ -19,6 +19,7 @@ from support.harness import (
     metadata_alias_type_lines,
     path_of,
     path_text,
+    scope_lines,
     skill_of,
     skill_text,
     term_text,
@@ -276,6 +277,54 @@ class PromptContextTest(E2ETestCase):
         # 検証
         self.assert_context_has_term(result, "term-a")
         self.assertNotIn("id: term-e", result.context_text)
+        self.assert_sent_unchanged(result, text)
+
+    def test_normal_when_cwd_scoped(self) -> None:
+        """作業場所が scope.cwd の glob に当たらない行の文脈は追加されない（正常シナリオ（作業場所で絞った行））"""
+        # 準備
+        # 1 つ目の行は起動したフォルダに当たり、2 つ目の行は別のフォルダだけに当たる
+        project_glob = f"{self.session.project_dir}/**"
+        other_glob = f"{self.session.root}/other/**"
+        session = self.start_with_terms(
+            config_aliases=[
+                *alias_lines("here-links", "url", "urls/link-a.yaml", records="links", metadata=["name: title"]),
+                *scope_lines(project_glob),
+                *alias_lines("other-links", "url", "urls/link-b.yaml", records="links", metadata=["name: title"]),
+                *scope_lines(other_glob),
+            ]
+        )
+        session.write_file(session.urls_dir / "link-a.yaml", url_links_text("link-a"))
+        session.write_file(session.urls_dir / "link-b.yaml", url_links_text("link-b"))
+        text = f"term-a と link-a と link-b について。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assert_context_has_entry(result, "URL", "link-a", f"url: {url_of('link-a')}")
+        self.assertNotIn("id: link-b", result.context_text)
+        self.assert_sent_unchanged(result, text)
+
+    def test_error_when_cwd_scope_invalid(self) -> None:
+        """作業場所の絞りが誤っている行だけが外れ、他の行の文脈は追加される（異常シナリオ（作業場所の絞りが誤っている行））"""
+        # 準備
+        session = self.start_with_terms(
+            config_aliases=[
+                *alias_lines("empty-scope", "url", "urls/link-e.yaml", records="links", metadata=["name: title"]),
+                "  scope:",
+                "    cwd: []",
+            ]
+        )
+        session.write_file(session.urls_dir / "link-e.yaml", url_links_text("link-e"))
+        text = f"term-a と link-e について。{ANSWER_BRIEFLY}"
+
+        # 実行
+        result = session.submit(text)
+
+        # 検証
+        self.assert_context_has_term(result, "term-a")
+        self.assertNotIn("id: link-e", result.context_text)
         self.assert_sent_unchanged(result, text)
 
 
