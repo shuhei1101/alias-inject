@@ -14,7 +14,7 @@ import unittest
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 PLUGIN_DIR = Path(os.environ.get("ALIAS_INJECT_E2E_PLUGIN_DIR", Path(__file__).resolve().parents[3]))
 SOURCE_CONFIG_DIR = Path(
@@ -153,6 +153,10 @@ def is_compact_boundary(line: dict[str, Any]) -> bool:
     return line.get("type") == "system" and line.get("subtype") == "compact_boundary"
 
 
+# 設定ファイルの指し方。settings は settings.json の env、shell は起動時の環境変数、default は既定のパス
+ConfigSource = Literal["settings", "shell", "default"]
+
+
 class ClaudeSession:
     """一時の CLAUDE_CONFIG_DIR とプロジェクトで、tmux 上の Claude Code を 1 つ動かす"""
 
@@ -164,6 +168,9 @@ class ClaudeSession:
         self.alias_dir = self.root / "alias-inject"
         self.urls_dir = self.alias_dir / "urls"
         self.config_path = self.alias_dir / "settings.yaml"
+        # XDG_CONFIG_HOME にするフォルダ。全てのテストで開発者の実の設定ファイルを読まないように指定する
+        self.xdg_config_home = self.root / "xdg-config"
+        self.default_config_path = self.xdg_config_home / "alias-inject" / "settings.yaml"
         # 読むリポジトリのフォルダ。dev-docs.yaml の documents の行の paths の相対パスはここから解決される
         self.repo_dir = self.root / "knowledge"
         self.terms_dir = self.repo_dir / "terms"
@@ -175,7 +182,15 @@ class ClaudeSession:
         self.tmux_name = f"alias-inject-e2e-{os.getpid()}-{uuid.uuid4().hex[:6]}"
         self._seen: dict[Path, int] = {}
         self._clock = time.time()
-        for folder in (self.config_dir, self.project_dir, self.terms_dir, self.docs_dir, self.urls_dir, self.empty_bin_dir):
+        for folder in (
+            self.config_dir,
+            self.project_dir,
+            self.terms_dir,
+            self.docs_dir,
+            self.urls_dir,
+            self.empty_bin_dir,
+            self.xdg_config_home,
+        ):
             folder.mkdir(parents=True)
 
     # ---- 準備 ----
@@ -226,6 +241,7 @@ class ClaudeSession:
         """Claude Code を起動し、入力を受け付ける状態まで待つ。env は起動時に足す環境変数、path は PATH の差し替え（claude は絶対パスで起動する）。
 
         コマンドの頭で CLAUDE_CODE_CHILD_SESSION を外す（Claude Code のセッションから流すと、継いだこの変数のせいで PATH が空の claude が transcript を保存しない）
+        env に ALIAS_INJECT_CONFIG が無いときは、開発者のシェルの値を引き継がないように同じくコマンドの頭で外す
         """
         for tool in ("tmux", "claude"):
             if shutil.which(tool) is None:
@@ -237,11 +253,15 @@ class ClaudeSession:
         # PATH の差し替えは tmux の -e ではなくコマンドの頭で渡す（-e の PATH は claude に届かない）
         if path is not None:
             command = f"PATH={shlex.quote(path)} {command}"
-        command = f"unset CLAUDE_CODE_CHILD_SESSION; {command}"
+        unset_names = ["CLAUDE_CODE_CHILD_SESSION"]
+        if "ALIAS_INJECT_CONFIG" not in (env or {}):
+            unset_names.append("ALIAS_INJECT_CONFIG")
+        command = f"unset {' '.join(unset_names)}; {command}"
         self._tmux(
             "new-session", "-d", "-s", self.tmux_name, "-x", "200", "-y", "50", "-c", str(self.project_dir),
             "-e", f"CLAUDE_CONFIG_DIR={self.config_dir}",
             "-e", f"HOME={os.environ['HOME']}",
+            "-e", f"XDG_CONFIG_HOME={self.xdg_config_home}",
             *extra_env,
             command,
         )
@@ -565,6 +585,8 @@ class E2ETestCase(unittest.TestCase):
         term_records: bool = False,
         extra_repositories: list[Path] | None = None,
         config_exists: bool = True,
+        config_source: ConfigSource = "settings",
+        default_config: bool = False,
         env: dict[str, str] | None = None,
         path: str | None = None,
     ) -> ClaudeSession:
@@ -574,6 +596,8 @@ class E2ETestCase(unittest.TestCase):
         トップレベルに dev_docs_extra を足す。設定ファイルは dev-docs.yaml（extra_repositories の後ろ）と
         config_aliases を持つ。term_records が True のとき、用語は配列 `terms` を持つ 1 つの YAML に置き、
         用語の行を `records: terms` にする（False のときは 1 ファイルに 1 語）。
+        config_source は設定ファイルの指し方で、settings は settings.json の env、shell は起動時の環境変数、default は既定のパス。
+        default_config が True のとき、既定のパスにも同じ内容の設定ファイルを置く。
         env は起動時に足す環境変数、path は claude を起動する PATH の差し替え
         """
         session = self.session
@@ -590,17 +614,19 @@ class E2ETestCase(unittest.TestCase):
                 extra=dev_docs_extra,
             ),
         )
+        config = config_text(
+            repositories=[*(extra_repositories or []), session.dev_docs_path],
+            global_extra=global_extra,
+            aliases=config_aliases,
+        )
+        config_path = session.default_config_path if config_source == "default" else session.config_path
         if config_exists:
-            session.write_file(
-                session.config_path,
-                config_text(
-                    repositories=[*(extra_repositories or []), session.dev_docs_path],
-                    global_extra=global_extra,
-                    aliases=config_aliases,
-                ),
-            )
-        session.write_user_settings(session.config_path, allow=ALLOWED_TOOLS)
-        session.start(env=env, path=path)
+            session.write_file(config_path, config)
+        if default_config:
+            session.write_file(session.default_config_path, config)
+        session.write_user_settings(session.config_path if config_source == "settings" else None, allow=ALLOWED_TOOLS)
+        shell_env = {"ALIAS_INJECT_CONFIG": str(session.config_path)} if config_source == "shell" else {}
+        session.start(env={**shell_env, **(env or {})}, path=path)
         return session
 
     def write_note(self, text: str) -> Path:

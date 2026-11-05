@@ -153,7 +153,7 @@ scenarios:
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: '`ALIAS_INJECT_CONFIG` が無いファイルを指す'
-        notes: 書式の誤った YAML でも同じ結末になる
+        notes: 書式の誤った YAML でも同じ結末になる。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置く（`ALIAS_INJECT_CONFIG` が読めないときに既定のパスを参照しない）
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -424,12 +424,110 @@ scenarios:
       - link-e の文脈は追加されていない
       - 入力の送信は止まっていない
     test: test_error_when_cwd_scope_invalid
+  - name: 正常シナリオ（既定のパスの設定ファイル）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を置かず、シェルの環境変数にも置かない。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにする
+      - name: 設定ファイル
+        description: 正常シナリオと同じ内容を、`{XDG_CONFIG_HOME}/alias-inject/settings.yaml` に置く
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: settings.json の env とシェルの環境変数に ALIAS_INJECT_CONFIG が無い
+        P->>P: XDG_CONFIG_HOME の下の alias-inject/settings.yaml を読む
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - モデルに届いた文脈に、term-a の語・`id`・`description` が並んでいる
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_default_config_path
+  - name: 正常シナリオ（シェルの環境変数の設定ファイル）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を置かない。`claude` の起動時に環境変数 `ALIAS_INJECT_CONFIG` を設定ファイルのパスにし、`XDG_CONFIG_HOME` を設定ファイルを置かない一時のフォルダにする
+      - name: 設定ファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: settings.json の env に ALIAS_INJECT_CONFIG が無い
+        P->>P: シェルの環境変数の ALIAS_INJECT_CONFIG が指す設定ファイルを読む
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - モデルに届いた文脈に、term-a の語・`id`・`description` が並んでいる
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_config_from_shell_env
+  - name: 正常シナリオ（settings.json の env を優先）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: settings.json の `env` の `ALIAS_INJECT_CONFIG` は 1 つ目の設定ファイルを、`claude` の起動時の環境変数 `ALIAS_INJECT_CONFIG` は 2 つ目の設定ファイルを指す
+      - name: 1 つ目の設定ファイル
+        description: 正常シナリオと同じ
+      - name: 2 つ目の設定ファイル
+        description: '`global.aliases` に、語 `link-a` を持つ URL の YAML を指す `alias_type` が `url` の行だけを持つ'
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a と link-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: settings.json の env の ALIAS_INJECT_CONFIG が指す 1 つ目の設定ファイルを読む
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: 入力と文脈を送信
+      ```
+    expected:
+      - term-a の文脈は追加されている
+      - link-a の文脈は追加されていない
+    test: test_normal_when_settings_env_preferred
+  - name: 正常シナリオ（設定ファイルが無い）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: settings.json の `env` とシェルの環境変数に `ALIAS_INJECT_CONFIG` を置かず、`XDG_CONFIG_HOME` を設定ファイルを置かない一時のフォルダにする
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 既定のパスに設定ファイルが無い
+        P->>CC: 入力をそのまま渡す
+        CC->>M: 入力だけを送信
+      ```
+    expected:
+      - 文脈が追加されていない
+      - 入力の送信は止まらず、モデルの返事が返っている
+    test: test_normal_when_config_missing
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する
 preconditions:
-  - ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG` が設定ファイルを指している
+  - 設定ファイルのパス（ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG`、無ければシェルの環境変数の `ALIAS_INJECT_CONFIG`、どちらも無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`）に設定ファイルがある
 success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下に並んでモデルに届き、入力の文は変わらない。
 minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_prompt_context.py

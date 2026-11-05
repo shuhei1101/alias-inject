@@ -43,6 +43,8 @@ export type FakeEngineOptions = {
   fs?: MemoryFs
   settings?: unknown
   home?: string
+  /** `$.env.get` が返す `HOME` のほかの環境変数 */
+  env?: Record<string, string>
   sessionId?: string
   projectRoot?: string
   /** 渡すと `$.state.set` の呼び出しごとに呼ぶ */
@@ -64,7 +66,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
   const stateKey = (ref: StateRef): string => `${ref.plugin}\u0000${ref.key}\u0000${ref.id ?? ''}`
 
   const fake = {
-    env: { get: async (name: string) => (name === 'HOME' ? home : undefined) },
+    env: { get: async (name: string) => (name === 'HOME' ? home : options.env?.[name]) },
     settings: {
       read: async (args?: { source?: string; key?: string }) => pick(options.settings ?? {}, args?.key),
     },
@@ -102,6 +104,8 @@ export type WorldOptions = {
   /** `$.settings.read` が返すユーザースコープの settings */
   settings: unknown
   home?: string
+  /** `mock.env` で渡す `HOME` のほかの環境変数 */
+  env?: Record<string, string>
   sessionId?: string
   projectRoot?: string
 }
@@ -123,7 +127,7 @@ export function installWorld(on: On, options: WorldOptions): World {
   const { fs } = options
   const world: World = { logs: [], sessionId: options.sessionId ?? 's1', compactResult: { messages: [COMPACTED_MESSAGE] } }
 
-  mock.env(on, { HOME: options.home ?? HOME })
+  mock.env(on, { HOME: options.home ?? HOME, ...options.env })
   on('settings.read', () => ({ value: options.settings }) as never)
   on('fs.read', (_, e) => {
     try {

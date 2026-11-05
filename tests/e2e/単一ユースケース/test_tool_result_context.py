@@ -131,7 +131,8 @@ class ToolResultContextTest(E2ETestCase):
     def test_error_when_config_unreadable(self) -> None:
         """設定ファイルが読めなくても Read の結果の本文はそのまま届き、文脈は追加されない（異常シナリオ（設定ファイルが読めない））"""
         # 準備
-        session = self.start_with_terms()
+        # ALIAS_INJECT_CONFIG が指す設定ファイルの書式が崩れている。既定のパスには term-a を照合できる設定ファイルがある
+        session = self.start_with_terms(default_config=True)
         session.write_file(session.config_path, "global: [\n")
         text = read_prompt(self.write_note(TERM_A_NOTE))
 

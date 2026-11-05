@@ -10,6 +10,7 @@ import {
   resolveSettings,
 } from '../../../../hooks/lib/config'
 import { createFakeEngine, userSettingsWithConfig } from '../support/engine'
+import { MemoryFs } from '../support/memory-fs'
 import { thrown } from '../support/thrown'
 
 // 指定した id と paths の term の aliases の行（設定ファイルに記載する構造）
@@ -48,19 +49,83 @@ test('test_read_config_path', async () => {
   expect(result).toBe('/home/u/.config/alias-inject/settings.yaml')
 })
 
-// 値が無い・空・文字列でないときは null を返す（正常系）
+// 値が無く、既定のパスにファイルが無いときは null を返す（正常系）
 test('test_read_config_path_when_missing', async () => {
   // 準備
   const settingsList = [{}, { env: {} }, { env: { ALIAS_INJECT_CONFIG: '' } }, { env: { ALIAS_INJECT_CONFIG: 5 } }]
+  const envList = [undefined, { ALIAS_INJECT_CONFIG: '' }, { ALIAS_INJECT_CONFIG: '  ' }]
 
   // 実行
   const results = []
   for (const settings of settingsList) {
-    results.push(await readConfigPath(createFakeEngine({ settings }).$))
+    for (const env of envList) {
+      results.push(await readConfigPath(createFakeEngine({ settings, env }).$))
+    }
   }
 
   // 検証
-  expect(results).toEqual([null, null, null, null])
+  expect(results).toEqual(new Array(settingsList.length * envList.length).fill(null))
+})
+
+// settings に値が無いときは環境変数の値を返す（正常系）
+test('test_read_config_path_when_shell_env', async () => {
+  // 準備
+  const { $ } = createFakeEngine({ env: { ALIAS_INJECT_CONFIG: '~/shell/settings.yaml' }, home: '/home/u' })
+
+  // 実行
+  const result = await readConfigPath($)
+
+  // 検証
+  expect(result).toBe('/home/u/shell/settings.yaml')
+})
+
+// settings と環境変数の両方に値があるときは settings の値を返す（正常系）
+test('test_read_config_path_when_settings_preferred', async () => {
+  // 準備
+  const { $ } = createFakeEngine({
+    settings: userSettingsWithConfig('/a/settings.yaml'),
+    env: { ALIAS_INJECT_CONFIG: '/b/settings.yaml' },
+  })
+
+  // 実行
+  const result = await readConfigPath($)
+
+  // 検証
+  expect(result).toBe('/a/settings.yaml')
+})
+
+// ALIAS_INJECT_CONFIG が無いときは既定のパスを返す（正常系）
+test('test_read_config_path_when_default_path', async () => {
+  // 準備
+  const cases: { env?: Record<string, string>; path: string }[] = [
+    { env: { XDG_CONFIG_HOME: '/xdg' }, path: '/xdg/alias-inject/settings.yaml' },
+    { env: { XDG_CONFIG_HOME: '' }, path: '/home/u/.config/alias-inject/settings.yaml' },
+    { path: '/home/u/.config/alias-inject/settings.yaml' },
+    { env: { XDG_CONFIG_HOME: '~/xdg' }, path: '/home/u/xdg/alias-inject/settings.yaml' },
+  ]
+
+  // 実行
+  const results = []
+  for (const { env, path } of cases) {
+    const fs = new MemoryFs({ [path]: 'global: {}' })
+    results.push(await readConfigPath(createFakeEngine({ env, fs, home: '/home/u' }).$))
+  }
+
+  // 検証
+  expect(results).toEqual(cases.map(({ path }) => path))
+})
+
+// ALIAS_INJECT_CONFIG が指すファイルが無くても既定のパスへ切り替えない（正常系）
+test('test_read_config_path_when_explicit_file_missing', async () => {
+  // 準備
+  const fs = new MemoryFs({ '/home/u/.config/alias-inject/settings.yaml': 'global: {}' })
+  const { $ } = createFakeEngine({ settings: userSettingsWithConfig('/missing/settings.yaml'), fs, home: '/home/u' })
+
+  // 実行
+  const result = await readConfigPath($)
+
+  // 検証
+  expect(result).toBe('/missing/settings.yaml')
 })
 
 // 全キーを書いた設定を読む（正常系）
