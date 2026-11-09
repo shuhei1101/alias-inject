@@ -1,0 +1,17 @@
+$ cd ai-monitor/.claude/worktrees/feat-docs-merge-dev-into-docs (4f5060dd8) && PYTHONPATH=src uv run python -m ai_monitor.design_docs validate --root /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/docs-layout-merge-dev-into-docs
+docs/pr/21/反映作業/index.yaml:items: 必須の項目が無い
+docs/pr/21/反映作業/index.yaml:summary: 必須の項目が無い
+docs/pr/21/反映作業/index.yaml:端末の設定の移し替え: Schema に無い項目
+docs/pr/41/反映作業/index.yaml:items: 必須の項目が無い
+docs/pr/41/反映作業/index.yaml:summary: 必須の項目が無い
+docs/pr/41/反映作業/index.yaml:端末の設定の移し替え: Schema に無い項目
+docs/pr/64/反映作業/index.yaml:items: 必須の項目が無い
+docs/pr/64/反映作業/index.yaml:summary: 必須の項目が無い
+docs/pr/64/反映作業/index.yaml:話し合いの端末の設定への作業場所の絞りの追加: Schema に無い項目
+docs/scenario/SC-1.yaml:test_file: 対応テストファイルがありません: tests/e2e/複合ユースケース/test_session_flow.py
+docs/scenario/SC-2.yaml:test_file: 対応テストファイルがありません: tests/e2e/単一ユースケース/test_tool_result_context.py
+docs/scenario/SC-3.yaml:test_file: 対応テストファイルがありません: tests/e2e/単一ユースケース/test_prompt_context.py
+docs/scenario/SC-4.yaml:test_file: 対応テストファイルがありません: tests/e2e/単一ユースケース/test_reset_record.py
+docs/scenario/SC-6.yaml:test_file: 対応テストファイルがありません: tests/e2e/単一ユースケース/test_reload.py
+docs/scenario/SC-7.yaml:test_file: 対応テストファイルがありません: tests/e2e/単一ユースケース/test_variable_reference.py
+exit=1
