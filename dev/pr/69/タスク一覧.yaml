@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-09T03:47:25.684583+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: tests/e2e/ の削除と、単体・結合テストの全 pass の確認
+    updated_by: planner
+    updated_at: '2026-11-09T15:17:37.070299+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: hooks モジュールの処理を変えず、結合テストは変えない

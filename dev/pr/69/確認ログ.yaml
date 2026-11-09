@@ -1,0 +1,7 @@
+confirmations:
+  - topic: 資源の待ち（単体・結合テストと lint の実行）
+    decision: メモリが空くのをシェルで監視し、空いたら実行する（推奨案 A を、返信待ちから監視での自動実行に変えた別案）
+    decided_by: reply
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/69#discussion_r4509510489
