@@ -1,0 +1,12 @@
+summary: サブシステムの外部インターフェースと処理フロー（サブシステム結合テストの元）
+items:
+  - page: IF-1.yaml
+    summary: 'session.end（reason: clear）で終わるセッションの記録を消す'
+  - page: IF-2.yaml
+    summary: tool.call でツールの結果の本文を照合し、初めて出た語の文脈を context に追加する
+  - page: IF-3.yaml
+    summary: prompt.submit で入力を照合し、初めて出た語の文脈を context に追加する
+  - page: IF-4.yaml
+    summary: session.compact の後にそのセッションの記録を消す
+  - page: IF-5.yaml
+    summary: tool.call でツールの結果の !{名前} を拾い、環境変数の値を context に追加する

@@ -1,1 +1,17 @@
-tabs: []
+# publish が docs/guide/ の文書の分類から書き出す（直接編集しない）
+tabs:
+  - name: はじめに
+    page: guide/はじめに.md
+  - name: 使い方
+    page: guide/使い方.md
+  - name: リファレンス
+    page: guide/リファレンス.md
+pages:
+  guide/コアコンセプト-引用の文脈.md: はじめに
+  guide/コアコンセプト-変数参照の値.md: はじめに
+  guide/変更履歴.md: はじめに
+  guide/セットアップ.md: 使い方
+  guide/設定の移し替え.md: 使い方
+  guide/エイリアスを登録するかを決める.md: 使い方
+  guide/設定ファイル.md: リファレンス
+  guide/エイリアスのスキーマ.md: リファレンス

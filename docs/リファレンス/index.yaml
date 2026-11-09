@@ -1,6 +1,0 @@
-summary: 設定ファイルの項目・エイリアスの共通のスキーマ
-items:
-  - page: 設定ファイル.md
-    summary: 設定ファイルの項目・既定値・`alias_type` ごとの `metadata` のキーの一覧
-  - page: エイリアスのスキーマ.md
-    summary: エイリアスの元の行のキー・`metadata` の値・`alias_type` ごとのキー・タグを指定した取り込み方

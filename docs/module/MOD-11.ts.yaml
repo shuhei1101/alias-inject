@@ -1,0 +1,191 @@
+id: MOD-11
+visibility: internal
+title: プラグイン / 照合条件 / condition.ts
+lead: '文書の `inject_when` の値を照合条件として検査し、照合した本文で評価して、照合条件に当たらない語を当たった語から外す。'
+test_files:
+  - tests/unit/hooks/lib/condition.test.ts
+directory: |-
+  ```text
+  hooks/
+    lib/
+      condition.ts           照合条件の検査・評価・絞り込み
+  tests/
+    unit/
+      hooks/
+        lib/
+          condition.test.ts  condition.ts の単体テスト
+  ```
+data_models:
+  - name: ConditionTerm
+    title: 条件
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    role: DTO
+    summary: 照合した本文と値を 1 つの比べ方で比べる条件
+    properties:
+      - name: op
+        type: "'contains' | 'not_contains'"
+        description: 比べ方。`not_contains` は同じ `values`・`match` の `contains` の否定
+      - name: values
+        type: string[]
+        description: 比べる値。`caseSensitive` が false なら照合の正規化に通したもの
+      - name: match
+        type: "'any' | 'all'"
+        description: '`values` のどれか（any）か全て（all）を本文が含めば当たる'
+      - name: caseSensitive
+        type: boolean
+        description: true なら本文と値を正規化せずに比べる
+    status: planned
+    introduced:
+      pr: 58
+  - name: Condition
+    title: 照合条件
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    role: DTO
+    summary: '条件か、`and`・`or`・`not` の束'
+    description: "`ConditionTerm | { and: Condition[] } | { or: Condition[] } | { not: Condition }` の union"
+    status: planned
+    introduced:
+      pr: 58
+constants:
+  - name: MAX_CONDITION_DEPTH
+    title: 束の入れ子の上限
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    summary: 最上位の束を 1 レイヤーとした束の入れ子の上限
+    value: '3'
+    refs:
+      - IF-3#constraints[照合条件]
+    status: planned
+    introduced:
+      pr: 58
+functions:
+  - name: parseCondition
+    title: 照合条件の検査
+    kind: 関数
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    summary: '`inject_when` の値を検査し、照合条件にするか、誤りの箇所と理由を返す'
+    scope: public
+    is_async: false
+    args:
+      - name: value
+        type: unknown
+        required: true
+        passing: positional
+        description: 文書の `inject_when` の値（undefined・null は呼び出し元が除く）
+    returns:
+      type: "{ ok: true; condition: Condition } | { ok: false; path: string; reason: string }"
+      description: 照合条件か、最初に見つけた誤りの `inject_when` からのパス（`inject_when.and[1].op` など）と理由
+    process: |-
+      1. 値がマッピングでなければ誤り（理由 `マッピングではありません`）
+      2. `and`・`or`・`not` のキーを持つマッピングは束にする。キーが 1 つでなければ誤り（理由 `束は and・or・not のどれか 1 つだけを持ちます`）
+         - `and`・`or` は 1 つ以上の要素の並びでなければ誤り（理由 `空の束です` か `並びではありません`）。各要素を `{パス}[{位置}]` で検査する
+         - `not` は値を `{パス}.not` で検査する
+         - 束の深さ（最上位の束を 1）が MAX_CONDITION_DEPTH を超えたら誤り（理由 `入れ子が {MAX_CONDITION_DEPTH} レイヤーを超えています`）
+      3. それ以外は条件にする。`field`・`op`・`values`・`match`・`case_sensitive` 以外のキーがあれば誤り（理由 `{キー} は書けません`）
+         - `field` が `text` でなければ誤り（理由 `field は text だけを書けます`）
+         - `op` が `contains`・`not_contains` でなければ誤り（理由 `op は contains・not_contains だけを書けます`）
+         - `values` が 1 つ以上の空でない文字列の並びでなければ誤り
+         - `match` は無ければ `any`。`any`・`all` でなければ誤り
+         - `case_sensitive` は無ければ false。真偽値でなければ誤り
+         - `case_sensitive` が false なら `values` の各要素を照合の正規化に通し、空になる要素があれば誤り
+    callees:
+      - MOD-10#functions[normalize]
+    refs:
+      - IF-3#constraints[照合条件]
+    unit_tests:
+      - name: test_parse_condition
+        case: 正常
+        summary: 条件と 3 レイヤーまでの束を照合条件にし、既定を補う
+        condition: '`{field: text, op: contains, values: [Ｒｅａｃｔ]}` と、`and` の中に `or` の中に `not` の条件を置いた束'
+        mock: なし
+        expected: 'どちらも ok が true。前者の match が `any`、caseSensitive が false、values が `[react]`'
+      - name: test_parse_condition_when_invalid
+        case: 正常
+        summary: 誤りの箇所と理由を返す
+        condition: '`{and: []}`、`{and: [{field: text, op: regex, values: [f]}]}`、`{and: [...], or: [...]}`、`{field: name, op: contains, values: [a]}`、`{field: text, op: contains, values: []}`、`{field: text, op: not_contains, values: [" "]}`、`{field: text, op: contains, values: [a], match: some}`、`{field: text, op: contains, values: [a], case_sensitive: yes}`、`{field: text, op: contains, values: [a], value: b}`、4 レイヤーの束'
+        mock: なし
+        expected: 'どれも ok が false。path が順に `inject_when.and`・`inject_when.and[0].op`・`inject_when`・`inject_when.field`・`inject_when.values`・`inject_when.values`・`inject_when.match`・`inject_when.case_sensitive`・`inject_when.value`・4 レイヤー目の束のパス'
+    status: planned
+    introduced:
+      pr: 58
+  - name: evaluateCondition
+    title: 照合条件の評価
+    kind: 関数
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    summary: 照合条件を照合した本文で評価する
+    scope: public
+    is_async: false
+    args:
+      - name: condition
+        type: Condition
+        required: true
+        passing: positional
+        description: 照合条件
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: 照合した本文（正規化前）
+    returns:
+      type: boolean
+      description: 照合条件に当たれば true
+    process: |-
+      1. 条件は、`caseSensitive` が false なら本文を照合の正規化に通し、`values` のどれか（any）か全て（all）を含むかを `includes` で比べる。`not_contains` はその否定
+      2. `and` は全ての要素、`or` はどれかの要素が当たれば true、`not` は要素が当たらなければ true
+    callees:
+      - MOD-10#functions[normalize]
+    unit_tests:
+      - name: test_evaluate_condition
+        case: 正常
+        summary: contains・not_contains と match・case_sensitive で比べる
+        condition: '本文「React と TSX」。`contains [react, vue]`（any）、`contains [react, vue]`（all）、`not_contains [python]`、`contains [tsx]`（case_sensitive が true）'
+        mock: なし
+        expected: true・false・true・false
+      - name: test_evaluate_condition_when_bundle
+        case: 正常
+        summary: and・or・not の束を評価する
+        condition: '本文「React と Python」。`and` に `contains [react]` と `not_contains [python]`、`or` に同じ 2 つ、`not` に `contains [python]`'
+        mock: なし
+        expected: false・true・false
+    status: planned
+    introduced:
+      pr: 58
+  - name: filterByCondition
+    title: 照合条件での絞り込み
+    kind: 関数
+    container: hooks/lib/condition.ts
+    usecase: 共通
+    summary: 当たった語のうち、照合条件に当たらない語を外す
+    scope: public
+    is_async: false
+    args:
+      - name: hits
+        type: Hit[]
+        required: true
+        passing: positional
+        description: 照合の結果
+      - name: text
+        type: string
+        required: true
+        passing: positional
+        description: 照合した本文（正規化前）
+    returns:
+      type: Hit[]
+      description: '`entry.condition` が undefined か、照合条件に当たる語。hits の順のまま'
+    process: 1. `entry.condition` が undefined の語は残し、それ以外は照合条件の評価が true の語だけを残す
+    callees:
+      - MOD-11#functions[evaluateCondition]
+    unit_tests:
+      - name: test_filter_by_condition
+        case: 正常
+        summary: 照合条件を持たない語は残し、照合条件に当たらない語を外す
+        condition: '本文「term-a と term-c を Python で」。term-a は照合条件なし、term-c は `not_contains [python]`'
+        mock: なし
+        expected: term-a だけ
+    status: planned
+    introduced:
+      pr: 58
