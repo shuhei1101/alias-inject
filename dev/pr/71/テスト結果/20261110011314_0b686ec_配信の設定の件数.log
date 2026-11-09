@@ -1,0 +1,40 @@
+# dev-docs.yaml の documents[] の paths・exclude に当たるファイルを数え、visibility・category と schema の実在を確かめる（dev-docs は配信元の設定を default_ref の develop から組み立てるため、作業ブランチの設定では検索できない）
+$ python3 count.py
+# import fnmatch, glob, os, sys, yaml
+# cfg = yaml.safe_load(open("dev-docs.yaml", encoding="utf-8"))
+# total = 0
+# for d in cfg["documents"]:
+#     files = []
+#     for p in d["paths"]:
+#         files += glob.glob(p)
+#     files = [f for f in files if not any(fnmatch.fnmatch(os.path.basename(f), e) for e in d.get("exclude", []))] if d.get("records") != "files" else files
+#     if d.get("records") == "files":
+#         rows = yaml.safe_load(open(files[0], encoding="utf-8"))["files"]
+#         base = os.path.dirname(files[0])
+#         missing = [r["path"] for r in rows if not os.path.exists(os.path.join(base, r["path"]))]
+#         novis = [r["path"] for r in rows if r.get("visibility") != "public" or not r.get("category")]
+#         n = len(rows)
+#         print(f"{d['id']}: {n} 行（本文が無い行 {missing}・visibility/category が無い行 {novis}）")
+#     else:
+#         n = len(files)
+#         bad = [f for f in files if d["id"] != "index" and yaml.safe_load(open(f, encoding="utf-8")).get("visibility") != "internal"]
+#         print(f"{d['id']}: {n} 件（visibility: internal でない {bad}）")
+#     if not os.path.exists(d["schema"]):
+#         print("  schema が無い:", d["schema"])
+#     if d["id"] not in ("index", "docs"):
+#         total += n
+# print("YAML の設計書の合計:", total)
+docs: 8 行（本文が無い行 []・visibility/category が無い行 []）
+architecture: 1 件（visibility: internal でない []）
+interface: 5 件（visibility: internal でない []）
+scenario: 7 件（visibility: internal でない []）
+test_procedure: 1 件（visibility: internal でない []）
+module: 17 件（visibility: internal でない []）
+library: 3 件（visibility: internal でない []）
+config: 1 件（visibility: internal でない []）
+dev_command: 1 件（visibility: internal でない []）
+nonfunctional: 1 件（visibility: internal でない []）
+index: 11 件（visibility: internal でない []）
+YAML の設計書の合計: 37
+$ git ls-tree -r --name-only origin/develop dev/設計書 | grep "\.yaml$" | grep -v index.yaml | wc -l
+37

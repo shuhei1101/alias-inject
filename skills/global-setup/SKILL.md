@@ -16,7 +16,7 @@ description: 端末ごとに 1 回、alias-inject の設定ファイルを作る
 
 2. 設定ファイルがある場合、`global.aliases` と `projects[].aliases` に旧い構造の要素が残っていないかを確認する。
    - 旧い構造は `type`・`fields` を持つ要素と、行の `alias_type` を持たず `metadata.alias_type` を持つ要素
-   - 残っていれば、`docs/使い方/設定の移し替え.md`（`${CLAUDE_SKILL_DIR}/../../docs/使い方/設定の移し替え.md`）の手順で移す内容を示し、移してよいかを聞く
+   - 残っていれば、`docs/guide/設定の移し替え.md`（`${CLAUDE_SKILL_DIR}/../../docs/guide/設定の移し替え.md`）の手順で移す内容を示し、移してよいかを聞く
    - 断られたら、設定ファイルと `settings.json` を変えずに止まる
    - 許されたら、同じ手順のとおりバックアップを取って移す
    - 残っていなければ、書き換えずに手順 4 へ進む

@@ -1,0 +1,8 @@
+summary: 採用済みの外部ライブラリ / 外部ツールのリファレンス
+items:
+  - page: LIB-1.yaml
+    summary: mod の hooks モジュールの型とテストの道具
+  - page: LIB-2.yaml
+    summary: 設定ファイルと照合する YAML を読むパーサー
+  - page: LIB-3.yaml
+    summary: 型の確認に使う TypeScript のコンパイラ

@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../schemas/files.schema.yaml
+files:
+  - path: コアコンセプト-引用の文脈.md
+    tags: [scope:はじめに, topic:引用の文脈]
+    visibility: public
+    category: はじめに
+  - path: コアコンセプト-変数参照の値.md
+    tags: [scope:はじめに, topic:変数参照]
+    visibility: public
+    category: はじめに
+  - path: 変更履歴.md
+    tags: [scope:はじめに]
+    visibility: public
+    category: はじめに
+  - path: セットアップ.md
+    tags: [scope:使い方, topic:セットアップ手順]
+    visibility: public
+    category: 使い方
+  - path: 設定の移し替え.md
+    tags: [scope:使い方, topic:設定の移し替え]
+    visibility: public
+    category: 使い方
+  - path: エイリアスを登録するかを決める.md
+    tags: [scope:判定フローチャート, topic:エイリアス]
+    visibility: public
+    category: 使い方
+  - path: 設定ファイル.md
+    tags: [scope:リファレンス, topic:設定ファイル]
+    visibility: public
+    category: リファレンス
+  - path: エイリアスのスキーマ.md
+    tags: [scope:リファレンス, topic:エイリアス]
+    visibility: public
+    category: リファレンス
