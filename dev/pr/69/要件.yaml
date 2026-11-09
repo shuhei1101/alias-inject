@@ -38,7 +38,9 @@ docs:
   - page: dev/設計書/テスト/テスト実行方法.yaml
     new: false
     change: 層「E2E テスト」の実行コマンド・説明・`ALIAS_INJECT_E2E_*` の環境変数・前提・個別実行を削除し、`run_all` を `未確定` にする（非機能要件テスト・外部疎通テストと同じ形）
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-09T03:54:39.938253+00:00'
 scope_out:
   - item: シナリオの `test_file`（対応テストファイル）の書き換え・削除
     reason: D-311 で、作り直すときの対応の印として残すと決まっている

@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-09T03:47:25.684583+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: dev/設計書/テスト/テスト実行方法.yaml の E2E テストの層
+    updated_by: planner
+    updated_at: '2026-11-09T03:54:45.614401+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: hooks モジュールの処理を変えず、単体テストは変えない
