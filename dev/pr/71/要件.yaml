@@ -1,6 +1,6 @@
 use_cases:
   - kind: single
-    scenario: dev/設計書/シナリオ/単一ユースケース/端末のセットアップ.yaml
+    scenario: docs/scenario/SC-5.yaml
     impact: run_only
     detail: セットアップのスキルが読む設定の移し替えの手順のページが移るため、スキルがそのページを読めることを確かめる
     depends_on: []
