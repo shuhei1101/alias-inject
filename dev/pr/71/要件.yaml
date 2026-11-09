@@ -1,0 +1,69 @@
+use_cases:
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/端末のセットアップ.yaml
+    impact: run_only
+    detail: セットアップのスキルが読む設定の移し替えの手順のページが移るため、スキルがそのページを読めることを確かめる
+    depends_on: []
+docs:
+  - page: docs/index.yaml
+    new: false
+    change: dev/index.yaml・dev/設計書/index.yaml の行をまとめ、行が種類のフォルダを指すようにする（README.md は生成し直す）
+    status: todo
+  - page: dev/README.md
+    new: false
+    change: docs/ へまとめ、dev/index.yaml とあわせて削除する
+    status: todo
+  - page: dev/テンプレート/README.md
+    new: false
+    change: Schema を schemas/{kind}.schema.yaml へ移し、目次とあわせて削除する。共通の Schema の visibility を public / internal にする
+    status: todo
+  - page: dev/設計書/README.md
+    new: false
+    change: '設計書を docs/{kind}/{ID}.yaml へ移して visibility: internal を持たせ、他の設計書を指すパスを修正する。中身の無い ER図/・外部API/ とあわせて削除する'
+    status: todo
+  - page: dev/エージェント運用/README.md
+    new: false
+    change: 中身の無い目次だけのフォルダのため、配下ごと削除する
+    status: todo
+  - page: dev/コーディング規約/README.md
+    new: false
+    change: 中身の無い目次だけのフォルダのため、削除する
+    status: todo
+  - page: docs/guide/index.yaml
+    new: true
+    change: docs/はじめに/・使い方/・リファレンス/ の目次をまとめる
+    status: todo
+  - page: docs/guide/files.yml
+    new: true
+    change: 'docs/files.yaml を移し、docs/guide/ の Markdown のタグに visibility: public と category を加える'
+    status: todo
+  - page: docs/guide/はじめに.md
+    new: true
+    change: 分類のトップページ（使い方.md・リファレンス.md も同じ構造で作る）。docs/はじめに/・使い方/・リファレンス/ の Markdown は docs/guide/ へ移す
+    status: todo
+  - page: docs/_theme/_data/nav.project.yml
+    new: false
+    change: 上タブを docs/guide/ の分類から作る
+    status: todo
+  - page: docs/_config.yml
+    new: true
+    change: exclude に internal の文書だけを持つ種類のフォルダと pr/・mock/・generated/ を記載する
+    status: todo
+  - page: docs/pr/5/README.md
+    new: true
+    change: マージ済みの PR ドキュメント dev/pr/{番号}/（#71 を除く）を中身を変えずに docs/pr/ へ移す
+    status: todo
+  - page: CLAUDE.md
+    new: false
+    change: ドキュメントの場所の案内を docs/ と schemas/ にし、使い方のリンクを docs/guide/ にする
+    status: todo
+scope_out:
+  - item: この PR の PR ドキュメント dev/pr/71/ の docs/pr/ への移動
+    reason: '稼働中のモニターは ai-monitor#3307 のマージまで dev/pr/ を参照し、移動は #3307 の反映作業『open の作業 PR の PR ドキュメントの移動』が行う'
+    plan: none
+  - item: 設計書の中身（記述）の書き換え
+    reason: '要望は置き場所と公開範囲の持ち方の移し替えだけ。他の設計書を指すパスと、アーキテクチャ図のリポジトリ構成の dev/ の記述だけをこの PR で修正する。本文の書き方の移行は #56'
+    plan: '#56'
+  - item: docs/guide/変更履歴.md の、タグで固定した dev/pr/ へのリンク
+    reason: タグの時点の置き場所を指しており、移した後も開ける
+    plan: none
