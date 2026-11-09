@@ -1,0 +1,54 @@
+use_cases:
+  - kind: composite
+    scenario: dev/設計書/シナリオ/複合ユースケース/セッションを通した引用の文脈の追加.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなり、対応テストファイルは作り直すときの印として残す
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/入力への引用の文脈の追加.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなる
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/ツールの結果への引用の文脈の追加.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなる
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/設定とYAMLの読み直し.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなる
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/圧縮とクリアの後の記録の消去.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなる
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/読んだ本文への変数参照の値の追加.yaml
+    impact: none
+    detail: シナリオは変えない。対応するテストファイルの E2E が無くなる
+    depends_on: []
+  - kind: single
+    scenario: dev/設計書/シナリオ/単一ユースケース/端末のセットアップ.yaml
+    impact: none
+    detail: シナリオは変えない
+    depends_on: []
+docs:
+  - page: dev/設計書/テスト/テスト実行方法.yaml
+    new: false
+    change: 層「E2E テスト」の実行コマンド・説明・`ALIAS_INJECT_E2E_*` の環境変数・前提・個別実行を削除し、`run_all` を `未確定` にする（非機能要件テスト・外部疎通テストと同じ形）
+    status: todo
+scope_out:
+  - item: シナリオの `test_file`（対応テストファイル）の書き換え・削除
+    reason: D-311 で、作り直すときの対応の印として残すと決まっている
+    plan: none
+  - item: '`dev/テンプレート/` のスキーマ（シナリオ・テスト実行方法）の E2E の記載'
+    reason: 配布されたテンプレートで、このリポジトリでは書き換えない
+    plan: none
+  - item: 過去の PR ドキュメント（`dev/pr/*`）と変更履歴の `tests/e2e/` への参照
+    reason: マージ済みの作業の記録で、当時の状態を指す
+    plan: none
+  - item: E2E のテストファイルが無い間の、release PR での E2E の実行の扱い
+    reason: ai-monitor 側の運用（shuhei1101/ai-monitor#3317）で決める
+    plan: none
