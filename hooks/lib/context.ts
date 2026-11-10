@@ -21,9 +21,10 @@ export const SECTION_HEADINGS: Record<AliasType, string> = {
   avoid: '避ける語',
 }
 
-/** 出所・`aliases` の要素の `id`・項目の ID の組を 1 つの文字列にする */
+/** 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の語は、やめた言い方も）の組を 1 つの文字列にする */
 export function entryKey(entry: Entry): string {
-  return `${entry.origin}\u0000${entry.aliasId}\u0000${entry.id}`
+  const key = `${entry.origin}\u0000${entry.aliasId}\u0000${entry.id}`
+  return entry.avoid === undefined ? key : `${key}\u0000${entry.avoid}`
 }
 
 /** 選んだ語を、見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする */

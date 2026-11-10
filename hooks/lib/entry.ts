@@ -19,7 +19,7 @@ export type Entry = {
   id: string
   /** 文脈に出す語 */
   word: string
-  /** 照合する語（`name` と `aliases`）を正規化したもの。空文字と重複を除く */
+  /** 照合する語（`name` と `aliases`。やめた言い方の語は、そのやめた言い方）を正規化したもの。空文字と重複を除く */
   keys: string[]
   /** 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ */
   fields: { name: string; value: string }[]
@@ -29,6 +29,8 @@ export type Entry = {
   bodyFile: string | undefined
   /** 解決した `inject_when` の値を照合条件の検査に通したもの。値が無い・null なら undefined */
   condition: Condition | undefined
+  /** 用語の `avoid` のやめた言い方から作った語のとき、そのやめた言い方（書いたまま）。それ以外は undefined */
+  avoid: string | undefined
 }
 
 /** 1 つの行から作った語と、読めなかった YAML・外した文書 */
@@ -151,6 +153,19 @@ function baseName(path: string): string {
   return dot <= 0 ? file : file.slice(0, dot)
 }
 
+// 用語のやめた言い方ごとに、避ける語の語を作る。空・重なり・用語の照合する語と同じものは作らない
+function avoidEntries(term: Entry, value: unknown): Entry[] {
+  const seen = new Set(term.keys)
+  const entries: Entry[] = []
+  for (const avoid of stringsOf(value)) {
+    const key = normalize(avoid)
+    if (key === '' || seen.has(key)) continue
+    seen.add(key)
+    entries.push({ ...term, type: 'avoid', word: avoid, keys: [key], fields: [{ name: 'replacement', value: term.word }], avoid })
+  }
+  return entries
+}
+
 /** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書と照合条件が誤っている文書は外す */
 export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, aliasIndex: number): LoadedEntries {
   const failures: LoadedEntries['failures'] = []
@@ -195,20 +210,24 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
   const wordOfId = new Map<string, string>()
   for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
 
-  const entries = kept.map(({ itemIndex, values, path, bodyFile, condition }) => ({
-    aliasIndex,
-    itemIndex,
-    origin: alias.origin,
-    aliasId: alias.id,
-    type: alias.alias_type,
-    id: String(values.id),
-    word: textOf(values.name) ?? '',
-    keys: [...new Set([...stringsOf(values.name), ...stringsOf(values.aliases)].map(normalize).filter((key) => key !== ''))],
-    fields: buildFields(alias.alias_type, values, wordOfId),
-    path,
-    bodyFile,
-    condition,
-  }))
+  const entries = kept.flatMap(({ itemIndex, values, path, bodyFile, condition }) => {
+    const entry: Entry = {
+      aliasIndex,
+      itemIndex,
+      origin: alias.origin,
+      aliasId: alias.id,
+      type: alias.alias_type,
+      id: String(values.id),
+      word: textOf(values.name) ?? '',
+      keys: [...new Set([...stringsOf(values.name), ...stringsOf(values.aliases)].map(normalize).filter((key) => key !== ''))],
+      fields: buildFields(alias.alias_type, values, wordOfId),
+      path,
+      bodyFile,
+      condition,
+      avoid: undefined,
+    }
+    return alias.alias_type === 'term' ? [entry, ...avoidEntries(entry, values.avoid)] : [entry]
+  })
   return { entries, failures }
 }
 
