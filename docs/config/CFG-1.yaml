@@ -168,7 +168,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: '`alias_type` が term のとき、用語ごとのやめた言い方を取る列の名前。スキーマが受け付けるが、文脈には使わない'
+    description: '`alias_type` が term のとき、用語ごとのやめた言い方を取る列の名前。値は文字列か文字列の並び。やめた言い方を照合し、当たったら `避ける語` のセクションにやめた言い方を並べ、`replacement` に用語の語を追加する。一般的な単語のやめた言い方は `exclude` で照合から外す'
   - key: global.aliases[].metadata.skill
     title: スキル
     file: ~/.config/alias-inject/settings.yaml
