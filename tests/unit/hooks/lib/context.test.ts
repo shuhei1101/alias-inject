@@ -8,7 +8,7 @@ const HEADING = 'この発言に出る用語'
 // テスト用の語。説明を渡すと description の列を持つ
 function makeEntry(
   id: string,
-  options: { origin?: string; aliasId?: string; type?: Entry['type']; description?: string } = {},
+  options: { origin?: string; aliasId?: string; type?: Entry['type']; description?: string; avoid?: string } = {},
 ): Entry {
   return {
     aliasIndex: 0,
@@ -23,6 +23,7 @@ function makeEntry(
     path: `/a/terms/${id}.yaml`,
     bodyFile: undefined,
     condition: undefined,
+    avoid: options.avoid,
   }
 }
 
@@ -49,6 +50,21 @@ test('test_entry_key', () => {
   expect(originKeys[0]).not.toBe(originKeys[1])
 })
 
+// 用語のやめた言い方の語は、用語とやめた言い方ごとにキーが違う（正常系）
+test('test_entry_key_when_avoid', () => {
+  // 準備
+  const term = makeEntry('term-a', { origin: '/a', aliasId: 'terms' })
+  const oldA = makeEntry('term-a', { origin: '/a', aliasId: 'terms', type: 'avoid', avoid: '旧エー' })
+  const oldB = makeEntry('term-a', { origin: '/a', aliasId: 'terms', type: 'avoid', avoid: 'OldA' })
+
+  // 実行
+  const keys = [entryKey(term), entryKey(oldA), entryKey(oldB)]
+
+  // 検証
+  expect(new Set(keys).size).toBe(3)
+  expect(keys[0]).toBe('/a\u0000terms\u0000term-a')
+})
+
 // 見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする（正常系）
 test('test_render_context', () => {
   // 準備
@@ -69,6 +85,7 @@ test('test_render_context', () => {
     path: '/mnt/c/Users/shuhe/repo/ai-monitor/commands.yaml',
     bodyFile: undefined,
     condition: undefined,
+    avoid: undefined,
   }
   const usecase: Entry = {
     aliasIndex: 0,
@@ -86,6 +103,7 @@ test('test_render_context', () => {
     path: '/mnt/c/Users/shuhe/repo/knowledge/terms/term-single-usecase.yaml',
     bodyFile: undefined,
     condition: undefined,
+    avoid: undefined,
   }
 
   // 実行

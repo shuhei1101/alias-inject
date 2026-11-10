@@ -24,6 +24,7 @@ function makeHit(id: string, condition: Condition | undefined, position: number)
     path: `/a/terms/${id}.yaml`,
     bodyFile: undefined,
     condition,
+    avoid: undefined,
   }
   return { entry, position, length: id.length, count: 1 }
 }
