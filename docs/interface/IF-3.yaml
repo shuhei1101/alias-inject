@@ -909,8 +909,11 @@ flows:
         description: '正常系に加え `exclude: [旧ビー]`'
         notes: 一般的な単語のやめた言い方を照合から外す手段
       - name: 入力
-        description: 1 回目「旧エーと oldA と旧ビーと term-b」、2 回目「旧エーとは」
+        description: 1 回目「旧エーと oldA と旧ビーと旧シーと term-b」、2 回目「旧エーとは」
         notes: oldA は正規化で OldA に当たる
+      - name: 照合条件を持つ用語
+        description: '正常系（照合条件を持つ文書）の term-c に `avoid: 旧シー` を加えて持つ'
+        notes: 1 回目の入力に React・tsx が無く、term-c の照合条件に当たらない
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -919,11 +922,12 @@ flows:
         participant FS as ファイル・settings
         participant ST as $.state
 
-        CC->>IF: 旧エーと oldA と旧ビーと term-b
+        CC->>IF: 旧エーと oldA と旧ビーと旧シーと term-b
         IF->>FS: 設定ファイル・dev-docs.yaml・用語の YAML を読む
         FS-->>IF: 文書（avoid を含む）
         IF->>IF: 用語の avoid のやめた言い方ごとに避ける語の語を作る
-        IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・term-b が当たる
+        IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・旧シー・term-b が当たる
+        IF->>IF: 旧シーを term-c の照合条件で評価して外す
         IF->>ST: 旧エー・OldA・term-b を記録に入れる
         IF-->>CC: context に用語と避ける語のセクション
         CC->>IF: 旧エーとは
@@ -936,6 +940,7 @@ flows:
       - 1 回目の返る `context` に 旧ビー が含まれない
       - 2 回目の返る `context` が空
       - テストの `on` の `ui.log` に行が届いていない
+      - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
     test: test_normal_when_term_avoid
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
@@ -1043,7 +1048,7 @@ constraints:
     constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使う（ファイル名は拡張子を除く）'
     notes: '-'
   - item: 照合条件
-    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前が当たった文書のうち照合条件に当たる文書だけを残す。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
+    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前・エイリアス・やめた言い方が当たった文書のうち照合条件に当たる文書だけを残す。用語のやめた言い方は、その用語の照合条件で評価する。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
     notes: 照合条件の評価は、照合で当たった文書だけに行う。照合条件で外れた語は記録に入れず、次に出た入力で追加の対象になる
   - item: 作業場所の絞り
     constraint: エイリアスの元の行（設定ファイルの `aliases` の行と `dev-docs.yaml` の `documents` の行）が `scope.cwd` に glob を 1 つ以上並べたとき、セッションを起動したプロジェクトの直下（`$.session.root()`）がどれかの glob に当たる場合だけ、その行を照合に使用する。`scope` を記載しない行は全ての作業場所で使用する。glob は先頭の `~` をホームに展開し、相対パスは `paths` と同じ基準で解決する。`/**` で終わる glob はそのフォルダと配下のフォルダに当たり、`/**` を付けないパスはそのフォルダだけに当たる。`*` はフォルダの区切りを除く任意の文字列に当たる
