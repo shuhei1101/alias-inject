@@ -6,10 +6,9 @@ use_cases:
     depends_on: []
   - kind: single
     scenario: docs/scenario/SC-2.yaml
-    impact: following
-    detail: ツールで読んだ本文に用語のやめた言い方が出たときも、入力と同じく避ける語として用語の名前を追加する
-    depends_on:
-      - docs/scenario/SC-3.yaml
+    impact: run_only
+    detail: シナリオは「入力と同じ語と照合する」のまま変わらない。ツールで読んだ本文に用語のやめた言い方が出たときも、避ける語として用語の名前を追加する
+    depends_on: []
   - kind: composite
     scenario: docs/scenario/SC-1.yaml
     impact: run_only
