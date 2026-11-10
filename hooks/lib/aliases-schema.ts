@@ -199,7 +199,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             },
             "avoid": {
               "title": "避ける語の列",
-              "description": "term の用語ごとのやめた言い方を取る列の名前。文脈には使わない。",
+              "description": "term の用語ごとのやめた言い方を取る列の名前。列の値は文字列か文字列の並び。やめた言い方を照合し、avoid と同じ避ける語として用語の語を案内する。",
               "type": "string",
               "minLength": 1,
               "examples": [
