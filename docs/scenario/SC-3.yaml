@@ -524,6 +524,40 @@ scenarios:
       - 文脈が追加されていない
       - 入力の送信は止まらず、モデルの返事が返っている
     test: test_normal_when_config_missing
+  - name: 正常シナリオ（用語のやめた言い方）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: 正常シナリオの term-a に、やめた言い方 `旧エー` を `avoid` の列で持たせる
+        notes: 用語の行は `metadata` を書かず、`avoid` も同じ名前の列から取る。`avoid` の列は文字列でも並びでも同じ結末になる
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-b と 旧エー を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 用語の name・aliases と、用語のやめた言い方を照合し、term-b と 旧エー が当たる
+        P->>P: term-b と 旧エー を記録に入れる
+        P->>CC: term-b を用語、旧エー を避ける語のセクションに分けた文脈を context に追加
+        CC->>M: 入力と文脈を送信
+        U->>CC: 旧エー を含む入力をもう一度送信
+        CC->>P: prompt.submit
+        P->>P: 照合で 旧エー が当たるが記録済み
+        P->>CC: 入力をそのまま渡す
+        CC->>M: 入力だけを送信
+      ```
+    expected:
+      - 1 回目の入力の文脈に、セクション「用語」の下で term-b の語・`id`・`description` が並んでいる
+      - 1 回目の入力の文脈に、セクション「避ける語」の下で 旧エー の語と、`replacement` として term-a が並んでいる
+      - 1 回目の入力の文脈のセクション「用語」に term-a は並んでいない
+      - 2 回目の入力には文脈が追加されていない
+      - 入力の文は送信したとおりのまま届いている
+    test: test_normal_when_term_avoid
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者

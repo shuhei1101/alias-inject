@@ -60,7 +60,7 @@ functions:
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: 出所・`aliases` の要素の `id`・項目の ID の組を 1 つの文字列にする
+    summary: 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の語は、やめた言い方も）の組を 1 つの文字列にする
     scope: public
     is_async: false
     args:
@@ -71,8 +71,10 @@ functions:
         description: 語
     returns:
       type: string
-      description: '`{origin}\u0000{aliasId}\u0000{id}`'
-    process: 1. origin・aliasId・id を NUL 文字でつないで返す
+      description: '`{origin}\u0000{aliasId}\u0000{id}`。`avoid` があるときは `{origin}\u0000{aliasId}\u0000{id}\u0000{avoid}`'
+    process: |-
+      1. origin・aliasId・id を NUL 文字でつなぐ
+      2. `avoid` が undefined でなければ、NUL 文字と `avoid` を後ろにつなぐ
     unit_tests:
       - name: test_entry_key
         case: 正常
@@ -80,6 +82,13 @@ functions:
         condition: origin `/a`・aliasId `b c`・id `d` と origin `/a`・aliasId `b`・id `c d`、origin だけが `/a` と `/b` で違う 2 つ
         mock: なし
         expected: どちらの組も 2 つのキーが異なる
+      - name: test_entry_key_when_avoid
+        case: 正常
+        summary: 用語のやめた言い方の語は、用語とやめた言い方ごとにキーが違う
+        condition: origin・aliasId・id が同じで、avoid が undefined・`旧エー`・`OldA` の 3 つ
+        mock: なし
+        expected: 3 つのキーが互いに異なり、avoid が undefined のキーは `{origin}\u0000{aliasId}\u0000{id}` のまま
+        notes: 'PR #73 で追加'
   - name: renderContext
     title: 文脈の書式化
     kind: 関数

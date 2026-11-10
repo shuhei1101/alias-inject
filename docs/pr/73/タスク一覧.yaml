@@ -1,0 +1,85 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: '#5 で済んでいる'
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書が揃っている
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めを依頼する Issue ではない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: 未検証の技術機構に依存しない。既存の照合と文脈の組み立ての処理に閉じる
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: '影響なし: セッションを通した流れは変わらない'
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 利用者に見える画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 利用者に見える画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: 単一ユースケース設計
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T16:26:08.944184+00:00'
+  - process: モック作成
+    status: skipped
+    reason: 利用者に見える画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: インターフェース定義設計
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T16:38:17.965224+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'
+  - process: モジュール構成設計
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T16:56:22.520943+00:00'
+  - process: ドキュメント修正
+    status: done
+    note: docs/guide/コアコンセプト-引用の文脈.md・docs/guide/設定ファイル.md・docs/guide/エイリアスのスキーマ.md・schemas/aliases.schema.yaml
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:14.728894+00:00'
+  - process: 単体テスト作成
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:27:06.939662+00:00'
+  - process: 実装
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:31:59.227552+00:00'
+  - process: 結合テスト作成
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:41:41.444735+00:00'
+  - process: E2E テスト作成
+    status: skipped
+    reason: 0.x の間は E2E を回さない（#68・#69 で削除済み。シナリオの対応テストファイルは作り直すときの印として残す）
+    updated_by: planner
+    updated_at: '2026-11-10T16:17:19.495977+00:00'

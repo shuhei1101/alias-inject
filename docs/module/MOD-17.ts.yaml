@@ -46,7 +46,7 @@ data_models:
         description: 文脈に出す語。解決した `name` の値（空なら補った値）
       - name: keys
         type: string[]
-        description: 照合する語（`name` と `aliases`）を正規化したもの。空文字と重複を除く
+        description: 照合する語（`name` と `aliases`。やめた言い方の語は、そのやめた言い方）を正規化したもの。空文字と重複を除く
       - name: fields
         type: '{ name: string; value: string }[]'
         description: 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ
@@ -62,6 +62,10 @@ data_models:
         type: Condition | undefined
         description: 解決した `inject_when` の値を照合条件の検査に通したもの。値が無い・null なら undefined
         notes: 'PR #58 で追加'
+      - name: avoid
+        type: string | undefined
+        description: 用語の `avoid` のやめた言い方から作った語のとき、そのやめた言い方（書いたまま）。それ以外は undefined
+        notes: 'PR #73 で追加'
   - name: LoadedEntries
     title: 読んだ語
     container: hooks/lib/entry.ts
@@ -181,7 +185,8 @@ functions:
          - env: `url`、`port`、`description`
          - avoid: `replacement`
       8. 値が文字列でないとき、数値・真偽値は文字列にし、それ以外は並べない。改行は空白 1 つにする
-      9. `origin`・`aliasId` は alias の値、`type` は行の `alias_type`、`path` は文書の path を入れる。`bodyFile` は `index` が null でなく行に `body_file` があるとき、その列の値を入れる（空なら undefined）。`condition` は 4 の照合条件を入れる
+      9. `origin`・`aliasId` は alias の値、`type` は行の `alias_type`、`path` は文書の path を入れる。`bodyFile` は `index` が null でなく行に `body_file` があるとき、その列の値を入れる（空なら undefined）。`condition` は 4 の照合条件を入れる。`avoid` は undefined
+      10. 行の `alias_type` が term のとき、各文書の `avoid`（文字列か文字列の並び）のやめた言い方ごとに、その文書の語の後ろへ語を 1 つ作る。`type` は avoid、`word`・`avoid` はやめた言い方、`keys` はやめた言い方を正規化した 1 つ、`fields` は `replacement` に用語の `word`。`aliasIndex`・`itemIndex`・`origin`・`aliasId`・`id`・`path`・`bodyFile`・`condition` は用語の語と同じにする。正規化して空になるもの、同じ文書の先のやめた言い方と重なるもの、用語の `keys` と重なるものは作らない
     callees:
       - MOD-10#functions[normalize]
       - MOD-2#functions[resolveMetadata]
@@ -243,6 +248,13 @@ functions:
         condition: 'alias_type が env の行で、env-a（`url: http://127.0.0.1:8000`・`port: 8000`（数値）・`description: 開発サーバー`）と env-b（`port: 5432` だけ）。alias_type が avoid の行で `replacement: term-a`'
         mock: なし
         expected: 'env-a の fields が `url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー` の順、env-b の fields が `port: 5432` だけ、avoid の fields が `replacement: term-a`'
+      - name: test_build_entries_when_term_avoid
+        case: 正常
+        summary: 用語の avoid のやめた言い方ごとに、用語の後ろへ avoid の語を作る
+        condition: '`alias_type: term` で metadata を書かない行。term-a（`name: Term-A`、`aliases: [用語エー]`、`description`、`avoid: [旧エー, OldA, 旧エー, 用語エー, ""]`、`inject_when: {field: text, op: contains, values: [tsx]}`）と term-b（`description`、`avoid: 旧ビー`（文字列））'
+        mock: なし
+        expected: "entries が term-a・旧エー・OldA・term-b・旧ビー の順。旧エー の type が avoid、id が `term-a`、word が `旧エー`、keys が `['旧エー']`、fields が `replacement: Term-A`、avoid が `旧エー`、path・itemIndex・condition が term-a と同じ。OldA の keys が `['olda']`。重なった `旧エー`・term-a の keys と同じ `用語エー`・空文字の語は作らない。term-a・term-b の avoid が undefined。failures が空"
+        notes: 'PR #73 で追加'
   - name: loadAliasEntries
     title: 行の文書の読み込み
     kind: 関数

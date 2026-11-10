@@ -896,6 +896,52 @@ flows:
       - 返る `context` に term-a の語・`id`・`description` が含まれる
       - '`/shell/settings.yaml` に `fs.read` が呼ばれていない'
     test: test_normal_when_settings_env_preferred
+  - name: 正常系（用語のやめた言い方）
+    summary: 用語の `avoid` のやめた言い方が当たったら、避ける語のセクションにやめた言い方と用語の語を追加し、exclude の語は照合しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+        notes: '-'
+      - name: 用語の YAML
+        description: '正常系の term-a に `avoid: [旧エー, OldA]`、term-b に `avoid: 旧ビー`（文字列）を加える'
+        notes: 用語の行は `metadata` を書かず、`avoid` も同じ名前の列から取る
+      - name: 設定ファイル
+        description: '正常系に加え `exclude: [旧ビー]`'
+        notes: 一般的な単語のやめた言い方を照合から外す手段
+      - name: 入力
+        description: 1 回目「旧エーと oldA と旧ビーと旧シーと term-b」、2 回目「旧エーとは」
+        notes: oldA は正規化で OldA に当たる
+      - name: 照合条件を持つ用語
+        description: '正常系（照合条件を持つ文書）の term-c に `avoid: 旧シー` を加えて持つ'
+        notes: 1 回目の入力に React・tsx が無く、term-c の照合条件に当たらない
+    flow: |-
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant FS as ファイル・settings
+        participant ST as $.state
+
+        CC->>IF: 旧エーと oldA と旧ビーと旧シーと term-b
+        IF->>FS: 設定ファイル・dev-docs.yaml・用語の YAML を読む
+        FS-->>IF: 文書（avoid を含む）
+        IF->>IF: 用語の avoid のやめた言い方ごとに避ける語の語を作る
+        IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・旧シー・term-b が当たる
+        IF->>IF: 旧シーを term-c の照合条件で評価して外す
+        IF->>ST: 旧エー・OldA・term-b を記録に入れる
+        IF-->>CC: context に用語と避ける語のセクション
+        CC->>IF: 旧エーとは
+        IF->>IF: 旧エーが当たるが記録済み
+        IF-->>CC: 受け取ったまま
+      ```
+    expected:
+      - 1 回目の返る `context` の `## 用語` に term-b が並び、`Term-A` が並ばない
+      - '1 回目の返る `context` の `## 避ける語` に、行「- 旧エー（id: term-a）」と行「- OldA（id: term-a）」がこの順に並び、それぞれの子に `replacement: Term-A` が並ぶ'
+      - 1 回目の返る `context` に 旧ビー が含まれない
+      - 2 回目の返る `context` が空
+      - テストの `on` の `ui.log` に行が届いていない
+      - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
+    test: test_normal_when_term_avoid
 lead: 入力の文を、読むリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
 idempotent: false
 side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
@@ -950,7 +996,7 @@ response_example: |
     - cwd: /mnt/c/Users/shuhe/repo/ai-monitor
     - description: 依存を入れる
   ```
-response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 避ける語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの行の語も、同じ `alias_type` なら 1 つのセクションに並べる。語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
+response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 避ける語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの行の語も、同じ `alias_type` なら 1 つのセクションに並べる。語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。`alias_type` が term の文書の `avoid` のやめた言い方は、やめた言い方ごとに `## 避ける語` の語にし、語はやめた言い方の値、`id` は用語の `id`、子は `replacement` に用語の語（`name` の値）を並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
 exceptions:
   - name: なし（正常終了）
     condition: 照合して文脈を追加したか、追加する語が無く受け取ったまま渡した
@@ -985,10 +1031,10 @@ constraints:
     decided_by: CFG-1#settings[global.max_chars]
     notes: 上限で外れた語は記録に入れず、次に出た入力で追加の対象になる
   - item: 照合
-    constraint: 入力と文書の `name`・`aliases` の語を NFKC・英字の小文字・前後の空白の除去でそろえ、語が入力の部分文字列に含まれるかで判定する。正規表現は使わない。`exclude` の語は照合しない
+    constraint: 入力と文書の `name`・`aliases` の語と、`alias_type` が term の文書の `avoid` のやめた言い方を NFKC・英字の小文字・前後の空白の除去でそろえ、語が入力の部分文字列に含まれるかで判定する。正規表現は使わない。`exclude` の語は照合しない
     notes: 1 つの文書の複数の語（`name` と `aliases`）が当たっても、その文書は 1 回だけ追加する
   - item: 記録の単位
-    constraint: セッション ID（`$.session.id()`）ごとに、出所（`dev-docs.yaml` の絶対パスか設定ファイルの絶対パス）と行の `id` と文書の `id` の組で記録する
+    constraint: セッション ID（`$.session.id()`）ごとに、出所（`dev-docs.yaml` の絶対パスか設定ファイルの絶対パス）と行の `id` と文書の `id` の組で記録する。用語のやめた言い方は、その組にやめた言い方の値を加えた組で、用語とは別に記録する
     notes: 同じ文書をエイリアスで入力しても二度目は追加しない。別のリポジトリが同じ行の `id` と文書の `id` を使っても、それぞれを追加する
   - item: 読み直し
     constraint: 入力の送信ごとに、照合の前に設定ファイル・`dev-docs.yaml`・`paths` に当たる YAML の `mtimeMs` とフォルダの一覧を確かめ、変わったものだけ読み直す。同じ `dev-docs.yaml` を `global` と `projects` の両方が指すときは 1 回だけ読む
@@ -1002,7 +1048,7 @@ constraints:
     constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使う（ファイル名は拡張子を除く）'
     notes: '-'
   - item: 照合条件
-    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前が当たった文書のうち照合条件に当たる文書だけを残す。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
+    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前・エイリアス・やめた言い方が当たった文書のうち照合条件に当たる文書だけを残す。用語のやめた言い方は、その用語の照合条件で評価する。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
     notes: 照合条件の評価は、照合で当たった文書だけに行う。照合条件で外れた語は記録に入れず、次に出た入力で追加の対象になる
   - item: 作業場所の絞り
     constraint: エイリアスの元の行（設定ファイルの `aliases` の行と `dev-docs.yaml` の `documents` の行）が `scope.cwd` に glob を 1 つ以上並べたとき、セッションを起動したプロジェクトの直下（`$.session.root()`）がどれかの glob に当たる場合だけ、その行を照合に使用する。`scope` を記載しない行は全ての作業場所で使用する。glob は先頭の `~` をホームに展開し、相対パスは `paths` と同じ基準で解決する。`/**` で終わる glob はそのフォルダと配下のフォルダに当たり、`/**` を付けないパスはそのフォルダだけに当たる。`*` はフォルダの区切りを除く任意の文字列に当たる

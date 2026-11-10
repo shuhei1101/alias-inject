@@ -279,6 +279,47 @@ test('test_build_entries_when_env_and_avoid', () => {
   expect(avoidEntries[0]?.fields).toEqual([{ name: 'replacement', value: 'term-a' }])
 })
 
+// 用語の avoid のやめた言い方ごとに、用語の後ろへ avoid の語を作る（正常系）
+test('test_build_entries_when_term_avoid', () => {
+  // 準備
+  const documents = [
+    fileDocument(
+      {
+        id: 'term-a',
+        name: 'Term-A',
+        aliases: ['用語エー'],
+        description: '説明 A',
+        avoid: ['旧エー', 'OldA', '旧エー', '用語エー', ''],
+        inject_when: { field: 'text', op: 'contains', values: ['tsx'] },
+      },
+      '/d/term/term-a.yaml',
+    ),
+    fileDocument({ id: 'term-b', name: 'Term-B', description: '説明 B', avoid: '旧ビー' }, '/d/term/term-b.yaml'),
+  ]
+
+  // 実行
+  const { entries, failures } = buildEntries(documents, makeAlias(), 0)
+
+  // 検証
+  expect(entries.map((entry) => entry.word)).toEqual(['Term-A', '旧エー', 'OldA', 'Term-B', '旧ビー'])
+  const [termA, oldA, oldAlpha, termB, oldB] = entries
+  expect(oldA?.type).toBe('avoid')
+  expect(oldA?.id).toBe('term-a')
+  expect(oldA?.keys).toEqual(['旧エー'])
+  expect(oldA?.fields).toEqual([{ name: 'replacement', value: 'Term-A' }])
+  expect(oldA?.avoid).toBe('旧エー')
+  expect(oldA?.path).toBe(termA?.path)
+  expect(oldA?.itemIndex).toBe(termA?.itemIndex)
+  expect(oldA?.condition).toEqual(termA?.condition)
+  expect(oldA?.condition).not.toBe(undefined)
+  expect(oldAlpha?.keys).toEqual(['olda'])
+  expect(oldB?.type).toBe('avoid')
+  expect(oldB?.fields).toEqual([{ name: 'replacement', value: 'Term-B' }])
+  expect(termA?.avoid).toBe(undefined)
+  expect(termB?.avoid).toBe(undefined)
+  expect(failures).toEqual([])
+})
+
 // glob に当たる全ての YAML を 1 件ずつの文書にして語にする（正常系）
 test('test_load_alias_entries', async () => {
   // 準備

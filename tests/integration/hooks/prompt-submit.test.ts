@@ -535,6 +535,33 @@ test('test_normal_when_inject_condition', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
+// 用語の avoid のやめた言い方を避ける語のセクションに追加し、exclude の語と照合条件に当たらない用語のやめた言い方は追加しない（正常系）
+test('test_normal_when_term_avoid', async ($, on) => {
+  // 準備
+  const fs = makeFs(makeConfig({ globalExtra: ['exclude: [旧ビー]'] }))
+  fs.write(`${TERMS_DIR}/term-a.yaml`, `${termYaml({ id: 'term-a', name: 'Term-A', aliases: ['用語エー'] })}avoid: [旧エー, OldA]\n`)
+  fs.write(`${TERMS_DIR}/term-b.yaml`, `${termYaml({ id: 'term-b' })}avoid: 旧ビー\n`)
+  fs.write(`${TERMS_DIR}/term-c.yaml`, `${TERM_C_WITH_CONDITION}avoid: 旧シー\n`)
+  const world = installWorld(on, { fs, settings: SETTINGS })
+
+  // 実行
+  // oldA は正規化で OldA に当たる。旧シー の term-c は React・tsx を含まないため照合条件に当たらない
+  const first = await submit($, '旧エーと oldA と旧ビーと旧シーと term-b')
+  const second = await submit($, '旧エーとは')
+
+  // 検証
+  const context = first.context?.[0] ?? ''
+  const [terms = '', avoids = ''] = context.split('## 避ける語')
+  expect(terms).toContain('## 用語')
+  expect(terms).toContain('term-b（id: term-b）')
+  expect(terms).not.toContain('Term-A')
+  expect(avoids).toContain('- 旧エー（id: term-a）\n  - replacement: Term-A\n- OldA（id: term-a）\n  - replacement: Term-A')
+  expect(context).not.toContain('旧ビー')
+  expect(context).not.toContain('旧シー')
+  expect(second.context ?? []).toEqual([])
+  expect(world.logs).toEqual([])
+})
+
 // 照合条件の誤った文書だけを外し、同じ行の他の文書の文脈は追加する（異常系）
 test('test_error_when_inject_condition_invalid', async ($, on) => {
   // 準備
