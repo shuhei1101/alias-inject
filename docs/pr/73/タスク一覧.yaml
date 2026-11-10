@@ -58,7 +58,9 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-10T16:17:19.495977+00:00'
   - process: モジュール構成設計
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T16:56:22.520943+00:00'
   - process: ドキュメント修正
     status: todo
     note: docs/guide/コアコンセプト-引用の文脈.md・docs/guide/設定ファイル.md・docs/guide/エイリアスのスキーマ.md・schemas/aliases.schema.yaml
