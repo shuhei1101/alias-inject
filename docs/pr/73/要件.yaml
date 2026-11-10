@@ -38,19 +38,27 @@ docs:
   - page: docs/guide/コアコンセプト-引用の文脈.md
     new: false
     change: term の `avoid` の単語が出たら、避ける語のセクションに用語の名前を並べることを追加する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:10.829422+00:00'
   - page: docs/guide/設定ファイル.md
     new: false
     change: term の `avoid` を「文脈には使わない」から、避ける語として照合する説明に書き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:10.829422+00:00'
   - page: docs/guide/エイリアスのスキーマ.md
     new: false
     change: term の `avoid` と `alias_type` が `avoid` の行の関係の説明を、照合するようになったことに合わせる
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:10.829422+00:00'
   - page: schemas/aliases.schema.yaml
     new: false
     change: '`metadata.avoid` の説明を、避ける語として照合する内容に合わせる（キーと型は変えない）'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:10.829422+00:00'
 scope_out:
   - item: '`alias_type` が `avoid` の行の廃止・用語の `avoid` への統合'
     reason: 用語集に無いやめた言い方と正しい語の組を記載する手段として残す（#21 で別に残すと決めた）。Issue の要望に含まれない

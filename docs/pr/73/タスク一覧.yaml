@@ -62,8 +62,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-10T16:56:22.520943+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/guide/コアコンセプト-引用の文脈.md・docs/guide/設定ファイル.md・docs/guide/エイリアスのスキーマ.md・schemas/aliases.schema.yaml
+    updated_by: planner
+    updated_at: '2026-11-10T17:03:14.728894+00:00'
   - process: 単体テスト作成
     status: todo
   - process: 実装
