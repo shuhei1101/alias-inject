@@ -1,0 +1,28 @@
+dev-docs の端末の設定の配信元の設定のパスの書き換え:
+  説明: 端末の設定 ~/.config/dev-docs/settings.yaml の配信元 alias-inject の config を /mnt/c/Users/shuhe/repo/alias-inject/dev-docs.yaml から /mnt/c/Users/shuhe/repo/alias-inject/project-index.yaml へ書き換え、配信している dev-docs に読み直させる。作業 PR が develop へ入ると develop の dev-docs.yaml が無くなり、次の読み直しで alias-inject の配信が止まるため、マージの直後に実行する。切り戻しは、作業 PR を develop から revert した後にだけ使う
+  タグ: [設定の書き換え, 再読み込み]
+  実行者: planner
+  時期: マージの後
+  回数: 1 回限り
+  可逆: true
+  疎通確認: null
+  実行: null
+  確認: null
+  切り戻し: null
+  失敗時: 既定の対処を 1 回、2 回連続で失敗したら依頼元へ返す
+  確認方法: dev-docs が読んでいる端末の設定の alias-inject の行の config が /mnt/c/Users/shuhe/repo/alias-inject/project-index.yaml で配信中になっており、develop の worktree を作業場所にした search_docs（source が alias-inject・view が count）の件数が書き換える前と同じ
+  状態: "-"
+alias-inject の端末の設定の配信元の設定のパスの書き換え:
+  説明: 端末の設定 ~/.config/alias-inject/settings.yaml の global.repositories の alias-inject の行の config を /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/develop/dev-docs.yaml から /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/develop/project-index.yaml へ書き換える。develop の worktree が作業 PR のマージを取り込むと dev-docs.yaml が無くなり、alias-inject が alias-inject の配信元の設定を照合から外すため、マージの直後に実行する。切り戻しは、作業 PR を develop から revert した後にだけ使う
+  タグ: [設定の書き換え]
+  実行者: planner
+  時期: マージの後
+  回数: 1 回限り
+  可逆: true
+  疎通確認: null
+  実行: null
+  確認: null
+  切り戻し: null
+  失敗時: 既定の対処を 1 回、2 回連続で失敗したら依頼元へ返す
+  確認方法: ~/.config/alias-inject/settings.yaml の global.repositories に /mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/develop/project-index.yaml の行が 1 つあり、dev-docs.yaml の alias-inject の行が無く、そのパスのファイルが develop の worktree にある
+  状態: "-"
