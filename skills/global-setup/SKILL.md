@@ -22,14 +22,14 @@ description: 端末ごとに 1 回、alias-inject の設定ファイルを作る
    - 残っていなければ、書き換えずに手順 4 へ進む
 
 3. 設定ファイルが無い場合、設定ファイルを作る。
-   - 読むリポジトリの `dev-docs.yaml` のパスと、用語集の YAML のパスを聞く
+   - 読むリポジトリの `project-index.yaml` のパスと、用語集の YAML のパスを聞く
    - `${CLAUDE_SKILL_DIR}/../../settings.sample.yaml` を元に、`global.repositories` と `global.aliases` を聞いた値にした設定ファイルを作る
 
 4. 設定ファイルのパスが既定のパスと違うか、`settings.json` の `env` の `ALIAS_INJECT_CONFIG` が別のパスを指していれば、`env` の `ALIAS_INJECT_CONFIG` に設定ファイルのパスを記載する。
    - `env` のほかのキーと、ファイルのほかの内容は変えない
 
 5. 引用の文脈が追加されることを確認する。
-   - 設定ファイルの `global.aliases` の `paths`、または `global.repositories` の `dev-docs.yaml` の `documents` のうち `alias_type` を持つ行の `paths` が指す YAML から、語を 1 つ取得する
+   - 設定ファイルの `global.aliases` の `paths`、または `global.repositories` の `project-index.yaml` の `documents` のうち `alias_type` を持つ行の `paths` が指す YAML から、語を 1 つ取得する
    - 語を取得できなければ、照合する語を聞く
    - `claude -p --debug-file {一時ファイル} "{語}の説明を 1 文で答えてください"` を実行し、回答に語の `description` の内容が反映されるかを確認する
    - 反映されなければ、一時ファイルの `alias-inject:` で始まる行を示し、行の理由に沿った直し方を示して止まる。理由の行が無ければ、プラグインが有効か（`claude plugin list`）を確認するよう示して止まる

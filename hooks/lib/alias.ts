@@ -61,7 +61,7 @@ export type AliasConfig = {
 
 /** 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行 */
 export type ResolvedAlias = AliasConfig & {
-  /** 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
+  /** 行を書いた `project-index.yaml` か設定ファイルの絶対パス */
   origin: string
   /** `paths` を解決した絶対パスの glob */
   patterns: string[]

@@ -7,7 +7,7 @@ import { MemoryFs } from '../support/memory-fs'
 import { thrown, thrownAsync } from '../support/thrown'
 
 const HOME = '/home/u'
-const DEV_DOCS = '/repo/knowledge/dev-docs.yaml'
+const DEV_DOCS = '/repo/knowledge/project-index.yaml'
 
 // documents の 1 行の YAML。`metadata` に足したい行を渡せる
 function termRowYaml(id: string, paths: string, extraMetadata: string[] = []): string[] {
@@ -19,12 +19,12 @@ function termRowYaml(id: string, paths: string, extraMetadata: string[] = []): s
   ]
 }
 
-// dev-docs.yaml の文字列
+// project-index.yaml の文字列
 function devDocs(...rowBlocks: string[][]): string {
   return ['documents:', ...rowBlocks.flat(), ''].join('\n')
 }
 
-// `documents` の `alias_type` を持つ行の `paths` を dev-docs.yaml のフォルダから解決し、他の行とキーは読まない（正常系）
+// `documents` の `alias_type` を持つ行の `paths` を project-index.yaml のフォルダから解決し、他の行とキーは読まない（正常系）
 test('test_parse_repository', () => {
   // 準備
   const text = [
@@ -43,7 +43,7 @@ test('test_parse_repository', () => {
   expect(result.warnings).toEqual([])
 })
 
-// `documents` を持たない・空の dev-docs.yaml は行 0 件になり、トップレベルの `aliases` は読まない（正常系）
+// `documents` を持たない・空の project-index.yaml は行 0 件になり、トップレベルの `aliases` は読まない（正常系）
 test('test_parse_repository_when_documents_missing', () => {
   // 準備
   const legacy = [
@@ -138,12 +138,12 @@ test('test_load_repository_aliases', async () => {
   expect(third.aliases.map((alias) => alias.id)).toEqual(['terms', 'urls'])
 })
 
-// 無い dev-docs.yaml はパスつきで例外を投げる（異常系）
+// 無い project-index.yaml はパスつきで例外を投げる（異常系）
 test('test_load_repository_aliases_when_missing', async () => {
   // 準備
   clearCache()
   const { $ } = createFakeEngine({ fs: new MemoryFs() })
-  const path = '/repo/missing/dev-docs.yaml'
+  const path = '/repo/missing/project-index.yaml'
 
   // 実行
   const error = await thrownAsync(() => loadRepositoryAliases($, { path, schema: ALIAS_SCHEMA, home: HOME }))
@@ -153,7 +153,7 @@ test('test_load_repository_aliases_when_missing', async () => {
   expect((error as RepositoryError).path).toBe(path)
 })
 
-// `documents` の行の `scope.cwd` を dev-docs.yaml のフォルダから解決する（正常系）
+// `documents` の行の `scope.cwd` を project-index.yaml のフォルダから解決する（正常系）
 test('test_parse_repository_when_cwd_scope', () => {
   // 準備
   const text = devDocs(

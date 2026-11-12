@@ -197,7 +197,7 @@ test('test_normal_when_files_changed', async ($, on) => {
 // 別のリポジトリが同じ aliases の id と項目の ID を使っても、両方を追加して記録する（正常系）
 test('test_normal_when_same_id_across_repositories', async ($, on) => {
   // 準備
-  const otherDevDocsPath = '/repo/other/dev-docs.yaml'
+  const otherDevDocsPath = '/repo/other/project-index.yaml'
   const config = makeConfig({ repositories: [`- config: ${DEV_DOCS_PATH}`, `- config: ${otherDevDocsPath}`] })
   const fs = makeFs(config)
   fs.write(otherDevDocsPath, makeDevDocs())
@@ -219,7 +219,7 @@ test('test_normal_when_same_id_across_repositories', async ($, on) => {
 // enabled: false の repositories の要素と documents の行を読まずに照合する（正常系）
 test('test_normal_when_disabled', async ($, on) => {
   // 準備
-  const otherDevDocsPath = '/repo/other/dev-docs.yaml'
+  const otherDevDocsPath = '/repo/other/project-index.yaml'
   const config = makeConfig({ repositories: [`- config: ${DEV_DOCS_PATH}`, `- config: ${otherDevDocsPath}`, '  enabled: false'] })
   const fs = makeFs(config, makeDevDocs({ documentsExtra: termAliasLines({ id: 'drafts', paths: 'drafts/*.yaml', enabled: false }) }))
   fs.write(`${KNOWLEDGE_DIR}/drafts/term-x.yaml`, termYaml({ id: 'term-x', name: 'Term-X' }))
@@ -240,7 +240,7 @@ test('test_normal_when_disabled', async ($, on) => {
   expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/drafts/term-x.yaml`)
 })
 
-// 更新時刻が変わった dev-docs.yaml を読み直し、追加した documents の行で照合する（正常系）
+// 更新時刻が変わった project-index.yaml を読み直し、追加した documents の行で照合する（正常系）
 test('test_normal_when_repository_config_changed', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -249,7 +249,7 @@ test('test_normal_when_repository_config_changed', async ($, on) => {
   const first = await submit($, 'term-a とは')
 
   // 実行
-  // dev-docs.yaml の documents にコマンドの行を追加する
+  // project-index.yaml の documents にコマンドの行を追加する
   fs.write(DEV_DOCS_PATH, makeDevDocs({ documentsExtra: aliasLines({ id: 'commands', type: 'command', paths: 'commands/*.yaml' }) }))
   fs.reads.length = 0
   const second = await submit($, 'term-a と cmd-a')
@@ -322,11 +322,11 @@ test('test_error_when_config_unreadable', async ($, on) => {
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
-// 読めない dev-docs.yaml のリポジトリだけを外し、他のリポジトリの文脈は追加する（異常系）
+// 読めない project-index.yaml のリポジトリだけを外し、他のリポジトリの文脈は追加する（異常系）
 test('test_error_when_repository_unreadable', async ($, on) => {
   // 準備
-  // /repo/missing/dev-docs.yaml が無い（fs.stat と fs.read が例外になる）
-  const missingPath = '/repo/missing/dev-docs.yaml'
+  // /repo/missing/project-index.yaml が無い（fs.stat と fs.read が例外になる）
+  const missingPath = '/repo/missing/project-index.yaml'
   const config = makeConfig({ repositories: [`- config: ${missingPath}`, `- config: ${DEV_DOCS_PATH}`] })
   const world = installWorld(on, { fs: makeFs(config), settings: SETTINGS })
 
@@ -337,7 +337,7 @@ test('test_error_when_repository_unreadable', async ($, on) => {
   const context = result.context?.[0] ?? ''
   expect(context).toContain('## 用語')
   expect(context).toContain('Term-A')
-  // dev-docs.yaml のパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
+  // project-index.yaml のパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
@@ -369,7 +369,7 @@ test('test_error_when_alias_invalid', async ($, on) => {
   expect(context).not.toContain('Term-X')
   expect(context).not.toContain('Term-V')
   expect(context).not.toContain('Term-Z')
-  // dev-docs.yaml のパス・行の id・理由（bad は metadata.name、unknown は alias_type）を含む行と、id の重なりの行が debug log に届く
+  // project-index.yaml のパス・行の id・理由（bad は metadata.name、unknown は alias_type）を含む行と、id の重なりの行が debug log に届く
   const debugLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(DEV_DOCS_PATH))
   expect(debugLines.some((line) => line.text.includes('id: bad') && line.text.includes('metadata.name'))).toBe(true)
   expect(debugLines.some((line) => line.text.includes('id: unknown') && line.text.includes('alias_type'))).toBe(true)
@@ -424,7 +424,7 @@ test('test_error_when_env_without_endpoint', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('env-x') && line.text.includes('url') && line.text.includes('port'))).toBe(true)
 })
 
-// 設定ファイルの旧い構造の要素と dev-docs.yaml の metadata.alias_type を持つ行を外し、dev-docs.yaml のトップレベルの aliases は読まない（異常系）
+// 設定ファイルの旧い構造の要素と project-index.yaml の metadata.alias_type を持つ行を外し、project-index.yaml のトップレベルの aliases は読まない（異常系）
 test('test_error_when_legacy_aliases', async ($, on) => {
   // 準備
   // metadata を持たない旧い構造の要素と、行の alias_type を持たず metadata.alias_type を持つ要素
@@ -452,7 +452,7 @@ test('test_error_when_legacy_aliases', async ($, on) => {
   expect(context).not.toContain('Term-Y')
   expect(context).not.toContain('Term-W')
   expect(context).not.toContain('Term-V')
-  // 設定ファイルのパス・行の id・理由を含む行と、dev-docs.yaml のパス・old-docs・metadata.alias_type を含む行が debug log に届く
+  // 設定ファイルのパス・行の id・理由を含む行と、project-index.yaml のパス・old-docs・metadata.alias_type を含む行が debug log に届く
   const configLines = world.logs.filter((line) => line.to === 'debug' && line.text.includes(CONFIG_PATH))
   expect(configLines.some((line) => line.text.includes('urls'))).toBe(true)
   expect(configLines.some((line) => line.text.includes('old-terms'))).toBe(true)

@@ -148,7 +148,7 @@ test('test_parse_config', () => {
   const value = {
     global: {
       enabled: false,
-      repositories: [{ config: '../knowledge/dev-docs.yaml' }, { config: '~/old/dev-docs.yaml', enabled: false }],
+      repositories: [{ config: '../knowledge/project-index.yaml' }, { config: '~/old/project-index.yaml', enabled: false }],
       aliases: [termAlias],
       origins: ['user', 'plugin'],
       max_items: 5,
@@ -160,7 +160,7 @@ test('test_parse_config', () => {
     projects: [
       {
         match: 'sample',
-        repositories: [{ config: 'dev-docs.yaml' }],
+        repositories: [{ config: 'project-index.yaml' }],
         aliases: [rawAlias('commands', 'docs/*.yaml')],
       },
     ],
@@ -171,7 +171,7 @@ test('test_parse_config', () => {
 
   // 検証
   expect(config.enabled).toBe(false)
-  expect(config.repositories).toEqual([{ config: '../knowledge/dev-docs.yaml', baseDir: 'config' }])
+  expect(config.repositories).toEqual([{ config: '../knowledge/project-index.yaml', baseDir: 'config' }])
   expect(config.aliases).toEqual([termAlias])
   expect(config.origins).toEqual(['user', 'plugin'])
   expect(config.maxItems).toBe(5)
@@ -181,7 +181,7 @@ test('test_parse_config', () => {
   expect(config.heading).toBe('見出し')
   expect(config.projects.length).toBe(1)
   expect(config.projects[0]?.match).toBe('sample')
-  expect(config.projects[0]?.repositories).toEqual([{ config: 'dev-docs.yaml', baseDir: 'project' }])
+  expect(config.projects[0]?.repositories).toEqual([{ config: 'project-index.yaml', baseDir: 'project' }])
   expect(config.projects[0]?.aliases.map((alias) => alias.id)).toEqual(['commands'])
   expect(config.warnings).toEqual([])
 })
@@ -319,18 +319,18 @@ test('test_resolve_settings', () => {
   // 準備
   const config = parse({
     global: {
-      repositories: [{ config: '/repo/g/dev-docs.yaml' }],
+      repositories: [{ config: '/repo/g/project-index.yaml' }],
       aliases: [rawAlias('global', 'g/*.yaml')],
     },
     projects: [
       {
         match: 'sample',
-        repositories: [{ config: '/repo/s/dev-docs.yaml' }],
+        repositories: [{ config: '/repo/s/project-index.yaml' }],
         aliases: [rawAlias('sample', 's/*.yaml')],
       },
       {
         match: 'other',
-        repositories: [{ config: '/repo/o/dev-docs.yaml' }],
+        repositories: [{ config: '/repo/o/project-index.yaml' }],
         aliases: [rawAlias('other', 'o/*.yaml')],
       },
     ],
@@ -340,7 +340,7 @@ test('test_resolve_settings', () => {
   const settings = resolveSettings(config, { where: WHERE })
 
   // 検証
-  expect(settings.repositories).toEqual(['/repo/g/dev-docs.yaml', '/repo/s/dev-docs.yaml'])
+  expect(settings.repositories).toEqual(['/repo/g/project-index.yaml', '/repo/s/project-index.yaml'])
   expect(settings.aliases.map((alias) => alias.id)).toEqual(['global', 'sample'])
   expect(settings.aliases.every((alias) => alias.origin === WHERE.configPath)).toBe(true)
   expect(settings.warnings).toEqual([])
@@ -351,13 +351,13 @@ test('test_resolve_settings_when_relative_paths', () => {
   // 準備
   const config = parse({
     global: {
-      repositories: [{ config: '../knowledge/dev-docs.yaml' }],
+      repositories: [{ config: '../knowledge/project-index.yaml' }],
       aliases: [rawAlias('global', 'terms/*.yaml')],
     },
     projects: [
       {
         match: 'sample',
-        repositories: [{ config: 'dev-docs.yaml' }],
+        repositories: [{ config: 'project-index.yaml' }],
         aliases: [rawAlias('sample', 'docs/command/*.yaml')],
       },
     ],
@@ -367,23 +367,23 @@ test('test_resolve_settings_when_relative_paths', () => {
   const settings = resolveSettings(config, { where: { ...WHERE, projectRoot: '/repo/sample/wt' } })
 
   // 検証
-  expect(settings.repositories).toEqual(['/home/u/.config/knowledge/dev-docs.yaml', '/repo/sample/wt/dev-docs.yaml'])
+  expect(settings.repositories).toEqual(['/home/u/.config/knowledge/project-index.yaml', '/repo/sample/wt/project-index.yaml'])
   expect(settings.aliases[0]?.patterns).toEqual(['/home/u/.config/alias-inject/terms/*.yaml'])
   expect(settings.aliases[1]?.patterns).toEqual(['/repo/sample/wt/docs/command/*.yaml'])
 })
 
-// 同じ dev-docs.yaml は 1 つにし、同じ id の aliases の要素は後を外す（正常系）
+// 同じ project-index.yaml は 1 つにし、同じ id の aliases の要素は後を外す（正常系）
 test('test_resolve_settings_when_duplicated', () => {
   // 準備
   const config = parse({
     global: {
-      repositories: [{ config: '/repo/knowledge/dev-docs.yaml' }],
+      repositories: [{ config: '/repo/knowledge/project-index.yaml' }],
       aliases: [rawAlias('terms', 'g/*.yaml')],
     },
     projects: [
       {
         match: 'sample',
-        repositories: [{ config: '/repo/sample/../knowledge/dev-docs.yaml' }],
+        repositories: [{ config: '/repo/sample/../knowledge/project-index.yaml' }],
         aliases: [rawAlias('terms', 's/*.yaml')],
       },
     ],
@@ -393,7 +393,7 @@ test('test_resolve_settings_when_duplicated', () => {
   const settings = resolveSettings(config, { where: WHERE })
 
   // 検証
-  expect(settings.repositories).toEqual(['/repo/knowledge/dev-docs.yaml'])
+  expect(settings.repositories).toEqual(['/repo/knowledge/project-index.yaml'])
   expect(settings.aliases.length).toBe(1)
   expect(settings.aliases[0]?.patterns).toEqual(['/home/u/.config/alias-inject/g/*.yaml'])
   expect(settings.warnings.length).toBe(1)
@@ -466,18 +466,18 @@ test('test_is_origin_allowed_when_origins_null', () => {
 // `config` を読み、`enabled` を書かない要素は有効になる（正常系）
 test('test_parse_repository_config', () => {
   // 実行
-  const withoutEnabled = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml' }, 'config')
-  const withEnabled = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml', enabled: true }, 'config')
+  const withoutEnabled = parseRepositoryConfig({ config: '../knowledge/project-index.yaml' }, 'config')
+  const withEnabled = parseRepositoryConfig({ config: '../knowledge/project-index.yaml', enabled: true }, 'config')
 
   // 検証
-  expect(withoutEnabled).toEqual({ config: '../knowledge/dev-docs.yaml', baseDir: 'config' })
-  expect(withEnabled).toEqual({ config: '../knowledge/dev-docs.yaml', baseDir: 'config' })
+  expect(withoutEnabled).toEqual({ config: '../knowledge/project-index.yaml', baseDir: 'config' })
+  expect(withEnabled).toEqual({ config: '../knowledge/project-index.yaml', baseDir: 'config' })
 })
 
 // `enabled: false` は null を返す（正常系）
 test('test_parse_repository_config_when_disabled', () => {
   // 実行
-  const result = parseRepositoryConfig({ config: '../knowledge/dev-docs.yaml', enabled: false }, 'config')
+  const result = parseRepositoryConfig({ config: '../knowledge/project-index.yaml', enabled: false }, 'config')
 
   // 検証
   expect(result).toBeNull()
@@ -490,7 +490,7 @@ test('test_parse_repository_config_when_invalid', () => {
     ['a', null],
     [{}, 'config'],
     [{ config: '' }, 'config'],
-    [{ config: '../knowledge/dev-docs.yaml', enabled: 'no' }, 'enabled'],
+    [{ config: '../knowledge/project-index.yaml', enabled: 'no' }, 'enabled'],
   ]
 
   // 実行・検証

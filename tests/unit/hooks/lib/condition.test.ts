@@ -14,7 +14,7 @@ function makeHit(id: string, condition: Condition | undefined, position: number)
   const entry: Entry = {
     aliasIndex: 0,
     itemIndex: position,
-    origin: '/a/dev-docs.yaml',
+    origin: '/a/project-index.yaml',
     aliasId: 'terms',
     type: 'term',
     id,

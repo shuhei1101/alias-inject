@@ -13,7 +13,7 @@ function makeEntry(
   return {
     aliasIndex: 0,
     itemIndex: 0,
-    origin: options.origin ?? '/a/dev-docs.yaml',
+    origin: options.origin ?? '/a/project-index.yaml',
     aliasId: options.aliasId ?? 'terms',
     type: options.type ?? 'term',
     id,
@@ -71,7 +71,7 @@ test('test_render_context', () => {
   const setup: Entry = {
     aliasIndex: 1,
     itemIndex: 0,
-    origin: '/mnt/c/Users/shuhe/repo/ai-monitor/dev-docs.yaml',
+    origin: '/mnt/c/Users/shuhe/repo/ai-monitor/project-index.yaml',
     aliasId: 'commands',
     type: 'command',
     id: 'cmd-setup',
@@ -90,7 +90,7 @@ test('test_render_context', () => {
   const usecase: Entry = {
     aliasIndex: 0,
     itemIndex: 0,
-    origin: '/mnt/c/Users/shuhe/repo/knowledge/dev-docs.yaml',
+    origin: '/mnt/c/Users/shuhe/repo/knowledge/project-index.yaml',
     aliasId: 'terms',
     type: 'term',
     id: 'term-single-usecase',
@@ -133,8 +133,8 @@ test('test_render_context', () => {
 // 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる（正常系）
 test('test_render_context_when_same_id_in_repositories', () => {
   // 準備
-  const later = makeEntry('term-a', { origin: '/b/dev-docs.yaml', description: 'b の説明' })
-  const earlier = makeEntry('term-a', { origin: '/a/dev-docs.yaml', description: 'a の説明' })
+  const later = makeEntry('term-a', { origin: '/b/project-index.yaml', description: 'b の説明' })
+  const earlier = makeEntry('term-a', { origin: '/a/project-index.yaml', description: 'a の説明' })
 
   // 実行
   const text = renderContext(HEADING, [later, earlier])

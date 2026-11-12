@@ -29,7 +29,7 @@ import { VARIABLE_REFERENCE_TIMEOUT_MS, findReferenceNames, formatReferenceLines
 
 type Next<Input, Result> = (e: Input) => Promise<Result>
 
-// debug log に出し終えた理由。読み込みの結果（設定ファイルの検証した設定・dev-docs.yaml から取り出した行）ごとに持つ
+// debug log に出し終えた理由。読み込みの結果（設定ファイルの検証した設定・project-index.yaml から取り出した行）ごとに持つ
 const loggedWarnings = new WeakMap<object, Set<string>>()
 
 // debug log に出す。入力の送信を止めないため、ログの失敗は呼び出し元に伝えない
@@ -67,7 +67,7 @@ async function loadConfig($: EngineInterface, configPath: string, schema: Record
   return loaded.config
 }
 
-// 読むリポジトリの行を repositories の順に並べる。読めない dev-docs.yaml は、そのリポジトリだけを外す
+// 読むリポジトリの行を repositories の順に並べる。読めない project-index.yaml は、そのリポジトリだけを外す
 async function loadRepositories(
   $: EngineInterface,
   repositories: string[],
@@ -82,7 +82,7 @@ async function loadRepositories(
       aliases.push(...loaded.aliases)
     } catch (error) {
       if (!(error instanceof RepositoryError)) throw error
-      logDebug($, `dev-docs.yaml を読めません（${error.path}）: ${error.reason}`)
+      logDebug($, `project-index.yaml を読めません（${error.path}）: ${error.reason}`)
     }
   }
   return aliases
