@@ -8,7 +8,9 @@ docs:
   - page: docs/guide/セットアップ.md
     new: false
     change: 手で用意する手順の curl が取得する settings.sample.yaml の URL を master から develop にする
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T07:33:25.974104+00:00'
 scope_out:
   - item: 過去の PR ドキュメント（docs/pr/）の master の記述
     reason: その PR の時点の記録で、参照ではない
