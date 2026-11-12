@@ -42,7 +42,7 @@ functions:
       - name: test_collect_argument_strings
         case: 正常
         summary: 入れ子のオブジェクトと並びの文字列を集め、予約したキーは集めない
-        condition: '`tool` が `mcp__plugin_dev-docs_dev-docs__search_docs`、`tool_use_id` が `t1`、`agentId` が `agent-1`、`source` が `knowledge`、`filter` が `{ and: [{ field: id, op: eq, values: [term-a] }] }`、`limit` が 5'
+        condition: '`tool` が `mcp__plugin_project-index_project-index__search_docs`、`tool_use_id` が `t1`、`agentId` が `agent-1`、`source` が `knowledge`、`filter` が `{ and: [{ field: id, op: eq, values: [term-a] }] }`、`limit` が 5'
         mock: なし
         expected: '`knowledge`・`id`・`eq`・`term-a` だけを持ち、`t1`・`agent-1`・ツール名を持たない'
     status: planned
@@ -132,7 +132,7 @@ functions:
       - name: test_exclude_reading_documents_when_mcp
         case: 正常
         summary: MCP のツールは引数の文字列に ID がある語を外す
-        condition: 'hits が term-a と term-b、`e` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `filter` が `{ field: id, op: eq, values: [term-a] }`'
+        condition: 'hits が term-a と term-b、`e` が `mcp__plugin_project-index_project-index__search_docs` で `filter` が `{ field: id, op: eq, values: [term-a] }`'
         mock: なし
         expected: term-b だけ
       - name: test_exclude_reading_documents_when_other_tool

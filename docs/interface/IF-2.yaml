@@ -73,7 +73,7 @@ flows:
       - name: Mock
         description: 正常系と同じ
       - name: ツールの呼び出し
-        description: '1 回目は `e.tool` が `Read` で `e.file_path` が `/repo/knowledge/terms/term-a.yaml`。2 回目は別のセッションで `e.tool` が `mcp__plugin_dev-docs_dev-docs__search_docs` で `e.filter` が `{ field: id, op: eq, values: [term-a] }`'
+        description: '1 回目は `e.tool` が `Read` で `e.file_path` が `/repo/knowledge/terms/term-a.yaml`。2 回目は別のセッションで `e.tool` が `mcp__plugin_project-index_project-index__search_docs` で `e.filter` が `{ field: id, op: eq, values: [term-a] }`'
         notes: ID が入れ子の並びの中にある呼び方
       - name: ツールの結果
         description: どちらも `text` が「Term-A と term-b」
