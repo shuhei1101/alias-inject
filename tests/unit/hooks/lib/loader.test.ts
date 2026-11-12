@@ -66,14 +66,14 @@ test('test_resolve_path_when_absolute', () => {
 test('test_resolve_path_when_dot_segments', () => {
   // 実行
   const relative = resolvePath({
-    path: '../knowledge/./dev-docs.yaml',
+    path: '../knowledge/./project-index.yaml',
     home: '/home/u',
     baseDir: '/home/u/.config/alias-inject',
   })
   const aboveRoot = resolvePath({ path: '/../a/**/*.yaml', home: '/home/u', baseDir: '/repo/sample' })
 
   // 検証
-  expect(relative).toBe('/home/u/.config/knowledge/dev-docs.yaml')
+  expect(relative).toBe('/home/u/.config/knowledge/project-index.yaml')
   expect(aboveRoot).toBe('/a/**/*.yaml')
 })
 
@@ -295,8 +295,8 @@ test('test_parse_yaml_when_proto_key', () => {
 // ファイルを置いたフォルダを返す（正常系）
 test('test_parent_dir', () => {
   // 実行
-  const nested = parentDir('/repo/knowledge/dev-docs.yaml')
-  const root = parentDir('/dev-docs.yaml')
+  const nested = parentDir('/repo/knowledge/project-index.yaml')
+  const root = parentDir('/project-index.yaml')
 
   // 検証
   expect(nested).toBe('/repo/knowledge')

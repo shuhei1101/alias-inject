@@ -8,9 +8,9 @@ scenarios:
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
         notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
       - name: 設定ファイル
-        description: '`global.repositories` に、一時のリポジトリの `dev-docs.yaml` を指す要素を 1 つ持つ'
+        description: '`global.repositories` に、一時のリポジトリの `project-index.yaml` を指す要素を 1 つ持つ'
         notes: '-'
-      - name: dev-docs.yaml
+      - name: project-index.yaml
         description: '`documents` に、`alias_type` が `term` で `paths` の相対パスが用語の YAML に当たる行と、`alias_type` を持たず語 `doc-z` を持つ YAML に当たる行を持つ'
         notes: 用語の行は `metadata` を書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る
       - name: 用語の YAML
@@ -25,7 +25,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と doc-z を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 設定ファイルと dev-docs.yaml の alias_type を持つ行と用語の YAML を読む
+        P->>P: 設定ファイルと project-index.yaml の alias_type を持つ行と用語の YAML を読む
         P->>P: 入力と語を正規化して照合し term-a が当たる
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 入力の文はそのままに、term-a の文脈を context に追加
@@ -142,7 +142,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: dev-docs.yaml の documents の行と設定ファイルの aliases の行の両方の語と照合する
+        P->>P: project-index.yaml の documents の行と設定ファイルの aliases の行の両方の語と照合する
         P->>CC: term-a と link-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
@@ -173,14 +173,14 @@ scenarios:
       - 文脈が追加されていない
       - 入力の送信は止まらず、モデルの返事が返っている
     test: test_error_when_config_unreadable
-  - name: 異常シナリオ（dev-docs.yaml が読めない）
+  - name: 異常シナリオ（project-index.yaml が読めない）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: '`global.repositories` に無い `dev-docs.yaml` を指す要素を加え、`global.aliases` に `alias_type` が url の行を 1 つ持つ'
-        notes: 書式の誤った `dev-docs.yaml` でも同じ結末になる
+        description: '`global.repositories` に無い `project-index.yaml` を指す要素を加え、`global.aliases` に `alias_type` が url の行を 1 つ持つ'
+        notes: 書式の誤った `project-index.yaml` でも同じ結末になる
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -190,7 +190,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 読めない dev-docs.yaml のリポジトリを照合から外す
+        P->>P: 読めない project-index.yaml のリポジトリを照合から外す
         P->>CC: 読めたリポジトリと設定ファイルの aliases の行の文脈を追加
         CC->>M: 入力と文脈を送信
       ```
@@ -203,7 +203,7 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
         notes: '-'
-      - name: dev-docs.yaml
+      - name: project-index.yaml
         description: 正常シナリオの行に加え、`alias_type` が term で、`metadata.name` を空の文字列で書いた行を 1 つ持つ
         notes: 合わない行の `paths` は語 `term-x` を持つ YAML に当たる。`name` の列も持つので、スキーマで検証しなければ term-x が当たる
     flow: |-
@@ -262,7 +262,7 @@ scenarios:
       - name: 設定ファイル
         description: '正常シナリオの `global.repositories` に加え、`global.aliases` に旧い構造（`type: url` と `fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の要素を 1 つずつ持つ'
         notes: '`type: url` の要素の `paths` は語 `link-a` を持つ URL の YAML に、`metadata.alias_type` の要素の `paths` は語 `term-w` を持つ YAML に当たる'
-      - name: dev-docs.yaml
+      - name: project-index.yaml
         description: '正常シナリオの `documents` の行に加え、トップレベルの `aliases` に旧い構造の `type: term` の要素と、`documents` に行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の行を 1 つずつ持つ'
         notes: トップレベルの要素の `paths` は語 `term-y` を持つ YAML に、`documents` の行の `paths` は語 `term-v` を持つ YAML に当たる
     flow: |-
@@ -274,7 +274,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a・link-a・term-y・term-w・term-v を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: dev-docs.yaml のトップレベルの aliases と、alias_type を持たない documents の行を読まない
+        P->>P: project-index.yaml のトップレベルの aliases と、alias_type を持たない documents の行を読まない
         P->>P: 設定ファイルの旧い構造の 2 つの要素をスキーマに合わない行として照合から外す
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
@@ -558,7 +558,7 @@ scenarios:
       - 2 回目の入力には文脈が追加されていない
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_term_avoid
-lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `dev-docs.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
+lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する

@@ -25,7 +25,7 @@ data_models:
     properties:
       - name: config
         type: string
-        description: '`dev-docs.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う）'
+        description: '`project-index.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う）'
       - name: baseDir
         type: "'config' | 'project'"
         description: 相対パスの基準。`global` の要素は設定ファイルのフォルダ、`projects` の要素は起動したプロジェクトの直下
@@ -82,7 +82,7 @@ data_models:
         description: Config の enabled
       - name: repositories
         type: string[]
-        description: 読む `dev-docs.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す
+        description: 読む `project-index.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す
       - name: aliases
         type: ResolvedAlias[]
         description: 設定ファイルの `aliases` の要素。global の後ろに当たった projects を並べ、先の要素と `id` が重なる要素を外したもの。`origin` は設定ファイルの絶対パス
@@ -399,13 +399,13 @@ functions:
       - name: test_resolve_settings_when_relative_paths
         case: 正常
         summary: 相対パスは global では設定ファイルのフォルダ、projects では起動したプロジェクトの直下から解決する
-        condition: 'global の `config: ../knowledge/dev-docs.yaml` と `paths: [terms/*.yaml]`、sample の `config: dev-docs.yaml` と `paths: [docs/command/*.yaml]`、`configPath` が `/home/u/.config/alias-inject/settings.yaml`、`projectRoot` が `/repo/sample/wt`'
+        condition: 'global の `config: ../knowledge/project-index.yaml` と `paths: [terms/*.yaml]`、sample の `config: project-index.yaml` と `paths: [docs/command/*.yaml]`、`configPath` が `/home/u/.config/alias-inject/settings.yaml`、`projectRoot` が `/repo/sample/wt`'
         mock: なし
-        expected: repositories が `/home/u/.config/knowledge/dev-docs.yaml` と `/repo/sample/wt/dev-docs.yaml`、patterns が `/home/u/.config/alias-inject/terms/*.yaml` と `/repo/sample/wt/docs/command/*.yaml`
+        expected: repositories が `/home/u/.config/knowledge/project-index.yaml` と `/repo/sample/wt/project-index.yaml`、patterns が `/home/u/.config/alias-inject/terms/*.yaml` と `/repo/sample/wt/docs/command/*.yaml`
       - name: test_resolve_settings_when_duplicated
         case: 正常
-        summary: 同じ dev-docs.yaml は 1 つにし、同じ id の aliases の要素は後を外す
-        condition: 'global と当たる要素の両方が `/repo/knowledge/dev-docs.yaml` を指し（片方は `/repo/sample/../knowledge/dev-docs.yaml` と書く）、両方が `id: terms` の aliases の要素を持つ'
+        summary: 同じ project-index.yaml は 1 つにし、同じ id の aliases の要素は後を外す
+        condition: 'global と当たる要素の両方が `/repo/knowledge/project-index.yaml` を指し（片方は `/repo/sample/../knowledge/project-index.yaml` と書く）、両方が `id: terms` の aliases の要素を持つ'
         mock: なし
         expected: repositories が 1 件、aliases が global の terms の 1 件で、warnings に `terms` を含む 1 件
       - name: test_resolve_settings_when_project_overrides
@@ -490,7 +490,7 @@ functions:
       - name: test_parse_repository_config
         case: 正常
         summary: '`config` を読み、`enabled` を書かない要素は有効'
-        condition: '`config: ../knowledge/dev-docs.yaml` と、それに `enabled: true` を足した要素'
+        condition: '`config: ../knowledge/project-index.yaml` と、それに `enabled: true` を足した要素'
         mock: なし
         expected: どちらも config が書いたままの RepositoryConfig
       - name: test_parse_repository_config_when_disabled

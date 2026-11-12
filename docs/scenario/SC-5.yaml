@@ -19,7 +19,7 @@ scenarios:
       - name: 端末の設定
         description: settings.json の `env` とシェルの環境変数に `ALIAS_INJECT_CONFIG` が無く、既定のパスに設定ファイルが無い
       - name: 読むリポジトリ
-        description: 一時のリポジトリの `dev-docs.yaml` が、語 `term-a` を持つ用語の YAML を `alias_type` が `term` の行で指す
+        description: 一時のリポジトリの `project-index.yaml` が、語 `term-a` を持つ用語の YAML を `alias_type` が `term` の行で指す
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -30,15 +30,15 @@ scenarios:
         U->>CC: /alias-inject:global-setup を実行
         CC->>S: スキルの手順を実行
         S->>S: 既定のパスに設定ファイルが無い
-        S->>U: 設定ファイルの場所（既定のパスを推奨）・読むリポジトリの dev-docs.yaml・用語集の YAML を聞く
-        U->>S: 既定のパスと dev-docs.yaml のパスを答える
+        S->>U: 設定ファイルの場所（既定のパスを推奨）・読むリポジトリの project-index.yaml・用語集の YAML を聞く
+        U->>S: 既定のパスと project-index.yaml のパスを答える
         S->>S: settings.sample.yaml を元に、答えたパスを記載した設定ファイルを既定のパスに作る
         S->>P: claude -p で term-a を含む文を送信
         P->>CC: term-a の文脈を追加
         S->>U: 作った設定ファイルのパスと、term-a の説明が回答に反映された結果を示す
       ```
     expected:
-      - 既定のパスに、`global.repositories` が答えた `dev-docs.yaml` を指す設定ファイルがある
+      - 既定のパスに、`global.repositories` が答えた `project-index.yaml` を指す設定ファイルがある
       - settings.json の `env` に `ALIAS_INJECT_CONFIG` が追加されていない
       - スキルの結果に、作った設定ファイルのパスと、引用の文脈が追加されたことが示されている
   - name: 正常シナリオ（既定と違う場所）
@@ -56,7 +56,7 @@ scenarios:
         participant F as settings.json
         U->>S: /alias-inject:global-setup を実行
         S->>S: ALIAS_INJECT_CONFIG が指すパスに設定ファイルが無い
-        S->>U: 設定ファイルの場所（ALIAS_INJECT_CONFIG の値を推奨）・読むリポジトリの dev-docs.yaml・用語集の YAML を聞く
+        S->>U: 設定ファイルの場所（ALIAS_INJECT_CONFIG の値を推奨）・読むリポジトリの project-index.yaml・用語集の YAML を聞く
         U->>S: 既定のパスと違う場所を答える
         S->>S: 答えた場所に設定ファイルを作る
         S->>F: env の ALIAS_INJECT_CONFIG を答えた場所にする

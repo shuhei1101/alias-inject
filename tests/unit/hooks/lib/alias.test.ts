@@ -3,7 +3,7 @@ import { ALIAS_SCHEMA } from '../../../../hooks/lib/aliases-schema'
 import { dedupeAliases, filterByScope, missingKeys, parseAliases, resolveMetadata } from '../../../../hooks/lib/alias'
 import type { AliasKey, AliasMetadata, ResolvedAlias } from '../../../../hooks/lib/alias'
 
-// スキーマに合う term の行（設定ファイルや dev-docs.yaml の documents に記載する構造）。
+// スキーマに合う term の行（設定ファイルや project-index.yaml の documents に記載する構造）。
 // 行の `enabled` と `schema`、`metadata` の `tags` はエイリアスの元の行が持たないキーで、取り出すときに外れる
 const TERM_ROW = {
   id: 'terms',

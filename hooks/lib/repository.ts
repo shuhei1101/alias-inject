@@ -3,15 +3,15 @@ import { dedupeAliases, parseAliases } from './alias'
 import type { ResolvedAlias } from './alias'
 import { parentDir, parseYaml, readIfChanged, resolvePath } from './loader'
 
-/** 1 つの `dev-docs.yaml` の `documents` から取り出したエイリアスの元の行と、外した行の理由 */
+/** 1 つの `project-index.yaml` の `documents` から取り出したエイリアスの元の行と、外した行の理由 */
 export type RepositoryAliases = {
-  /** `alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `dev-docs.yaml` の絶対パス */
+  /** `alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `project-index.yaml` の絶対パス */
   aliases: ResolvedAlias[]
   /** スキーマに合わない行・旧い構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
-/** `dev-docs.yaml` が無い・読めない・書式が誤っていることを、パスと理由つきで伝える例外 */
+/** `project-index.yaml` が無い・読めない・書式が誤っていることを、パスと理由つきで伝える例外 */
 export class RepositoryError extends Error {
   readonly path: string
   readonly reason: string
@@ -28,7 +28,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/** `dev-docs.yaml` の文字列から `documents` のうち `alias_type` を持つ行だけを取り出し、`paths` をそのフォルダから解決する */
+/** `project-index.yaml` の文字列から `documents` のうち `alias_type` を持つ行だけを取り出し、`paths` をそのフォルダから解決する */
 export function parseRepository({
   text,
   path,
@@ -64,7 +64,7 @@ export function parseRepository({
   }
 }
 
-/** `dev-docs.yaml` を更新時刻が変わったときだけ読み直し、取り出した行を返す */
+/** `project-index.yaml` を更新時刻が変わったときだけ読み直し、取り出した行を返す */
 export async function loadRepositoryAliases(
   $: EngineInterface,
   { path, schema, home }: { path: string; schema: Record<string, unknown>; home: string },

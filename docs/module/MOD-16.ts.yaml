@@ -1,7 +1,7 @@
 id: MOD-16
 visibility: internal
 title: プラグイン / 読み込み / loader.ts
-lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイル・スキーマ・`dev-docs.yaml`・`aliases` の要素が指す YAML が使う。
+lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイル・スキーマ・`project-index.yaml`・`aliases` の要素が指す YAML が使う。
 test_files:
   - tests/unit/hooks/lib/loader.test.ts
 directory: |-
@@ -144,9 +144,9 @@ functions:
       - name: test_resolve_path_when_dot_segments
         case: 正常
         summary: '`.`・`..` の区切りを畳む'
-        condition: '`path` が `../knowledge/./dev-docs.yaml`、`baseDir` が `/home/u/.config/alias-inject`。`path` が `/../a/**/*.yaml`'
+        condition: '`path` が `../knowledge/./project-index.yaml`、`baseDir` が `/home/u/.config/alias-inject`。`path` が `/../a/**/*.yaml`'
         mock: なし
-        expected: '`/home/u/.config/knowledge/dev-docs.yaml` と `/a/**/*.yaml`'
+        expected: '`/home/u/.config/knowledge/project-index.yaml` と `/a/**/*.yaml`'
   - name: matchSegment
     title: 名前と glob の区切りの照合
     kind: 関数
@@ -280,7 +280,7 @@ functions:
         type: "'config' | 'repository' | 'alias'"
         required: true
         passing: keyword
-        description: 読み込みの種類（設定ファイル・`dev-docs.yaml`・`aliases` の要素が指す YAML）。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
+        description: 読み込みの種類（設定ファイル・`project-index.yaml`・`aliases` の要素が指す YAML）。キャッシュのキーに含め、変換の違う読み込みが同じファイルの値を共有しないようにする
     returns:
       type: Promise<T>
       description: 変換した値
@@ -378,7 +378,7 @@ functions:
       - name: test_parent_dir
         case: 正常
         summary: ファイルを置いたフォルダを返す
-        condition: '`/repo/knowledge/dev-docs.yaml` と `/dev-docs.yaml`'
+        condition: '`/repo/knowledge/project-index.yaml` と `/project-index.yaml`'
         mock: なし
         expected: '`/repo/knowledge` と `/`'
   - name: matchPathGlob

@@ -10,8 +10,8 @@ export const CONFIG_DIR = '/home/u/.config/alias-inject'
 /** 読むリポジトリのフォルダ */
 export const KNOWLEDGE_DIR = '/repo/knowledge'
 
-/** 読むリポジトリの dev-docs.yaml の絶対パス */
-export const DEV_DOCS_PATH = `${KNOWLEDGE_DIR}/dev-docs.yaml`
+/** 読むリポジトリの project-index.yaml の絶対パス */
+export const DEV_DOCS_PATH = `${KNOWLEDGE_DIR}/project-index.yaml`
 
 /** 用語の YAML を置くフォルダ */
 export const TERMS_DIR = `${KNOWLEDGE_DIR}/terms`
@@ -78,7 +78,7 @@ export function makeConfig(
 /** `alias_type` を持たない `documents` の行（エイリアスの行ではない） */
 const PLAIN_DOCUMENT_LINES = ['- id: docs', '  paths: [docs/*.yaml]', '  metadata:', '    title: name']
 
-/** `dev-docs.yaml` の本文。`documents` に用語の行と `alias_type` を持たない行を持ち、字下げなしの行で他の行を追加できる */
+/** `project-index.yaml` の本文。`documents` に用語の行と `alias_type` を持たない行を持ち、字下げなしの行で他の行を追加できる */
 export function makeDevDocs(options: { documentsExtra?: string[]; rootExtra?: string[] } = {}): string {
   return [
     'documents:',
@@ -98,7 +98,7 @@ export function termYaml(options: { id: string; name?: string; aliases?: string[
   ].join('\n')
 }
 
-/** 設定ファイルと、読むリポジトリの dev-docs.yaml と用語の YAML（term-a・term-b。term-b は `name` を持たない）と文書の YAML（doc-z）を持つファイル表 */
+/** 設定ファイルと、読むリポジトリの project-index.yaml と用語の YAML（term-a・term-b。term-b は `name` を持たない）と文書の YAML（doc-z）を持つファイル表 */
 export function makeFs(config: string = makeConfig(), devDocs: string = makeDevDocs()): MemoryFs {
   return new MemoryFs({
     [CONFIG_PATH]: config,

@@ -11,6 +11,6 @@ items:
   - page: SC-5.yaml
     summary: スキル `global-setup` で端末の設定を作るか今の構造へ移し、引用の文脈が追加されることを確かめる
   - page: SC-6.yaml
-    summary: 設定ファイル・`dev-docs.yaml`・照合の YAML のどれかを書き換えると、次の入力から反映される
+    summary: 設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から反映される
   - page: SC-7.yaml
     summary: ツールで読んだ本文の `!{名前}` に、同じ名前の環境変数の値を文脈として追加する

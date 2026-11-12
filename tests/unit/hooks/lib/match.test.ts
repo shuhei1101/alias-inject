@@ -7,7 +7,7 @@ function makeEntry(id: string, word: string, keys: string[], itemIndex = 0): Ent
   return {
     aliasIndex: 0,
     itemIndex,
-    origin: '/a/dev-docs.yaml',
+    origin: '/a/project-index.yaml',
     aliasId: 'terms',
     type: 'term',
     id,

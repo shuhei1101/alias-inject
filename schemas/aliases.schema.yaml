@@ -1,6 +1,6 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 title: エイリアスの元の行
-description: 用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は dev-docs.yaml の documents の行と同じ構造で、行の alias_type に引用の種類、metadata にエイリアスのキーごとの列の名前を置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。
+description: 用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は project-index.yaml の documents の行と同じ構造で、行の alias_type に引用の種類、metadata にエイリアスのキーごとの列の名前を置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。
 type: array
 items:
   $ref: "#/$defs/alias"

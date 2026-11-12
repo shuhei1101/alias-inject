@@ -12,7 +12,7 @@ export type Entry = {
   aliasIndex: number
   /** 行の中の文書の並び（ファイルのパスの順、ファイルの中の `records` の順） */
   itemIndex: number
-  /** 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス */
+  /** 行を書いた `project-index.yaml` か設定ファイルの絶対パス */
   origin: string
   aliasId: string
   type: AliasType

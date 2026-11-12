@@ -4,10 +4,10 @@ global:
   # false のとき、何も追加しない
   enabled: true
 
-  # 読むリポジトリの dev-docs.yaml。その documents のうち alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  # 読むリポジトリの project-index.yaml。その documents のうち alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
   repositories:
-    - config: ~/repo/knowledge/dev-docs.yaml
-    - config: ../old-notes/dev-docs.yaml
+    - config: ~/repo/knowledge/project-index.yaml
+    - config: ../old-notes/project-index.yaml
       # false のとき、このリポジトリを読まない
       enabled: false
 
@@ -87,7 +87,7 @@ projects:
   - match: sample-project
     max_items: 10
     repositories:
-      - config: dev-docs.yaml
+      - config: project-index.yaml
     aliases:
       - id: project-commands
         paths: [docs/command.yaml]

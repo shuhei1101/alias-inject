@@ -5,7 +5,7 @@ import { MemoryFs } from './support/memory-fs'
 
 const CONFIG_DIR = '/home/u/.config/alias-inject'
 const CONFIG_PATH = `${CONFIG_DIR}/settings.yaml`
-const DEV_DOCS_PATH = '/home/u/knowledge/dev-docs.yaml'
+const DEV_DOCS_PATH = '/home/u/knowledge/project-index.yaml'
 const SETTINGS = userSettingsWithConfig('~/.config/alias-inject/settings.yaml')
 const TERM_A_PATH = `${CONFIG_DIR}/terms/term-a.yaml`
 const VALUE_A_RUN = { value: { exitCode: 0, stdout: 'VALUE_A=value-a\0' } }
@@ -34,7 +34,7 @@ type FsOptions = {
   globalExtra?: string[]
   /** 設定ファイルの `global.aliases` に足す行（字下げ込み） */
   extraAliases?: string[]
-  /** 置くと設定ファイルの `global.repositories` が指す dev-docs.yaml の行（字下げ込み） */
+  /** 置くと設定ファイルの `global.repositories` が指す project-index.yaml の行（字下げ込み） */
   devDocs?: string[]
   /** 設定ファイルの `global.aliases` の term の要素の `paths` */
   termPaths?: string
@@ -45,7 +45,7 @@ function makeFs(options: FsOptions = {}): MemoryFs {
   const config = [
     'global:',
     ...(options.globalExtra ?? []).map((line) => `  ${line}`),
-    ...(options.devDocs === undefined ? [] : ['  repositories:', '    - config: ~/knowledge/dev-docs.yaml']),
+    ...(options.devDocs === undefined ? [] : ['  repositories:', '    - config: ~/knowledge/project-index.yaml']),
     '  aliases:',
     ...termAliasLines('terms', options.termPaths ?? 'terms/*.yaml', 4),
     ...(options.extraAliases ?? []),

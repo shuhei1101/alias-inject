@@ -25,13 +25,13 @@ data_models:
     properties:
       - name: aliasIndex
         type: number
-        description: 読む行の並び（`repositories` の順の `dev-docs.yaml` の行、その後に設定ファイルの行）での位置
+        description: 読む行の並び（`repositories` の順の `project-index.yaml` の行、その後に設定ファイルの行）での位置
       - name: itemIndex
         type: number
         description: 行の中の文書の並び（ファイルのパスの順、ファイルの中の `records` の順）
       - name: origin
         type: string
-        description: 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス
+        description: 行を書いた `project-index.yaml` か設定ファイルの絶対パス
       - name: aliasId
         type: string
         description: 行の `id`

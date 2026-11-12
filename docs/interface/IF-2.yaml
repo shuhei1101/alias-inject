@@ -25,7 +25,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>FS: 設定ファイル・dev-docs.yaml・YAML を読む
+        IF->>FS: 設定ファイル・project-index.yaml・YAML を読む
         FS-->>IF: 語の一覧
         IF->>IF: 本文と語を正規化して照合し term-a が当たる
         IF->>ST: セッションの記録を読む
@@ -425,7 +425,7 @@ exceptions:
   - name: なし（設定ファイルが読めない）
     condition: '`ALIAS_INJECT_CONFIG` が指す設定ファイルが無いか、設定ファイルが読めない・書式が誤っている'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
-  - name: なし（YAML・dev-docs.yaml が読めない・スキーマに合わない行・照合条件が誤っている文書）
+  - name: なし（YAML・project-index.yaml が読めない・スキーマに合わない行・照合条件が誤っている文書）
     condition: '[入力への引用の文脈の追加](id:IF-3) の同じ名前の行と同じ'
     notes: その YAML・リポジトリ・行・文書だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる
   - name: なし（記録の書き込みがやり直しの上限まで外れた）
@@ -440,7 +440,7 @@ constraints:
     decided_by: NFR-1#requirements[ツールの呼び出しで増える待ち時間]
     notes: ファイルは更新時刻が変わったときだけ読み、語の一覧はモジュールの中に持つ
   - item: 照合
-    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合と同じ（同じ設定ファイル・`dev-docs.yaml`・YAML・`exclude`）'
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合と同じ（同じ設定ファイル・`project-index.yaml`・YAML・`exclude`）'
     notes: 設定と語の読み込みは `prompt.submit` と共有する
   - item: 並び
     constraint: 語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い語を先にする

@@ -8,7 +8,7 @@ scenarios:
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
         notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
       - name: 設定ファイル
-        description: 『入力への引用の文脈の追加』の正常シナリオと同じ（語 `term-a`・`term-b` を持つ用語の YAML を、一時のリポジトリの `dev-docs.yaml` の `documents` の行で読む）
+        description: 『入力への引用の文脈の追加』の正常シナリオと同じ（語 `term-a`・`term-b` を持つ用語の YAML を、一時のリポジトリの `project-index.yaml` の `documents` の行で読む）
       - name: 読ませるファイル
         description: 本文に term-a を含み、term-b を含まないテキストファイル
     flow: |-
@@ -97,7 +97,7 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
-        description: 正常シナリオの設定に加え、`dev-docs.yaml` の `documents` に、`alias_type` が `doc` で `paths` が文書のファイルに当たる行を持つ
+        description: 正常シナリオの設定に加え、`project-index.yaml` の `documents` に、`alias_type` が `doc` で `paths` が文書のファイルに当たる行を持つ
         notes: 文書の語は `doc-x`
       - name: 読ませるファイル
         description: '`doc-x` の文書のファイル。本文に doc-x と term-a を含む'

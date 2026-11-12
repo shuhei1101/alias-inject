@@ -126,7 +126,7 @@ functions:
       - name: test_render_context_when_same_id_in_repositories
         case: 正常
         summary: 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる
-        condition: origin `/b/dev-docs.yaml` の term-a を先、origin `/a/dev-docs.yaml` の term-a を後に渡す
+        condition: origin `/b/project-index.yaml` の term-a を先、origin `/a/project-index.yaml` の term-a を後に渡す
         mock: なし
         expected: '`## 用語` が 1 つで、`/b` の term-a・`/a` の term-a の順に並ぶ'
   - name: selectEntries

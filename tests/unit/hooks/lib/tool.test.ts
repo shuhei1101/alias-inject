@@ -12,7 +12,7 @@ function makeEntry(id: string, overrides: Partial<Entry> = {}): Entry {
   return {
     aliasIndex: 0,
     itemIndex: 0,
-    origin: '/repo/knowledge/dev-docs.yaml',
+    origin: '/repo/knowledge/project-index.yaml',
     aliasId: 'terms',
     type: 'term',
     id,

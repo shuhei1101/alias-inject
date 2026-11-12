@@ -1,0 +1,199 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: none
+    detail: 前提の説明の例の名前を置換するだけで、流れは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: 前提の説明の例の名前を置換するだけで、流れは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: 前提の説明の例の名前を置換するだけで、流れは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: 端末の設定を作るときに聞く設定のファイルの例の名前を置換するだけで、流れは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: 書き換える配信元の設定の例の名前を置換するだけで、流れは変わらない
+    depends_on: []
+docs:
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: 外部システムの「読むリポジトリの dev-docs.yaml」と検証の説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/config/CFG-1.yaml
+    new: false
+    change: '`repositories[].config` の説明と例の dev-docs.yaml を project-index.yaml にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/interface/IF-2.yaml
+    new: false
+    change: 入出力・フローの説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/interface/IF-3.yaml
+    new: false
+    change: 入出力・フロー・異常系の説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/SC-1.yaml
+    new: false
+    change: 前提の説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/SC-2.yaml
+    new: false
+    change: 前提の説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/SC-3.yaml
+    new: false
+    change: 前提・手順の説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/SC-5.yaml
+    new: false
+    change: 聞くパスの説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/SC-6.yaml
+    new: false
+    change: 書き換える対象の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/scenario/index.yaml
+    new: false
+    change: SC-6 の summary の例の名前を project-index.yaml にし、README.md を生成し直す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-1.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-2.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-3.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-5.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-6.ts.yaml
+    new: false
+    change: 説明・テストケースの例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-9.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-15.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-16.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/MOD-17.ts.yaml
+    new: false
+    change: 説明の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/module/index.yaml
+    new: false
+    change: summary の例の名前を project-index.yaml にし、README.md を生成し直す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '`repositories[].config` の説明と例の名前を project-index.yaml にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/セットアップ.md
+    new: false
+    change: 設定ファイルの例と説明の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/エイリアスのスキーマ.md
+    new: false
+    change: エイリアスの元の行を書くファイルの例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: 照合の定義を読むファイルの例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/設定の移し替え.md
+    new: false
+    change: 移し替える対象のファイルの例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/index.yaml
+    new: false
+    change: 設定の移し替えの summary の例の名前を project-index.yaml にし、README.md を生成し直す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+  - page: docs/guide/使い方.md
+    new: false
+    change: 設定の移し替えの行の概要の例の名前を project-index.yaml にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:03.090823+00:00'
+scope_out:
+  - item: docs/guide/変更履歴.md の dev-docs.yaml
+    reason: 過去に入った PR のタイトルで、書き換えると履歴と食い違う
+    plan: none
+  - item: docs/pr/・dev/pr/ の過去の作業 PR の PR ドキュメントとテスト結果のログの dev-docs.yaml
+    reason: その作業 PR の時点の記録で、書き換えると記録と食い違う
+    plan: none
+  - item: リポジトリ直下の alias-inject 自身の配信元の設定 dev-docs.yaml の改名
+    reason: 例の名前ではなく dev-docs が読む実体のファイルで、改名は dev-docs の既定のファイル名の変更（shuhei1101/dev-docs#114）が入った後の作業になる。Issue 本文のやりたいことに含まれない
+    plan: '77'

@@ -9,7 +9,7 @@ files:
   - file: ~/.config/alias-inject/settings.yaml
     manages: 読むリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
     notes: 既定の置き場所は `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` で、`ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
-  - file: dev-docs.yaml
+  - file: project-index.yaml
     manages: リポジトリのエイリアス（`documents` のうち `alias_type` を持つ行だけを読む）
     notes: 読むリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`alias_type` を持つ `documents` の行以外は読まない
   - file: settings.sample.yaml
@@ -39,22 +39,22 @@ settings:
     type: object[]
     required: false
     default: '[]'
-    description: 読むリポジトリの `dev-docs.yaml` の並び。各リポジトリの `documents` のうち `alias_type` を持つ行が照合の定義になる。`alias_type` を持たず `metadata.alias_type` を持つ行は旧い構造として照合から外し、移し替えが要ることが分かる理由を debug log に出す。読めない `dev-docs.yaml` は、そのリポジトリの定義だけを照合から外し、理由を debug log に出す
+    description: 読むリポジトリの `project-index.yaml` の並び。各リポジトリの `documents` のうち `alias_type` を持つ行が照合の定義になる。`alias_type` を持たず `metadata.alias_type` を持つ行は旧い構造として照合から外し、移し替えが要ることが分かる理由を debug log に出す。読めない `project-index.yaml` は、そのリポジトリの定義だけを照合から外し、理由を debug log に出す
     notes:
-      読み直し: '`dev-docs.yaml` も、更新時刻が変わったときだけ読み直すので、書き換えは次の入力から効く'
+      読み直し: '`project-index.yaml` も、更新時刻が変わったときだけ読み直すので、書き換えは次の入力から効く'
   - key: global.repositories[].config
-    title: 読む dev-docs.yaml
+    title: 読む project-index.yaml
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: true
-    description: 読むリポジトリの `dev-docs.yaml` のパス。このファイルの `documents` のうち `alias_type` を持つ行を読む。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
+    description: 読むリポジトリの `project-index.yaml` のパス。このファイルの `documents` のうち `alias_type` を持つ行を読む。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する
     missing: その要素を読まない
   - key: global.repositories[].enabled
     title: リポジトリの有効
     file: ~/.config/alias-inject/settings.yaml
     type: boolean
     default: 'true'
-    description: false のとき、このリポジトリの `dev-docs.yaml` を読まない
+    description: false のとき、このリポジトリの `project-index.yaml` を読まない
   - key: global.aliases
     title: 端末のエイリアス
     file: ~/.config/alias-inject/settings.yaml
@@ -80,7 +80,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string[]
     required: true
-    description: 読む YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。ファイルと glob を混ぜてよい。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する。`dev-docs.yaml` の `documents` の行では、その `dev-docs.yaml` のフォルダ（リポジトリの直下）から解決する
+    description: 読む YAML のパスか glob（`*` はフォルダの区切りを除く任意の文字列、`**` は任意の深さのフォルダ）。ファイルと glob を混ぜてよい。先頭の `~` はホームに展開し、`global` の中の相対パスは設定ファイルのフォルダから、`projects` の中の相対パスは起動したプロジェクトの直下から解決する。`project-index.yaml` の `documents` の行では、その `project-index.yaml` のフォルダ（リポジトリの直下）から解決する
     missing: その要素を照合から外す
     allowed: 1 件以上
     notes:
@@ -294,7 +294,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: object
     required: false
-    description: 行を照合に使用する範囲。キーは `cwd` だけ。`dev-docs.yaml` の `documents` の行にも記載できる
+    description: 行を照合に使用する範囲。キーは `cwd` だけ。`project-index.yaml` の `documents` の行にも記載できる
     missing: 全ての作業場所で行を使用する
   - key: global.aliases[].scope.cwd
     title: 行を使用する作業場所

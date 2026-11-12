@@ -14,7 +14,7 @@ export type OriginKey = (typeof ORIGIN_KEYS)[number]
 
 /** 検証を通った有効な `repositories` の 1 要素 */
 export type RepositoryConfig = {
-  /** `dev-docs.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う） */
+  /** `project-index.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う） */
   config: string
   /** 相対パスの基準。`global` の要素は設定ファイルのフォルダ、`projects` の要素は起動したプロジェクトの直下 */
   baseDir: 'config' | 'project'
@@ -55,7 +55,7 @@ export type Config = {
 /** 起動したプロジェクトに当たる projects を重ね、パスを絶対パスにした設定 */
 export type Settings = {
   enabled: boolean
-  /** 読む `dev-docs.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す */
+  /** 読む `project-index.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す */
   repositories: string[]
   /** 設定ファイルの `aliases` の要素。global の後ろに当たった projects を並べ、先の要素と `id` が重なる要素を外したもの */
   aliases: ResolvedAlias[]
