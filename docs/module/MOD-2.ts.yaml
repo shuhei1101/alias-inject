@@ -1,7 +1,7 @@
 id: MOD-2
 visibility: internal
 title: プラグイン / エイリアス / alias.ts
-lead: 設定ファイルの `aliases` の行と `dev-docs.yaml` の `documents` の行をスキーマで検証して取り出し、`id` の重なった行を外す。文書ごとに `metadata` の値を解決し、種類ごとの必須のキーを確かめる。
+lead: 設定ファイルの `aliases` の行と `project-index.yaml` の `documents` の行をスキーマで検証して取り出し、`id` の重なった行を外す。文書ごとに `metadata` の値を解決し、種類ごとの必須のキーを確かめる。
 test_files:
   - tests/unit/hooks/lib/alias.test.ts
 directory: |-
@@ -54,7 +54,7 @@ data_models:
     properties:
       - name: origin
         type: string
-        description: 行を書いた `dev-docs.yaml` か設定ファイルの絶対パス
+        description: 行を書いた `project-index.yaml` か設定ファイルの絶対パス
       - name: patterns
         type: string[]
         description: '`paths` を解決した絶対パスの glob'
@@ -133,7 +133,7 @@ functions:
         type: readonly unknown[]
         required: true
         passing: keyword
-        description: 設定ファイルの `aliases` か `dev-docs.yaml` の `documents` の並び
+        description: 設定ファイルの `aliases` か `project-index.yaml` の `documents` の並び
       - name: schema
         type: Record<string, unknown>
         required: true

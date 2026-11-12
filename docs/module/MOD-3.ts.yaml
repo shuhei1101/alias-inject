@@ -1,7 +1,7 @@
 id: MOD-3
 visibility: internal
 title: プラグイン / スキーマ / schema.ts
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `dev-docs.yaml` の `documents` の行）を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `project-index.yaml` の `documents` の行）を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
 test_files:
   - tests/unit/hooks/lib/schema.test.ts
 directory: |-
