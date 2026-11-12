@@ -1,0 +1,14 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: 設定と YAML を読み直す。配信元の設定のファイル名は端末の設定が指すため、流れは変わらない
+    depends_on: []
+scope_out:
+  - item: '`docs/guide/変更履歴.md` の過去の版の行に残る `dev-docs.yaml`'
+    reason: その版に入った PR のタイトルの記録で、当時のファイル名が正しい
+    plan: none
+  - item: '`~/.config/alias-inject/settings.yaml` の alias-inject 以外の行（rule-inject など）が指す `dev-docs.yaml`'
+    reason: 各リポジトリの配信元の設定の改名に合わせて、それぞれの作業で書き換える
+    plan: none
+docs: []
