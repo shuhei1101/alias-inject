@@ -1,0 +1,18 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: スキルで端末の設定を作る流れで、手で用意する手順の取得元の URL は使わないため変わらない
+    depends_on: []
+docs:
+  - page: docs/guide/セットアップ.md
+    new: false
+    change: 手で用意する手順の curl が取得する settings.sample.yaml の URL を master から develop にする
+    status: todo
+scope_out:
+  - item: 過去の PR ドキュメント（docs/pr/）の master の記述
+    reason: その PR の時点の記録で、参照ではない
+    plan: none
+  - item: v1.0.0 で URL を master に戻す修正
+    reason: 既定のブランチを master に戻す v1.0.0 の作業で扱う（D-296）
+    plan: to_file
