@@ -12,3 +12,6 @@ scope_out:
   - item: 取り込み側（dev-docs・project-index）の aliases.source.yaml のタグの更新
     reason: 起点 Issue の本文のとおり、取り込み側の作業で行う
     plan: none
+  - item: 引用の文脈の見出し「避ける語」など、hooks が出力する用語と docs/ の「避ける語」の呼び名（スキーマの注釈は「使用しない単語」へ修正した）
+    reason: 利用者の目に触れる用語の変更で、起点 Issue の対象（スキーマの title・description）に含まれない。呼び名を変えるかはユーザーの判断が要るため、レビューで起票するかを確定する
+    plan: to_file

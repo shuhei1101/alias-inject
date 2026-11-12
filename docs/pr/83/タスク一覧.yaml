@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T18:58:18.516203+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: schemas/aliases.schema.yaml の title・description の修正と hooks/lib/aliases-schema.ts の再生成
+    updated_by: planner
+    updated_at: '2026-11-12T19:10:13.825635+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: 挙動を変えないため対象外
