@@ -5,7 +5,7 @@ import type { Hit } from '../../../../hooks/lib/match'
 import { collectArgumentStrings, documentPathOf, excludeReadingDocuments } from '../../../../hooks/lib/tool'
 
 const HOME = '/home/u'
-const SEARCH_DOCS = 'mcp__plugin_dev-docs_dev-docs__search_docs'
+const SEARCH_DOCS = 'mcp__plugin_project-index_project-index__search_docs'
 
 // テスト用の語。上書きしたいキーだけ渡す
 function makeEntry(id: string, overrides: Partial<Entry> = {}): Entry {

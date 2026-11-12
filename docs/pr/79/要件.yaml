@@ -1,0 +1,26 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: ツールの結果への引用の文脈の追加で、テストケースの例のツールの名前を置換するだけで、流れは変わらない
+    depends_on: []
+docs:
+  - page: docs/interface/IF-2.yaml
+    new: false
+    change: テストケースのツールの呼び出しの例の `mcp__plugin_dev-docs_dev-docs__search_docs` を `mcp__plugin_project-index_project-index__search_docs` にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T07:39:51.493091+00:00'
+  - page: docs/module/MOD-5.ts.yaml
+    new: false
+    change: テストケースの条件の例の `mcp__plugin_dev-docs_dev-docs__search_docs`（2 か所）を `mcp__plugin_project-index_project-index__search_docs` にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T07:39:51.493091+00:00'
+scope_out:
+  - item: 過去の PR ドキュメント（`docs/pr/52/プラグイン.md`）に残る `mcp__plugin_dev-docs_dev-docs__search_docs`
+    reason: マージ済みの作業の記録で、当時の名前のまま残す
+    plan: none
+  - item: リポジトリ直下の配信元の設定 `dev-docs.yaml` の改名
+    reason: ツールの完全名ではなく設定のファイル名の変更で、目的が違う
+    plan: '#77'
