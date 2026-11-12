@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T00:41:54.047639+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: 要件.yaml の docs の行（設計書・公開ドキュメント）の dev-docs.yaml を project-index.yaml に置換する
+    updated_by: planner
+    updated_at: '2026-11-12T00:50:06.938519+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: 振る舞いを変えず、追加・変更するテストが無い
