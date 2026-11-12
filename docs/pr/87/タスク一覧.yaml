@@ -1,0 +1,74 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 既存の設計書があり棚卸しは不要
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めを依頼する Issue ではない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: 見出しの文字列の変更で、未検証の技術機構に依存しない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: 複合ユースケースのシナリオ（SC-1）は見出しの呼び名を記述していない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 単一ユースケース設計
+    status: todo
+    note: 呼び名の確定（要件.md の `未確定`）と docs/scenario/SC-3.yaml の呼び名
+  - process: モック作成
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: インターフェース定義設計
+    status: todo
+    note: docs/interface/IF-3.yaml の見出しと呼び名
+  - process: 部品設計
+    status: skipped
+    reason: 画面の部品を持たない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: モジュール構成設計
+    status: todo
+    note: docs/module/MOD-2.ts.yaml・docs/module/MOD-9.ts.yaml の呼び名
+  - process: ドキュメント修正
+    status: todo
+    note: docs/config/CFG-1.yaml・docs/guide の 3 ページ・README.md・CLAUDE.md の呼び名
+  - process: 単体テスト作成
+    status: skipped
+    reason: tests/unit に見出し `避ける語` を期待する箇所が無い
+    updated_by: planner
+    updated_at: '2026-11-12T22:51:15.093861+00:00'
+  - process: 実装
+    status: todo
+    note: hooks/lib/context.ts の SECTION_HEADINGS.avoid と hooks/lib/entry.ts のコメント
+  - process: 結合テスト作成
+    status: todo
+    note: tests/integration/hooks/prompt-submit.test.ts の見出しの期待

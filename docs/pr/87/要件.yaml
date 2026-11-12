@@ -1,0 +1,38 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: changed
+    detail: 入力に出たやめた言い方を並べる文脈のセクションの呼び名を、決めた呼び名へ変える
+    depends_on: []
+docs:
+  - page: docs/config/CFG-1.yaml
+    new: false
+    change: avoid の列とセクションの呼び名（107・167・171 行目）を決めた呼び名へ変える
+    status: todo
+  - page: docs/guide/エイリアスのスキーマ.md
+    new: false
+    change: 引用の種類の並び（7 行目）の呼び名を決めた呼び名へ変える
+    status: todo
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: セクションの呼び名（152・157 行目）を決めた呼び名へ変える
+    status: todo
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: avoid の説明と見出しの表（121・157 行目）の呼び名を決めた呼び名へ変える
+    status: todo
+  - page: README.md
+    new: false
+    change: プラグインの説明（3 行目）の呼び名を決めた呼び名へ変える
+    status: todo
+  - page: CLAUDE.md
+    new: false
+    change: プラグインの説明（3 行目）の呼び名を決めた呼び名へ変える
+    status: todo
+scope_out:
+  - item: 設定のキー `avoid` とスキーマの構造の変更
+    reason: 呼び名だけを揃える要望で、キーを変えると既存の設定ファイルが読めなくなる
+    plan: none
+  - item: 「文脈に出す語」「読む側が確かめる」の文言の修正
+    reason: 同じファイルを触る別の要望
+    plan: '#84'
