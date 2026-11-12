@@ -223,7 +223,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 記録を分けるため、別のセッションで呼ぶ
     if (world.files !== undefined) world.files.sessionId = 's2'
     const mcp = await callTool($, {
-      tool: 'mcp__plugin_dev-docs_dev-docs__search_docs',
+      tool: 'mcp__plugin_project-index_project-index__search_docs',
       filter: { field: 'id', op: 'eq', values: ['term-a'] },
     })
 
