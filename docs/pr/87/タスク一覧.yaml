@@ -35,8 +35,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T22:51:15.093861+00:00'
   - process: 単一ユースケース設計
-    status: todo
+    status: done
     note: 呼び名の確定（要件.md の `未確定`）と docs/scenario/SC-3.yaml の呼び名
+    updated_by: planner
+    updated_at: '2026-11-12T22:53:30.436162+00:00'
   - process: モック作成
     status: skipped
     reason: 画面を持たない
