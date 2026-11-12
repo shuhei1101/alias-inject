@@ -75,14 +75,11 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T00:41:54.047639+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: hooks/ のコメントと debug log の文言・schemas/aliases.schema.yaml の description と生成した hooks/lib/aliases-schema.ts・settings.sample.yaml・skills/global-setup/SKILL.md の置換。既存の単体テストの全 pass と lint を確かめる
-  - process: 結合テスト作成
-    status: skipped
-    reason: 振る舞いを変えず、追加・変更するテストが無い
     updated_by: planner
-    updated_at: '2026-11-12T00:41:54.047639+00:00'
-  - process: E2E テスト作成
+    updated_at: '2026-11-12T07:04:37.901651+00:00'
+  - process: 結合テスト作成
     status: skipped
     reason: 振る舞いを変えず、追加・変更するテストが無い
     updated_by: planner
