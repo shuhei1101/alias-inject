@@ -2,15 +2,21 @@ docs:
   - page: docs/guide/エイリアスのスキーマ.md
     new: false
     change: 26 行目の「読む側が確かめる」を「参照する側が確認する」、45 行目の「照合する語」「文脈に出す語」を「照合する単語」「文脈に出す単語」へ修正する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T19:52:05.016474+00:00'
   - page: docs/guide/設定ファイル.md
     new: false
     change: 117 行目の「照合する語」「文脈に出す語」を「照合する単語」「文脈に出す単語」へ修正する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T19:52:05.016474+00:00'
   - page: docs/config/CFG-1.yaml
     new: false
     change: metadata.name の title を「文脈に出す単語」、description の「文脈に出す語」「照合する語」「書かない行」「使う」を「文脈に出す単語」「照合する単語」「記載しない行」「使用する」へ修正する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-12T19:52:05.016474+00:00'
 use_cases:
   - kind: single
     scenario: docs/scenario/SC-3.yaml

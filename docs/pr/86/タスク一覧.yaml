@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T19:46:40.208506+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/guide/エイリアスのスキーマ.md・docs/guide/設定ファイル.md・docs/config/CFG-1.yaml の文言
+    updated_by: planner
+    updated_at: '2026-11-12T19:52:06.734439+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードを変えない文書の文言の修正のため対象外
