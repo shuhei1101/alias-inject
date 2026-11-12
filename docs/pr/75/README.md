@@ -1,0 +1,1 @@
+# 設計書・公開ドキュメント・設定の例の配信元の設定のファイル名を dev-docs.yaml から project-index.yaml にする
