@@ -2,7 +2,7 @@
 export const ALIAS_SCHEMA: Record<string, unknown> = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "エイリアスの元の行",
-  "description": "用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・避ける語を、どの YAML のどの列から取るかを定義する行の並び。行は project-index.yaml の documents の行と同じ構造で、行の alias_type に引用の種類、metadata にエイリアスのキーごとの列の名前を置く。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。",
+  "description": "用語・文書のエイリアス・コマンド・URL・スキル・ツール・パス・環境・使用しない単語を、どの YAML のどの列から取るかを定義する行の並び。行は project-index.yaml の documents の行と同じ構造で、行の alias_type に引用の種類、metadata にエイリアスのキーごとの列の名前を配置する。取り込む側は、エイリアスの元の行を並べるキーからこのルートを $ref で指す。",
   "type": "array",
   "items": {
     "$ref": "#/$defs/alias"
@@ -10,7 +10,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
   "$defs": {
     "alias": {
       "title": "エイリアスの元の行",
-      "description": "paths に当たる各ファイルを 1 件の文書にし、alias_type で引用の種類を決め、metadata でエイリアスのキーごとに値を取る列の名前を定義する行。records を書いた行は、ファイルのその配列の各要素を 1 件の文書にする。id の一意はスキーマで表せないため、読む側が確かめる。行と metadata は他のキー（schema・body_file・tags・status など）も書ける。",
+      "description": "paths に該当する各ファイルを 1 件の文書にし、alias_type で引用の種類を決め、metadata でエイリアスのキーごとに値を取る列の名前を定義する行。records を記載した行は、ファイルのその配列の各要素を 1 件の文書にする。id の一意はスキーマで表せないため、参照する側が確認する。行と metadata は他のキー（schema・body_file・tags・status など）も記載できる。",
       "type": "object",
       "required": [
         "id",
@@ -29,7 +29,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "enabled": {
           "title": "有効",
-          "description": "false のとき、この行を使わない。",
+          "description": "false のとき、この行を使用しない。",
           "type": "boolean",
           "default": true,
           "examples": [
@@ -37,8 +37,8 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
           ]
         },
         "paths": {
-          "title": "読む YAML",
-          "description": "読む YAML のパスか glob。ファイルと glob を混ぜてよい。",
+          "title": "参照する YAML",
+          "description": "参照する YAML のパスか glob。ファイルと glob を混ぜてよい。",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -53,7 +53,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "alias_type": {
           "title": "引用の種類",
-          "description": "行の全文書に同じ引用の種類を使う。文脈に並べる列とセクションが種類ごとに決まる。",
+          "description": "行の全文書に同じ引用の種類を使用する。文脈に並べる列とセクションが種類ごとに決まる。",
           "enum": [
             "term",
             "doc",
@@ -71,7 +71,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "records": {
           "title": "文書の並びのキー",
-          "description": "文書の並びを持つ配列のキー。書かないとき、各ファイルを 1 件の文書にする。",
+          "description": "文書の並びを持つ配列のキー。記載しないとき、各ファイルを 1 件の文書にする。",
           "type": "string",
           "minLength": 1,
           "examples": [
@@ -80,7 +80,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "body_file": {
           "title": "本文のファイルの列",
-          "description": "records の要素の本文のファイルのパスを持つ列の名前。name が空の要素の名前に、その列の値のファイル名（拡張子を除く）を使う。",
+          "description": "records の要素の本文のファイルのパスを持つ列の名前。name が空の要素の名前に、その列の値のファイル名（拡張子を除く）を使用する。",
           "type": "string",
           "minLength": 1,
           "examples": [
@@ -89,7 +89,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "scope": {
           "title": "行の使用範囲",
-          "description": "行を照合に使用する範囲。cwd に作業場所の glob を並べた行は、セッションを起動したプロジェクトの直下がどれかの glob に当たるときだけ照合に使用する。/** で終わる glob はそのフォルダと配下のフォルダ、/** を付けないパスはそのフォルダだけに当たる。書かないとき、全ての作業場所で使用する。",
+          "description": "行を照合に使用する範囲。cwd に作業場所の glob を並べた行は、セッションを起動したプロジェクトの直下がどれかの glob に該当するときだけ照合に使用する。/** で終わる glob はそのフォルダと配下のフォルダ、/** を付けないパスはそのフォルダだけに該当する。記載しないとき、全ての作業場所で使用する。",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -122,12 +122,12 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
         },
         "metadata": {
           "title": "エイリアスのキーの列",
-          "description": "エイリアスのキーごとに、値を取る文書の列の名前を書く。書かないキーは、同じ名前の列から取る。入れ子の列は meta.summary のように . でつなぐ。",
+          "description": "エイリアスのキーごとに、値を取る文書の列の名前を記載する。記載しないキーは、同じ名前の列から取る。入れ子の列は meta.summary のように . でつなぐ。",
           "type": "object",
           "properties": {
             "id": {
               "title": "文書の ID の列",
-              "description": "文書の ID を取る列の名前。どの引用の種類でも必須。id の列を持たない要素の並び（files.yaml）を読む行は、id にする列を書く。",
+              "description": "文書の ID を取る列の名前。どの引用の種類でも必須。id の列を持たない要素の並び（files.yaml）を参照する行は、id にする列を記載する。",
               "type": "string",
               "minLength": 1,
               "examples": [
@@ -135,8 +135,8 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
               ]
             },
             "name": {
-              "title": "文脈に出す語の列",
-              "description": "文脈に出す語を取る列の名前。aliases と合わせて、照合する語にもなる。どの引用の種類でも必須。",
+              "title": "文脈に出す単語の列",
+              "description": "文脈に出す単語を取る列の名前。aliases と合わせて、照合する単語にもなる。どの引用の種類でも必須。",
               "type": "string",
               "minLength": 1,
               "examples": [
@@ -145,7 +145,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             },
             "aliases": {
               "title": "別名の列",
-              "description": "照合する語（別名）を取る列の名前。列の値は文字列か文字列の並び。文脈には出さない。",
+              "description": "照合する単語（別名）を取る列の名前。列の値は文字列か文字列の並び。文脈には出さない。",
               "type": "string",
               "minLength": 1,
               "examples": [
@@ -198,8 +198,8 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
               ]
             },
             "avoid": {
-              "title": "避ける語の列",
-              "description": "term の用語ごとのやめた言い方を取る列の名前。列の値は文字列か文字列の並び。やめた言い方を照合し、avoid と同じ避ける語として用語の語を案内する。",
+              "title": "使用しない単語の列",
+              "description": "term の用語ごとのやめた言い方を取る列の名前。列の値は文字列か文字列の並び。やめた言い方を照合し、avoid と同じ使用しない単語として用語の単語を案内する。",
               "type": "string",
               "minLength": 1,
               "examples": [
@@ -243,8 +243,8 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
               ]
             },
             "replacement": {
-              "title": "正しい語の列",
-              "description": "avoid のやめた言い方に代えて使う正しい語を取る列の名前。avoid では必須。",
+              "title": "正しい単語の列",
+              "description": "avoid のやめた言い方に代えて使用する正しい単語を取る列の名前。avoid では必須。",
               "type": "string",
               "minLength": 1,
               "examples": [
@@ -253,7 +253,7 @@ export const ALIAS_SCHEMA: Record<string, unknown> = {
             },
             "inject_when": {
               "title": "照合条件の列",
-              "description": "文書の照合条件（条件か and・or・not の束）を取る列の名前。name・aliases が当たっても、照合した本文が照合条件に当たらない文書は追加しない。どの引用の種類でも任意。",
+              "description": "文書の照合条件（条件か and・or・not の束）を取る列の名前。name・aliases がヒットしても、照合した本文が照合条件に該当しない文書は追加しない。どの引用の種類でも任意。",
               "type": "string",
               "minLength": 1,
               "examples": [
