@@ -17,4 +17,4 @@ scope_out:
     plan: none
   - item: v1.0.0 で URL を master に戻す修正
     reason: 既定のブランチを master に戻す v1.0.0 の作業で扱う（D-296）
-    plan: to_file
+    plan: '#80'
