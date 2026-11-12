@@ -196,4 +196,4 @@ scope_out:
     plan: none
   - item: リポジトリ直下の alias-inject 自身の配信元の設定 dev-docs.yaml の改名
     reason: 例の名前ではなく dev-docs が読む実体のファイルで、改名は dev-docs の既定のファイル名の変更（shuhei1101/dev-docs#114）が入った後の作業になる。Issue 本文のやりたいことに含まれない
-    plan: to_file
+    plan: '77'
