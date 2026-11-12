@@ -1,0 +1,1 @@
+# セットアップの手順が取得する settings.sample.yaml の URL を master から develop にする
