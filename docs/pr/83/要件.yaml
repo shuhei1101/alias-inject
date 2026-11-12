@@ -1,0 +1,14 @@
+docs: []
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: エイリアスの元の行をスキーマで検証して合わない行を照合から外す。注釈の文言だけを変えるため、検証の結果は変わらない
+    depends_on: []
+scope_out:
+  - item: docs/guide/エイリアスのスキーマ.md（26・45 行目）・docs/guide/設定ファイル.md（117 行目）・docs/config/CFG-1.yaml（118・122 行目）の、同じスキーマの説明の文言の統一
+    reason: 起点 Issue は対象を schemas/aliases.schema.yaml に絞っている。スキーマの修正がマージされなくても同じ内容で成り立つため、別の作業にする
+    plan: '#84'
+  - item: 取り込み側（dev-docs・project-index）の aliases.source.yaml のタグの更新
+    reason: 起点 Issue の本文のとおり、取り込み側の作業で行う
+    plan: none
