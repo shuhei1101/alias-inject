@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import { findHits, normalize, sortByCount } from '../../../../hooks/lib/match'
 import type { Entry } from '../../../../hooks/lib/entry'
 
-// テスト用の語。照合に使う `keys` は正規化済みで渡す
+// テスト用の単語。照合に使用する `keys` は正規化済みで指定する
 function makeEntry(id: string, word: string, keys: string[], itemIndex = 0): Entry {
   return {
     aliasIndex: 0,
@@ -32,7 +32,7 @@ test('test_normalize', () => {
   expect(halfWidthKana).toBe('パン')
 })
 
-// 入力に先に出た語から並べる（正常系）
+// 入力に先に出た単語から並べる（正常系）
 test('test_find_hits', () => {
   // 準備
   const termA = makeEntry('term-a', 'Term-A', ['term-a', '用語エー'])
@@ -45,7 +45,7 @@ test('test_find_hits', () => {
   expect(hits.map((hit) => hit.entry.id)).toEqual(['term-b', 'term-a'])
 })
 
-// 同じ位置なら長い語が先になる（正常系）
+// 同じ位置なら長い単語が先になる（正常系）
 test('test_find_hits_when_same_position', () => {
   // 準備
   const short = makeEntry('review', 'レビュー', ['レビュー'])
@@ -58,7 +58,7 @@ test('test_find_hits_when_same_position', () => {
   expect(hits.map((hit) => hit.entry.id)).toEqual(['review-thread', 'review'])
 })
 
-// exclude の語は照合しない（正常系）
+// exclude の単語は照合しない（正常系）
 test('test_find_hits_when_excluded', () => {
   // 準備
   const termA = makeEntry('term-a', 'Term-A', ['term-a', '用語エー'])
@@ -89,7 +89,7 @@ test('test_find_hits_when_counted', () => {
   expect(reviewHits[0]?.count).toBe(1)
 })
 
-// 当たる語が無ければ空を返す（正常系）
+// ヒットする単語が無ければ空を返却する（正常系）
 test('test_find_hits_when_no_match', () => {
   // 準備
   const termA = makeEntry('term-a', 'Term-A', ['term-a', '用語エー'])
@@ -101,7 +101,7 @@ test('test_find_hits_when_no_match', () => {
   expect(hits).toEqual([])
 })
 
-// 出た回数の多い語が先、同じ回数なら先に出た語が先になる（正常系）
+// 出た回数の多い単語が先、同じ回数なら先に出た単語が先になる（正常系）
 test('test_sort_by_count', () => {
   // 準備
   const termA = makeEntry('term-a', 'Term-A', ['term-a'])

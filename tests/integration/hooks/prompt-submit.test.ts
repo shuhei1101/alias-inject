@@ -23,22 +23,22 @@ import {
   termYaml,
 } from './support/fixtures'
 
-// 読まれると何も追加しない設定ファイル。読んだ設定ファイルが違うことを文脈の有無で確かめる
+// 読み込まれると何も追加しない設定ファイル。読み込んだ設定ファイルが違うことを文脈の有無で確認する
 const DISABLED_CONFIG = 'global: { enabled: false }\n'
 
 // 環境変数 ALIAS_INJECT_CONFIG が指す設定ファイル
 const SHELL_CONFIG_PATH = '/shell/settings.yaml'
 
-// 初めて出た語の文脈を追加し、記録に入れる（正常系）
+// 初めて出た単語の文脈を追加し、記録に入れる（正常系）
 test('test_normal', async ($, on) => {
   // 準備
   const fs = makeFs()
   installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  // エイリアスで当てる。alias_type を持たない行の YAML（doc-z）は読まない
+  // エイリアスでヒットさせる。alias_type を持たない行の YAML（doc-z）は読み込まない
   const first = await submit($, '用語エーと doc-z を説明して')
-  // 大文字を含む語 Term-A が正規化で当たり、記録済みで追加されない
+  // 大文字を含む単語 Term-A が正規化でヒットし、記録済みで追加されない
   const second = await submit($, 'term-a とは')
 
   // 検証
@@ -56,7 +56,7 @@ test('test_normal', async ($, on) => {
   expect(second.context ?? []).toEqual([])
 })
 
-// 入力に先に出た語から max_items 語だけを追加し、外れた語は記録しない（正常系）
+// 入力に先に出た単語から max_items 個の単語だけを追加し、上限から漏れた単語は記録しない（正常系）
 test('test_normal_when_over_item_limit', async ($, on) => {
   // 準備
   installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['max_items: 1'] })), settings: SETTINGS })
@@ -71,7 +71,7 @@ test('test_normal_when_over_item_limit', async ($, on) => {
   expect(second.context?.[0]).toContain('id: term-b')
 })
 
-// 足すと max_chars を超える語を飛ばし、後ろの収まる語を追加する（正常系）
+// 追加すると max_chars を超える単語を飛ばし、後ろの収まる単語を追加する（正常系）
 test('test_normal_when_over_char_limit', async ($, on) => {
   // 準備
   const fs = makeFs(makeConfig({ globalExtra: ['max_chars: 300'] }))
@@ -80,7 +80,7 @@ test('test_normal_when_over_char_limit', async ($, on) => {
 
   // 実行
   const first = await submit($, 'term-a・term-long・term-b を比べて')
-  // 上限を 4000 に戻すと、飛ばした語が追加される
+  // 上限を 4000 に戻すと、飛ばした単語が追加される
   fs.write(CONFIG_PATH, makeConfig({ globalExtra: ['max_chars: 4000'] }))
   const second = await submit($, 'term-long とは')
 
@@ -93,14 +93,14 @@ test('test_normal_when_over_char_limit', async ($, on) => {
   expect(second.context?.[0]).toContain('Term-Long')
 })
 
-// origins に対応づかない出所の入力はそのまま渡す（正常系）
+// origins に対応づかない出所の入力はそのまま返却する（正常系）
 test('test_normal_when_origin_excluded', async ($, on) => {
   // 準備
   installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['origins: [plugin]'] })), settings: SETTINGS })
 
   // 実行
   const fromComposer = await submit($, 'term-a とは', { kind: 'composer' })
-  // 同じセッションで出所が plugin の入力を送ると、前の入力で記録されていないため追加される
+  // 同じセッションで出所が plugin の入力を送信すると、前の入力で記録されていないため追加される
   const fromPlugin = await submit($, 'term-a とは', { kind: 'plugin' })
 
   // 検証
@@ -109,14 +109,14 @@ test('test_normal_when_origin_excluded', async ($, on) => {
   expect(fromPlugin.context?.[0]).toContain('Term-A')
 })
 
-// スラッシュコマンドの行は照合せずにそのまま渡す（正常系）
+// スラッシュコマンドの行は照合せずにそのまま返却する（正常系）
 test('test_normal_when_slash_command', async ($, on) => {
   // 準備
   installWorld(on, { fs: makeFs(), settings: SETTINGS })
 
   // 実行
   const command = await submit($, '/review term-a', { command: { name: 'review', args: 'term-a' } })
-  // term-a が記録に入っていないため、続けて送る入力で文脈が追加される
+  // term-a が記録に入っていないため、続けて送信する入力で文脈が追加される
   const after = await submit($, 'term-a とは')
 
   // 検証
@@ -125,7 +125,7 @@ test('test_normal_when_slash_command', async ($, on) => {
   expect(after.context?.[0]).toContain('Term-A')
 })
 
-// ALIAS_INJECT_CONFIG が無く、既定のパスにも設定ファイルが無いときはそのまま渡す（正常系）
+// ALIAS_INJECT_CONFIG が無く、既定のパスにも設定ファイルが無いときはそのまま返却する（正常系）
 test('test_normal_when_config_path_missing', async ($, on) => {
   // 準備
   const fs = new MemoryFs()
@@ -141,7 +141,7 @@ test('test_normal_when_config_path_missing', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 当たった projects の aliases の行を global に重ね、同じ語を alias_type ごとの両方のセクションに追加する（正常系）
+// 該当した projects の aliases の行を global に重ね、同じ単語を alias_type ごとの両方のセクションに追加する（正常系）
 test('test_normal_when_project_matched', async ($, on) => {
   // 準備
   const config = makeConfig({
@@ -172,7 +172,7 @@ test('test_normal_when_project_matched', async ($, on) => {
   expect(fs.reads).not.toContain('/repo/sample/docs/other.yaml')
 })
 
-// 更新時刻が変わった設定ファイルと YAML だけを読み直し、増えたファイルも読む（正常系）
+// 更新時刻が変わった設定ファイルと YAML だけを再読み込みし、増えたファイルも読み込む（正常系）
 test('test_normal_when_files_changed', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -194,7 +194,7 @@ test('test_normal_when_files_changed', async ($, on) => {
   expect(fs.reads).toEqual([`${TERMS_DIR}/term-a.yaml`, `${TERMS_DIR}/term-c.yaml`])
 })
 
-// 別のリポジトリが同じ aliases の id と項目の ID を使っても、両方を追加して記録する（正常系）
+// 別のリポジトリが同じ aliases の id と項目の ID を使用しても、両方を追加して記録する（正常系）
 test('test_normal_when_same_id_across_repositories', async ($, on) => {
   // 準備
   const otherDevDocsPath = '/repo/other/project-index.yaml'
@@ -216,7 +216,7 @@ test('test_normal_when_same_id_across_repositories', async ($, on) => {
   expect(second.context ?? []).toEqual([])
 })
 
-// enabled: false の repositories の要素と documents の行を読まずに照合する（正常系）
+// enabled: false の repositories の要素と documents の行を読み込まずに照合する（正常系）
 test('test_normal_when_disabled', async ($, on) => {
   // 準備
   const otherDevDocsPath = '/repo/other/project-index.yaml'
@@ -240,7 +240,7 @@ test('test_normal_when_disabled', async ($, on) => {
   expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/drafts/term-x.yaml`)
 })
 
-// 更新時刻が変わった project-index.yaml を読み直し、追加した documents の行で照合する（正常系）
+// 更新時刻が変わった project-index.yaml を再読み込みし、追加した documents の行で照合する（正常系）
 test('test_normal_when_repository_config_changed', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -264,7 +264,7 @@ test('test_normal_when_repository_config_changed', async ($, on) => {
   expect(fs.reads).toEqual([DEV_DOCS_PATH, `${KNOWLEDGE_DIR}/commands/cmd-a.yaml`])
 })
 
-// skill・tool・path・env・avoid の行の語を、種類ごとのセクションとキーで追加する（正常系）
+// skill・tool・path・env・avoid の行の単語を、種類ごとのセクションとキーで追加する（正常系）
 test('test_normal_when_added_types', async ($, on) => {
   // 準備
   const config = makeConfig({
@@ -303,7 +303,7 @@ test('test_normal_when_added_types', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 設定ファイルが読めないときは何も追加せずに渡す（異常系）
+// 設定ファイルを読み込めないときは何も追加せずに返却する（異常系）
 test('test_error_when_config_unreadable', async ($, on) => {
   // 準備
   // ALIAS_INJECT_CONFIG が指す設定ファイルが無い（fs.stat と fs.read が例外になる）。既定のパスには term-a を照合できる設定ファイルがある
@@ -316,13 +316,13 @@ test('test_error_when_config_unreadable', async ($, on) => {
   // 検証
   expect(result.text).toBe('term-a とは')
   expect(result.context ?? []).toEqual([])
-  // 設定ファイルのパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
+  // 設定ファイルのパスと、読み込めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
-// 読めない project-index.yaml のリポジトリだけを外し、他のリポジトリの文脈は追加する（異常系）
+// 読み込めない project-index.yaml のリポジトリだけを除外し、他のリポジトリの文脈は追加する（異常系）
 test('test_error_when_repository_unreadable', async ($, on) => {
   // 準備
   // /repo/missing/project-index.yaml が無い（fs.stat と fs.read が例外になる）
@@ -337,16 +337,16 @@ test('test_error_when_repository_unreadable', async ($, on) => {
   const context = result.context?.[0] ?? ''
   expect(context).toContain('## 用語')
   expect(context).toContain('Term-A')
-  // project-index.yaml のパスと、読めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
+  // project-index.yaml のパスと、読み込めなかった理由（ファイルが無い例外のメッセージ）を含む行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
 })
 
-// スキーマに合わない行・id の重なった後の行だけを外し、他の行の文脈は追加する（異常系）
+// スキーマに合わない行・id の重なった後の行だけを除外し、他の行の文脈は追加する（異常系）
 test('test_error_when_alias_invalid', async ($, on) => {
   // 準備
-  // metadata.name を空の文字列で書いた id: bad の行、alias_type が glossary の id: unknown の行、id: terms が重なる後の行
+  // metadata.name を空の文字列で記載した id: bad の行、alias_type が glossary の id: unknown の行、id: terms が重なる後の行
   const devDocs = makeDevDocs({
     documentsExtra: [
       ...aliasLines({ id: 'bad', type: 'term', paths: 'bad/*.yaml', metadata: ["name: ''"] }),
@@ -376,7 +376,7 @@ test('test_error_when_alias_invalid', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('terms') && line.text.includes('重なり'))).toBe(true)
 })
 
-// 書式の誤った YAML の文書だけを外し、他の行の文脈は追加する（異常系）
+// 書式の誤った YAML の文書だけを除外し、他の行の文脈は追加する（異常系）
 test('test_error_when_yaml_malformed', async ($, on) => {
   // 準備
   const config = makeConfig({ aliases: aliasLines({ id: 'urls', type: 'url', paths: 'urls/*.yaml', metadata: ['name: title'] }) })
@@ -399,7 +399,7 @@ test('test_error_when_yaml_malformed', async ($, on) => {
   expect(logged.some((line) => line.text.includes('照合から外しました') && /\d+:\d+/.test(line.text))).toBe(true)
 })
 
-// 解決した url も port も空の env の文書を外し、同じ行の他の文書の文脈は追加する（異常系）
+// 解決した url も port も空の env の文書を除外し、同じ行の他の文書の文脈は追加する（異常系）
 test('test_error_when_env_without_endpoint', async ($, on) => {
   // 準備
   const config = makeConfig({ aliases: aliasLines({ id: 'envs', type: 'env', paths: 'envs/*.yaml' }) })
@@ -424,10 +424,10 @@ test('test_error_when_env_without_endpoint', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('env-x') && line.text.includes('url') && line.text.includes('port'))).toBe(true)
 })
 
-// 設定ファイルの旧い構造の要素と project-index.yaml の metadata.alias_type を持つ行を外し、project-index.yaml のトップレベルの aliases は読まない（異常系）
+// 設定ファイルの旧構造の要素と project-index.yaml の metadata.alias_type を持つ行を除外し、project-index.yaml のトップレベルの aliases は読み込まない（異常系）
 test('test_error_when_legacy_aliases', async ($, on) => {
   // 準備
-  // metadata を持たない旧い構造の要素と、行の alias_type を持たず metadata.alias_type を持つ要素
+  // metadata を持たない旧構造の要素と、行の alias_type を持たず metadata.alias_type を持つ要素
   const legacyUrlRow = ['- id: urls', '  type: url', '  paths: [urls/*.yaml]', '  fields:', '    id: id', '    match: [name]', '    url: url']
   const metadataAliasTypeRow = ['- id: old-terms', '  paths: [old/*.yaml]', '  metadata:', '    alias_type:', '      type: custom', '      value: term']
   const oldDocsRow = ['- id: old-docs', '  paths: [old-docs/*.yaml]', '  metadata:', '    alias_type:', '      type: custom', '      value: term']
@@ -464,7 +464,7 @@ test('test_error_when_legacy_aliases', async ($, on) => {
   expect(fs.reads).not.toContain(`${KNOWLEDGE_DIR}/legacy/term-y.yaml`)
 })
 
-// 必須のキーの値が空の文書だけを外し、同じ行の他の文書の文脈は追加する（異常系）
+// 必須のキーの値が空の文書だけを除外し、同じ行の他の文書の文脈は追加する（異常系）
 test('test_error_when_required_value_missing', async ($, on) => {
   // 準備
   // description を持たない term-n
@@ -485,7 +485,7 @@ test('test_error_when_required_value_missing', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('term-n') && line.text.includes('description'))).toBe(true)
 })
 
-// body_file の列のファイル名を語にした records の行の文書を、alias_type の文書として追加する（正常系）
+// body_file の列のファイル名を単語にした records の行の文書を、alias_type の文書として追加する（正常系）
 test('test_normal_when_records_body_file', async ($, on) => {
   // 準備
   // id・name を持たない管理用の YAML の要素を、metadata.id の path の列で id にする
@@ -514,7 +514,7 @@ test('test_normal_when_records_body_file', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 名前が当たった文書のうち、照合条件に当たらない文書を外す（正常系）
+// 名前が該当した文書のうち、照合条件に該当しない文書を除外する（正常系）
 test('test_normal_when_inject_condition', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -522,9 +522,9 @@ test('test_normal_when_inject_condition', async ($, on) => {
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  // contains に当たり、not_contains で外れる
+  // contains に該当し、not_contains で除外される
   const first = await submit($, 'term-a と term-c を React と Python で')
-  // 大文字の TSX が正規化で tsx に当たる
+  // 大文字の TSX が正規化で tsx にヒットする
   const second = await submit($, 'term-c を TSX で')
 
   // 検証
@@ -535,7 +535,7 @@ test('test_normal_when_inject_condition', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 用語の avoid のやめた言い方を使用しない単語のセクションに追加し、exclude の語と照合条件に当たらない用語のやめた言い方は追加しない（正常系）
+// 用語の avoid のやめた言い方を使用しない単語のセクションに追加し、exclude の単語と照合条件に該当しない用語のやめた言い方は追加しない（正常系）
 test('test_normal_when_term_avoid', async ($, on) => {
   // 準備
   const fs = makeFs(makeConfig({ globalExtra: ['exclude: [旧ビー]'] }))
@@ -545,7 +545,7 @@ test('test_normal_when_term_avoid', async ($, on) => {
   const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
-  // oldA は正規化で OldA に当たる。旧シー の term-c は React・tsx を含まないため照合条件に当たらない
+  // oldA は正規化で OldA にヒットする。旧シー の term-c は React・tsx を含まないため照合条件に該当しない
   const first = await submit($, '旧エーと oldA と旧ビーと旧シーと term-b')
   const second = await submit($, '旧エーとは')
 
@@ -562,7 +562,7 @@ test('test_normal_when_term_avoid', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 照合条件の誤った文書だけを外し、同じ行の他の文書の文脈は追加する（異常系）
+// 照合条件の誤った文書だけを除外し、同じ行の他の文書の文脈は追加する（異常系）
 test('test_error_when_inject_condition_invalid', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -586,7 +586,7 @@ test('test_error_when_inject_condition_invalid', async ($, on) => {
   expect(debugOf(unknownOpPath).some((line) => line.text.includes('term-f') && line.text.includes('op'))).toBe(true)
 })
 
-// 作業場所が scope.cwd の glob に当たらない行を、YAML を読み込まずに照合から除外する（正常系）
+// 作業場所が scope.cwd の glob に該当しない行を、YAML を読み込まずに照合から除外する（正常系）
 test('test_normal_when_cwd_scoped', async ($, on) => {
   // 準備
   // worktree のセッションは worktree のパスで判定する
@@ -601,7 +601,7 @@ test('test_normal_when_cwd_scoped', async ($, on) => {
   expect(context).toContain('Term-A')
   expect(context).toContain('link-a')
   expect(context).not.toContain('link-b')
-  // /** を付けない /repo/sample は、配下の worktree に当たらない
+  // /** を付けない /repo/sample は、配下の worktree に該当しない
   expect(context).not.toContain('link-c')
   expect(fs.reads).not.toContain(SCOPED_LINKS.other)
   expect(fs.reads).not.toContain(SCOPED_LINKS.root)
@@ -642,7 +642,7 @@ test('test_error_when_cwd_scope_invalid', async ($, on) => {
   expect(debugLines.some((line) => line.text.includes('string-scope') && line.text.includes('scope.cwd'))).toBe(true)
 })
 
-// ALIAS_INJECT_CONFIG が無いとき、XDG_CONFIG_HOME の下の設定ファイルを読む（正常系）
+// ALIAS_INJECT_CONFIG が無いとき、XDG_CONFIG_HOME の下の設定ファイルを読み込む（正常系）
 test('test_normal_when_default_config_path', async ($, on) => {
   // 準備
   const fs = makeFs(DISABLED_CONFIG)
@@ -659,7 +659,7 @@ test('test_normal_when_default_config_path', async ($, on) => {
   expect(result.context?.[0]).toContain('説明 Term-A')
 })
 
-// XDG_CONFIG_HOME が空のときは ~/.config の下の設定ファイルを読む（正常系）
+// XDG_CONFIG_HOME が空のときは ~/.config の下の設定ファイルを読み込む（正常系）
 test('test_normal_when_xdg_config_home_empty', async ($, on) => {
   // 準備
   installWorld(on, { fs: makeFs(), settings: { env: {} }, env: { XDG_CONFIG_HOME: '' } })
@@ -673,7 +673,7 @@ test('test_normal_when_xdg_config_home_empty', async ($, on) => {
   expect(result.context?.[0]).toContain('説明 Term-A')
 })
 
-// settings に値が無いとき、環境変数 ALIAS_INJECT_CONFIG が指す設定ファイルを読む（正常系）
+// settings に値が無いとき、環境変数 ALIAS_INJECT_CONFIG が指す設定ファイルを読み込む（正常系）
 test('test_normal_when_config_from_shell_env', async ($, on) => {
   // 準備
   const fs = makeFs(DISABLED_CONFIG)
@@ -689,7 +689,7 @@ test('test_normal_when_config_from_shell_env', async ($, on) => {
   expect(result.context?.[0]).toContain('説明 Term-A')
 })
 
-// settings と環境変数の両方に値があるときは settings の値を使う（正常系）
+// settings と環境変数の両方に値があるときは settings の値を使用する（正常系）
 test('test_normal_when_settings_env_preferred', async ($, on) => {
   // 準備
   const fs = makeFs()

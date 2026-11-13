@@ -5,7 +5,7 @@ import { thrown } from '../support/thrown'
 
 type Json = Record<string, unknown>
 
-// スキーマに合う行。上書きしたいキーだけ渡す
+// スキーマに合う行。上書きしたいキーだけ指定する
 function makeItem(overrides: Json = {}): Json {
   return {
     id: 'terms',
@@ -25,14 +25,14 @@ function validateItem(value: unknown): string[] {
   return validateSchema({ root: ALIAS_SCHEMA, schema: ALIAS_SCHEMA.items, value, path: 'aliases[0]' })
 }
 
-// 同梱のスキーマの `$defs.alias.properties.id` を書き換えた複製を返す
+// 同梱のスキーマの `$defs.alias.properties.id` を書き換えた複製を返却する
 function withIdSchema(idSchema: Json): Json {
   const copy = JSON.parse(JSON.stringify(ALIAS_SCHEMA)) as { $defs: { alias: { properties: { id: Json } } } }
   copy.$defs.alias.properties.id = idSchema
   return copy as unknown as Json
 }
 
-// 同梱のスキーマを返す（正常系）
+// 同梱のスキーマを返却する（正常系）
 test('test_load_alias_schema', () => {
   // 実行
   const schema = loadAliasSchema()
@@ -69,7 +69,7 @@ test('test_check_keywords_when_unsupported', () => {
   expect((unresolvedError as SchemaError).message).toContain('#/$defs/none')
 })
 
-// スキーマに合う行は空を返す（正常系）
+// スキーマに合う行は空を返却する（正常系）
 test('test_validate_schema', () => {
   // 準備
   const items = [
@@ -93,7 +93,7 @@ test('test_validate_schema', () => {
   expect(results).toEqual(items.map(() => []))
 })
 
-// 無い必須のキーをパスつきで返す（正常系）
+// 無い必須のキーをパスつきで返却する（正常系）
 test('test_validate_schema_when_required_missing', () => {
   // 準備
   const withoutAliasType = { id: 'terms', paths: ['terms/*.yaml'] }
@@ -108,7 +108,7 @@ test('test_validate_schema_when_required_missing', () => {
   expect(pathsReasons.some((reason) => reason.includes('aliases[0].paths'))).toBe(true)
 })
 
-// 型・列挙・最小の数と長さに合わない値を返す（正常系）
+// 型・列挙・最小の数と長さに合わない値を返却する（正常系）
 test('test_validate_schema_when_type_mismatch', () => {
   // 準備
   const cases: [string, Json][] = [
@@ -125,7 +125,7 @@ test('test_validate_schema_when_type_mismatch', () => {
   }
 })
 
-// `additionalProperties: false` のスキーマは書けないキーを返し、行と metadata の他のキーは許す（正常系）
+// `additionalProperties: false` のスキーマは記載できないキーを返却し、行と metadata の他のキーは許す（正常系）
 test('test_validate_schema_when_additional_property', () => {
   // 準備
   const closed: Json = { type: 'object', additionalProperties: false, properties: { a: { type: 'integer' } } }
@@ -140,7 +140,7 @@ test('test_validate_schema_when_additional_property', () => {
   expect(otherReasons).toEqual([])
 })
 
-// `scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返す（正常系）
+// `scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返却する（正常系）
 test('test_validate_schema_when_scope', () => {
   // 準備
   const scopes: unknown[] = [{ cwd: ['/repo/a/**'] }, { cwd: [] }, { cwd: '/repo/a/**' }, { cwd: [1] }, { path: ['/repo/a'] }]
@@ -154,7 +154,7 @@ test('test_validate_schema_when_scope', () => {
   expect((results[4] ?? []).some((reason) => reason.includes('aliases[0].scope'))).toBe(true)
 })
 
-// `if` に合わないときは `then` を使わない（正常系）
+// `if` に合わないときは `then` を使用しない（正常系）
 test('test_validate_schema_when_if_not_matched', () => {
   // 準備
   const schema: Json = {
@@ -168,7 +168,7 @@ test('test_validate_schema_when_if_not_matched', () => {
   expect(reasons).toEqual([])
 })
 
-// `anyOf` のどの要素にも合わないときだけ理由を返す（正常系）
+// `anyOf` のどの要素にも合わないときだけ理由を返却する（正常系）
 test('test_validate_schema_when_any_of_not_matched', () => {
   // 準備
   const schema: Json = { anyOf: [{ type: 'string' }, { type: 'integer' }] }

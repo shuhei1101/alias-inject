@@ -7,16 +7,16 @@ export const CONFIG_PATH = '/home/u/.config/alias-inject/settings.yaml'
 /** 設定ファイルのフォルダ */
 export const CONFIG_DIR = '/home/u/.config/alias-inject'
 
-/** 読むリポジトリのフォルダ */
+/** 参照するリポジトリのフォルダ */
 export const KNOWLEDGE_DIR = '/repo/knowledge'
 
-/** 読むリポジトリの project-index.yaml の絶対パス */
+/** 参照するリポジトリの project-index.yaml の絶対パス */
 export const DEV_DOCS_PATH = `${KNOWLEDGE_DIR}/project-index.yaml`
 
-/** 用語の YAML を置くフォルダ */
+/** 用語の YAML を配置するフォルダ */
 export const TERMS_DIR = `${KNOWLEDGE_DIR}/terms`
 
-/** `alias_type` を持たない行の YAML を置くフォルダ */
+/** `alias_type` を持たない行の YAML を配置するフォルダ */
 export const DOCS_DIR = `${KNOWLEDGE_DIR}/docs`
 
 /** `ALIAS_INJECT_CONFIG` で設定ファイルを指すユーザースコープの settings */
@@ -30,16 +30,16 @@ export function indent(lines: string[], width: number): string[] {
 /** エイリアスの元の行 1 つの行。`- id:` を字下げなしで始める。行の `alias_type` を `type` の値にする */
 export function aliasLines(options: {
   id: string
-  /** 行の `alias_type` の値（引用の種類にない値も書ける） */
+  /** 行の `alias_type` の値（引用の種類にない値も記載できる） */
   type: string
   paths: string
-  /** `false` のとき、この行を使わない */
+  /** `false` のとき、この行を使用しない */
   enabled?: boolean
   /** 文書の並びを持つ配列のキー */
   records?: string
   /** `records` の要素の本文のファイルのパスを持つ列の名前 */
   bodyFile?: string
-  /** `metadata` に追加するキーの行（字下げなし）。無ければ `metadata` を書かない */
+  /** `metadata` に追加するキーの行（字下げなし）。無ければ `metadata` を記載しない */
   metadata?: string[]
 }): string[] {
   return [
@@ -59,8 +59,8 @@ export function termAliasLines(options: { id?: string; paths?: string; enabled?:
 }
 
 /**
- * 端末の設定ファイルの本文。読むリポジトリを `global.repositories` に持つ。
- * `repositories`・`aliases` は字下げなしの要素の行で渡し、`global` の行と `projects` の行も渡せる
+ * 端末の設定ファイルの本文。参照するリポジトリを `global.repositories` に持つ。
+ * `repositories`・`aliases` は字下げなしの要素の行で指定し、`global` の行と `projects` の行も指定できる
  */
 export function makeConfig(
   options: { globalExtra?: string[]; repositories?: string[]; aliases?: string[]; projects?: string[] } = {},
@@ -98,7 +98,7 @@ export function termYaml(options: { id: string; name?: string; aliases?: string[
   ].join('\n')
 }
 
-/** 設定ファイルと、読むリポジトリの project-index.yaml と用語の YAML（term-a・term-b。term-b は `name` を持たない）と文書の YAML（doc-z）を持つファイル表 */
+/** 設定ファイルと、参照するリポジトリの project-index.yaml と用語の YAML（term-a・term-b。term-b は `name` を持たない）と文書の YAML（doc-z）を持つファイル表 */
 export function makeFs(config: string = makeConfig(), devDocs: string = makeDevDocs()): MemoryFs {
   return new MemoryFs({
     [CONFIG_PATH]: config,

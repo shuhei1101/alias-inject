@@ -17,12 +17,12 @@ function envOutput(entries: Record<string, string>): string {
     .join('')
 }
 
-// `env -0` が終了コード 0 で返す応答
+// `env -0` が終了コード 0 で返却する応答
 function envRun(entries: Record<string, string>): unknown {
   return { value: { exitCode: 0, stdout: envOutput(entries) } }
 }
 
-describe('読んだ本文への変数参照の値の追加', () => {
+describe('参照した本文への変数参照の値の追加', () => {
   // 本文に出た名前ごとに 1 行の値を context に追加する（正常系）
   test('test_normal', async ($, on) => {
     // 準備
@@ -59,7 +59,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     ])
   })
 
-  // 変数参照が無い結果は子プロセスを起こさずそのまま返す（正常系）
+  // 変数参照が無い結果は子プロセスを起動せずそのまま返却する（正常系）
   test('test_normal_when_no_reference', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -74,7 +74,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     expect(world.runs).toEqual([])
   })
 
-  // エラーの結果と deny は本文に変数参照があってもそのまま返す（正常系）
+  // エラーの結果と deny は本文に変数参照があってもそのまま返却する（正常系）
   test('test_normal_when_error_result', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -91,7 +91,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     expect(world.runs).toEqual([])
   })
 
-  // 本文に出た順で 50 名前までの行を作り、残りの件数の行を置く（正常系）
+  // 本文に出た順で 50 名前までの行を作り、残りの件数の行を配置する（正常系）
   test('test_normal_when_over_reference_limit', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -111,7 +111,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     expect(lines[50]).toBe('変数参照の値: ほか 2 件の変数参照は値を追加していない')
   })
 
-  // 1000 文字を超える値は先頭だけを書き、改行を含む値は JSON の文字列で 1 行に収める（正常系）
+  // 1000 文字を超える値は先頭だけを記載し、改行を含む値は JSON の文字列で 1 行に収める（正常系）
   test('test_normal_when_over_value_limit', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -128,7 +128,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     expect(lines[1]).toBe('変数参照の値: !{MULTI_D} = "line1\\nline2"')
   })
 
-  // env -0 が 0 以外で終わったときは文脈を追加せずそのまま返す（異常系）
+  // env -0 が 0 以外で終わったときは文脈を追加せずそのまま返却する（異常系）
   test('test_error_when_nonzero_exit', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -144,7 +144,7 @@ describe('読んだ本文への変数参照の値の追加', () => {
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('3')).length).toBe(1)
   })
 
-  // 起動できない・待ちの上限を超えたときは文脈を追加せずそのまま返す（異常系）
+  // 起動できない・待ちの上限を超えたときは文脈を追加せずそのまま返却する（異常系）
   test('test_error_when_process_failed', async ($, on) => {
     // 準備
     const world = installToolWorld(on)
@@ -168,13 +168,13 @@ describe('読んだ本文への変数参照の値の追加', () => {
 // 変数参照の値の行
 const VALUE_A_LINE = '変数参照の値: !{VALUE_A} = value-a'
 
-// Read の呼び出し。agentId を渡すとサブエージェントの中の呼び出しにする
+// Read の呼び出し。agentId を指定するとサブエージェントの中の呼び出しにする
 function readInput(agentId?: string): Record<string, unknown> {
   return { tool: 'Read', file_path: '/work/note.md', ...(agentId === undefined ? {} : { agentId }) }
 }
 
 describe('ツールの結果への引用の文脈の追加', () => {
-  // 初めて出た語の文脈を追加し、メインの会話の記録に入れる（正常系）
+  // 初めて出た単語の文脈を追加し、メインの会話の記録に入れる（正常系）
   test('test_normal', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
@@ -212,7 +212,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(read.context?.[0]).toContain('Term-A')
   })
 
-  // Read の file_path と MCP の引数の ID に当たる語を外す（正常系）
+  // Read の file_path と MCP の引数の ID に該当する単語を除外する（正常系）
   test('test_normal_when_reading_own_document', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
@@ -234,7 +234,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     }
   })
 
-  // 出た回数の多い語から max_items 語だけを追加する（正常系）
+  // 出た回数の多い単語から max_items 個の単語だけを追加する（正常系）
   test('test_normal_when_over_limit', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['max_items: 1'] })), settings: SETTINGS })
@@ -305,7 +305,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.context?.[1]).toBe(VALUE_A_LINE)
   })
 
-  // ifVersion が外れたら読み直し、他の呼び出しで記録された語を除いて追加する（正常系）
+  // ifVersion が一致しなければ再読み込みし、他の呼び出しで記録された単語を除いて追加する（正常系）
   test('test_normal_when_record_conflicted', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
@@ -330,7 +330,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(after.context ?? []).toEqual([])
   })
 
-  // 設定ファイルが読めないときは引用の文脈を追加せずに返す（異常系）
+  // 設定ファイルを読み込めないときは引用の文脈を追加せずに返却する（異常系）
   test('test_error_when_config_unreadable', async ($, on) => {
     // 準備
     // ALIAS_INJECT_CONFIG が指す設定ファイルは書式が崩れている。既定のパスには term-a を照合できる設定ファイルがある
@@ -349,13 +349,13 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath)).length).toBeGreaterThan(0)
   })
 
-  // ifVersion が 3 回続けて外れたら引用の文脈を追加せずに返す（異常系）
+  // ifVersion が 3 回続けて一致しなければ引用の文脈を追加せずに返却する（異常系）
   test('test_error_when_record_conflicts_exhausted', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
     const answer = { result: 'r', text: '用語エーの説明', context: ['other'] }
     world.answer = answer
-    // ifVersion を付けた書き込みには常に外れたと返す
+    // ifVersion を付けた書き込みには常に一致しなかったと返却する
     let setCalls = 0
     on('state.set', (_, e, next) => {
       setCalls += 1
@@ -388,20 +388,20 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('state broken')).length).toBe(1)
   })
 
-  // 照合条件をツールの結果の本文で評価し、当たらない文書を外す（正常系）
+  // 照合条件をツールの結果の本文で評価し、該当しない文書を除外する（正常系）
   test('test_normal_when_inject_condition', async ($, on) => {
     // 準備
     const fs = makeFs()
     fs.write(`${TERMS_DIR}/term-c.yaml`, TERM_C_WITH_CONDITION)
     const world = installToolWorld(on, { fs, settings: SETTINGS })
-    // 入力の文は照合条件に当たるが、ツールの結果の本文で評価する
+    // 入力の文は照合条件に該当するが、ツールの結果の本文で評価する
     await submit($, 'React の話')
     const firstAnswer = { result: 'r', text: 'term-c の説明', context: ['other'] }
 
     // 実行
     world.answer = firstAnswer
     const first = await callTool($, readInput())
-    world.answer = { result: 'r', text: 'term-c を tsx で使う', context: ['other'] }
+    world.answer = { result: 'r', text: 'term-c を tsx で使用する', context: ['other'] }
     const second = await callTool($, readInput())
 
     // 検証
@@ -410,7 +410,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(second.context?.[1]).toContain('id: term-c')
   })
 
-  // 作業場所が scope.cwd の glob に当たらない行の語を、ツールの結果の本文に出ても追加しない（正常系）
+  // 作業場所が scope.cwd の glob に該当しない行の単語を、ツールの結果の本文に出ても追加しない（正常系）
   test('test_normal_when_cwd_scoped', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeCwdScopedFs(), settings: SETTINGS, projectRoot: SCOPED_PROJECT_ROOT })

@@ -22,7 +22,7 @@ export type FakeStateSetResult = { isSet: boolean; version: number }
 /** `$.state.set` の 1 回の呼び出し */
 export type FakeStateWrite = { ref: StateRef; value: unknown; ifVersion: number | undefined }
 
-/** `$.state.set` を横取りする処理。`store` を呼ぶとメモリの記録へ書く（`ifVersion` を渡すと、その version のときだけ書く） */
+/** `$.state.set` を横取りする処理。`store` を呼ぶとメモリの記録へ書き込む（`ifVersion` を指定すると、その version のときだけ書き込む） */
 export type FakeStateSetHook = (
   write: FakeStateWrite,
   store: (value: unknown, ifVersion: number | undefined) => FakeStateSetResult,
@@ -43,11 +43,11 @@ export type FakeEngineOptions = {
   fs?: MemoryFs
   settings?: unknown
   home?: string
-  /** `$.env.get` が返す `HOME` のほかの環境変数 */
+  /** `$.env.get` が返却する `HOME` のほかの環境変数 */
   env?: Record<string, string>
   sessionId?: string
   projectRoot?: string
-  /** 渡すと `$.state.set` の呼び出しごとに呼ぶ */
+  /** 指定すると `$.state.set` の呼び出しごとに呼ぶ */
   onStateSet?: FakeStateSetHook
 }
 
@@ -57,7 +57,7 @@ export type FakeEngine = {
   logs: LogLine[]
 }
 
-/** プラグインの `$` の代わりになる、メモリ上の `$`。ライブラリの関数を直接呼ぶ単体テストで使う */
+/** プラグインの `$` の代わりになる、メモリ上の `$`。ライブラリの関数を直接呼ぶ単体テストで使用する */
 export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
   const fs = options.fs ?? new MemoryFs()
   const home = options.home ?? HOME
@@ -80,7 +80,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
       set: async (ref: StateRef, value: unknown, opts?: { ifVersion?: number }) => {
         const store = (stored: unknown, ifVersion: number | undefined): FakeStateSetResult => {
           const current = versions.get(stateKey(ref))?.version ?? 0
-          // ifVersion が今の version と違えば書かない
+          // ifVersion が今の version と違えば書き込まない
           if (ifVersion !== undefined && ifVersion !== current) return { isSet: false, version: current }
           versions.set(stateKey(ref), { value: stored, version: current + 1 })
           return { isSet: true, version: current + 1 }
@@ -101,10 +101,10 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
 
 export type WorldOptions = {
   fs: MemoryFs
-  /** `$.settings.read` が返すユーザースコープの settings */
+  /** `$.settings.read` が返却するユーザースコープの settings */
   settings: unknown
   home?: string
-  /** `mock.env` で渡す `HOME` のほかの環境変数 */
+  /** `mock.env` で指定する `HOME` のほかの環境変数 */
   env?: Record<string, string>
   sessionId?: string
   projectRoot?: string
@@ -116,9 +116,9 @@ export const COMPACTED_MESSAGE = { role: 'user' as const, text: '要約', toolUs
 export type World = {
   /** `$.ui.log` に届いた行 */
   logs: LogLine[]
-  /** `$.session.id()` が返すセッション ID。テストの途中で書き換えられる */
+  /** `$.session.id()` が返却するセッション ID。テストの途中で書き換えられる */
   sessionId: string
-  /** 圧縮の結果（`session.compact` の一番下の処理が返す値） */
+  /** 圧縮の結果（`session.compact` の一番下の処理が返却する値） */
   compactResult: { messages: (typeof COMPACTED_MESSAGE)[] } | { skip: string }
 }
 
@@ -158,14 +158,14 @@ export function installWorld(on: On, options: WorldOptions): World {
     return { value: undefined }
   })
 
-  // 一番下の処理は、届いた入力をそのまま返す
+  // 一番下の処理は、届いた入力をそのまま返却する
   on('prompt.submit', (_, e) => ({ text: e.text, context: e.context }))
   on('session.compact', () => world.compactResult as never)
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   return world
 }
 
-/** 入力を送信して、返った `text` と `context` を返す */
+/** 入力を送信して、返却された `text` と `context` を返却する */
 export async function submit(
   $: Engine,
   text: string,
@@ -185,7 +185,7 @@ export async function submit(
 export type ProcessRun = { argv: readonly string[]; timeoutMs: number | undefined }
 
 export type ToolWorld = {
-  /** `tool.call` の一番下の処理が返すツールの結果 */
+  /** `tool.call` の一番下の処理が返却するツールの結果 */
   answer: unknown
   /** `process.run` の応答。`{ value }` は子プロセスの結果、`{ deny }` は例外 */
   run: unknown
@@ -193,11 +193,11 @@ export type ToolWorld = {
   runs: ProcessRun[]
   /** `$.ui.log` に届いた行 */
   logs: LogLine[]
-  /** `options` を渡したときに登録したファイル表の応答（セッション ID・圧縮の結果を書き換えられる） */
+  /** `options` を指定したときに登録したファイル表の応答（セッション ID・圧縮の結果を書き換えられる） */
   files: World | undefined
 }
 
-/** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる。`options` を渡すと設定ファイルと YAML のファイル表も登録し、渡さないと設定ファイルのパスの無い settings を返す */
+/** ツールの結果と子プロセスの応答をテストの `on` へ登録する。応答はテストの途中で書き換えられる。`options` を指定すると設定ファイルと YAML のファイル表も登録し、指定しないと設定ファイルのパスの無い settings を返却する */
 export function installToolWorld(on: On, options?: WorldOptions): ToolWorld {
   const fileWorld = options === undefined ? undefined : installWorld(on, options)
   const world: ToolWorld = {
@@ -222,12 +222,12 @@ export function installToolWorld(on: On, options?: WorldOptions): ToolWorld {
   return world
 }
 
-/** ツールを呼び、返ったツールの結果を返す。`input` を渡さないと Read の呼び出しにする */
+/** ツールを呼び、返却されたツールの結果を返却する。`input` を指定しないと Read の呼び出しにする */
 export async function callTool($: Engine, input: Record<string, unknown> = { tool: 'Read', file_path: '/repo/sample/note.md' }) {
   return $.tool.call(input as never)
 }
 
-/** `NAME_01` の形の名前を `count` 個並べる */
+/** `NAME_01` の書式の名前を `count` 個並べる */
 export function numberedNames(count: number): string[] {
   return Array.from({ length: count }, (_, index) => `NAME_${String(index + 1).padStart(2, '0')}`)
 }

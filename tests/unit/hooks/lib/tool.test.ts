@@ -7,7 +7,7 @@ import { collectArgumentStrings, documentPathOf, excludeReadingDocuments } from 
 const HOME = '/home/u'
 const SEARCH_DOCS = 'mcp__plugin_project-index_project-index__search_docs'
 
-// テスト用の語。上書きしたいキーだけ渡す
+// テスト用の単語。上書きしたいキーだけ指定する
 function makeEntry(id: string, overrides: Partial<Entry> = {}): Entry {
   return {
     aliasIndex: 0,
@@ -27,12 +27,12 @@ function makeEntry(id: string, overrides: Partial<Entry> = {}): Entry {
   }
 }
 
-// 照合の結果の形にする
+// 照合の結果の構造にする
 function makeHit(entry: Entry): Hit {
   return { entry, position: 0, length: entry.word.length, count: 1 }
 }
 
-// tool.call の入力の形にする
+// tool.call の入力の構造にする
 function toolInput(value: Record<string, unknown>): ToolCallInput {
   return value as unknown as ToolCallInput
 }
@@ -56,7 +56,7 @@ test('test_collect_argument_strings', () => {
   expect([...strings].sort()).toEqual(['eq', 'id', 'knowledge', 'term-a'])
 })
 
-// body_file の無い語は YAML のパス、ある語は語を取り出した YAML のフォルダから解決したパスにする（正常系）
+// body_file の無い単語は YAML のパス、ある単語は単語を取り出した YAML のフォルダから解決したパスにする（正常系）
 test('test_document_path_of', () => {
   // 準備
   const yamlEntry = makeEntry('term-a')
@@ -71,7 +71,7 @@ test('test_document_path_of', () => {
   expect(bodyFilePath).toBe('/repo/knowledge/hooks/hooks.json')
 })
 
-// Read は文書のパスが file_path と一致する語を外す（正常系）
+// Read は文書のパスが file_path と一致する単語を除外する（正常系）
 test('test_exclude_reading_documents_when_read', () => {
   // 準備
   const hits = [makeHit(makeEntry('term-a')), makeHit(makeEntry('term-b'))]
@@ -84,7 +84,7 @@ test('test_exclude_reading_documents_when_read', () => {
   expect(remaining.map((hit) => hit.entry.id)).toEqual(['term-b'])
 })
 
-// MCP のツールは引数の文字列に ID がある語を外す（正常系）
+// MCP のツールは引数の文字列に ID がある単語を除外する（正常系）
 test('test_exclude_reading_documents_when_mcp', () => {
   // 準備
   const hits = [makeHit(makeEntry('term-a')), makeHit(makeEntry('term-b'))]
@@ -97,7 +97,7 @@ test('test_exclude_reading_documents_when_mcp', () => {
   expect(remaining.map((hit) => hit.entry.id)).toEqual(['term-b'])
 })
 
-// Read と MCP 以外のツールは外さない（正常系）
+// Read と MCP 以外のツールは除外しない（正常系）
 test('test_exclude_reading_documents_when_other_tool', () => {
   // 準備
   const hits = [makeHit(makeEntry('term-a')), makeHit(makeEntry('term-b'))]

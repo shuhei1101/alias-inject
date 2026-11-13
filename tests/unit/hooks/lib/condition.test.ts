@@ -4,12 +4,12 @@ import type { Condition } from '../../../../hooks/lib/condition'
 import type { Entry } from '../../../../hooks/lib/entry'
 import type { Hit } from '../../../../hooks/lib/match'
 
-// テスト用の条件。上書きしたいキーだけ渡す
+// テスト用の条件。上書きしたいキーだけ指定する
 function term(op: 'contains' | 'not_contains', values: string[], match: 'any' | 'all' = 'any', caseSensitive = false): Condition {
   return { op, values, match, caseSensitive }
 }
 
-// テスト用の当たった語
+// テスト用のヒットした単語
 function makeHit(id: string, condition: Condition | undefined, position: number): Hit {
   const entry: Entry = {
     aliasIndex: 0,
@@ -44,7 +44,7 @@ test('test_parse_condition', () => {
   expect(nestedResult).toEqual({ ok: true, condition: { and: [{ or: [{ not: term('not_contains', ['python']) }] }] } })
 })
 
-// 誤りの箇所と理由を返す（正常系）
+// 誤りの箇所と理由を返却する（正常系）
 test('test_parse_condition_when_invalid', () => {
   // 準備
   const valid = { field: 'text', op: 'contains', values: ['a'] }
@@ -105,7 +105,7 @@ test('test_evaluate_condition_when_bundle', () => {
   expect(results).toEqual([false, true, false])
 })
 
-// 照合条件を持たない語は残し、照合条件に当たらない語を外す（正常系）
+// 照合条件を持たない単語は残し、照合条件に該当しない単語を除外する（正常系）
 test('test_filter_by_condition', () => {
   // 準備
   const hits = [makeHit('term-a', undefined, 0), makeHit('term-c', term('not_contains', ['python']), 9)]

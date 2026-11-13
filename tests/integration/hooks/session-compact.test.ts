@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import { COMPACTED_MESSAGE, callTool, installToolWorld, installWorld, submit } from '../../unit/hooks/support/engine'
 import { SETTINGS, makeFs } from './support/fixtures'
 
-// 圧縮の後に記録を消し、同じ語の文脈がもう一度追加される（正常系）
+// 圧縮の後に記録を削除し、同じ単語の文脈がもう一度追加される（正常系）
 test('test_normal', async ($, on) => {
   // 準備
   installWorld(on, { fs: makeFs(), settings: SETTINGS })
@@ -25,7 +25,7 @@ test('test_normal_when_not_compacted', async ($, on) => {
   const before = await submit($, 'term-a とは')
 
   // 実行
-  // precompute・見送りの 2 つを順に起こす
+  // precompute・見送りの 2 つを順に発生させる
   const precomputed = await $.session.compact({ trigger: 'precompute', messages: [COMPACTED_MESSAGE] })
   world.compactResult = { skip: 'not compacted' }
   const skipped = await $.session.compact({ trigger: 'manual', messages: [COMPACTED_MESSAGE] })
@@ -38,7 +38,7 @@ test('test_normal_when_not_compacted', async ($, on) => {
   expect(after.context ?? []).toEqual([])
 })
 
-// agentId のある圧縮ではそのサブエージェントの記録だけを消す（正常系）
+// agentId のある圧縮ではそのサブエージェントの記録だけを削除する（正常系）
 test('test_normal_when_subagent_compacted', async ($, on) => {
   // 準備
   const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })

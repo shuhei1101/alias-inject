@@ -8,7 +8,7 @@ import { MemoryFs } from '../support/memory-fs'
 
 const ORIGIN = '/home/u/.config/alias-inject/settings.yaml'
 
-// テスト用の行。上書きしたいキーだけ渡す
+// テスト用の行。上書きしたいキーだけ指定する
 function makeAlias(overrides: Partial<ResolvedAlias> = {}): ResolvedAlias {
   return {
     id: 'terms',
@@ -54,7 +54,7 @@ test('test_parse_documents_when_records', () => {
   expect(result.ok && result.documents.length).toBe(2)
 })
 
-// 構造が合わなければ理由を返す（正常系）
+// 構造が合わなければ理由を返却する（正常系）
 test('test_parse_documents_when_unmatched', () => {
   // 準備
   const cases: [unknown, string | undefined, string][] = [
@@ -72,7 +72,7 @@ test('test_parse_documents_when_unmatched', () => {
   }
 })
 
-// term は name を語にし、description と名前を引いた related を並べる（正常系）
+// term は name を単語にし、description と名前を参照した related を並べる（正常系）
 test('test_build_entries_when_term', () => {
   // 準備
   const documents = [
@@ -127,7 +127,7 @@ test('test_build_entries_when_metadata_column', () => {
   ])
 })
 
-// name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を語にする（正常系）
+// name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を単語にする（正常系）
 test('test_build_entries_when_name_missing', () => {
   // 準備
   const documents = [
@@ -145,7 +145,7 @@ test('test_build_entries_when_name_missing', () => {
   expect(entries.map((entry) => entry.path)).toEqual(['/d/term/term-b.yaml', '/d/files.yaml', '/d/files.yaml'])
 })
 
-// 必須の値が空の文書は外し、理由を返す（正常系）
+// 必須の値が空の文書は除外し、理由を返却する（正常系）
 test('test_build_entries_when_required_missing', () => {
   // 準備
   const documents = [
@@ -165,7 +165,7 @@ test('test_build_entries_when_required_missing', () => {
   expect(failures[1]?.reason).toContain('terms[1]: id、description が空です')
 })
 
-// inject_when を照合条件にして語に持たせ、誤っている文書は外して理由を返す（正常系）
+// inject_when を照合条件にして単語に持たせ、誤っている文書は除外して理由を返却する（正常系）
 test('test_build_entries_when_inject_condition', () => {
   // 準備
   const alias = makeAlias({ metadata: { inject_when: 'when' } })
@@ -230,7 +230,7 @@ test('test_build_entries_when_skill_tool_path', () => {
     fileDocument({ id: 'skill-a', name: 'Skill-A', skill: 'code-review', description: 'レビューする' }),
   ]
   const toolDocuments = [
-    fileDocument({ id: 'tool-a', name: 'Tool-A', tool: 'search_design_docs', description: '設計書を引く' }),
+    fileDocument({ id: 'tool-a', name: 'Tool-A', tool: 'search_design_docs', description: '設計書を検索する' }),
   ]
   const pathDocuments = [
     fileDocument({ id: 'path-a', name: 'Path-A', path: '~/.config/ai-monitor/settings.yaml', description: '設定' }),
@@ -248,7 +248,7 @@ test('test_build_entries_when_skill_tool_path', () => {
   ])
   expect(toolEntries[0]?.fields).toEqual([
     { name: 'tool', value: '`search_design_docs`' },
-    { name: 'description', value: '設計書を引く' },
+    { name: 'description', value: '設計書を検索する' },
   ])
   expect(pathEntries[0]?.fields).toEqual([
     { name: 'path', value: '`~/.config/ai-monitor/settings.yaml`' },
@@ -279,7 +279,7 @@ test('test_build_entries_when_env_and_avoid', () => {
   expect(avoidEntries[0]?.fields).toEqual([{ name: 'replacement', value: 'term-a' }])
 })
 
-// 用語の avoid のやめた言い方ごとに、用語の後ろへ avoid の語を作る（正常系）
+// 用語の avoid のやめた言い方ごとに、用語の後ろへ avoid の単語を作る（正常系）
 test('test_build_entries_when_term_avoid', () => {
   // 準備
   const documents = [
@@ -320,7 +320,7 @@ test('test_build_entries_when_term_avoid', () => {
   expect(failures).toEqual([])
 })
 
-// glob に当たる全ての YAML を 1 件ずつの文書にして語にする（正常系）
+// glob にヒットする全ての YAML を 1 件ずつの文書にして単語にする（正常系）
 test('test_load_alias_entries', async () => {
   // 準備
   clearCache()
@@ -341,7 +341,7 @@ test('test_load_alias_entries', async () => {
   expect(result.failures).toEqual([])
 })
 
-// records を書いた行はその配列の要素を文書にする（正常系）
+// records を記載した行はその配列の要素を文書にする（正常系）
 test('test_load_alias_entries_when_records', async () => {
   // 準備
   clearCache()
@@ -373,7 +373,7 @@ test('test_load_alias_entries_when_records', async () => {
   expect(result.entries.map((entry) => entry.itemIndex)).toEqual([0, 1])
 })
 
-// 書式の誤った YAML・records の配列の無い YAML だけを外し、パスと理由を返す（正常系）
+// 書式の誤った YAML・records の配列の無い YAML だけを除外し、パスと理由を返却する（正常系）
 test('test_load_alias_entries_when_yaml_malformed', async () => {
   // 準備
   clearCache()
