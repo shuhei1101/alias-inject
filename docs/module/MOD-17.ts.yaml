@@ -239,9 +239,9 @@ functions:
       - name: test_build_entries_when_skill_tool_path
         case: 正常
         summary: skill・tool・path は値をバッククォートで囲んだ列と description を並べる
-        condition: 'alias_type が skill（`skill: code-review`・`description: レビューする`）・tool（`tool: search_design_docs`・`description: 設計書を引く`）・path（`path: ~/.config/ai-monitor/settings.yaml`・`description: 設定`）の行'
+        condition: 'alias_type が skill（`skill: code-review`・`description: レビューする`）・tool（`tool: search_design_docs`・`description: 設計書を検索する`）・path（`path: ~/.config/ai-monitor/settings.yaml`・`description: 設定`）の行'
         mock: なし
-        expected: 'skill の fields が `skill: `code-review``・`description: レビューする`、tool の fields が `tool: `search_design_docs``・`description: 設計書を引く`、path の fields が `path: `~/.config/ai-monitor/settings.yaml`` で `~` を展開しない'
+        expected: 'skill の fields が `skill: `code-review``・`description: レビューする`、tool の fields が `tool: `search_design_docs``・`description: 設計書を検索する`、path の fields が `path: `~/.config/ai-monitor/settings.yaml`` で `~` を展開しない'
       - name: test_build_entries_when_env_and_avoid
         case: 正常
         summary: env は url・port・description の順で値のある列だけを、avoid は replacement を並べる
