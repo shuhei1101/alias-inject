@@ -38,83 +38,123 @@ docs:
   - page: docs/guide/はじめに.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/README.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/index.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/files.yml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/エイリアスのスキーマ.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/エイリアスを登録するかを決める.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/コアコンセプト-変数参照の値.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/コアコンセプト-引用の文脈.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/セットアップ.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/使い方.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/設定の移し替え.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/guide/設定ファイル.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/architecture/ARCH-1.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/architecture/README.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/architecture/index.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/library/LIB-1.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/library/LIB-2.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/library/LIB-3.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/library/README.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/library/index.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/nonfunctional/NFR-1.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
@@ -124,27 +164,39 @@ docs:
   - page: docs/dev-command/CMD-1.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/dev-command/README.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/dev-command/index.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/test-procedure/TP-1.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/README.md
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
   - page: docs/index.yaml
     new: false
     change: AI slop の単語を対応表の OK の単語へ置き換える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:01.522605+00:00'
 scope_out:
   - item: docs/guide/変更履歴.md の AI slop の単語
     reason: 過去に入った PR のタイトルをそのまま記録しているため、置き換えると PR と一致しなくなる
@@ -170,3 +222,6 @@ scope_out:
   - item: '設計書の単体テストの入力の値（MOD-17 の `description: 設計書を引く` 等）'
     reason: テストが使用する入力の値で、置き換えるとテストコードの値と一致しなくなる。テストコードの置き換えと合わせて修正する
     plan: '#90'
+  - item: 公開ドキュメントのセクション名「使い方」（`docs/guide/使い方.md` の見出し・`permalink`、`files.yml` の `category`・タグ `scope:使い方`、目次の区分）
+    reason: テーマのナビ（`docs/_theme/_data/nav.project.yml`）と公開ページの URL が同じ名前で指しており、置き換えるとナビの区分と一致しなくなる
+    plan: none

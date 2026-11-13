@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T02:19:46.766714+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/guide/・docs/architecture/・docs/library/・docs/nonfunctional/・docs/dev-command/・docs/test-procedure/・docs/README.md・docs/index.yaml の置き換え
+    updated_by: planner
+    updated_at: '2026-11-13T02:35:06.056262+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コメントだけを置き換え、動作を変えないためテストを追加しない（実装の工程で既存の単体テストを実行する）
