@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T15:54:02.532070+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: plugin.json の description と settings.sample.yaml・rules.yaml のコメントの置き換え。既存の単体・結合テストを全件実行し、claude plugin validate . で回帰を確認する
+    updated_by: planner
+    updated_at: '2026-11-13T16:03:13.474027+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: テストを追加しない（実装の工程で既存の結合テストを実行する）
