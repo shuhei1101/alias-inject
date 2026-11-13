@@ -182,7 +182,7 @@ export function validateSchema({
     // `properties` に無いキーは、false なら記載できないキー、スキーマならそのスキーマで検証する
     for (const key of Object.keys(value)) {
       if (hasOwn(properties, key)) continue
-      if (schema.additionalProperties === false) reasons.push(`${path}.${key}: 書けないキーです`)
+      if (schema.additionalProperties === false) reasons.push(`${path}.${key}: 記載できないキーです`)
       else if (isRecord(schema.additionalProperties)) {
         reasons.push(...validate(schema.additionalProperties, value[key], `${path}.${key}`))
       }
