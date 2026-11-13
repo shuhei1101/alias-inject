@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-12T22:51:15.093861+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: hooks/lib/context.ts の SECTION_HEADINGS.avoid と hooks/lib/entry.ts のコメント
+    updated_by: planner
+    updated_at: '2026-11-13T00:54:36.439482+00:00'
   - process: 結合テスト作成
     status: todo
     note: tests/integration/hooks/prompt-submit.test.ts の見出しの期待
