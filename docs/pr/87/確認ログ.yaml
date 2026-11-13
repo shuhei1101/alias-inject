@@ -1,0 +1,7 @@
+confirmations:
+  - topic: 引用の文脈の avoid のセクションの呼び名
+    decision: '`使用しない単語` へ変える（推奨案 A）'
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/87#discussion_r4557432054
