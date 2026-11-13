@@ -1,0 +1,4 @@
+scope_out:
+  - item: project-index.yaml の exclude の `使い方.md`
+    reason: ファイル名の値で、docs/ のフォルダ名と対応している（#89 と同じ扱い）
+    plan: none

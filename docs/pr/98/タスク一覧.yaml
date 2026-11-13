@@ -1,0 +1,84 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書が揃っているため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めの依頼ではないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: 文言の置き換えで未検証の技術機構に依存しないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: 業務フローを変えないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 画面を持たないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 画面を持たないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 単一ユースケース設計
+    status: skipped
+    reason: 手順・期待する結果を変えないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: モック作成
+    status: skipped
+    reason: 画面を持たないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: インターフェース定義設計
+    status: skipped
+    reason: インターフェースを変えないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面の部品を持たないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: モジュール構成設計
+    status: skipped
+    reason: モジュールの構成と、設計書が記載する値を変えないため対象外
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: ドキュメント修正
+    status: skipped
+    reason: docs/ とルートの説明の文言は変えないため対象外（3 ファイルの置き換えは実装の工程で行う）
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 単体テスト作成
+    status: skipped
+    reason: テストを追加しない（Red になるテストが無い）
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
+  - process: 実装
+    status: todo
+    note: plugin.json の description と settings.sample.yaml・rules.yaml のコメントの置き換え。既存の単体・結合テストを全件実行し、claude plugin validate . で回帰を確認する
+  - process: 結合テスト作成
+    status: skipped
+    reason: テストを追加しない（実装の工程で既存の結合テストを実行する）
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:02.532070+00:00'
