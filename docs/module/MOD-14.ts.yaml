@@ -98,7 +98,7 @@ functions:
     kind: 関数
     container: hooks/lib/record.ts
     usecase: 共通
-    summary: 記録済みのキーから単語を選ばせ、選んだ単語のキーを `ifVersion` で記録に追加する。一致しなかったら再読み込みして再選択す
+    summary: 記録済みのキーから単語を選ばせ、選んだ単語のキーを `ifVersion` で記録に追加する。一致しなかったら再読み込みして再選択する
     scope: public
     is_async: true
     side_effects: '`$.state` のその会話の記録を書き換える'
@@ -122,7 +122,7 @@ functions:
       type: Promise<Selection | null>
       description: 記録に書き込めた選択。select が null を返却したときは null
     process: |-
-      1. RECORD_WRITE_ATTEMPTS 回まで次を繰り返却する
+      1. RECORD_WRITE_ATTEMPTS 回まで次を繰り返す
          1. 記録の読み込みをし、select に keys を指定する。null なら null を返却する（書き込まない）
          2. keys の後ろに選択の keys を並べ、`$.state.set` に `{ ifVersion: version }` を付けて書き込む
          3. `isSet` が true なら選択を返却する
@@ -141,13 +141,13 @@ functions:
         expected: 2 回目の select が a を受け取り、s1 の記録が a・b、s2 の記録が空
       - name: test_add_recorded_when_nothing_selected
         case: 正常
-        summary: select が null なら記載せずに null を返却する
+        summary: select が null なら書き込まずに null を返却する
         condition: select が null を返却する
         mock: テストの `on` で `state.set` の呼ばれた回数を記録する
         expected: null が返り、`state.set` が呼ばれていない
       - name: test_add_recorded_when_conflicted
         case: 正常
-        summary: '`ifVersion` が一致しなかったら再読み込みして再選択す'
+        summary: '`ifVersion` が一致しなかったら再読み込みして再選択する'
         condition: select は受け取った keys に無い a・b を選ぶ
         mock: テストの `on` の `state.set` は 1 回目の書き込みの前に、同じ記録へ a を書き込んで version を進める
         expected: 2 回目の select が a を受け取り、返る選択の keys が b だけで、記録が a・b

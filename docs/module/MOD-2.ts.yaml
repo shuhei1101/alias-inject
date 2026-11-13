@@ -327,7 +327,7 @@ functions:
     unit_tests:
       - name: test_filter_by_scope
         case: 正常
-        summary: 絞りを持たない行は残し、作業場所がヒットしなない行を除外する
+        summary: 絞りを持たない行は残し、作業場所が該当しない行を除外する
         condition: "`cwd` が `/repo/sample/wt`。`cwdPatterns` が undefined の行、`['/repo/sample/**']` の行、`['/repo/other/**', '/repo/sample']` の行"
         mock: なし
         expected: 1 件目と 2 件目の行だけが、この順に残る

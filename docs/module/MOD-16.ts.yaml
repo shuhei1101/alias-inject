@@ -181,7 +181,7 @@ functions:
         expected: true・true・false・false
       - name: test_match_segment_when_multiple_stars
         case: 正常
-        summary: 複数の `*` は順に重ならずに適用する
+        summary: 複数の `*` は順に重ならずにヒットさせる
         condition: '`segment` が `a*b*c`、`name` が `axbyc`・`abc`・`acb`'
         mock: なし
         expected: true・true・false
@@ -406,7 +406,7 @@ functions:
     process: |-
       1. `pattern` と `path` の末尾の `/` を除き、`/` で区切って空の区切りを除く
       2. `pattern` の区切りを先頭から順に `path` の区切りと照合する。`**` は `path` の 0 個以上の区切りに該当し、`*` を含む区切りは名前と glob の区切りの照合、それ以外は文字列の一致でヒットさせる
-      3. `pattern` と `path` の区切りを全て当て終えたとき true を返却する（正規表現は使用しない）
+      3. `pattern` と `path` の区切りを全て照合し終えたとき true を返却する（正規表現は使用しない）
     callees:
       - MOD-16#functions[matchSegment]
     refs:

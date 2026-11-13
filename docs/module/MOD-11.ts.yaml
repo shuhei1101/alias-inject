@@ -135,7 +135,7 @@ functions:
       description: 照合条件に該当すれば true
     process: |-
       1. 条件は、`caseSensitive` が false なら本文に照合の正規化を適用し、`values` のどれか（any）か全て（all）を含むかを `includes` で比べる。`not_contains` はその否定
-      2. `and` は全ての要素、`or` はどれかの要素が該当すれば true、`not` は要素がヒットしななければ true
+      2. `and` は全ての要素、`or` はどれかの要素が該当すれば true、`not` は要素が該当しなければ true
     callees:
       - MOD-10#functions[normalize]
     unit_tests:

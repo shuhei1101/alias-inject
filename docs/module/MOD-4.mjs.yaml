@@ -34,7 +34,7 @@ functions:
     process: |-
       1. `node:fs` でリポジトリの直下からの `schemas/aliases.schema.yaml` を参照し、`hooks/vendor/js-yaml.mjs` の `load` でパースする
       2. 先頭の行 `// schemas/aliases.schema.yaml から scripts/gen-aliases-schema.mjs が生成する。直接編集しない` と、`export const ALIAS_SCHEMA: Record<string, unknown> = {値の JSON.stringify（字下げ 2）}` を並べた本文を組む
-      3. `check` が false なら本文を `hooks/lib/aliases-schema.ts` に記載する
+      3. `check` が false なら本文を `hooks/lib/aliases-schema.ts` に書き出す
       4. `check` が true なら `hooks/lib/aliases-schema.ts` と本文を比べ、違うか無ければ `hooks/lib/aliases-schema.ts が schemas/aliases.schema.yaml と一致しません。node scripts/gen-aliases-schema.mjs を実行してください` を標準エラーに出して終了コード 1 で終える
     notes:
       テスト: '`claude plugin test` の環境は `node:fs` を import できないため単体テストを持たない。lint の `--check` が一致を確認する'

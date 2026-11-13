@@ -8,7 +8,7 @@ files:
     notes: 'ユーザースコープだけを参照する（`$.settings.read({ source: "user" })`）'
   - file: ~/.config/alias-inject/settings.yaml
     manages: 参照するリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
-    notes: 既定の配置し場所は `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` で、`ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
+    notes: 既定の配置場所は `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` で、`ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
   - file: project-index.yaml
     manages: リポジトリのエイリアス（`documents` のうち `alias_type` を持つ行だけを参照する）
     notes: 参照するリポジトリごとに 1 つ。パスは `repositories[].config` で指定する。`alias_type` を持つ `documents` の行以外は参照しない
@@ -306,7 +306,7 @@ settings:
     allowed: 1 件以上の空でない文字列。空の並び・並びでない値・文字列でない要素の行は、スキーマに合わない行として照合から除外し、理由を debug log に出す
     notes:
       書式: dev-docs の端末の設定の `sources[].scope` と同じ glob の書式
-      projects との使用し分け: '`projects[].match` は設定のキー全体を起動したプロジェクトごとに重ねる。`scope.cwd` は 1 つの行を複数の作業場所に絞る'
+      projects との違い: '`projects[].match` は設定のキー全体を起動したプロジェクトごとに重ねる。`scope.cwd` は 1 つの行を複数の作業場所に絞る'
       metadata.cwd との違い: '`metadata.cwd` は command のコマンドを実行するフォルダを取る列の名前で、行の絞りには使用しない'
   - key: XDG_CONFIG_HOME
     title: 設定のフォルダの基準
