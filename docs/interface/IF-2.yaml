@@ -6,15 +6,15 @@ entry:
   value: '`tool.call`（ツールの呼び出しごと）'
 flows:
   - name: 正常系
-    summary: 初めて出た語の文脈を追加し、メインの会話の記録に入れる
+    summary: 初めて出た単語の文脈を追加し、メインの会話の記録に入れる
     setup:
       - name: Mock
-        description: '[入力への引用の文脈の追加](id:IF-3) の正常系と同じファイル表。テストの `on` の `tool.call` は本文を含む結果を返す。`process.run` の呼ばれた回数を記録する'
+        description: '[入力への引用の文脈の追加](id:IF-3) の正常系と同じファイル表。テストの `on` の `tool.call` は本文を含む結果を返却する。`process.run` の呼ばれた回数を記録する'
       - name: ツールの呼び出し
         description: '`e.tool` が `Read`、`e.file_path` が `/work/note.md`'
       - name: ツールの結果
         description: '`text` が「用語エーの説明」。`context` に他のフックが追加した要素を 1 つ持つ'
-        notes: エイリアスで当てる
+        notes: エイリアスで適用する
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -25,22 +25,22 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>FS: 設定ファイル・project-index.yaml・YAML を読む
-        FS-->>IF: 語の一覧
-        IF->>IF: 本文と語を正規化して照合し term-a が当たる
-        IF->>ST: セッションの記録を読む
+        IF->>FS: 設定ファイル・project-index.yaml・YAML を参照する
+        FS-->>IF: 単語の一覧
+        IF->>IF: 本文と単語を正規化して照合し term-a がヒットする
+        IF->>ST: セッションの記録を参照する
         ST-->>IF: 記録なし・version 0
-        IF->>ST: term-a を ifVersion 0 で書く
+        IF->>ST: term-a を ifVersion 0 で記載する
         ST-->>IF: isSet true
         IF-->>CC: 結果の context の末尾に term-a の文脈
     expected:
       - 返る `context` が 2 要素で、先頭が受け取った要素のまま
-      - 返る `context` の末尾が `# この発言に出る用語`・`## 用語`・term-a の語 `Term-A` を含む
+      - 返る `context` の末尾が `# この発言に出る用語`・`## 用語`・term-a の単語 `Term-A` を含む
       - 返る `text` が `next(e)` の結果の `text` と同じ
-      - 同じセッションで `prompt.submit` に「term-a とは」を送ると、返る `context` が空
+      - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、返る `context` が空
       - '`process.run` が呼ばれていない'
     test: test_normal
-  - name: 正常系（照合から外したツール）
+  - name: 正常系（照合から除外したツール）
     summary: exclude_tools のツールの結果は照合しない
     setup:
       - name: Mock
@@ -67,8 +67,8 @@ flows:
       - 1 回目の返る結果が `next(e)` の結果と同じ
       - 2 回目の返る `context` に term-a が含まれる
     test: test_normal_when_tool_excluded
-  - name: 正常系（読んでいる文書そのもの）
-    summary: Read の file_path と MCP の引数の ID に当たる語を外す
+  - name: 正常系（参照している文書そのもの）
+    summary: Read の file_path と MCP の引数の ID に該当する単語を除外する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -85,18 +85,18 @@ flows:
         CC->>IF: e（Read の file_path が term-a の YAML）
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>IF: term-a と term-b が当たり、term-a を外す
+        IF->>IF: term-a と term-b がヒットし、term-a を除外する
         IF-->>CC: context に term-b の文脈
         CC->>IF: e（MCP の filter の values が term-a）
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>IF: term-a と term-b が当たり、term-a を外す
+        IF->>IF: term-a と term-b がヒットし、term-a を除外する
         IF-->>CC: context に term-b の文脈
     expected:
       - どちらの呼び出しも、返る `context` に term-b が含まれ、term-a が含まれない
     test: test_normal_when_reading_own_document
   - name: 正常系（上限を超える）
-    summary: 出た回数の多い語から max_items 語だけを追加する
+    summary: 出た回数の多い単語から max_items 単語だけを追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -114,12 +114,12 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>IF: 2 語が当たり、出た回数の多い term-b だけを選ぶ
+        IF->>IF: 2 つの単語がヒットし、出た回数の多い term-b だけを選ぶ
         IF->>ST: term-b だけを記録に入れる
         IF-->>CC: context に term-b の文脈
     expected:
       - 返る `context` に term-b が含まれ、term-a が含まれない
-      - 同じセッションで `prompt.submit` に「term-a とは」を送ると、term-a の文脈が追加される
+      - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
     test: test_normal_when_over_limit
   - name: 正常系（サブエージェント）
     summary: agentId のある呼び出しはメインの会話と別の記録で照合する
@@ -127,7 +127,7 @@ flows:
       - name: Mock
         description: 正常系と同じ
       - name: セッションの記録
-        description: '`prompt.submit` に「term-a とは」を送り、メインの会話で term-a が記録済み'
+        description: '`prompt.submit` に「term-a とは」を送信し、メインの会話で term-a が記録済み'
       - name: ツールの呼び出し
         description: '`e.agentId` が `agent-1`。結果の `text` が「term-a と term-b」。続けて同じ `agentId` で同じ結果をもう 1 回'
     flow: |-
@@ -139,7 +139,7 @@ flows:
         CC->>IF: e（agentId: agent-1）
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>ST: セッションと agent-1 の記録を読む
+        IF->>ST: セッションと agent-1 の記録を参照する
         ST-->>IF: 記録なし
         IF->>ST: term-a と term-b を agent-1 の記録に入れる
         IF-->>CC: context に term-a と term-b の文脈
@@ -149,7 +149,7 @@ flows:
     expected:
       - 1 回目の返る `context` に term-a と term-b が含まれる
       - 2 回目の返る結果が `next(e)` の結果と同じ
-      - 続けて `prompt.submit` に「term-b とは」を送ると、term-b の文脈が追加される
+      - 続けて `prompt.submit` に「term-b とは」を送信すると、term-b の文脈が追加される
     test: test_normal_when_in_subagent
   - name: 正常系（照合しない結果）
     summary: エラーの結果・deny・本文の無い結果は照合しない
@@ -157,7 +157,7 @@ flows:
       - name: Mock
         description: 正常系と同じ
       - name: ツールの結果
-        description: '`isError` が `true` で `text` に term-a を含む結果、`deny` が入った結果、`text` が無い結果を呼び出しごとに返す'
+        description: '`isError` が `true` で `text` に term-a を含む結果、`deny` が入った結果、`text` が無い結果を呼び出しごとに返却する'
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -169,13 +169,13 @@ flows:
         IF-->>CC: 結果そのまま
     expected:
       - どの呼び出しも、返る結果が `next(e)` の結果と同じ
-      - 続けて `prompt.submit` に「term-a とは」を送ると、term-a の文脈が追加される
+      - 続けて `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
     test: test_normal_when_not_matched_result
   - name: 正常系（変数参照の値と合わせる）
     summary: 引用の文脈を先に、変数参照の値の行を後に追加する
     setup:
       - name: Mock
-        description: 正常系と同じ。`process.run` は `env -0` に `VALUE_A=value-a` を含む出力を返す
+        description: 正常系と同じ。`process.run` は `env -0` に `VALUE_A=value-a` を含む出力を返却する
       - name: ツールの結果
         description: '`text` が「term-a と !{VALUE_A}」。`context` が無い'
     flow: |-
@@ -187,7 +187,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>IF: term-a が当たる
+        IF->>IF: term-a がヒットする
         IF->>PR: env -0
         PR-->>IF: 環境の一覧
         IF-->>CC: context に term-a の文脈と値の行
@@ -195,7 +195,7 @@ flows:
       - '返る `context` が 2 要素で、1 つ目が term-a の文脈、2 つ目が `変数参照の値: !{VALUE_A} = value-a`'
     test: test_normal_when_variable_reference_added
   - name: 正常系（記録の書き込みが競合する）
-    summary: ifVersion が外れたら読み直し、他の呼び出しで記録された語を除いて追加する
+    summary: ifVersion が一致しなかったら再読み込みし、他の呼び出しで記録された単語を除いて追加する
     setup:
       - name: Mock
         description: 正常系と同じ。テストの `on` の `state.set` は 1 回目の書き込みの前に、同じ記録へ term-a を書き込んで version を進める
@@ -210,23 +210,23 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>ST: 記録を読む（version 0）
-        IF->>ST: term-a と term-b を ifVersion 0 で書く
+        IF->>ST: 記録を参照する（version 0）
+        IF->>ST: term-a と term-b を ifVersion 0 で記載する
         ST-->>IF: isSet false
-        IF->>ST: 記録を読み直す（term-a が記録済み）
-        IF->>ST: term-b を足して ifVersion 1 で書く
+        IF->>ST: 記録を再読み込みする（term-a が記録済み）
+        IF->>ST: term-b を追加して ifVersion 1 で記載する
         ST-->>IF: isSet true
         IF-->>CC: context に term-b の文脈
     expected:
       - 返る `context` に term-b が含まれ、term-a が含まれない
       - 記録に term-a と term-b の両方が入っている
     test: test_normal_when_record_conflicted
-  - name: 異常系（設定ファイルが読めない）
-    summary: 設定ファイルが読めないときは引用の文脈を追加せずに返す
+  - name: 異常系（設定ファイルを読み込めない）
+    summary: 設定ファイルを読み込めないときは引用の文脈を追加せずに返却する
     setup:
       - name: Mock
         description: 正常系と同じ。ただし設定ファイルの中身が YAML の書式の誤ったもの。`ui.log` は届いた行を記録する
-        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指し、既定のパス `~/.config/alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置き、既定のパスへ切り替えないことを固定する'
+        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指し、既定のパス `~/.config/alias-inject/settings.yaml` に term-a を照合できる設定ファイルを配置し、既定のパスへ切り替えないことを固定する'
       - name: ツールの結果
         description: 正常系と同じ
     flow: |-
@@ -238,7 +238,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>FS: 設定ファイルを読む
+        IF->>FS: 設定ファイルを参照する
         FS-->>IF: 書式の誤り
         IF->>IF: debug log に出す
         IF-->>CC: 結果そのまま
@@ -247,11 +247,11 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスを含む行が届いている
     test: test_error_when_config_unreadable
-  - name: 異常系（記録の書き込みがやり直しの上限まで外れる）
-    summary: ifVersion が 3 回続けて外れたら引用の文脈を追加せずに返す
+  - name: 異常系（記録の書き込みが再試行の上限まで一致しない）
+    summary: ifVersion が 3 回続けて一致しなかったら引用の文脈を追加せずに返却する
     setup:
       - name: Mock
-        description: '正常系と同じ。ただしテストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返す。`ui.log` は届いた行を記録する'
+        description: '正常系と同じ。ただしテストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返却する。`ui.log` は届いた行を記録する'
       - name: ツールの結果
         description: 正常系と同じ
     flow: |-
@@ -264,7 +264,7 @@ flows:
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
         loop 3 回
-          IF->>ST: ifVersion で書く
+          IF->>ST: ifVersion で記載する
           ST-->>IF: isSet false
         end
         IF->>IF: debug log に出す
@@ -291,7 +291,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>ST: 記録を読む
+        IF->>ST: 記録を参照する
         ST-->>IF: 例外
         IF->>IF: debug log に出す
         IF->>PR: env -0
@@ -303,15 +303,15 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が届いている
     test: test_error_when_unexpected_exception
   - name: 正常系（照合条件を持つ文書）
-    summary: 照合条件をツールの結果の本文で評価し、当たらない文書を外す
+    summary: 照合条件をツールの結果の本文で評価し、該当しない文書を除外する
     setup:
       - name: Mock
         description: 正常系と同じファイル表に、[入力への引用の文脈の追加](id:IF-3) の正常系（照合条件を持つ文書）の `term-c.yaml` を加える
       - name: 入力
-        description: 同じセッションで、先に `prompt.submit` に「React の話」を送る
-        notes: 照合条件が入力の文ではなくツールの結果の本文で評価されることを確かめる
+        description: 同じセッションで、先に `prompt.submit` に「React の話」を送信する
+        notes: 照合条件が入力の文ではなくツールの結果の本文で評価されることを確認する
       - name: ツールの結果
-        description: 1 回目は `text` が「term-c の説明」、2 回目は `text` が「term-c を tsx で使う」
+        description: 1 回目は `text` が「term-c の説明」、2 回目は `text` が「term-c を tsx で使用する」
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -320,19 +320,19 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: 本文「term-c の説明」
-        IF->>IF: 照合で term-c が当たり、照合条件を本文で評価して外す
+        IF->>IF: 照合で term-c がヒットし、照合条件を本文で評価して除外する
         IF-->>CC: 結果をそのまま
         CC->>IF: e
         IF->>CC: next(e)
-        CC-->>IF: 本文「term-c を tsx で使う」
-        IF->>IF: 照合で term-c が当たり、照合条件にも当たる
+        CC-->>IF: 本文「term-c を tsx で使用する」
+        IF->>IF: 照合で term-c がヒットし、照合条件にも該当する
         IF-->>CC: 結果の context の末尾に term-c の文脈
     expected:
       - 1 回目に返る `context` が受け取ったまま
       - 2 回目に返る `context` の末尾に term-c の文脈がある
     test: test_normal_when_inject_condition
   - name: 正常系（作業場所で絞った行）
-    summary: 作業場所が scope.cwd の glob に当たらない行の語を、ツールの結果の本文に出ても追加しない
+    summary: 作業場所が scope.cwd の glob に該当しない行の単語を、ツールの結果の本文に出ても追加しない
     setup:
       - name: Mock
         description: 正常系と同じファイル表に、[入力への引用の文脈の追加](id:IF-3) の正常系（作業場所で絞った行）の設定ファイル・URL の YAML と起動したプロジェクトの直下を加える
@@ -348,38 +348,38 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: 本文「term-a と link-a と link-b」
-        IF->>IF: $.session.root() が scope.cwd に当たらない other-links と root-links を除外する
-        IF->>IF: 照合で term-a と link-a が当たる
+        IF->>IF: $.session.root() が scope.cwd に該当しない other-links と root-links を除外する
+        IF->>IF: 照合で term-a と link-a がヒットする
         IF-->>CC: 結果の context の末尾に term-a と link-a の文脈
     expected:
       - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
     test: test_normal_when_cwd_scoped
-lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ語と照合し、その会話で初めて出た語の引用の文脈を、本文を変えずに `context` に追加して返す。
+lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ単語と照合し、その会話で初めて出た単語の引用の文脈を、本文を変えずに `context` に追加して返却する。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
-side_effects: 追加した語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
-exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ書くため、記録は `$.state.set` の `ifVersion` で書き、外れたら読み直して照合の結果から記録済みの語を除き直す。この書き方は `prompt.submit` と共有する
+exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ記載するため、記録は `$.state.set` の `ifVersion` で記載し、一致しなかったら再読み込みして照合の結果から記録済みの単語を再除外する。この記載方法は `prompt.submit` と共有する
 request:
   - name: e.tool
     type: string
     required: true
     location: argument
-    description: ツールの名前（`Read`・`Bash`・`mcp__{サーバー}__{ツール}` など）。照合から外すツールの判定に使う
+    description: ツールの名前（`Read`・`Bash`・`mcp__{サーバー}__{ツール}` など）。照合から除外するツールの判定に使用する
   - name: e.file_path
     type: string
     required: false
     default: なし（Read 以外のツール）
     location: argument
-    description: Read の読んだファイルの絶対パス。読んでいる文書そのものの判定に使う
+    description: Read の参照したファイルの絶対パス。参照している文書そのものの判定に使用する
   - name: e.{引数}
     type: unknown
     required: false
     default: なし（引数の無いツール）
     location: argument
-    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、読んでいる文書の ID の判定に使う
-    notes: dev-docs の `search_docs` は ID を `filter` の条件の `values` に入れる。ID でない文字列（`source`・`op` など）が語の ID と一致したときはその語を外す
+    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、参照している文書の ID の判定に使用する
+    notes: dev-docs の `search_docs` は ID を `filter` の条件の `values` に入れる。ID でない文字列（`source`・`op` など）が単語の ID と一致したときはその単語を除外する
   - name: e.agentId
     type: string
     required: false
@@ -389,21 +389,21 @@ request:
   - name: result.text
     type: string
     required: false
-    default: なし（文脈を追加せず結果をそのまま返す）
+    default: なし（文脈を追加せず結果をそのまま返却する）
     location: argument
-    description: '`next(e)` が返したツールの結果の本文。ここを照合する'
+    description: '`next(e)` が返却したツールの結果の本文。ここを照合する'
   - name: result.isError
     type: boolean
     required: false
     default: 'false'
     location: argument
-    description: '`true` のときはエラーの結果として、照合せずにそのまま返す'
+    description: '`true` のときはエラーの結果として、照合せずにそのまま返却する'
   - name: result.deny
     type: string
     required: false
     default: なし（ツールが実行された）
     location: argument
-    description: 他のフックが実行を拒んだときに入る。入っているときは照合せずにそのまま返す
+    description: 他のフックが実行を拒んだときに入る。入っているときは照合せずにそのまま返却する
   - name: result.context
     type: readonly string[]
     required: false
@@ -416,66 +416,66 @@ response:
     description: '`next(e)` の結果を広げたもの。`context` だけを替え、`ref`・`result`・`text` はそのまま'
   - name: context
     type: readonly string[]
-    description: 受け取った `context` の末尾に、引用の文脈を 1 要素で追加したもの。変数参照の値の行があるときは、引用の文脈の後ろに置く。追加する語が無いときは受け取ったまま
+    description: 受け取った `context` の末尾に、引用の文脈を 1 要素で追加したもの。変数参照の値の行があるときは、引用の文脈の後ろに配置する。追加する単語が無いときは受け取ったまま
     constraints: 引用の文脈の要素は `max_chars` 文字まで
-response_notes: 文脈の書式（見出し・`alias_type` ごとのセクション・語ごとの箇条書き）は [入力への引用の文脈の追加](id:IF-3) と同じ
+response_notes: 文脈の書式（見出し・`alias_type` ごとのセクション・単語ごとの箇条書き）は [入力への引用の文脈の追加](id:IF-3) と同じ
 exceptions:
   - name: なし（正常終了）
-    condition: 照合して文脈を追加したか、追加する語が無い・照合しない結果のため受け取ったまま返した
-  - name: なし（設定ファイルが読めない）
-    condition: '`ALIAS_INJECT_CONFIG` が指す設定ファイルが無いか、設定ファイルが読めない・書式が誤っている'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返す。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
-  - name: なし（YAML・project-index.yaml が読めない・スキーマに合わない行・照合条件が誤っている文書）
+    condition: 照合して文脈を追加したか、追加する単語が無い・照合しない結果のため受け取ったまま返却した
+  - name: なし（設定ファイルを読み込めない）
+    condition: '`ALIAS_INJECT_CONFIG` が指す設定ファイルが無いか、設定ファイルを読み込めない・書式が誤っている'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、引用の文脈を追加せずに返却する。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
+  - name: なし（YAML・project-index.yaml を読み込めない・スキーマに合わない行・照合条件が誤っている文書）
     condition: '[入力への引用の文脈の追加](id:IF-3) の同じ名前の行と同じ'
-    notes: その YAML・リポジトリ・行・文書だけを照合から外す。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確かめる
-  - name: なし（記録の書き込みがやり直しの上限まで外れた）
-    condition: '`ifVersion` を付けた `$.state.set` が 3 回続けて外れた'
-    notes: 例外を外へ出さず、debug log に出し、引用の文脈を追加せずに返す
+    notes: その YAML・リポジトリ・行・文書だけを照合から除外する。読み込みを `prompt.submit` と共有するため、結合テストは入力への引用の文脈の追加のフローで確認する
+  - name: なし（記録の書き込みが再試行の上限まで一致しなかった）
+    condition: '`ifVersion` を付けた `$.state.set` が 3 回続けて一致しなかった'
+    notes: 例外を外へ出さず、debug log に出し、引用の文脈を追加せずに返却する
   - name: なし（想定しない例外）
     condition: 照合・記録の途中で想定しない例外が起きた
-    notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返す。変数参照の値の行は追加する
+    notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返却する。変数参照の値の行は追加する
 constraints:
   - item: 処理時間
     constraint: ツールの呼び出しで増える待ち時間は 200ms まで
     decided_by: NFR-1#requirements[ツールの呼び出しで増える待ち時間]
-    notes: ファイルは更新時刻が変わったときだけ読み、語の一覧はモジュールの中に持つ
+    notes: ファイルは更新時刻が変わったときだけ参照し、単語の一覧はモジュールの中に持つ
   - item: 照合
     constraint: '[入力への引用の文脈の追加](id:IF-3) の照合と同じ（同じ設定ファイル・`project-index.yaml`・YAML・`exclude`）'
-    notes: 設定と語の読み込みは `prompt.submit` と共有する
+    notes: 設定と単語の読み込みは `prompt.submit` と共有する
   - item: 並び
-    constraint: 語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い語を先にする
+    constraint: 単語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い単語を先にする
     notes: '`prompt.submit` は今の最初に出た位置の順のまま'
   - item: 照合条件
     constraint: '[入力への引用の文脈の追加](id:IF-3) の照合条件と同じ。`field` の `text` はツールの結果の本文（`result.text`）を指す'
-    notes: 照合条件で外した後に、出た回数の順に並べる
-  - item: 語の数の上限
-    constraint: '`max_items` 語まで（既定 20）。並べた順に選ぶ'
+    notes: 照合条件で除外した後に、出た回数の順に並べる
+  - item: 単語の数の上限
+    constraint: '`max_items` 単語まで（既定 20）。並べた順に選ぶ'
     decided_by: CFG-1#settings[global.max_items]
   - item: 文字数の上限
-    constraint: 見出しを含む引用の文脈全体で `max_chars` 文字まで（既定 4,000）。足すと上限を超える語は飛ばして、後ろの語で収まるものを続けて足す
+    constraint: 見出しを含む引用の文脈全体で `max_chars` 文字まで（既定 4,000）。追加すると上限を超える単語は飛ばして、後ろの単語で収まるものを続けて追加する
     decided_by: CFG-1#settings[global.max_chars]
-    notes: 上限で外れた語は記録に入れない
-  - item: 照合から外すツール
+    notes: 上限で除外された単語は記録に入れない
+  - item: 照合から除外するツール
     constraint: '`e.tool` が設定の `exclude_tools` の名前のどれかと完全に一致するとき照合しない。既定は空で、全てのツールを照合する'
     decided_by: CFG-1#settings[global.exclude_tools]
-  - item: 読んでいる文書そのもの
-    constraint: '`e.tool` が `Read` のとき、文書のパスが `e.file_path` と一致する語を外す。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する語を外す'
-    notes: 文書のパスは、`records` を書かない行では語を取り出した YAML、`records` と `body_file` を書いた行では `body_file` の列の値のパス（語を取り出した YAML のフォルダから解決）、`records` だけを書いた行では語を取り出した YAML（その YAML の全ての語を外す）
+  - item: 参照している文書そのもの
+    constraint: '`e.tool` が `Read` のとき、文書のパスが `e.file_path` と一致する単語を除外する。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する単語を除外する'
+    notes: 文書のパスは、`records` を記載しない行では単語を取り出した YAML、`records` と `body_file` を記載した行では `body_file` の列の値のパス（単語を取り出した YAML のフォルダから解決）、`records` だけを記載した行では単語を取り出した YAML（その YAML の全ての単語を除外する）
   - item: 照合しない結果
     constraint: '`result.isError` が `true`・`result.deny` が入っている・`result.text` が文字列でない結果は照合しない'
   - item: 記録の単位
     constraint: '`e.agentId` が無いときはセッション ID（`$.session.id()`）、あるときはセッション ID と `agentId` の組ごとに記録する。メインの会話の記録は `prompt.submit` と共有する'
     notes: ワークフローのエージェント・エンジンのフォーク（圧縮・メモリ）も `agentId` があればサブエージェントと同じに扱う
-  - item: 記録の書き込みのやり直し
-    constraint: '`ifVersion` が外れたら記録を読み直し、選んだ語から記録済みの語を除いて文脈を作り直す。3 回まで'
-    notes: 外れるのは同じ記録へ同時に書いたときだけで、並列のツールの呼び出しが続けて当たることはまれ
+  - item: 記録の書き込みの再試行
+    constraint: '`ifVersion` が一致しなかったら記録を再読み込みし、選んだ単語から記録済みの単語を除いて文脈を再作成する。3 回まで'
+    notes: 一致しなくなるのは同じ記録へ同時に記載したときだけで、並列のツールの呼び出しが続けて該当することはまれ
   - item: 出所
     constraint: '`origins` で絞らない'
     decided_by: CFG-1#settings[global.origins]
     notes: '`origins` は入力の出所の設定で、ツールの結果は出所を持たない'
   - item: 変数参照の値との並び
     constraint: 引用の文脈の要素を先に、変数参照の値の行の要素を後に追加する。片方が失敗しても、もう片方は追加する
-    notes: '[読んだ本文への変数参照の値の追加](id:IF-5)'
+    notes: '[参照した本文への変数参照の値の追加](id:IF-5)'
   - item: 作業場所の絞り
     constraint: '[入力への引用の文脈の追加](id:IF-3) の作業場所の絞りと同じ'
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]

@@ -6,10 +6,10 @@ entry:
   value: '`prompt.submit`（入力の送信ごと）'
 flows:
   - name: 正常系
-    summary: 初めて出た語の文脈を追加し、記録に入れる
+    summary: 初めて出た単語の文脈を追加し、記録に入れる
     setup:
       - name: Mock
-        description: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を渡す。`prompt.submit` は届いた `text`・`context` をそのまま返す。`ui.log` は届いた行を記録する
+        description: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を指定する。`prompt.submit` は届いた `text`・`context` をそのまま返却する。`ui.log` は届いた行を記録する
         notes: '-'
       - name: ユーザースコープの settings
         description: '`env.ALIAS_INJECT_CONFIG` が `~/.config/alias-inject/settings.yaml`'
@@ -19,16 +19,16 @@ flows:
         notes: '-'
       - name: project-index.yaml
         description: '`documents` に、`id: terms`・`paths: [terms/*.yaml]`・`alias_type: term` の行と、`alias_type` を持たず `paths: [docs/*.yaml]` の行を持つ'
-        notes: 用語の行は `records` と `metadata` を書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る。`paths` は `/repo/knowledge/` を起点に解決される
+        notes: 用語の行は `records` と `metadata` を記載せず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る。`paths` は `/repo/knowledge/` を起点に解決される
       - name: 用語の YAML
         description: '`/repo/knowledge/terms/term-a.yaml`（`id: term-a`・`name: Term-A`・`aliases: [用語エー]`・`description`）と `term-b.yaml`（`id: term-b`・`description`。`name` を持たない）'
-        notes: term-b の語はファイル名の `term-b` になる
+        notes: term-b の単語はファイル名の `term-b` になる
       - name: 文書の YAML
         description: '`/repo/knowledge/docs/doc-z.yaml`（`name: doc-z`）'
-        notes: '`alias_type` を持たない行の YAML は読まない'
+        notes: '`alias_type` を持たない行の YAML は参照しない'
       - name: 入力
         description: '`text` が「用語エーと doc-z を説明して」、`origin.kind` が `composer`'
-        notes: エイリアスで当てる。2 回目の入力「term-a とは」で、大文字を含む語 `Term-A` が正規化で当たり、記録済みで追加されないことを確かめる
+        notes: エイリアスで適用する。2 回目の入力「term-a とは」で、大文字を含む単語 `Term-A` が正規化で該当し、記録済みで追加されないことを確認する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -38,29 +38,29 @@ flows:
         participant ST as $.state
 
         CC->>IF: text・origin
-        IF->>FS: ユーザースコープの settings を読む
+        IF->>FS: ユーザースコープの settings を参照する
         FS-->>IF: ALIAS_INJECT_CONFIG
-        IF->>FS: 設定ファイルと project-index.yaml を読む
+        IF->>FS: 設定ファイルと project-index.yaml を参照する
         FS-->>IF: repositories と documents
         IF->>IF: alias_type を持つ行だけを取り出し、スキーマで検証する
-        IF->>FS: 用語の行の paths に当たる YAML を読む
+        IF->>FS: 用語の行の paths に該当する YAML を参照する
         FS-->>IF: ファイルごとの文書
         IF->>IF: metadata の値を文書ごとに解決する
-        IF->>ST: セッションの記録を読む
+        IF->>ST: セッションの記録を参照する
         ST-->>IF: 記録なし
-        IF->>IF: 正規化して照合し term-a が当たる
+        IF->>IF: 正規化して照合し term-a がヒットする
         IF->>ST: term-a を記録に入れる
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
     expected:
       - 返る `text` が入力の `text` と同じ
-      - 返る `context` が 1 要素で、`# この発言に出る用語`・`## 用語`・term-a の語 `Term-A`・`id`・`description` を含む
+      - 返る `context` が 1 要素で、`# この発言に出る用語`・`## 用語`・term-a の単語 `Term-A`・`id`・`description` を含む
       - 返る `context` に term-b と doc-z が含まれない
       - '`/repo/knowledge/docs/` の YAML に `fs.read` が呼ばれていない'
-      - 同じセッションで続けて「term-a とは」を送ると、返る `context` が空
+      - 同じセッションで続けて「term-a とは」を送信すると、返る `context` が空
     test: test_normal
   - name: 正常系（上限を超える）
-    summary: 入力に先に出た語から max_items 語だけを追加し、外れた語は記録しない
+    summary: 入力に先に出た単語から max_items 単語だけを追加し、除外された単語は記録しない
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -77,7 +77,7 @@ flows:
         participant ST as $.state
 
         CC->>IF: term-a と term-b の違い
-        IF->>IF: 2 語が当たり、先に出た term-a だけを選ぶ
+        IF->>IF: 2 つの単語がヒットし、先に出た term-a だけを選ぶ
         IF->>ST: term-a だけを記録に入れる
         IF-->>CC: context に term-a の文脈
         CC->>IF: term-b について
@@ -89,7 +89,7 @@ flows:
       - 2 回目の返る `context` に term-b が含まれる
     test: test_normal_when_over_item_limit
   - name: 正常系（文字数の上限を超える）
-    summary: 足すと max_chars を超える語を飛ばし、後ろの収まる語を追加する
+    summary: 追加すると max_chars を超える単語を飛ばし、後ろの収まる単語を追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -108,19 +108,19 @@ flows:
         participant ST as $.state
 
         CC->>IF: term-a・term-long・term-b を比べて
-        IF->>IF: term-a を足す
-        IF->>IF: term-long は足すと上限を超えるので飛ばす
-        IF->>IF: term-b を足す
+        IF->>IF: term-a を追加する
+        IF->>IF: term-long は追加すると上限を超えるので飛ばす
+        IF->>IF: term-b を追加する
         IF->>ST: term-a と term-b を記録に入れる
         IF-->>CC: context に term-a と term-b の文脈
       ```
     expected:
       - 返る `context` に term-a と term-b が含まれ、term-long が含まれない
       - 返る `context` の追加した要素が 300 文字以下
-      - 同じセッションで `max_chars` を 4000 に戻して「term-long とは」を送ると、term-long の文脈が追加される
+      - 同じセッションで `max_chars` を 4000 に戻して「term-long とは」を送信すると、term-long の文脈が追加される
     test: test_normal_when_over_char_limit
   - name: 正常系（出所が対象外）
-    summary: origins に対応づかない出所の入力はそのまま渡す
+    summary: origins に対応づかない出所の入力はそのまま返却する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -140,10 +140,10 @@ flows:
       ```
     expected:
       - 返る `text`・`context` が受け取ったまま
-      - 同じセッションで `origin.kind` が `plugin` の「term-a とは」を送ると、term-a の文脈が追加される（前の入力で記録されていない）
+      - 同じセッションで `origin.kind` が `plugin` の「term-a とは」を送信すると、term-a の文脈が追加される（前の入力で記録されていない）
     test: test_normal_when_origin_excluded
   - name: 正常系（スラッシュコマンド）
-    summary: スラッシュコマンドの行は照合せずにそのまま渡す
+    summary: スラッシュコマンドの行は照合せずにそのまま返却する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -160,13 +160,13 @@ flows:
       ```
     expected:
       - 返る `text`・`context` が受け取ったまま
-      - term-a が記録に入っていない（続けて送る「term-a とは」で文脈が追加される）
+      - term-a が記録に入っていない（続けて送信する「term-a とは」で文脈が追加される）
     test: test_normal_when_slash_command
   - name: 正常系（設定ファイルのパスが無い）
-    summary: ALIAS_INJECT_CONFIG が無く、既定のパスにも設定ファイルが無いときはそのまま渡す
+    summary: ALIAS_INJECT_CONFIG が無く、既定のパスにも設定ファイルが無いときはそのまま返却する
     setup:
       - name: Mock
-        description: 正常系と同じ。`mock.env` に `ALIAS_INJECT_CONFIG`・`XDG_CONFIG_HOME` を渡さない
+        description: 正常系と同じ。`mock.env` に `ALIAS_INJECT_CONFIG`・`XDG_CONFIG_HOME` を指定しない
       - name: ユーザースコープの settings
         description: '`env` に `ALIAS_INJECT_CONFIG` が無い'
       - name: 設定ファイル
@@ -181,7 +181,7 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: ユーザースコープの settings と環境変数を読む
+        IF->>FS: ユーザースコープの settings と環境変数を参照する
         FS-->>IF: ALIAS_INJECT_CONFIG が無い
         IF->>FS: 既定のパスを調べる
         FS-->>IF: ファイルが無い
@@ -193,7 +193,7 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_config_path_missing
   - name: 正常系（プロジェクトの設定を重ねる）
-    summary: 当たった projects の aliases の行を global に重ね、同じ語を alias_type ごとの両方のセクションに追加する
+    summary: 該当した projects の aliases の行を global に重ね、同じ単語を alias_type ごとの両方のセクションに追加する
     setup:
       - name: Mock
         description: 正常系に加え、起動したプロジェクトの直下を `/repo/sample` にする
@@ -203,7 +203,7 @@ flows:
         notes: '`paths` は相対パスで `/repo/sample/docs/` に解決される'
       - name: コマンドの YAML
         description: '`/repo/sample/docs/command.yaml` の配列 `commands` に要素 term-a（`id: term-a`・`command: make term-a`。`name` を持たない）'
-        notes: 語は要素の `id` の `term-a` になる
+        notes: 単語は要素の `id` の `term-a` になる
       - name: 入力
         description: 「term-a とは」
         notes: '-'
@@ -215,20 +215,20 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: 設定ファイルと project-index.yaml を読む
+        IF->>FS: 設定ファイルと project-index.yaml を参照する
         FS-->>IF: global・projects の aliases と project-index.yaml の documents
         IF->>IF: match: sample だけを global に重ねる
-        IF->>FS: 両方の行の YAML を読む
+        IF->>FS: 両方の行の YAML を参照する
         FS-->>IF: 文書
         IF-->>CC: context に「用語」と「コマンド」の両方のセクションで term-a
       ```
     expected:
       - 返る `context` に `## 用語` と `## コマンド` の両方のセクションがあり、それぞれに term-a が並ぶ
       - '`## コマンド` の term-a に `command: make term-a` が並ぶ'
-      - '`match: other` の行の YAML は読まれていない'
+      - '`match: other` の行の YAML は参照されていない'
     test: test_normal_when_project_matched
   - name: 正常系（ファイルの書き換え）
-    summary: 更新時刻が変わった設定ファイルと YAML だけを読み直し、増えたファイルも読む
+    summary: 更新時刻が変わった設定ファイルと YAML だけを再読み込みし、増えたファイルも参照する
     setup:
       - name: Mock
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
@@ -244,20 +244,20 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-b とは
-        IF->>FS: 設定ファイルと YAML を読む
+        IF->>FS: 設定ファイルと YAML を参照する
         IF-->>CC: context に term-b
         CC->>IF: term-a と term-c
-        IF->>FS: mtimeMs とフォルダの一覧を確かめる
+        IF->>FS: mtimeMs とフォルダの一覧を確認する
         FS-->>IF: term-a が更新、term-c が増えた
-        IF->>FS: term-a と term-c の YAML だけを読む
+        IF->>FS: term-a と term-c の YAML だけを参照する
         IF-->>CC: context に書き換え後の term-a と term-c
       ```
     expected:
       - 2 回目の返る `context` に、書き換え後の term-a の `description` と term-c が含まれる
-      - 2 回目の入力で `fs.read` が呼ばれたのは term-a と term-c の YAML だけ（設定ファイルと term-b の YAML は読み直していない）
+      - 2 回目の入力で `fs.read` が呼ばれたのは term-a と term-c の YAML だけ（設定ファイルと term-b の YAML は再読み込みしていない）
     test: test_normal_when_files_changed
   - name: 正常系（別のリポジトリの同じ ID）
-    summary: 別のリポジトリが同じ行の id と文書の id を使っても、両方を追加して記録する
+    summary: 別のリポジトリが同じ行の id と文書の id を使用しても、両方を追加して記録する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -282,11 +282,11 @@ flows:
         participant ST as $.state
 
         CC->>IF: term-a とは
-        IF->>IF: 両方のリポジトリの term-a が当たる
+        IF->>IF: 両方のリポジトリの term-a がヒットする
         IF->>ST: 出所の違う 2 つの term-a を記録に入れる
         IF-->>CC: context の「用語」に 2 つの term-a
         CC->>IF: term-a とは
-        IF->>ST: 記録を読む
+        IF->>ST: 記録を参照する
         IF-->>CC: 受け取ったまま
       ```
     expected:
@@ -294,7 +294,7 @@ flows:
       - 2 回目の返る `context` が受け取ったまま
     test: test_normal_when_same_id_across_repositories
   - name: 正常系（無効にした行）
-    summary: 'enabled: false の repositories の要素と行を読まずに照合する'
+    summary: 'enabled: false の repositories の要素と行を参照せずに照合する'
     setup:
       - name: Mock
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
@@ -319,8 +319,8 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a・term-x・term-y
-        IF->>FS: 設定ファイルと有効な project-index.yaml だけを読む
-        IF->>FS: 有効な行の YAML だけを読む
+        IF->>FS: 設定ファイルと有効な project-index.yaml だけを参照する
+        IF->>FS: 有効な行の YAML だけを参照する
         FS-->>IF: 文書
         IF-->>CC: context に term-a だけ
       ```
@@ -329,7 +329,7 @@ flows:
       - '`/repo/other/project-index.yaml` と `/repo/knowledge/drafts/` の YAML に `fs.read` が呼ばれていない'
     test: test_normal_when_disabled
   - name: 正常系（project-index.yaml の書き換え）
-    summary: 更新時刻が変わった project-index.yaml を読み直し、追加した documents の行で照合する
+    summary: 更新時刻が変わった project-index.yaml を再読み込みし、追加した documents の行で照合する
     setup:
       - name: Mock
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
@@ -353,21 +353,21 @@ flows:
         CC->>IF: term-a とは
         IF-->>CC: context に term-a
         CC->>IF: term-a と cmd-a
-        IF->>FS: mtimeMs を確かめる
+        IF->>FS: mtimeMs を確認する
         FS-->>IF: project-index.yaml が更新
-        IF->>FS: project-index.yaml とコマンドの YAML を読む
+        IF->>FS: project-index.yaml とコマンドの YAML を参照する
         IF-->>CC: context に cmd-a だけ
       ```
     expected:
       - '2 回目の返る `context` に `## コマンド` の cmd-a と `command: make cmd-a` があり、term-a が無い（記録が残っている）'
       - 2 回目の入力で `fs.read` が呼ばれたのは `project-index.yaml` とコマンドの YAML だけ
     test: test_normal_when_repository_config_changed
-  - name: 異常系（設定ファイルが読めない）
-    summary: 設定ファイルが読めないときは何も追加せずに渡す
+  - name: 異常系（設定ファイルを読み込めない）
+    summary: 設定ファイルを読み込めないときは何も追加せずに返却する
     setup:
       - name: Mock
-        description: 正常系と同じ。`ALIAS_INJECT_CONFIG` が指す設定ファイルの `fs.read` と `fs.stat` はファイルが無い例外を返す
-        notes: 既定のパス `~/.config/alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置き、既定のパスへ切り替えないことを固定する
+        description: 正常系と同じ。`ALIAS_INJECT_CONFIG` が指す設定ファイルの `fs.read` と `fs.stat` はファイルが無い例外を返却する
+        notes: 既定のパス `~/.config/alias-inject/settings.yaml` に term-a を照合できる設定ファイルを配置し、既定のパスへ切り替えないことを固定する
       - name: 入力
         description: 「term-a とは」
     flow: |-
@@ -378,7 +378,7 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: 設定ファイルを読む
+        IF->>FS: 設定ファイルを参照する
         FS-->>IF: ファイルが無い
         IF-->>CC: 受け取ったまま
       ```
@@ -387,11 +387,11 @@ flows:
       - フックが例外で終わらない（入力が止まらない）
       - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスと理由を含む行が届いている
     test: test_error_when_config_unreadable
-  - name: 異常系（project-index.yaml が読めない）
-    summary: 読めない project-index.yaml のリポジトリだけを外し、他のリポジトリの文脈は追加する
+  - name: 異常系（project-index.yaml を読み込めない）
+    summary: 読み込めない project-index.yaml のリポジトリだけを除外し、他のリポジトリの文脈は追加する
     setup:
       - name: Mock
-        description: 正常系と同じ。`/repo/missing/project-index.yaml` の `fs.stat` と `fs.read` はファイルが無い例外を返す
+        description: 正常系と同じ。`/repo/missing/project-index.yaml` の `fs.stat` と `fs.read` はファイルが無い例外を返却する
       - name: 設定ファイル
         description: '`global.repositories` に `config: /repo/missing/project-index.yaml` と `config: /repo/knowledge/project-index.yaml` の要素を持つ'
       - name: 入力
@@ -404,9 +404,9 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: 両方の project-index.yaml を読む
+        IF->>FS: 両方の project-index.yaml を参照する
         FS-->>IF: /repo/missing はファイルが無い
-        IF->>IF: /repo/missing のリポジトリを照合から外す
+        IF->>IF: /repo/missing のリポジトリを照合から除外する
         IF-->>CC: context に「用語」の term-a
       ```
     expected:
@@ -415,13 +415,13 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で `/repo/missing/project-index.yaml` と理由を含む行が届いている
     test: test_error_when_repository_unreadable
   - name: 異常系（スキーマに合わない行）
-    summary: スキーマに合わない行・id の重なった後の行だけを外し、他の行の文脈は追加する
+    summary: スキーマに合わない行・id の重なった後の行だけを除外し、他の行の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
         notes: '-'
       - name: project-index.yaml
-        description: '`documents` に、正常系の用語の行に加え、`id: bad`・`paths: [bad/*.yaml]`・`alias_type: term` で `metadata.name` を空の文字列で書いた行、`id: unknown`・`paths: [unknown/*.yaml]` で `alias_type` が `glossary` の行、正常系の行と同じ `id: terms` で `paths: [dup/*.yaml]` の行を持つ'
+        description: '`documents` に、正常系の用語の行に加え、`id: bad`・`paths: [bad/*.yaml]`・`alias_type: term` で `metadata.name` を空の文字列で記載した行、`id: unknown`・`paths: [unknown/*.yaml]` で `alias_type` が `glossary` の行、正常系の行と同じ `id: terms` で `paths: [dup/*.yaml]` の行を持つ'
         notes: '`metadata` の値は 1 文字以上の列名の文字列だけを許し、`alias_type` は 9 つの値だけを許す'
       - name: 用語の YAML
         description: 正常系に加え、`/repo/knowledge/bad/` に文書 term-x、`/repo/knowledge/unknown/` に文書 term-v、`/repo/knowledge/dup/` に文書 term-z を持つ
@@ -437,9 +437,9 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a・term-x・term-v・term-z
-        IF->>FS: project-index.yaml を読む
-        IF->>IF: id: bad と id: unknown はスキーマに合わず、後の id: terms は重なるので外す
-        IF->>FS: 残った行の YAML を読む
+        IF->>FS: project-index.yaml を参照する
+        IF->>IF: id: bad と id: unknown はスキーマに合わず、後の id: terms は重なるので除外する
+        IF->>FS: 残った行の YAML を参照する
         IF-->>CC: context に term-a だけ
       ```
     expected:
@@ -448,7 +448,7 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で `project-index.yaml` のパスと理由を含む、`bad`・`unknown`・`terms` の重なりのそれぞれの行が届いている
     test: test_error_when_alias_invalid
   - name: 異常系（YAML の書式の誤り）
-    summary: 書式の誤った YAML の文書だけを外し、他の行の文脈は追加する
+    summary: 書式の誤った YAML の文書だけを除外し、他の行の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -470,9 +470,9 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: 両方の行の YAML を読む
+        IF->>FS: 両方の行の YAML を参照する
         FS-->>IF: URL の YAML は書式の誤り
-        IF->>IF: URL の YAML の文書を照合から外す
+        IF->>IF: URL の YAML の文書を照合から除外する
         IF-->>CC: context に「用語」の term-a
       ```
     expected:
@@ -481,14 +481,14 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で URL の YAML のパスと理由を含む行が届いている
     test: test_error_when_yaml_malformed
   - name: 正常系（追加した種類）
-    summary: skill・tool・path・env・avoid の行の語を、種類ごとのセクションとキーで追加する
+    summary: skill・tool・path・env・avoid の行の単語を、種類ごとのセクションとキーで追加する
     setup:
       - name: Mock
         description: 正常系と同じ
         notes: '-'
       - name: 設定ファイル
         description: '正常系の `global.repositories` に加え、`global.aliases` に `id: skills`・`id: tools`・`id: paths`・`id: envs`・`id: avoids` の行を持ち、`alias_type` をそれぞれ `skill`・`tool`・`path`・`env`・`avoid` にする'
-        notes: どの行も `metadata` を書かず、`paths` は設定フォルダの `{種類}/*.yaml`
+        notes: どの行も `metadata` を記載せず、`paths` は設定フォルダの `{種類}/*.yaml`
       - name: 種類ごとの YAML
         description: '文書 skill-a（`skill: code-review`）・tool-a（`tool: search_design_docs`）・path-a（`path: ~/.config/ai-monitor/settings.yaml`）・env-a（`url: http://127.0.0.1:8000`・`port: 8000`・`description: 開発サーバー`）・avoid-a（`replacement: term-a`）。どの文書も `id`・`name` を持つ'
         notes: 'env-b（`port: 5432` だけを持ち `url` が無い）も envs の YAML に持つ'
@@ -504,13 +504,13 @@ flows:
         participant ST as $.state
 
         CC->>IF: term-a・skill-a・tool-a・path-a・env-a・env-b・avoid-a
-        IF->>FS: 設定ファイルと project-index.yaml を読む
+        IF->>FS: 設定ファイルと project-index.yaml を参照する
         IF->>IF: 全ての行がスキーマに合う
-        IF->>FS: 種類ごとの YAML を読む
+        IF->>FS: 種類ごとの YAML を参照する
         FS-->>IF: 文書
-        IF->>IF: 7 語が当たる
-        IF->>ST: 7 語を記録に入れる
-        IF-->>CC: context に種類ごとのセクションで 7 語の文脈
+        IF->>IF: 7 つの単語がヒットする
+        IF->>ST: 7 つの単語を記録に入れる
+        IF-->>CC: context に種類ごとのセクションで 7 つの単語の文脈
       ```
     expected:
       - 返る `context` のセクションが `## 用語`・`## スキル`・`## ツール`・`## パス`・`## 環境`・`## 使用しない単語` の順に並ぶ
@@ -520,7 +520,7 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_added_types
   - name: 異常系（URL もポートも持たない env の文書）
-    summary: 解決した url も port も空の env の文書を照合から外し、同じ行の他の文書の文脈は追加する
+    summary: 解決した url も port も空の env の文書を照合から除外し、同じ行の他の文書の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -542,8 +542,8 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a・env-a・env-x
-        IF->>FS: 設定ファイルと project-index.yaml と YAML を読む
-        IF->>IF: env-x は url も port も空なので外す
+        IF->>FS: 設定ファイルと project-index.yaml と YAML を参照する
+        IF->>IF: env-x は url も port も空なので除外する
         IF-->>CC: context に term-a と env-a
       ```
     expected:
@@ -551,17 +551,17 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で env-x の YAML のパス・`env-x`・`url`・`port` を含む行が届いている
     test: test_error_when_env_without_endpoint
-  - name: 異常系（旧い構造の aliases）
-    summary: 設定ファイルの旧い構造の要素と、project-index.yaml の metadata.alias_type を持つ行を外し、project-index.yaml のトップレベルの aliases は読まない
+  - name: 異常系（旧構造の aliases）
+    summary: 設定ファイルの旧構造の要素と、project-index.yaml の metadata.alias_type を持つ行を除外し、project-index.yaml のトップレベルの aliases は参照しない
     setup:
       - name: Mock
         description: 正常系と同じ。`fs.read` の呼ばれたパスを記録する
         notes: '-'
       - name: 設定ファイル
-        description: '正常系の `global.repositories` に加え、`global.aliases` に旧い構造の `id: urls`・`type: url`・`paths: [urls/*.yaml]`・`fields`（`id: id`・`match: [name]`・`url: url`）の要素と、行の `alias_type` を持たず `id: old-terms`・`paths: [old/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の要素を持つ'
+        description: '正常系の `global.repositories` に加え、`global.aliases` に旧構造の `id: urls`・`type: url`・`paths: [urls/*.yaml]`・`fields`（`id: id`・`match: [name]`・`url: url`）の要素と、行の `alias_type` を持たず `id: old-terms`・`paths: [old/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の要素を持つ'
         notes: '`id: urls` は `metadata` を持たない'
       - name: project-index.yaml
-        description: '正常系の `documents` に加え、行の `alias_type` を持たず `id: old-docs`・`paths: [old-docs/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の行を持ち、トップレベルの `aliases` に旧い構造の `id: legacy`・`type: term`・`paths: [legacy/*.yaml]` の要素を持つ'
+        description: '正常系の `documents` に加え、行の `alias_type` を持たず `id: old-docs`・`paths: [old-docs/*.yaml]`・`metadata.alias_type: {type: custom, value: term}` の行を持ち、トップレベルの `aliases` に旧構造の `id: legacy`・`type: term`・`paths: [legacy/*.yaml]` の要素を持つ'
         notes: '-'
       - name: YAML
         description: 設定フォルダの `urls/` に文書 link-a、`old/` に文書 term-w、`/repo/knowledge/old-docs/` に文書 term-v、`/repo/knowledge/legacy/` に文書 term-y を持つ
@@ -577,11 +577,11 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a・link-a・term-y・term-w・term-v
-        IF->>FS: 設定ファイルと project-index.yaml を読む
+        IF->>FS: 設定ファイルと project-index.yaml を参照する
         IF->>IF: project-index.yaml は documents だけを取り出す
-        IF->>IF: 設定ファイルの id: urls と id: old-terms はスキーマに合わないので外す
-        IF->>IF: project-index.yaml の id: old-docs は旧い構造の行なので外す
-        IF->>FS: 残った行の YAML を読む
+        IF->>IF: 設定ファイルの id: urls と id: old-terms はスキーマに合わないので除外する
+        IF->>IF: project-index.yaml の id: old-docs は旧構造の行なので除外する
+        IF->>FS: 残った行の YAML を参照する
         IF-->>CC: context に term-a だけ
       ```
     expected:
@@ -591,7 +591,7 @@ flows:
       - 設定フォルダの `urls/`・`old/` と `/repo/knowledge/old-docs/`・`/repo/knowledge/legacy/` の YAML に `fs.read` が呼ばれていない
     test: test_error_when_legacy_aliases
   - name: 異常系（必須の値が空の文書）
-    summary: 必須のキーの値が空の文書だけを外し、同じ行の他の文書の文脈は追加する
+    summary: 必須のキーの値が空の文書だけを除外し、同じ行の他の文書の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -610,8 +610,8 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a と term-n
-        IF->>FS: 用語の行の YAML を読む
-        IF->>IF: 文書ごとに必須のキーの値を確かめ、term-n を外す
+        IF->>FS: 用語の行の YAML を参照する
+        IF->>IF: 文書ごとに必須のキーの値を確認し、term-n を除外する
         IF-->>CC: context に term-a だけ
       ```
     expected:
@@ -629,8 +629,8 @@ flows:
         description: '正常系の `global.repositories` に加え、`global.aliases` に `id: guides`・`paths: [files.yaml]`・`alias_type: doc`・`records: files`・`body_file: path`・`metadata.id: path`・`metadata.description: meta.summary` の行を持つ'
         notes: '`paths` は設定フォルダの `files.yaml`'
       - name: 管理用の YAML
-        description: '設定フォルダの `files.yaml` の配列 `files` に、`path: docs/使い方/セットアップ.md`・`meta.summary: 前提と手順` の要素を持つ'
-        notes: dev-docs の `templates/files.schema.yaml` のとおり `id`・`name` を持たない。語は `path` のファイル名の `セットアップ` になる
+        description: '設定フォルダの `files.yaml` の配列 `files` に、`path: docs/使用し方/セットアップ.md`・`meta.summary: 前提と手順` の要素を持つ'
+        notes: dev-docs の `templates/files.schema.yaml` のとおり `id`・`name` を持たない。単語は `path` のファイル名の `セットアップ` になる
       - name: 入力
         description: 「セットアップとは」
         notes: '-'
@@ -642,18 +642,18 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: セットアップとは
-        IF->>FS: files.yaml を読む
+        IF->>FS: files.yaml を参照する
         FS-->>IF: 配列 files の要素
         IF->>IF: id を path の列、description を meta.summary の列から取る
         IF->>IF: name が空なので path の列のファイル名を付ける
         IF-->>CC: context の「文書」にセットアップ
       ```
     expected:
-      - '返る `context` の `## 文書` に、`セットアップ（id: docs/使い方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
+      - '返る `context` の `## 文書` に、`セットアップ（id: docs/使用し方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_records_body_file
   - name: 正常系（照合条件を持つ文書）
-    summary: 名前が当たった文書のうち、照合条件に当たらない文書を外す
+    summary: 名前がヒットした文書のうち、照合条件に該当しない文書を除外する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -663,7 +663,7 @@ flows:
         notes: '`inject_when` は `and` の束に、`{field: text, op: contains, values: [React, tsx], match: any}` と `{field: text, op: not_contains, values: [Python]}` を並べたもの'
       - name: 入力
         description: 1 回目は「term-a と term-c を React と Python で」、2 回目は「term-c を TSX で」
-        notes: 1 回目は `contains` に当たり `not_contains` で外れる。2 回目は大文字の `TSX` が正規化で `tsx` に当たる
+        notes: 1 回目は `contains` に該当し `not_contains` で除外される。2 回目は大文字の `TSX` が正規化で `tsx` に該当する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -672,12 +672,12 @@ flows:
         participant ST as $.state
 
         CC->>IF: term-a と term-c を React と Python で
-        IF->>IF: 照合で term-a と term-c が当たる
-        IF->>IF: term-c の照合条件を入力の文で評価し、not_contains で外す
+        IF->>IF: 照合で term-a と term-c がヒットする
+        IF->>IF: term-c の照合条件を入力の文で評価し、not_contains で除外する
         IF->>ST: term-a を記録に入れる
         IF-->>CC: context に term-a だけ
         CC->>IF: term-c を TSX で
-        IF->>IF: 照合で term-c が当たり、照合条件にも当たる
+        IF->>IF: 照合で term-c がヒットし、照合条件にも該当する
         IF->>ST: term-c を記録に入れる
         IF-->>CC: context に term-c
       ```
@@ -687,7 +687,7 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_inject_condition
   - name: 異常系（照合条件が誤っている文書）
-    summary: 照合条件の誤った文書だけを外し、同じ行の他の文書の文脈は追加する
+    summary: 照合条件の誤った文書だけを除外し、同じ行の他の文書の文脈は追加する
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -706,8 +706,8 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a と term-e と term-f
-        IF->>FS: 用語の行の YAML を読む
-        IF->>IF: 文書ごとに照合条件を検査し、term-e と term-f を外す
+        IF->>FS: 用語の行の YAML を参照する
+        IF->>IF: 文書ごとに照合条件を検査し、term-e と term-f を除外する
         IF-->>CC: context に term-a だけ
       ```
     expected:
@@ -716,14 +716,14 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で term-e の YAML のパス・`term-e`・`inject_when` を含む行と、term-f の YAML のパス・`term-f`・`op` を含む行が届いている
     test: test_error_when_inject_condition_invalid
   - name: 正常系（作業場所で絞った行）
-    summary: 作業場所が scope.cwd の glob に当たらない行を、YAML を読み込まずに照合から除外する
+    summary: 作業場所が scope.cwd の glob に該当しない行を、YAML を読み込まずに照合から除外する
     setup:
       - name: Mock
         description: 正常系に加え、起動したプロジェクトの直下（`$.session.root()`）を `/repo/sample/.claude/worktrees/feat-x` にする。`fs.read` の呼ばれたパスを記録する
         notes: worktree のセッションは worktree のパスで判定することを確認する
       - name: 設定ファイル
         description: '正常系の `global.repositories` に加え、`global.aliases` に `alias_type: url`・`records: links` の行を 3 つ持つ。`id: sample-links`（`scope.cwd: [/repo/sample/**]`・`paths: [/repo/links/sample.yaml]`）、`id: other-links`（`scope.cwd: [/repo/other/**]`・`paths: [/repo/links/other.yaml]`）、`id: root-links`（`scope.cwd: [/repo/sample]`・`paths: [/repo/links/root.yaml]`）'
-        notes: '`/**` を付けない `/repo/sample` は、そのフォルダだけに当たり、配下の worktree には当たらない'
+        notes: '`/**` を付けない `/repo/sample` は、そのフォルダだけに該当し、配下の worktree には該当しない'
       - name: URL の YAML
         description: '`sample.yaml`・`other.yaml`・`root.yaml` の配列 `links` に、それぞれ `id: link-a`・`id: link-b`・`id: link-c` の要素（`url` を持つ）を 1 つ持つ'
         notes: '-'
@@ -740,7 +740,7 @@ flows:
         CC->>IF: term-a と link-a と link-b と link-c
         IF->>FS: 設定ファイルと project-index.yaml を読み込む
         FS-->>IF: aliases と documents
-        IF->>IF: $.session.root() が scope.cwd に当たらない other-links と root-links を除外する
+        IF->>IF: $.session.root() が scope.cwd に該当しない other-links と root-links を除外する
         IF->>FS: 残った行の YAML だけを読み込む
         FS-->>IF: 文書
         IF-->>CC: context に term-a と link-a
@@ -760,7 +760,7 @@ flows:
         description: '正常系の `global.repositories` に加え、`global.aliases` に `alias_type: url`・`records: links` の行を 2 つ持つ。`id: empty-scope`（`scope.cwd: []`）と `id: string-scope`（`scope.cwd: /repo/sample/**`）'
         notes: 文字列でない要素・`scope` の未知のキーも同じ結末になる
       - name: URL の YAML
-        description: '2 つの行の `paths` が、それぞれ `id: link-e`・`id: link-f` の要素を持つ YAML に当たる'
+        description: '2 つの行の `paths` が、それぞれ `id: link-e`・`id: link-f` の要素を持つ YAML に該当する'
         notes: '-'
       - name: 入力
         description: 「term-a と link-e と link-f」
@@ -783,14 +783,14 @@ flows:
       - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパス・`empty-scope`・`scope.cwd` を含む行と、`string-scope`・`scope.cwd` を含む行が届いている
     test: test_error_when_cwd_scope_invalid
   - name: 正常系（既定のパス）
-    summary: ALIAS_INJECT_CONFIG が無いとき、XDG_CONFIG_HOME の下の設定ファイルを読む
+    summary: ALIAS_INJECT_CONFIG が無いとき、XDG_CONFIG_HOME の下の設定ファイルを参照する
     setup:
       - name: Mock
         description: 正常系と同じ。`mock.env` で `XDG_CONFIG_HOME` を `/xdg` にする
       - name: ユーザースコープの settings
         description: '`env` に `ALIAS_INJECT_CONFIG` が無い'
       - name: 設定ファイル
-        description: 正常系と同じ内容を `/xdg/alias-inject/settings.yaml` に置く
+        description: 正常系と同じ内容を `/xdg/alias-inject/settings.yaml` に配置する
       - name: 入力
         description: 「term-a とは」
     flow: |-
@@ -801,25 +801,25 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: ユーザースコープの settings と環境変数を読む
+        IF->>FS: ユーザースコープの settings と環境変数を参照する
         FS-->>IF: ALIAS_INJECT_CONFIG が無く、XDG_CONFIG_HOME が /xdg
-        IF->>FS: /xdg/alias-inject/settings.yaml を読む
+        IF->>FS: /xdg/alias-inject/settings.yaml を参照する
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
     expected:
       - 返る `text` が入力の `text` と同じ
-      - 返る `context` に term-a の語・`id`・`description` が含まれる
+      - 返る `context` に term-a の単語・`id`・`description` が含まれる
     test: test_normal_when_default_config_path
   - name: 正常系（XDG_CONFIG_HOME が空）
-    summary: XDG_CONFIG_HOME が空のときは ~/.config の下の設定ファイルを読む
+    summary: XDG_CONFIG_HOME が空のときは ~/.config の下の設定ファイルを参照する
     setup:
       - name: Mock
         description: 正常系と同じ。`mock.env` で `XDG_CONFIG_HOME` を空文字にする
       - name: ユーザースコープの settings
         description: '`env` に `ALIAS_INJECT_CONFIG` が無い'
       - name: 設定ファイル
-        description: 正常系と同じ内容を `~/.config/alias-inject/settings.yaml` に置く
+        description: 正常系と同じ内容を `~/.config/alias-inject/settings.yaml` に配置する
       - name: 入力
         description: 「term-a とは」
     flow: |-
@@ -830,24 +830,24 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: ユーザースコープの settings と環境変数を読む
+        IF->>FS: ユーザースコープの settings と環境変数を参照する
         FS-->>IF: ALIAS_INJECT_CONFIG が無く、XDG_CONFIG_HOME が空
-        IF->>FS: ~/.config/alias-inject/settings.yaml を読む
+        IF->>FS: ~/.config/alias-inject/settings.yaml を参照する
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
     expected:
-      - 返る `context` に term-a の語・`id`・`description` が含まれる
+      - 返る `context` に term-a の単語・`id`・`description` が含まれる
     test: test_normal_when_xdg_config_home_empty
   - name: 正常系（シェルの環境変数）
-    summary: settings に値が無いとき、環境変数 ALIAS_INJECT_CONFIG が指す設定ファイルを読む
+    summary: settings に値が無いとき、環境変数 ALIAS_INJECT_CONFIG が指す設定ファイルを参照する
     setup:
       - name: Mock
         description: 正常系と同じ。`mock.env` で `ALIAS_INJECT_CONFIG` を `/shell/settings.yaml` にする
       - name: ユーザースコープの settings
         description: '`env` に `ALIAS_INJECT_CONFIG` が無い'
       - name: 設定ファイル
-        description: 正常系と同じ内容を `/shell/settings.yaml` に置く
+        description: 正常系と同じ内容を `/shell/settings.yaml` に配置する
       - name: 入力
         description: 「term-a とは」
     flow: |-
@@ -858,17 +858,17 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: ユーザースコープの settings と環境変数を読む
+        IF->>FS: ユーザースコープの settings と環境変数を参照する
         FS-->>IF: 環境変数の ALIAS_INJECT_CONFIG
-        IF->>FS: /shell/settings.yaml を読む
+        IF->>FS: /shell/settings.yaml を参照する
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
     expected:
-      - 返る `context` に term-a の語・`id`・`description` が含まれる
+      - 返る `context` に term-a の単語・`id`・`description` が含まれる
     test: test_normal_when_config_from_shell_env
   - name: 正常系（settings の env を優先）
-    summary: settings と環境変数の両方に値があるときは settings の値を使う
+    summary: settings と環境変数の両方に値があるときは settings の値を使用する
     setup:
       - name: Mock
         description: 正常系と同じ。`mock.env` で `ALIAS_INJECT_CONFIG` を `/shell/settings.yaml` にする
@@ -886,34 +886,34 @@ flows:
         participant FS as ファイル・settings
 
         CC->>IF: term-a とは
-        IF->>FS: ユーザースコープの settings を読む
+        IF->>FS: ユーザースコープの settings を参照する
         FS-->>IF: env.ALIAS_INJECT_CONFIG
-        IF->>FS: ~/.config/alias-inject/settings.yaml を読む
+        IF->>FS: ~/.config/alias-inject/settings.yaml を参照する
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
     expected:
-      - 返る `context` に term-a の語・`id`・`description` が含まれる
+      - 返る `context` に term-a の単語・`id`・`description` が含まれる
       - '`/shell/settings.yaml` に `fs.read` が呼ばれていない'
     test: test_normal_when_settings_env_preferred
   - name: 正常系（用語のやめた言い方）
-    summary: 用語の `avoid` のやめた言い方が当たったら、使用しない単語のセクションにやめた言い方と用語の語を追加し、exclude の語は照合しない
+    summary: 用語の `avoid` のやめた言い方がヒットしたら、使用しない単語のセクションにやめた言い方と用語の単語を追加し、exclude の単語は照合しない
     setup:
       - name: Mock
         description: 正常系と同じ
         notes: '-'
       - name: 用語の YAML
         description: '正常系の term-a に `avoid: [旧エー, OldA]`、term-b に `avoid: 旧ビー`（文字列）を加える'
-        notes: 用語の行は `metadata` を書かず、`avoid` も同じ名前の列から取る
+        notes: 用語の行は `metadata` を記載せず、`avoid` も同じ名前の列から取る
       - name: 設定ファイル
         description: '正常系に加え `exclude: [旧ビー]`'
-        notes: 一般的な単語のやめた言い方を照合から外す手段
+        notes: 一般的な単語のやめた言い方を照合から除外する手段
       - name: 入力
         description: 1 回目「旧エーと oldA と旧ビーと旧シーと term-b」、2 回目「旧エーとは」
-        notes: oldA は正規化で OldA に当たる
+        notes: oldA は正規化で OldA に該当する
       - name: 照合条件を持つ用語
         description: '正常系（照合条件を持つ文書）の term-c に `avoid: 旧シー` を加えて持つ'
-        notes: 1 回目の入力に React・tsx が無く、term-c の照合条件に当たらない
+        notes: 1 回目の入力に React・tsx が無く、term-c の照合条件に該当しない
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -923,15 +923,15 @@ flows:
         participant ST as $.state
 
         CC->>IF: 旧エーと oldA と旧ビーと旧シーと term-b
-        IF->>FS: 設定ファイル・project-index.yaml・用語の YAML を読む
+        IF->>FS: 設定ファイル・project-index.yaml・用語の YAML を参照する
         FS-->>IF: 文書（avoid を含む）
-        IF->>IF: 用語の avoid のやめた言い方ごとに使用しない単語の語を作る
-        IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・旧シー・term-b が当たる
-        IF->>IF: 旧シーを term-c の照合条件で評価して外す
+        IF->>IF: 用語の avoid のやめた言い方ごとに使用しない単語の単語を作る
+        IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・旧シー・term-b がヒットする
+        IF->>IF: 旧シーを term-c の照合条件で評価して除外する
         IF->>ST: 旧エー・OldA・term-b を記録に入れる
         IF-->>CC: context に用語と使用しない単語のセクション
         CC->>IF: 旧エーとは
-        IF->>IF: 旧エーが当たるが記録済み
+        IF->>IF: 旧エーがヒットするが記録済み
         IF-->>CC: 受け取ったまま
       ```
     expected:
@@ -942,12 +942,12 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
       - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
     test: test_normal_when_term_avoid
-lead: 入力の文を、読むリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を `context` に追加して渡す。
+lead: 入力の文を、参照するリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の引用の文脈を `context` に追加して返却する。
 idempotent: false
-side_effects: 追加した語を `$.state` のセッションの記録に入れる。読み込んだ設定と語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
-exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で書き、外れたら読み直して記録済みの語を除き直す（3 回まで）。上限まで外れたら、debug log に出して文脈を追加せずに渡す
+exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で記載し、一致しなかったら再読み込みして記録済みの単語を再除外する（3 回まで）。上限まで一致しなかったら、debug log に出して文脈を追加せずに返却する
 request:
   - name: text
     type: string
@@ -977,7 +977,7 @@ response:
     description: 受け取った `text` のまま
   - name: context
     type: readonly string[]
-    description: 受け取った `context` の末尾に、今回追加する文脈を 1 要素で追加したもの。追加する語が無いときは受け取ったまま
+    description: 受け取った `context` の末尾に、今回追加する文脈を 1 要素で追加したもの。追加する単語が無いときは受け取ったまま
     constraints: 追加する要素は `max_chars` 文字まで
 response_example: |
   ```markdown
@@ -986,7 +986,7 @@ response_example: |
   ## 用語
 
   - 単一ユースケース（id: term-single-usecase）
-    - description: 1 つの操作を始めから終わりまで書くシナリオの単位
+    - description: 1 つの操作を始めから終わりまで記載するシナリオの単位
     - related: tpl-scenario（シナリオのテンプレート）
 
   ## コマンド
@@ -996,67 +996,67 @@ response_example: |
     - cwd: /mnt/c/Users/shuhe/repo/ai-monitor
     - description: 依存を入れる
   ```
-response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 使用しない単語 の順）と語ごとの箇条書きで並べる。どのリポジトリ・どの行の語も、同じ `alias_type` なら 1 つのセクションに並べる。語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。`alias_type` が term の文書の `avoid` のやめた言い方は、やめた言い方ごとに `## 使用しない単語` の語にし、語はやめた言い方の値、`id` は用語の `id`、子は `replacement` に用語の語（`name` の値）を並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
+response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 使用しない単語 の順）と単語ごとの箇条書きで並べる。どのリポジトリ・どの行の単語も、同じ `alias_type` なら 1 つのセクションに並べる。単語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。`alias_type` が term の文書の `avoid` のやめた言い方は、やめた言い方ごとに `## 使用しない単語` の単語にし、単語はやめた言い方の値、`id` は用語の `id`、子は `replacement` に用語の単語（`name` の値）を並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
 exceptions:
   - name: なし（正常終了）
-    condition: 照合して文脈を追加したか、追加する語が無く受け取ったまま渡した
-  - name: なし（設定ファイルが読めない）
-    condition: '`ALIAS_INJECT_CONFIG` が指す設定ファイルが無いか、設定ファイルが読めない・書式が誤っている'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、何も追加せずに `next(e)` へ渡す。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
+    condition: 照合して文脈を追加したか、追加する単語が無く受け取ったまま返却した
+  - name: なし（設定ファイルを読み込めない）
+    condition: '`ALIAS_INJECT_CONFIG` が指す設定ファイルが無いか、設定ファイルを読み込めない・書式が誤っている'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で設定ファイルのパスと理由を debug log に出し、何も追加せずに `next(e)` へ引き渡す。`ALIAS_INJECT_CONFIG` が無く、既定のパスにも設定ファイルが無いときはログを出さない'
   - name: なし（YAML の書式の誤り）
-    condition: '行の `paths` に当たる YAML が読めない・書式が誤っているか、`records` を書いた行でその配列が無い'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパスと理由を debug log に出し、その YAML の文書だけを照合から外す'
-  - name: なし（project-index.yaml が読めない）
-    condition: '`repositories` の要素の `config` が指す `project-index.yaml` が無い・読めない・書式が誤っているか、`documents` が並びでない'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で `project-index.yaml` のパスと理由を debug log に出し、そのリポジトリの行だけを照合から外す'
+    condition: '行の `paths` に該当する YAML を読み込めない・書式が誤っているか、`records` を記載した行でその配列が無い'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパスと理由を debug log に出し、その YAML の文書だけを照合から除外する'
+  - name: なし（project-index.yaml を読み込めない）
+    condition: '`repositories` の要素の `config` が指す `project-index.yaml` が無い・読み込めない・書式が誤っているか、`documents` が並びでない'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で `project-index.yaml` のパスと理由を debug log に出し、そのリポジトリの行だけを照合から除外する'
   - name: なし（スキーマに合わない行）
-    condition: '設定ファイルの `aliases` の行か、`project-index.yaml` の `documents` のうち `alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧い構造の要素・9 つに無い `alias_type`・列名の文字列でない `metadata` の値・1 つ以上の文字列の並びでない `scope.cwd` を含む）か、`project-index.yaml` の `documents` の行が行の `alias_type` を持たず `metadata.alias_type` を持つか、同じ出所の中で先の行と `id` が重なる'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で出所（`project-index.yaml` か設定ファイルのパス）・行の `id`（無ければ並びの位置）・理由を debug log に出し、その行だけを照合から外す'
+    condition: '設定ファイルの `aliases` の行か、`project-index.yaml` の `documents` のうち `alias_type` を持つ行が `schemas/aliases.schema.yaml` に合わない（旧構造の要素・9 つに無い `alias_type`・列名の文字列でない `metadata` の値・1 つ以上の文字列の並びでない `scope.cwd` を含む）か、`project-index.yaml` の `documents` の行が行の `alias_type` を持たず `metadata.alias_type` を持つか、同じ出所の中で先の行と `id` が重なる'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で出所（`project-index.yaml` か設定ファイルのパス）・行の `id`（無ければ並びの位置）・理由を debug log に出し、その行だけを照合から除外する'
   - name: なし（必須の値が空の文書）
     condition: 文書ごとに解決した `metadata` の値で、`alias_type` の必須のキーの値が空（env は `url`・`port` の両方が空）
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`（空なら `records` の並びの位置）・空のキーを debug log に出し、その文書だけを照合から外す'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`（空なら `records` の並びの位置）・空のキーを debug log に出し、その文書だけを照合から除外する'
   - name: なし（照合条件が誤っている文書）
     condition: '文書の `inject_when` の値が制約『照合条件』に合わない（例: 知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`・文字列でない `values` の要素・`any`・`all` 以外の `match`・真偽値でない `case_sensitive`）'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から外す'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から除外する'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで
     decided_by: NFR-1#requirements[入力の送信で増える待ち時間]
-    notes: ファイルは更新時刻が変わったときだけ読み、語の一覧はモジュールの中に持つ
-  - item: 語の数の上限
-    constraint: '`max_items` 語まで（既定 20）。入力に最初に出た位置の早い語から順に選び、同じ位置なら長い語を先にする'
+    notes: ファイルは更新時刻が変わったときだけ参照し、単語の一覧はモジュールの中に持つ
+  - item: 単語の数の上限
+    constraint: '`max_items` 単語まで（既定 20）。入力に最初に出た位置の早い単語から順に選び、同じ位置なら長い単語を先にする'
     decided_by: CFG-1#settings[global.max_items]
   - item: 文字数の上限
-    constraint: 見出しを含む文脈全体で `max_chars` 文字まで（既定 4,000）。語を選ぶ順に足していき、足すと上限を超える語は飛ばして、後ろの語で収まるものを続けて足す
+    constraint: 見出しを含む文脈全体で `max_chars` 文字まで（既定 4,000）。単語を選ぶ順に追加していき、追加すると上限を超える単語は飛ばして、後ろの単語で収まるものを続けて追加する
     decided_by: CFG-1#settings[global.max_chars]
-    notes: 上限で外れた語は記録に入れず、次に出た入力で追加の対象になる
+    notes: 上限で除外された単語は記録に入れず、次に出た入力で追加の対象になる
   - item: 照合
-    constraint: 入力と文書の `name`・`aliases` の語と、`alias_type` が term の文書の `avoid` のやめた言い方を NFKC・英字の小文字・前後の空白の除去でそろえ、語が入力の部分文字列に含まれるかで判定する。正規表現は使わない。`exclude` の語は照合しない
-    notes: 1 つの文書の複数の語（`name` と `aliases`）が当たっても、その文書は 1 回だけ追加する
+    constraint: 入力と文書の `name`・`aliases` の単語と、`alias_type` が term の文書の `avoid` のやめた言い方を NFKC・英字の小文字・前後の空白の除去でそろえ、単語が入力の部分文字列に含まれるかで判定する。正規表現は使用しない。`exclude` の単語は照合しない
+    notes: 1 つの文書の複数の単語（`name` と `aliases`）がヒットしても、その文書は 1 回だけ追加する
   - item: 記録の単位
     constraint: セッション ID（`$.session.id()`）ごとに、出所（`project-index.yaml` の絶対パスか設定ファイルの絶対パス）と行の `id` と文書の `id` の組で記録する。用語のやめた言い方は、その組にやめた言い方の値を加えた組で、用語とは別に記録する
-    notes: 同じ文書をエイリアスで入力しても二度目は追加しない。別のリポジトリが同じ行の `id` と文書の `id` を使っても、それぞれを追加する
-  - item: 読み直し
-    constraint: 入力の送信ごとに、照合の前に設定ファイル・`project-index.yaml`・`paths` に当たる YAML の `mtimeMs` とフォルダの一覧を確かめ、変わったものだけ読み直す。同じ `project-index.yaml` を `global` と `projects` の両方が指すときは 1 回だけ読む
+    notes: 同じ文書をエイリアスで入力しても二度目は追加しない。別のリポジトリが同じ行の `id` と文書の `id` を使用しても、それぞれを追加する
+  - item: 再読み込みし
+    constraint: 入力の送信ごとに、照合の前に設定ファイル・`project-index.yaml`・`paths` に該当する YAML の `mtimeMs` とフォルダの一覧を確認し、変わったものだけ再読み込みする。同じ `project-index.yaml` を `global` と `projects` の両方が指すときは 1 回だけ参照する
   - item: 出所
-    constraint: '`origins` を書かないときはすべての出所の入力に追加する。書いたときは、`origins` に対応づかない出所の入力には追加しない'
+    constraint: '`origins` を記載しないときはすべての出所の入力に追加する。記載したときは、`origins` に対応づかない出所の入力には追加しない'
     decided_by: CFG-1#settings[global.origins]
   - item: 検証
-    constraint: '設定ファイルの `aliases` の行と、読んだ `project-index.yaml` の `documents` のうち `alias_type` を持つ行を、行ごとに `schemas/aliases.schema.yaml` で検証する。行と `metadata` の他のキーは弾かない。`enabled: false` の `repositories` の要素と行は読まない。`id` の重なりは出所ごとに確かめ、設定ファイルは `global` と当たった `projects` を重ねた並びで確かめる。種類ごとの必須のキーは、文書ごとに解決した値で確かめる'
-    notes: '`project-index.yaml` は `documents` だけを読み、トップレベルの `aliases` は読まない。`documents` を持たない `project-index.yaml` は行 0 件として扱い、`alias_type` も `metadata.alias_type` も持たない行は検証せずに飛ばす。どちらもログを出さない'
+    constraint: '設定ファイルの `aliases` の行と、参照した `project-index.yaml` の `documents` のうち `alias_type` を持つ行を、行ごとに `schemas/aliases.schema.yaml` で検証する。行と `metadata` の他のキーは弾かない。`enabled: false` の `repositories` の要素と行は参照しない。`id` の重なりは出所ごとに確認し、設定ファイルは `global` と該当した `projects` を重ねた並びで確認する。種類ごとの必須のキーは、文書ごとに解決した値で確認する'
+    notes: '`project-index.yaml` は `documents` だけを参照し、トップレベルの `aliases` は参照しない。`documents` を持たない `project-index.yaml` は行 0 件として扱い、`alias_type` も `metadata.alias_type` も持たない行は検証せずに飛ばす。どちらもログを出さない'
   - item: 文書の取り出し
-    constraint: '`records` を書かない行は `paths` に当たった各ファイルを 1 件の文書にし、書いた行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。書かないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使う（ファイル名は拡張子を除く）'
+    constraint: '`records` を記載しない行は `paths` に該当した各ファイルを 1 件の文書にし、記載した行はファイルのその配列の各要素を 1 件の文書にする。`metadata` の値は文書の列名で、入れ子の列は `.` でつなぐ（`meta.summary`）。記載しないキーは同じ名前の列から取る。`name` が空なら、ファイルの文書はファイル名、`records` の要素は行の `body_file` が指す列の値のファイル名、それも空なら `id` を使用する（ファイル名は拡張子を除く）'
     notes: '-'
   - item: 照合条件
-    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前・エイリアス・やめた言い方が当たった文書のうち照合条件に当たる文書だけを残す。用語のやめた言い方は、その用語の照合条件で評価する。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化に通して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
-    notes: 照合条件の評価は、照合で当たった文書だけに行う。照合条件で外れた語は記録に入れず、次に出た入力で追加の対象になる
+    constraint: '文書の `inject_when` の値（`metadata.inject_when` で列を指せる）を照合条件にし、名前・エイリアス・やめた言い方がヒットした文書のうち照合条件に該当する文書だけを残す。用語のやめた言い方は、その用語の照合条件で評価する。`inject_when` が無い・`null` の文書は照合条件を持たない。照合条件は、条件（`field`・`op`・`values`・`match`・`case_sensitive` を持つマッピング）か、束（`and`・`or` は条件か束の 1 つ以上の並び、`not` は条件か束の 1 つ。1 つの束はこの 3 つのキーのどれか 1 つだけを持つ）。`field` は照合した本文を指す `text` だけ。`op` は `contains`（`values` のどれか（`match: any`。既定）か全て（`match: all`）を本文が含む）と、その否定の `not_contains`。`case_sensitive` が `false`（既定）なら、本文と `values` を照合の正規化を適用して比べる。束の入れ子は最上位の束を 1 レイヤーとして 3 レイヤーまで'
+    notes: 照合条件の評価は、照合で該当した文書だけに行う。照合条件で除外された単語は記録に入れず、次に出た入力で追加の対象になる
   - item: 作業場所の絞り
-    constraint: エイリアスの元の行（設定ファイルの `aliases` の行と `project-index.yaml` の `documents` の行）が `scope.cwd` に glob を 1 つ以上並べたとき、セッションを起動したプロジェクトの直下（`$.session.root()`）がどれかの glob に当たる場合だけ、その行を照合に使用する。`scope` を記載しない行は全ての作業場所で使用する。glob は先頭の `~` をホームに展開し、相対パスは `paths` と同じ基準で解決する。`/**` で終わる glob はそのフォルダと配下のフォルダに当たり、`/**` を付けないパスはそのフォルダだけに当たる。`*` はフォルダの区切りを除く任意の文字列に当たる
+    constraint: エイリアスの元の行（設定ファイルの `aliases` の行と `project-index.yaml` の `documents` の行）が `scope.cwd` に glob を 1 つ以上並べたとき、セッションを起動したプロジェクトの直下（`$.session.root()`）がどれかの glob に該当する場合だけ、その行を照合に使用する。`scope` を記載しない行は全ての作業場所で使用する。glob は先頭の `~` をホームに展開し、相対パスは `paths` と同じ基準で解決する。`/**` で終わる glob はそのフォルダと配下のフォルダに該当し、`/**` を付けないパスはそのフォルダだけに該当する。`*` はフォルダの区切りを除く任意の文字列に該当する
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]
-    notes: 書式は dev-docs の `sources[].scope` と同じ。worktree のセッションは worktree のパスで判定する。当たらない行の YAML は読み込まない
+    notes: 書式は dev-docs の `sources[].scope` と同じ。worktree のセッションは worktree のパスで判定する。該当しない行の YAML は読み込まない
   - item: 設定ファイルのパス
-    constraint: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、`${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` の順に、最初に値があるものを使う。`XDG_CONFIG_HOME` が空のときは `~/.config`
-    notes: '`ALIAS_INJECT_CONFIG` が指すファイルが読めないときも既定のパスへ切り替えない。入力の送信ごとに決め直すので、settings と既定のパスの変更は次の入力から有効になる'
+    constraint: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、`${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` の順に、最初に値があるものを使用する。`XDG_CONFIG_HOME` が空のときは `~/.config`
+    notes: '`ALIAS_INJECT_CONFIG` が指すファイルを読み込めないときも既定のパスへ切り替えない。入力の送信ごとに再決定するので、settings と既定のパスの変更は次の入力から有効になる'
 refs:
   - SC-3#
   - SC-6#
