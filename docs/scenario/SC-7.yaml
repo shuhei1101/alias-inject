@@ -50,7 +50,7 @@ scenarios:
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を取得し、子プロセスで値を取得する
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を検出し、子プロセスで値を取得する
         P->>CC: 本文はそのままに、値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
@@ -158,7 +158,7 @@ scenarios:
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
         P->>P: 照合で term-a がヒットする
-        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を取得し、子プロセスで値を取得する
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を検出し、子プロセスで値を取得する
         P->>CC: 本文はそのままに、term-a の文脈と値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
