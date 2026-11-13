@@ -88,7 +88,7 @@ async function loadRepositories(
   return aliases
 }
 
-// 設定ファイルを参照し、実効の設定を組み立てる。設定ファイルのパスが無いとき、読み込めない設定のときは null
+// 設定ファイルを読み込み、実効の設定を組み立てる。設定ファイルのパスが無いとき、読み込めない設定のときは null
 async function loadSettings(
   $: EngineInterface,
 ): Promise<{ settings: Settings; schema: Record<string, unknown>; home: string; projectRoot: string } | null> {

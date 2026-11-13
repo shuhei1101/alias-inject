@@ -85,7 +85,7 @@ function walkKeywords(root: Json, schema: unknown, pointer: string): void {
   }
 }
 
-/** スキーマが検証するキーワードとスキップすキーワードだけを使用し、`$ref` が `$defs` の要素を指すことを確認する */
+/** スキーマが検証するキーワードとスキップするキーワードだけを使用し、`$ref` が `$defs` の要素を指すことを確認する */
 export function checkKeywords(root: Json): void {
   walkKeywords(root, root, 'schemas/aliases.schema.yaml')
 }

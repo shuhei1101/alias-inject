@@ -158,7 +158,7 @@ export function filterByScope({ aliases, cwd }: { aliases: readonly ResolvedAlia
   )
 }
 
-/** 文書から列の名前が指す値を取る。`.` を含む列の名前は入れ子の列をたどり、途中でマッピングでない値に該当すれば undefined */
+/** 文書から列の名前が指す値を取る。`.` を含む列の名前は入れ子の列をたどり、途中でマッピングでない値に到達すれば undefined */
 export function getColumn(document: Record<string, unknown>, column: string): unknown {
   let value: unknown = document
   for (const part of column.split('.')) value = isRecord(value) ? value[part] : undefined

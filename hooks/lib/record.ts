@@ -27,7 +27,7 @@ export async function readRecorded($: EngineInterface, recordId: string): Promis
   return { keys, version }
 }
 
-/** 記録済みのキーから select で単語を選び、選んだ単語のキーを会話の記録に追加する。選ぶ単語が無ければ記載せずに null を返却する */
+/** 記録済みのキーから select で単語を選び、選んだ単語のキーを会話の記録に追加する。選ぶ単語が無ければ書き込まずに null を返却する */
 export async function addRecorded(
   $: EngineInterface,
   { recordId, select }: { recordId: string; select: (recorded: ReadonlySet<string>) => Selection | null },

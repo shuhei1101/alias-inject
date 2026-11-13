@@ -182,7 +182,7 @@ export async function expandFiles($: EngineInterface, { pattern }: { pattern: st
   return [...files.values()].sort((a, b) => (a.path < b.path ? -1 : 1))
 }
 
-/** 更新時刻が前回と同じファイルは参照せずに前回の値を返却し、変わったときだけ参照して変換する */
+/** 更新時刻が前回と同じファイルは読み込まずに前回の値を返却し、変わったときだけ読み込んで変換する */
 export async function readIfChanged<T>(
   $: EngineInterface,
   { file, convert, kind }: { file: FileStamp; convert: (text: string) => T; kind: ReadKind },

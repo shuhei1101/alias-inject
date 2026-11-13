@@ -153,7 +153,7 @@ function baseName(path: string): string {
   return dot <= 0 ? file : file.slice(0, dot)
 }
 
-// 用語のやめた言い方ごとに、使用しない単語の単語を作る。空・重なり・用語の照合する単語と同じものは作らない
+// 用語のやめた言い方ごとに、使用しない単語のセクションの項目を作る。空・重なり・用語の照合する単語と同じものは作らない
 function avoidEntries(term: Entry, value: unknown): Entry[] {
   const seen = new Set(term.keys)
   const entries: Entry[] = []
@@ -206,7 +206,7 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
     kept.push({ itemIndex, values, path: document.path, bodyFile, condition })
   }
 
-  // 関連する文書の名前を参照するため、この行の残った文書の ID から単語を参照する表を作る
+  // 関連する文書の名前を取得するため、この行の残った文書の ID から単語を取得する表を作る
   const wordOfId = new Map<string, string>()
   for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
 
