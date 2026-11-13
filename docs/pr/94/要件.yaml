@@ -1,0 +1,35 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: 端末のセットアップのスキルの文言の AI slop の単語を置き換える（スキルの手順と確認する内容は変えない）
+    depends_on: []
+docs:
+  - page: README.md
+    new: false
+    change: AI slop の単語を対応表の OK の単語へ置き換え、用語「語」を「単語」へ置き換える
+    status: todo
+  - page: CLAUDE.md
+    new: false
+    change: AI slop の単語を対応表の OK の単語へ置き換え、用語「語」を「単語」へ置き換える
+    status: todo
+  - page: skills/global-setup/SKILL.md
+    new: false
+    change: AI slop の単語を対応表の OK の単語へ置き換え、用語「語」を「単語」へ置き換える（手順と確認する内容は変えない）
+    status: todo
+scope_out:
+  - item: テストの期待値のうち hooks/ が出力する警告・エラーの文字列（`YAML を読めません` 等）
+    reason: コードの出力と一致させる値で、置き換えるとテストが失敗する。出力の文言の変更と合わせて修正する
+    plan: '#91'
+  - item: テストの入力の値のパス（`docs/使い方/セットアップ.md` 等）
+    reason: フォルダ名の値で、設計書（IF-3 等）の値と対応している（#89 と同じ扱い）
+    plan: none
+  - item: CLAUDE.md のセクション名「使い方」
+    reason: 公開ドキュメントのセクション名で、#89 でナビの区分と合わせて維持すると決めた
+    plan: none
+  - item: schemas/ の設計書のスキーマ（aliases.schema.yaml 以外）の文言
+    reason: AI Monitor から取り込んだ配布物で、次の配布物への追従で上書きされる。AI Monitor 側で修正する論点
+    plan: none
+  - item: .claude-plugin/plugin.json・settings.sample.yaml・rules.yaml の AI slop の単語
+    reason: 起点 Issue の対象の外で、この作業 PR がマージされなくても同じ内容で成り立つ
+    plan: '#95'
