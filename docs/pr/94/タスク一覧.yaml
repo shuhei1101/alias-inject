@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T06:11:02.007353+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: ルートの README.md・CLAUDE.md と skills/global-setup/SKILL.md の置き換え
+    updated_by: planner
+    updated_at: '2026-11-13T06:20:28.496289+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: テストを追加せず、既存のテストのコメント・テスト名・入力の値の置き換えは実装の工程で行う（Red になるテストが無い）
