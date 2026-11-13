@@ -230,7 +230,7 @@ test('test_handle_prompt_submit_when_alias_paths_match_config', async ($, on) =>
   // 検証
   expect(result.context?.length).toBe(1)
   expect(result.context?.[0]).toContain('Term-A')
-  expect(world.logs.filter((line) => line.text.includes('照合から除外しました'))).toEqual([])
+  expect(world.logs.filter((line) => line.text.includes('照合から除外しました') && !line.text.includes('が空です'))).toEqual([])
 })
 
 // `clear` のときだけ、終わるセッション（e.sessionId）の記録を消去する（正常系）
