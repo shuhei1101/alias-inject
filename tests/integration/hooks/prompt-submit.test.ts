@@ -290,7 +290,7 @@ test('test_normal_when_added_types', async ($, on) => {
 
   // 検証
   const context = result.context?.[0] ?? ''
-  const headings = ['## 用語', '## スキル', '## ツール', '## パス', '## 環境', '## 避ける語']
+  const headings = ['## 用語', '## スキル', '## ツール', '## パス', '## 環境', '## 使用しない単語']
   const positions = headings.map((heading) => context.indexOf(heading))
   expect(positions.every((position) => position >= 0)).toBe(true)
   expect(positions).toEqual([...positions].sort((a, b) => a - b))
@@ -298,7 +298,7 @@ test('test_normal_when_added_types', async ($, on) => {
   expect(context).toContain('- tool-a（id: tool-a）\n  - tool: `search_design_docs`')
   expect(context).toContain('- path-a（id: path-a）\n  - path: `~/.config/ai-monitor/settings.yaml`')
   expect(context).toContain('- env-a（id: env-a）\n  - url: http://127.0.0.1:8000\n  - port: 8000\n  - description: 開発サーバー')
-  expect(context).toContain('- env-b（id: env-b）\n  - port: 5432\n\n## 避ける語')
+  expect(context).toContain('- env-b（id: env-b）\n  - port: 5432\n\n## 使用しない単語')
   expect(context).toContain('- avoid-a（id: avoid-a）\n  - replacement: term-a')
   expect(world.logs).toEqual([])
 })
@@ -535,7 +535,7 @@ test('test_normal_when_inject_condition', async ($, on) => {
   expect(world.logs).toEqual([])
 })
 
-// 用語の avoid のやめた言い方を避ける語のセクションに追加し、exclude の語と照合条件に当たらない用語のやめた言い方は追加しない（正常系）
+// 用語の avoid のやめた言い方を使用しない単語のセクションに追加し、exclude の語と照合条件に当たらない用語のやめた言い方は追加しない（正常系）
 test('test_normal_when_term_avoid', async ($, on) => {
   // 準備
   const fs = makeFs(makeConfig({ globalExtra: ['exclude: [旧ビー]'] }))
@@ -551,7 +551,7 @@ test('test_normal_when_term_avoid', async ($, on) => {
 
   // 検証
   const context = first.context?.[0] ?? ''
-  const [terms = '', avoids = ''] = context.split('## 避ける語')
+  const [terms = '', avoids = ''] = context.split('## 使用しない単語')
   expect(terms).toContain('## 用語')
   expect(terms).toContain('term-b（id: term-b）')
   expect(terms).not.toContain('Term-A')
