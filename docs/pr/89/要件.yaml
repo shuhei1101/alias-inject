@@ -161,3 +161,6 @@ scope_out:
   - item: hooks/ が出力する警告・エラーの文字列の AI slop の単語（生成物 hooks/lib/aliases-schema.ts を含む）
     reason: コードの出力を変え、利用者の目に触れる文言の変更になるため、コメントだけを対象にするこの作業から分ける。aliases-schema.ts は schemas/ の修正（#90）で再生成する
     plan: '#91'
+  - item: 設計書のバッククォートの中のパスの値（IF-3 の `docs/使い方/セットアップ.md` 等）
+    reason: フォルダ名の実在の値で、置き換えると対応するテストの値と一致しなくなる
+    plan: none
