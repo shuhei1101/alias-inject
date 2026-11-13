@@ -5,9 +5,9 @@ import type { Hit } from './match'
 export type ConditionTerm = {
   /** `not_contains` は同じ `values`・`match` の `contains` の否定 */
   op: 'contains' | 'not_contains'
-  /** 比べる値。`caseSensitive` が false なら照合の正規化に通したもの */
+  /** 比べる値。`caseSensitive` が false なら照合の正規化を適用したもの */
   values: string[]
-  /** `values` のどれか（any）か全て（all）を本文が含めば当たる */
+  /** `values` のどれか（any）か全て（all）を本文が含めば該当する */
   match: 'any' | 'all'
   /** true なら本文と値を正規化せずに比べる */
   caseSensitive: boolean
@@ -85,7 +85,7 @@ function parseNode(value: unknown, path: string, depth: number): ParseResult {
   return parseTerm(value, path)
 }
 
-/** `inject_when` の値を検査し、照合条件にするか、誤りの箇所と理由を返す */
+/** `inject_when` の値を検査し、照合条件にするか、誤りの箇所と理由を返却する */
 export function parseCondition(value: unknown): ParseResult {
   return parseNode(value, 'inject_when', 0)
 }
@@ -102,7 +102,7 @@ export function evaluateCondition(condition: Condition, text: string): boolean {
   return condition.op === 'contains' ? matched : !matched
 }
 
-/** 当たった語のうち、照合条件に当たらない語を外す */
+/** 該当した単語のうち、照合条件に該当しない単語を除外する */
 export function filterByCondition(hits: Hit[], text: string): Hit[] {
   return hits.filter(({ entry }) => entry.condition === undefined || evaluateCondition(entry.condition, text))
 }

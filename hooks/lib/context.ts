@@ -2,7 +2,7 @@ import type { AliasType } from './alias'
 import type { Entry } from './entry'
 import type { Hit } from './match'
 
-/** 追加する文脈と、記録に入れる語のキー */
+/** 追加する文脈と、記録に入れる単語のキー */
 export type Selection = {
   text: string
   keys: string[]
@@ -21,13 +21,13 @@ export const SECTION_HEADINGS: Record<AliasType, string> = {
   avoid: '使用しない単語',
 }
 
-/** 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の語は、やめた言い方も）の組を 1 つの文字列にする */
+/** 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の単語は、やめた言い方も）の組を 1 つの文字列にする */
 export function entryKey(entry: Entry): string {
   const key = `${entry.origin}\u0000${entry.aliasId}\u0000${entry.id}`
   return entry.avoid === undefined ? key : `${key}\u0000${entry.avoid}`
 }
 
-/** 選んだ語を、見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする */
+/** 選んだ単語を、見出し・引用の種類ごとのセクション・単語ごとの箇条書きの Markdown にする */
 export function renderContext(heading: string, entries: Entry[]): string {
   const lines = [`# ${heading}`]
   // セクションの順に種類で分ける。セクションの中は選んだ順で、出所や aliases の要素が違っても同じセクションに並べる
@@ -43,7 +43,7 @@ export function renderContext(heading: string, entries: Entry[]): string {
   return lines.join('\n')
 }
 
-/** 当たった語から記録済みの語を除き、語の数と文字数の上限に収まる語を選んで文脈にする */
+/** 該当した単語から記録済みの単語を除き、単語の数と文字数の上限に収まる単語を選んで文脈にする */
 export function selectEntries(
   hits: Hit[],
   recorded: ReadonlySet<string>,
@@ -57,7 +57,7 @@ export function selectEntries(
     const key = entryKey(hit.entry)
     if (recorded.has(key) || keys.has(key)) continue
 
-    // 加えると文字数（コードポイントの数）が上限を超える語は、加えずに次の語へ進む
+    // 加えると文字数（コードポイントの数）が上限を超える単語は、加えずに次の単語へ進む
     const candidate = renderContext(limits.heading, [...selected, hit.entry])
     if ([...candidate].length > limits.maxChars) continue
 

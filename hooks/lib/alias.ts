@@ -6,7 +6,7 @@ const ALIAS_TYPES = ['term', 'doc', 'command', 'url', 'skill', 'tool', 'path', '
 /** 行の `alias_type` の値。文脈に並べる列とセクションが種類ごとに決まる */
 export type AliasType = (typeof ALIAS_TYPES)[number]
 
-/** `metadata` に書けるエイリアスのキー */
+/** `metadata` に記載できるエイリアスのキー */
 export const ALIAS_KEYS = [
   'id',
   'name',
@@ -27,7 +27,7 @@ export const ALIAS_KEYS = [
 
 export type AliasKey = (typeof ALIAS_KEYS)[number]
 
-/** 種類ごとに、文書で値が空であってはならないキー。env の `url`・`port` の 1 つ以上は含めず、`missingKeys` が別に確かめる */
+/** 種類ごとに、文書で値が空であってはならないキー。env の `url`・`port` の 1 つ以上は含めず、`missingKeys` が別に確認する */
 export const REQUIRED_KEYS: Record<AliasType, readonly AliasKey[]> = {
   term: ['id', 'name', 'description'],
   doc: ['id', 'name', 'description'],
@@ -40,32 +40,32 @@ export const REQUIRED_KEYS: Record<AliasType, readonly AliasKey[]> = {
   avoid: ['id', 'name', 'replacement'],
 }
 
-/** 行の `metadata` のうち、エイリアスのキーだけを持つもの。各キーの値は値を取る文書の列の名前（入れ子の列は `.` でつなぐ）。書かないキーは同じ名前の列から取る */
+/** 行の `metadata` のうち、エイリアスのキーだけを持つもの。各キーの値は値を取る文書の列の名前（入れ子の列は `.` でつなぐ）。記載しないキーは同じ名前の列から取る */
 export type AliasMetadata = Partial<Record<AliasKey, string>>
 
 /** スキーマの検証を通った有効なエイリアスの元の行 */
 export type AliasConfig = {
   id: string
-  /** 読む YAML のパスか glob。書いたまま（解決は読む側が行う） */
+  /** 参照する YAML のパスか glob。記載したまま（解決は参照する側が行う） */
   paths: string[]
   /** 行の引用の種類 */
   alias_type: AliasType
-  /** 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書 */
+  /** 文書の並びを持つ配列のキー。記載しないときは各ファイルが 1 件の文書 */
   records?: string | undefined
-  /** `records` の要素の本文のファイルのパスを持つ列の名前。`name` が空の要素の名前に使う */
+  /** `records` の要素の本文のファイルのパスを持つ列の名前。`name` が空の要素の名前に使用する */
   body_file?: string | undefined
   metadata: AliasMetadata
-  /** 行を照合に使用する作業場所の glob。書いたまま（解決は読む側が行う）。書かないときは undefined */
+  /** 行を照合に使用する作業場所の glob。記載したまま（解決は参照する側が行う）。記載しないときは undefined */
   scope?: { cwd: string[] } | undefined
 }
 
 /** 出所を持ち、`paths` を絶対パスにしたエイリアスの元の行 */
 export type ResolvedAlias = AliasConfig & {
-  /** 行を書いた `project-index.yaml` か設定ファイルの絶対パス */
+  /** 行を記載した `project-index.yaml` か設定ファイルの絶対パス */
   origin: string
   /** `paths` を解決した絶対パスの glob */
   patterns: string[]
-  /** `scope.cwd` を `paths` と同じ基準で解決した絶対パスの glob。`scope` を書かない行は undefined */
+  /** `scope.cwd` を `paths` と同じ基準で解決した絶対パスの glob。`scope` を記載しない行は undefined */
   cwdPatterns?: string[] | undefined
 }
 
@@ -79,7 +79,7 @@ function hasValue(value: unknown): boolean {
   return typeof value === 'number' || typeof value === 'boolean'
 }
 
-/** 行の並びの各行をスキーマで検証し、有効な行を取り出す。合わない行は外して理由を残す */
+/** 行の並びの各行をスキーマで検証し、有効な行を取り出す。合わない行は除外して理由を残す */
 export function parseAliases({
   items,
   schema,
@@ -89,7 +89,7 @@ export function parseAliases({
   items: readonly unknown[]
   schema: Record<string, unknown>
   path: string
-  /** true のとき、`alias_type` を持たない行を検証せずに飛ばし、`alias_type` を持たず `metadata.alias_type` を持つ行を旧い構造として外す */
+  /** true のとき、`alias_type` を持たない行を検証せずに飛ばし、`alias_type` を持たず `metadata.alias_type` を持つ行を旧構造として除外する */
   aliasTypeOnly?: boolean
 }): { aliases: AliasConfig[]; warnings: string[] } {
   const aliases: AliasConfig[] = []
@@ -99,7 +99,7 @@ export function parseAliases({
     const itemPath = `${path}[${index}]`
     const id = isRecord(item) && typeof item.id === 'string' && item.id !== '' ? `（id: ${item.id}）` : ''
     if (aliasTypeOnly && !(isRecord(item) && 'alias_type' in item)) {
-      // `metadata.alias_type` を持つ行は旧い構造のため、移し替えが要ることが分かる理由を残す。それ以外はエイリアスの行ではない
+      // `metadata.alias_type` を持つ行は旧構造のため、移し替えが要ることが分かる理由を残す。それ以外はエイリアスの行ではない
       if (isRecord(item) && isRecord(item.metadata) && 'alias_type' in item.metadata) {
         warnings.push(`${itemPath}${id}: 旧い構造の行です。metadata.alias_type を行の alias_type へ移してください`)
       }
@@ -114,7 +114,7 @@ export function parseAliases({
       continue
     }
 
-    // スキーマの検証を通っているため、必須のキーは型どおりに揃っている
+    // スキーマの検証を通っているため、必須のキーは型どおりの値を持つ
     const valid = item as Record<string, unknown>
     const written = (valid.metadata ?? {}) as Record<string, unknown>
     const metadata: Record<string, unknown> = {}
@@ -134,7 +134,7 @@ export function parseAliases({
   return { aliases, warnings }
 }
 
-/** 同じ出所の行のうち、先の行と `id` が重なる行を外す */
+/** 同じ出所の行のうち、先の行と `id` が重なる行を除外する */
 export function dedupeAliases<T extends { id: string }>(aliases: readonly T[]): { aliases: T[]; warnings: string[] } {
   const kept: T[] = []
   const warnings: string[] = []
@@ -151,28 +151,28 @@ export function dedupeAliases<T extends { id: string }>(aliases: readonly T[]): 
   return { aliases: kept, warnings }
 }
 
-/** 読む行のうち、作業場所が `scope.cwd` のどの glob にも当たらない行を外す */
+/** 参照する行のうち、作業場所が `scope.cwd` のどの glob にも該当しない行を除外する */
 export function filterByScope({ aliases, cwd }: { aliases: readonly ResolvedAlias[]; cwd: string }): ResolvedAlias[] {
   return aliases.filter(
     (alias) => alias.cwdPatterns === undefined || alias.cwdPatterns.some((pattern) => matchPathGlob({ pattern, path: cwd })),
   )
 }
 
-/** 文書から列の名前が指す値を取る。`.` を含む列の名前は入れ子の列をたどり、途中でマッピングでない値に当たれば undefined */
+/** 文書から列の名前が指す値を取る。`.` を含む列の名前は入れ子の列をたどり、途中でマッピングでない値に該当すれば undefined */
 export function getColumn(document: Record<string, unknown>, column: string): unknown {
   let value: unknown = document
   for (const part of column.split('.')) value = isRecord(value) ? value[part] : undefined
   return value
 }
 
-/** 1 件の文書について、エイリアスのキーごとの値を行の `metadata` が指す列から取る。書かないキーは同じ名前の列から取る */
+/** 1 件の文書について、エイリアスのキーごとの値を行の `metadata` が指す列から取る。記載しないキーは同じ名前の列から取る */
 export function resolveMetadata(metadata: AliasMetadata, document: Record<string, unknown>): Record<AliasKey, unknown> {
   const values = {} as Record<AliasKey, unknown>
   for (const key of ALIAS_KEYS) values[key] = getColumn(document, metadata[key] ?? key)
   return values
 }
 
-/** 解決した値のうち、種類の必須のキーで値が空のものを返す */
+/** 解決した値のうち、種類の必須のキーで値が空のものを返却する */
 export function missingKeys(type: AliasType, values: Record<AliasKey, unknown>): string[] {
   const missing: string[] = REQUIRED_KEYS[type].filter((key) => !hasValue(values[key]))
   // env は url・port の 1 つ以上を求める

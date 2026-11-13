@@ -9,18 +9,18 @@ const DEFAULT_HEADING = 'この発言に出る用語'
 
 const ORIGIN_KEYS = ['user', 'plugin'] as const
 
-/** 設定の `origins` に書ける値 */
+/** 設定の `origins` に記載できる値 */
 export type OriginKey = (typeof ORIGIN_KEYS)[number]
 
 /** 検証を通った有効な `repositories` の 1 要素 */
 export type RepositoryConfig = {
-  /** `project-index.yaml` のパス。設定ファイルに書いたまま（解決は実効の設定の組み立てで行う） */
+  /** `project-index.yaml` のパス。設定ファイルに記載したまま（解決は実効の設定の組み立てで行う） */
   config: string
   /** 相対パスの基準。`global` の要素は設定ファイルのフォルダ、`projects` の要素は起動したプロジェクトの直下 */
   baseDir: 'config' | 'project'
 }
 
-/** 検証したプロジェクトの設定。書いたキーだけが値を持つ */
+/** 検証したプロジェクトの設定。記載したキーだけが値を持つ */
 export type ProjectConfig = {
   match: string
   enabled: boolean | undefined
@@ -35,7 +35,7 @@ export type ProjectConfig = {
   excludeTools: string[]
 }
 
-/** 検証して既定値を当てた設定ファイルの内容 */
+/** 検証して既定値を適用した設定ファイルの内容 */
 export type Config = {
   enabled: boolean
   repositories: RepositoryConfig[]
@@ -48,25 +48,25 @@ export type Config = {
   /** 結果を照合しないツールの名前 */
   excludeTools: string[]
   projects: ProjectConfig[]
-  /** 外した要素と無視した値の理由。呼び出し元が debug log に出す */
+  /** 除外した要素と無視した値の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
-/** 起動したプロジェクトに当たる projects を重ね、パスを絶対パスにした設定 */
+/** 起動したプロジェクトに該当する projects を重ね、パスを絶対パスにした設定 */
 export type Settings = {
   enabled: boolean
-  /** 読む `project-index.yaml` の絶対パス。global の後ろに当たった projects を並べ、同じパスは先の 1 つだけを残す */
+  /** 参照する `project-index.yaml` の絶対パス。global の後ろに該当した projects を並べ、同じパスは先の 1 つだけを残す */
   repositories: string[]
-  /** 設定ファイルの `aliases` の要素。global の後ろに当たった projects を並べ、先の要素と `id` が重なる要素を外したもの */
+  /** 設定ファイルの `aliases` の要素。global の後ろに該当した projects を並べ、先の要素と `id` が重なる要素を除外したもの */
   aliases: ResolvedAlias[]
   origins: OriginKey[] | null
   maxItems: number
   maxChars: number
   exclude: string[]
   heading: string
-  /** 結果を照合しないツールの名前。global の後ろに当たった projects を並べたもの */
+  /** 結果を照合しないツールの名前。global の後ろに該当した projects を並べたもの */
   excludeTools: string[]
-  /** `id` が重なって外した `aliases` の要素の理由。呼び出し元が debug log に出す */
+  /** `id` が重なって除外した `aliases` の要素の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
@@ -90,7 +90,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== ''
 }
 
-/** ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、既定のパスの順に設定ファイルのパスを決め、`~` を展開した絶対パスを返す */
+/** ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、既定のパスの順に設定ファイルのパスを決め、`~` を展開した絶対パスを返却する */
 export async function readConfigPath($: EngineInterface): Promise<string | null> {
   const settings: unknown = await $.settings.read({ source: 'user' })
   const env = isRecord(settings) ? settings.env : undefined
@@ -112,7 +112,7 @@ export async function readConfigPath($: EngineInterface): Promise<string | null>
   return defaultPath
 }
 
-/** `repositories` の 1 要素を検証し、有効なら RepositoryConfig を返す。`enabled: false` のときは null、外すときは理由を返す */
+/** `repositories` の 1 要素を検証し、有効なら RepositoryConfig を返却する。`enabled: false` のときは null、除外するときは理由を返却する */
 export function parseRepositoryConfig(value: unknown, baseDir: 'config' | 'project'): RepositoryConfig | null | string {
   if (!isRecord(value)) return 'repositories の要素がマッピングではありません'
   if (value.enabled !== undefined && typeof value.enabled !== 'boolean') return 'enabled が真偽値ではありません'
@@ -121,7 +121,7 @@ export function parseRepositoryConfig(value: unknown, baseDir: 'config' | 'proje
   return { config: value.config, baseDir }
 }
 
-// `repositories` の並びを検証する。外した要素と並びでない値の理由は warnings に入れる
+// `repositories` の並びを検証する。除外した要素と並びでない値の理由は warnings に入れる
 function parseRepositories(
   value: unknown,
   baseDir: 'config' | 'project',
@@ -142,7 +142,7 @@ function parseRepositories(
   return repositories
 }
 
-// `aliases` の並びをスキーマで検証する。外した要素と並びでない値の理由は warnings に入れる
+// `aliases` の並びをスキーマで検証する。除外した要素と並びでない値の理由は warnings に入れる
 function parseAliasList(value: unknown, schema: Record<string, unknown>, prefix: string, warnings: string[]): AliasConfig[] {
   if (value === undefined) return []
   if (!Array.isArray(value)) {
@@ -154,7 +154,7 @@ function parseAliasList(value: unknown, schema: Record<string, unknown>, prefix:
   return parsed.aliases
 }
 
-// `global` と `projects` の 1 要素に共通のキーを検証する。書かないキー・誤った値は undefined
+// `global` と `projects` の 1 要素に共通のキーを検証する。記載しないキー・誤った値は undefined
 function parseScope(
   scope: Record<string, unknown>,
   { baseDir, prefix, schema, warnings }: { baseDir: 'config' | 'project'; prefix: string; schema: Record<string, unknown>; warnings: string[] },
@@ -199,7 +199,7 @@ function parseScope(
   }
 }
 
-/** パースした設定ファイルの値を検証し、既定値を当てる。誤った要素は外して理由を残す */
+/** パースした設定ファイルの値を検証し、既定値を適用する。誤った要素は除外して理由を残す */
 export function parseConfig(value: unknown, schema: Record<string, unknown>): Config {
   if (!isRecord(value)) throw new ConfigError('設定ファイルの最上位がマッピングではありません')
   const warnings: string[] = []
@@ -232,7 +232,7 @@ export function parseConfig(value: unknown, schema: Record<string, unknown>): Co
   }
 }
 
-/** `projects[].match` が起動したプロジェクトに当たるかを判定する */
+/** `projects[].match` が起動したプロジェクトに該当するかを判定する */
 export function matchProject(match: string, repoRoot: string, home: string): boolean {
   const expanded = expandHome({ path: match, home }).replace(/\/+$/, '')
   const root = repoRoot.replace(/\/+$/, '')
@@ -240,7 +240,7 @@ export function matchProject(match: string, repoRoot: string, home: string): boo
   return root.split('/').pop() === expanded
 }
 
-/** 当たった projects の要素を global に重ね、`repositories` と `aliases` のパスを絶対パスに解決する */
+/** 該当した projects の要素を global に重ね、`repositories` と `aliases` のパスを絶対パスに解決する */
 export function resolveSettings(
   config: Config,
   { where }: { where: { configPath: string; projectRoot: string; repoRoot: string; home: string } },
@@ -251,12 +251,12 @@ export function resolveSettings(
   const exclude = [...config.exclude]
   const excludeTools = [...config.excludeTools]
   const repositories = [...config.repositories]
-  // 相対パスの基準を決めるため、aliases は書いた場所（global か projects）とあわせて持つ
+  // 相対パスの基準を決めるため、aliases は記載した場所（global か projects）とあわせて持つ
   const scopedAliases: { alias: AliasConfig; baseDir: 'config' | 'project' }[] = config.aliases.map((alias) => ({
     alias,
     baseDir: 'config',
   }))
-  // repositories・aliases・exclude・excludeTools は後ろに追加し、それ以外は書いた値で置き換える
+  // repositories・aliases・exclude・excludeTools は後ろに追加し、それ以外は記載した値で置き換える
   for (const project of matched) {
     repositories.push(...project.repositories)
     scopedAliases.push(...project.aliases.map((alias) => ({ alias, baseDir: 'project' as const })))

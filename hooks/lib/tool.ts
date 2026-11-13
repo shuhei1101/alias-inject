@@ -20,13 +20,13 @@ export function collectArgumentStrings(e: ToolCallInput): Set<string> {
   return strings
 }
 
-/** 語の文書のパスを返す。body_file の値があれば、語を取り出した YAML のフォルダから解決する */
+/** 単語の文書のパスを返却する。body_file の値があれば、単語を取り出した YAML のフォルダから解決する */
 export function documentPathOf(entry: Entry, { home }: { home: string }): string {
   if (entry.bodyFile === undefined) return entry.path
   return resolvePath({ path: entry.bodyFile, home, baseDir: parentDir(entry.path) })
 }
 
-/** ツールが読んでいる文書の語を外す。Read は file_path、MCP のツールは引数の文字列で判定する */
+/** ツールが参照している文書の単語を除外する。Read は file_path、MCP のツールは引数の文字列で判定する */
 export function excludeReadingDocuments(hits: Hit[], { e, home }: { e: ToolCallInput; home: string }): Hit[] {
   if (e.tool === 'Read') {
     const filePath = (e as Record<string, unknown>).file_path

@@ -3,15 +3,15 @@ import { dedupeAliases, parseAliases } from './alias'
 import type { ResolvedAlias } from './alias'
 import { parentDir, parseYaml, readIfChanged, resolvePath } from './loader'
 
-/** 1 つの `project-index.yaml` の `documents` から取り出したエイリアスの元の行と、外した行の理由 */
+/** 1 つの `project-index.yaml` の `documents` から取り出したエイリアスの元の行と、除外した行の理由 */
 export type RepositoryAliases = {
   /** `alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `project-index.yaml` の絶対パス */
   aliases: ResolvedAlias[]
-  /** スキーマに合わない行・旧い構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す */
+  /** スキーマに合わない行・旧構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す */
   warnings: string[]
 }
 
-/** `project-index.yaml` が無い・読めない・書式が誤っていることを、パスと理由つきで伝える例外 */
+/** `project-index.yaml` が無い・読み込めない・書式が誤っていることを、パスと理由つきで伝える例外 */
 export class RepositoryError extends Error {
   readonly path: string
   readonly reason: string
@@ -43,7 +43,7 @@ export function parseRepository({
   const parsed = parseYaml(text)
   if (!parsed.ok) throw new RepositoryError(path, parsed.reason)
 
-  // 空の入力と `documents` を持たないマッピングは、行 0 件として扱う。トップレベルの `aliases` と他のキーは読まない
+  // 空の入力と `documents` を持たないマッピングは、行 0 件として扱う。トップレベルの `aliases` と他のキーは参照しない
   const { value } = parsed
   if (value === null) return { aliases: [], warnings: [] }
   if (!isRecord(value)) throw new RepositoryError(path, '最上位がマッピングではありません')
@@ -64,7 +64,7 @@ export function parseRepository({
   }
 }
 
-/** `project-index.yaml` を更新時刻が変わったときだけ読み直し、取り出した行を返す */
+/** `project-index.yaml` を更新時刻が変わったときだけ再読み込みし、取り出した行を返却する */
 export async function loadRepositoryAliases(
   $: EngineInterface,
   { path, schema, home }: { path: string; schema: Record<string, unknown>; home: string },

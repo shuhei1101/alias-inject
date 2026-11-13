@@ -1,13 +1,13 @@
 import type { Entry } from './entry'
 
-/** 入力に当たった語と、最初に出た位置 */
+/** 入力に該当した単語と、最初に出た位置 */
 export type Hit = {
   entry: Entry
-  /** 正規化した入力で、その語の keys のどれかが最初に出た位置 */
+  /** 正規化した入力で、その単語の keys のどれかが最初に出た位置 */
   position: number
-  /** その位置で当たった key のうち最も長いものの長さ */
+  /** その位置で該当した key のうち最も長いものの長さ */
   length: number
-  /** 正規化した入力で、その語の keys のどれかが始まる位置の数（同じ位置は 1 回） */
+  /** 正規化した入力で、その単語の keys のどれかが始まる位置の数（同じ位置は 1 回） */
   count: number
 }
 
@@ -16,7 +16,7 @@ export function normalize(text: string): string {
   return text.normalize('NFKC').toLowerCase().trim()
 }
 
-/** 入力に含まれる語を、最初に出た位置の順に返す */
+/** 入力に含まれる単語を、最初に出た位置の順に返却する */
 export function findHits(text: string, entries: Entry[], exclude: string[]): Hit[] {
   const normalizedText = normalize(text)
   const excluded = new Set(exclude.map(normalize))
@@ -37,7 +37,7 @@ export function findHits(text: string, entries: Entry[], exclude: string[]): Hit
     if (best !== undefined) hits.push({ entry, ...best, count: positions.size })
   }
 
-  // 位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順
+  // 位置の昇順、同じ位置なら長い単語が先、それも同じなら aliasIndex・itemIndex の順
   return hits.sort(
     (a, b) =>
       a.position - b.position ||
@@ -47,9 +47,9 @@ export function findHits(text: string, entries: Entry[], exclude: string[]): Hit
   )
 }
 
-/** 当たった語を、出た位置の数の降順に並べた複製を返す */
+/** 該当した単語を、出た位置の数の降順に並べた複製を返却する */
 export function sortByCount(hits: Hit[]): Hit[] {
-  // 数が同じなら、位置の昇順・長い語が先・aliasIndex・itemIndex の順
+  // 数が同じなら、位置の昇順・長い単語が先・aliasIndex・itemIndex の順
   return [...hits].sort(
     (a, b) =>
       b.count - a.count ||
