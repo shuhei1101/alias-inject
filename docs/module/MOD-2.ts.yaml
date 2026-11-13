@@ -104,7 +104,7 @@ enums:
         title: 環境
         description: '`url`・`port`・`description` を追加する'
       - value: avoid
-        title: 避ける語
+        title: 使用しない単語
         description: '`replacement` を追加する'
 constants:
   - name: ALIAS_KEYS

@@ -104,7 +104,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: true
-    description: 引用の種類。行の全文書に同じ種類を使う。追加する列とセクションを決める。term は `description`・`related`、doc は `description`、command は `command`・`cwd`・`description`、url は `url`・`description`、skill は `skill`・`description`、tool は `tool`・`description`、path は `path`・`description`、env は `url`・`port`・`description`、avoid は `replacement` を追加する。セクションの見出しは term が `用語`、doc が `文書`、command が `コマンド`、url が `URL`、skill が `スキル`、tool が `ツール`、path が `パス`、env が `環境`、avoid が `避ける語`
+    description: 引用の種類。行の全文書に同じ種類を使う。追加する列とセクションを決める。term は `description`・`related`、doc は `description`、command は `command`・`cwd`・`description`、url は `url`・`description`、skill は `skill`・`description`、tool は `tool`・`description`、path は `path`・`description`、env は `url`・`port`・`description`、avoid は `replacement` を追加する。セクションの見出しは term が `用語`、doc が `文書`、command が `コマンド`、url が `URL`、skill が `スキル`、tool が `ツール`、path が `パス`、env が `環境`、avoid が `使用しない単語`
     missing: その要素を照合から外す
     allowed: term / doc / command / url / skill / tool / path / env / avoid のどれか。それ以外の値の要素は、スキーマに合わない要素として照合から外し、理由を debug log に出す
   - key: global.aliases[].metadata.id
@@ -164,11 +164,11 @@ settings:
     description: '`alias_type` が url か env のとき、URL を取る列の名前。url では必須。env では `port` と合わせて 1 つ以上が必須'
     missing: url ではその文書を照合から外す。env では `port` も無ければその文書を照合から外し、`port` があれば URL を追加しない
   - key: global.aliases[].metadata.avoid
-    title: 避ける語
+    title: 使用しない単語
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: '`alias_type` が term のとき、用語ごとのやめた言い方を取る列の名前。値は文字列か文字列の並び。やめた言い方を照合し、当たったら `避ける語` のセクションにやめた言い方を並べ、`replacement` に用語の語を追加する。一般的な単語のやめた言い方は `exclude` で照合から外す'
+    description: '`alias_type` が term のとき、用語ごとのやめた言い方を取る列の名前。値は文字列か文字列の並び。やめた言い方を照合し、当たったら `使用しない単語` のセクションにやめた言い方を並べ、`replacement` に用語の語を追加する。一般的な単語のやめた言い方は `exclude` で照合から外す'
   - key: global.aliases[].metadata.skill
     title: スキル
     file: ~/.config/alias-inject/settings.yaml

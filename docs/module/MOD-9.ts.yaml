@@ -53,7 +53,7 @@ constants:
       - key: env
         value: 環境
       - key: avoid
-        value: 避ける語
+        value: 使用しない単語
 functions:
   - name: entryKey
     title: 記録のキー
