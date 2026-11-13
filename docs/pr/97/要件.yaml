@@ -1,0 +1,6 @@
+use_cases: []
+docs: []
+scope_out:
+  - item: 端末の project-index の設定 settings.yaml の sources へ alias-inject を配信元として登録する
+    reason: リポジトリの外の端末ごとの設定で、利用者が /project-index:setup で端末ごとに登録する。この作業 PR がマージされなくても同じ内容で成り立つ
+    plan: none
