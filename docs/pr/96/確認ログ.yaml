@@ -1,0 +1,7 @@
+confirmations:
+  - topic: hooks が出力する警告・エラー・debug log の置き換え後の文言
+    decision: プラグイン.md の文言の案の表のとおり。引けませんは取得できませんにする（推奨案 A）
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/96#discussion_r4565713909
