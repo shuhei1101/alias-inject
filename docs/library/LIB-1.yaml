@@ -118,7 +118,7 @@ catalogs:
             description: シンボリックリンクか
       - name: $.state
         kind: オブジェクト
-        purpose: プラグインの状態を名前（`plugin`・`key`）で参照し記載しする
+        purpose: プラグインの状態を名前（`plugin`・`key`）で取得・書き込みする
         description: '`get(ref)` が `{ value, version }` を返却し、`set(ref, value, options?)` が値を書き込む。名前に使用できる `plugin` と `key` は `PluginState` の宣言に挙げたものに限る。`options.ifVersion` を指定すると、参照したバージョンと一致したときだけ書き込む。'
       - name: $.session.id
         kind: 関数
