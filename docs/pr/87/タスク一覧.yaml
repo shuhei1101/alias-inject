@@ -80,5 +80,7 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T00:54:36.439482+00:00'
   - process: 結合テスト作成
-    status: todo
+    status: done
     note: tests/integration/hooks/prompt-submit.test.ts の見出しの期待
+    updated_by: planner
+    updated_at: '2026-11-13T00:59:32.484825+00:00'
