@@ -60,8 +60,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T06:07:40.953652+00:00'
   - process: モジュール構成設計
-    status: todo
+    status: done
     note: 'MOD-17 の単体テストの入力の値（`description: 設計書を引く`）を、テストコードの置き換えと合わせて置き換える（#89 のスコープ外から引き継ぎ）'
+    updated_by: planner
+    updated_at: '2026-11-13T06:11:02.007353+00:00'
   - process: ドキュメント修正
     status: todo
     note: ルートの README.md・CLAUDE.md と skills/global-setup/SKILL.md の置き換え
