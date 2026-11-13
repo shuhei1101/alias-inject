@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T06:07:40.953652+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: tests/unit/・tests/integration/ のコメント・テスト名・入力の値と scripts/gen-aliases-schema.mjs のコメントの置き換え。既存の単体・結合テストを全件実行して回帰を確認する
+    updated_by: planner
+    updated_at: '2026-11-13T15:21:10.032905+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: テストを追加せず、既存のテストの置き換えは実装の工程で行う（実装の工程で既存の結合テストを実行する）
