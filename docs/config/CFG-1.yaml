@@ -115,11 +115,11 @@ settings:
     description: '文書の ID を取る列の名前。どの `alias_type` でも必須。`id` の列を持たない要素の並び（`files.yaml`）を読む行は、`id: path` のように ID にする列を書く'
     missing: その文書を照合から外す
   - key: global.aliases[].metadata.name
-    title: 文脈に出す語
+    title: 文脈に出す単語
     file: ~/.config/alias-inject/settings.yaml
     type: string
     required: false
-    description: 文脈に出す語を取る列の名前。`aliases` と合わせて、照合する語にもなる。どの `alias_type` でも必須。値が空の文書は、`records` を書かない行ではファイル名（拡張子を除く）、`records` の要素では行の `body_file` が指す列の値のファイル名（拡張子を除く）、それも空なら `id` の値を使う
+    description: 文脈に出す単語を取る列の名前。`aliases` と合わせて、照合する単語にもなる。どの `alias_type` でも必須。値が空の文書は、`records` を記載しない行ではファイル名（拡張子を除く）、`records` の要素では行の `body_file` が指す列の値のファイル名（拡張子を除く）、それも空なら `id` の値を使用する
     missing: 補った後も空なら、その文書を照合から外す
   - key: global.aliases[].metadata.aliases
     title: 別名
