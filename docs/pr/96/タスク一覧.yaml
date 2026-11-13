@@ -60,8 +60,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T15:49:10.948327+00:00'
   - process: モジュール構成設計
-    status: todo
+    status: done
     note: MOD-1・MOD-2・MOD-11 に記載した警告・エラーの文言と、MOD-1 の単体テストの expected を置き換え後の文言にする
+    updated_by: planner
+    updated_at: '2026-11-13T15:54:00.208190+00:00'
   - process: ドキュメント修正
     status: skipped
     reason: 公開ドキュメント・README.md・CLAUDE.md は hooks/ が出力する文言を記載していないため対象外
