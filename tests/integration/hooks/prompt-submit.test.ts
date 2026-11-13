@@ -396,7 +396,7 @@ test('test_error_when_yaml_malformed', async ($, on) => {
   // YAML のパスと、パースに失敗した理由（行と列を含む）の行が debug log に届く
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath))
   expect(logged.length).toBeGreaterThan(0)
-  expect(logged.some((line) => line.text.includes('照合から外しました') && /\d+:\d+/.test(line.text))).toBe(true)
+  expect(logged.some((line) => line.text.includes('照合から除外しました') && /\d+:\d+/.test(line.text))).toBe(true)
 })
 
 // 解決した url も port も空の env の文書を除外し、同じ行の他の文書の文脈は追加する（異常系）
