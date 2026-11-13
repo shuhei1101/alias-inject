@@ -154,7 +154,7 @@ functions:
       type: '{ aliases: AliasConfig[]; warnings: string[] }'
       description: 取り出した行（並びの順）と、除外した行の理由
     process: |-
-      1. `aliasTypeOnly` が true で、行が `alias_type` のキーを持つマッピングでない場合、`metadata` に `alias_type` のキーを持つマッピングなら除外して `{path}[{位置}]（id: {id}）: 旧い構造の行です。metadata.alias_type を行の alias_type へ移してください` を warnings に入れ、それ以外は検証せずに飛ばす
+      1. `aliasTypeOnly` が true で、行が `alias_type` のキーを持つマッピングでない場合、`metadata` に `alias_type` のキーを持つマッピングなら除外して `{path}[{位置}]（id: {id}）: 旧構造の行です。metadata.alias_type を行の alias_type へ移してください` を warnings に入れ、それ以外は検証せずに飛ばす
       2. マッピングで `enabled` が false の行は、検証せずに飛ばす
       3. 他の行を、スキーマのルートの `items` で `{path}[{位置}]` をパスにして検証する（値の検証）。位置は飛ばした行を含む元の並びでの位置
       4. 理由があれば行を除外し、`{path}[{位置}]（id: {id}）: {理由を「、」でつなぐ}` を warnings に入れる。`（id: {id}）` は `id` が空でない文字列のときだけ付ける

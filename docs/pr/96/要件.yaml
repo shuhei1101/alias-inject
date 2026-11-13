@@ -1,0 +1,28 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: 読み込めない設定・YAML を除外したときの debug log と警告の文言だけが変わり、引用の文脈と除外する条件は変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: none
+    detail: 変数参照の値を取得できないときの debug log の文言だけが変わり、追加する値の行は変えない
+    depends_on: []
+docs: []
+scope_out:
+  - item: hooks/lib/aliases-schema.ts（schemas/aliases.schema.yaml からの生成物）の title・description
+    reason: '生成元の schemas/ は #94 で置き換え済みで、develop で対応表の pattern のヒットが 0 件'
+    plan: none
+  - item: hooks/vendor/ の文字列
+    reason: 外部ライブラリ js-yaml の同梱物で、このリポジトリでは編集しない
+    plan: none
+  - item: alias.ts の `…へ移してください` の「移す」
+    reason: 対応表の「移す」は表のセル・ラベルなど 1 単語の値のときだけ NG で、文の中の動詞は pattern にヒットしない
+    plan: none
+  - item: .claude-plugin/plugin.json・settings.sample.yaml・rules.yaml の AI slop の単語
+    reason: 起点 Issue の対象（hooks/ が出力する文言）の外で、この作業 PR がマージされなくても同じ内容で成り立つ
+    plan: '#95'
+  - item: マージ済みの PR ドキュメント（docs/pr/・dev/pr/）に引用した今の文言
+    reason: マージ済みの PR の記録で、今後参照して作業する文書ではない
+    plan: none

@@ -101,7 +101,7 @@ export function parseAliases({
     if (aliasTypeOnly && !(isRecord(item) && 'alias_type' in item)) {
       // `metadata.alias_type` を持つ行は旧構造のため、移し替えが要ることが分かる理由を残す。それ以外はエイリアスの行ではない
       if (isRecord(item) && isRecord(item.metadata) && 'alias_type' in item.metadata) {
-        warnings.push(`${itemPath}${id}: 旧い構造の行です。metadata.alias_type を行の alias_type へ移してください`)
+        warnings.push(`${itemPath}${id}: 旧構造の行です。metadata.alias_type を行の alias_type へ移してください`)
       }
       continue
     }

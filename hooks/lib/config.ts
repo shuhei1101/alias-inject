@@ -130,13 +130,13 @@ function parseRepositories(
 ): RepositoryConfig[] {
   if (value === undefined) return []
   if (!Array.isArray(value)) {
-    warnings.push(`${prefix}repositories が並びではないため、読むリポジトリを使いません`)
+    warnings.push(`${prefix}repositories が並びではないため、参照するリポジトリを使用しません`)
     return []
   }
   const repositories: RepositoryConfig[] = []
   for (const [index, raw] of value.entries()) {
     const parsed = parseRepositoryConfig(raw, baseDir)
-    if (typeof parsed === 'string') warnings.push(`${prefix}repositories[${index}] を外しました: ${parsed}`)
+    if (typeof parsed === 'string') warnings.push(`${prefix}repositories[${index}] を除外しました: ${parsed}`)
     else if (parsed !== null) repositories.push(parsed)
   }
   return repositories
@@ -146,7 +146,7 @@ function parseRepositories(
 function parseAliasList(value: unknown, schema: Record<string, unknown>, prefix: string, warnings: string[]): AliasConfig[] {
   if (value === undefined) return []
   if (!Array.isArray(value)) {
-    warnings.push(`${prefix}aliases が並びではないため、端末のエイリアスを使いません`)
+    warnings.push(`${prefix}aliases が並びではないため、端末のエイリアスを使用しません`)
     return []
   }
   const parsed = parseAliases({ items: value, schema, path: `${prefix}aliases` })
@@ -179,7 +179,7 @@ function parseScope(
   const limit = (key: 'max_items' | 'max_chars'): number | undefined => {
     const value = scope[key]
     if (typeof value === 'number' && Number.isInteger(value) && value >= 1) return value
-    if (value !== undefined) warnings.push(`${prefix}${key} が 1 以上の整数ではないため、既定値を使います`)
+    if (value !== undefined) warnings.push(`${prefix}${key} が 1 以上の整数ではないため、既定値を使用します`)
     return undefined
   }
 
@@ -209,7 +209,7 @@ export function parseConfig(value: unknown, schema: Record<string, unknown>): Co
   if (Array.isArray(value.projects)) {
     for (const [index, raw] of value.projects.entries()) {
       if (!isRecord(raw) || !isNonEmptyString(raw.match)) {
-        warnings.push(`projects[${index}] を外しました: match が空でない文字列ではありません`)
+        warnings.push(`projects[${index}] を除外しました: match が空でない文字列ではありません`)
         continue
       }
       const prefix = `projects[${index}].`

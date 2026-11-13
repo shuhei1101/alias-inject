@@ -53,7 +53,7 @@ functions:
       6. 実効の設定の組み立てをする（configPath は設定ファイルのパス、projectRoot は `$.session.root()`、repoRoot は `$.session.repo()?.root ?? $.session.root()`）。設定ファイルの検証と組み立ての warnings を、設定ファイルのパスを添えて debug log に出す
       7. enabled が false、または出所の判定が false なら `next(e)` を返却する
       8. 実効の設定の repositories を順に project-index.yaml の読み込みで参照する。RepositoryError はパスと理由を debug log に出し、そのリポジトリだけを除外する。読み込めたリポジトリの warnings は、`project-index.yaml` のパスを添えて debug log に出す
-      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べ、作業場所での絞り込み（cwd は `$.session.root()`）を適用する。残った各行を並びの位置とともに行の文書の読み込みで参照し、failures は `照合から外しました（{YAML のパス}）: {理由}` を debug log に出す
+      9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べ、作業場所での絞り込み（cwd は `$.session.root()`）を適用する。残った各行を並びの位置とともに行の文書の読み込みで参照し、failures は `照合から除外しました（{YAML のパス}）: {理由}` を debug log に出す
       10. 全ての単語を照合し、`e.text` で照合条件での絞り込みを適用する
       11. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は undefined）、select を記録済みのキーでの単語の選択にして呼ぶ
       12. 結果が null なら `next(e)`、それ以外は `next({ ...e, context: [...(e.context ?? []), selection.text] })` を返却する
@@ -102,7 +102,7 @@ functions:
         summary: aliases の要素の glob が設定ファイルに該当しても、その要素の他の単語の文脈を追加する
         condition: "設定ファイルの `global.aliases` に `paths: ['*.yaml']` の term の要素、同じフォルダに term-a.yaml、入力「term-a とは」"
         mock: 同上
-        expected: 返る `context` の末尾が term-a の文脈で、`YAML を読めません` の debug log が出ない
+        expected: 返る `context` の末尾が term-a の文脈で、`照合から除外しました` の debug log は、設定ファイル自身を必須の値が空の文書として除外した行（理由 `… が空です`）だけが出る
       - name: test_handle_prompt_submit_when_inject_condition
         case: 正常
         summary: 照合条件に該当しない単語の文脈を追加せず、記録にも入れない

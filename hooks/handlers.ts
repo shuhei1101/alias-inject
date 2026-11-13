@@ -48,7 +48,7 @@ function logWarningsOnce($: EngineInterface, owner: object, path: string, warnin
   for (const warning of warnings) {
     if (logged.has(warning)) continue
     logged.add(warning)
-    logDebug($, `設定の値を外しました（${path}）: ${warning}`)
+    logDebug($, `設定の値を除外しました（${path}）: ${warning}`)
   }
 }
 
@@ -82,7 +82,7 @@ async function loadRepositories(
       aliases.push(...loaded.aliases)
     } catch (error) {
       if (!(error instanceof RepositoryError)) throw error
-      logDebug($, `project-index.yaml を読めません（${error.path}）: ${error.reason}`)
+      logDebug($, `project-index.yaml を読み込めません（${error.path}）: ${error.reason}`)
     }
   }
   return aliases
@@ -100,7 +100,7 @@ async function loadSettings(
   try {
     config = await loadConfig($, configPath, schema)
   } catch (error) {
-    logDebug($, `設定ファイルを読めません（${configPath}）: ${describe(error)}`)
+    logDebug($, `設定ファイルを読み込めません（${configPath}）: ${describe(error)}`)
     return null
   }
 
@@ -131,7 +131,7 @@ async function loadEntries(
   const entries: Entry[] = []
   for (const [index, alias] of aliases.entries()) {
     const loaded = await loadAliasEntries($, alias, index)
-    for (const failure of loaded.failures) logDebug($, `照合から外しました（${failure.path}）: ${failure.reason}`)
+    for (const failure of loaded.failures) logDebug($, `照合から除外しました（${failure.path}）: ${failure.reason}`)
     entries.push(...loaded.entries)
   }
   return entries
@@ -221,13 +221,13 @@ async function formatToolResultReferences($: EngineInterface, text: string): Pro
   try {
     const run = await $.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })
     if (run.exitCode !== 0) {
-      logDebug($, `変数参照の値を引けません: env の終了コード ${run.exitCode}`)
+      logDebug($, `変数参照の値を取得できません: env の終了コード ${run.exitCode}`)
       return null
     }
     return formatReferenceLines(names, parseEnvOutput(run.stdout))
   } catch (error) {
     // 起動できない・待ちの上限の超過を含め、値を取得できなくてもツールの結果は止めない
-    logDebug($, `変数参照の値を引けません: ${describe(error)}`)
+    logDebug($, `変数参照の値を取得できません: ${describe(error)}`)
     return null
   }
 }

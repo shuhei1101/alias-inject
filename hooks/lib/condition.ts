@@ -59,23 +59,23 @@ function parseBundle(value: Record<string, unknown>, path: string, depth: number
 // 条件を検査する
 function parseTerm(value: Record<string, unknown>, path: string): ParseResult {
   const unknownKey = Object.keys(value).find((key) => !TERM_KEYS.includes(key))
-  if (unknownKey !== undefined) return failure(`${path}.${unknownKey}`, `${unknownKey} は書けません`)
-  if (value.field !== 'text') return failure(`${path}.field`, 'field は text だけを書けます')
+  if (unknownKey !== undefined) return failure(`${path}.${unknownKey}`, `${unknownKey} は記載できません`)
+  if (value.field !== 'text') return failure(`${path}.field`, 'field は text だけを記載できます')
   if (value.op !== 'contains' && value.op !== 'not_contains') {
-    return failure(`${path}.op`, 'op は contains・not_contains だけを書けます')
+    return failure(`${path}.op`, 'op は contains・not_contains だけを記載できます')
   }
   const values = value.values
   if (!Array.isArray(values) || values.length === 0 || !values.every((element) => typeof element === 'string' && element !== '')) {
-    return failure(`${path}.values`, 'values は 1 つ以上の空でない文字列の並びで書きます')
+    return failure(`${path}.values`, 'values は 1 つ以上の空でない文字列の並びで記載します')
   }
   const match = value.match ?? 'any'
-  if (match !== 'any' && match !== 'all') return failure(`${path}.match`, 'match は any・all だけを書けます')
+  if (match !== 'any' && match !== 'all') return failure(`${path}.match`, 'match は any・all だけを記載できます')
   const caseSensitive = value.case_sensitive ?? false
-  if (typeof caseSensitive !== 'boolean') return failure(`${path}.case_sensitive`, 'case_sensitive は真偽値で書きます')
+  if (typeof caseSensitive !== 'boolean') return failure(`${path}.case_sensitive`, 'case_sensitive は真偽値で記載します')
 
   const strings = caseSensitive ? (values as string[]) : (values as string[]).map(normalize)
   // 正規化で空になる値（空白だけの値）は、どの本文にも含まれるため空の値と同じく誤りにする
-  if (strings.includes('')) return failure(`${path}.values`, 'values は 1 つ以上の空でない文字列の並びで書きます')
+  if (strings.includes('')) return failure(`${path}.values`, 'values は 1 つ以上の空でない文字列の並びで記載します')
   return { ok: true, condition: { op: value.op, values: strings, match, caseSensitive } }
 }
 
