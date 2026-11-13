@@ -1,0 +1,1 @@
+# 配信元の設定 project-index.yaml に description と when を記載する
