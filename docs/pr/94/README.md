@@ -1,0 +1,1 @@
+# テスト・README.md・CLAUDE.md・スキル・スクリプトに残る AI slop の単語を対応表に合わせて修正する
