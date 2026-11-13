@@ -13,8 +13,8 @@ catalogs:
     entries:
       - name: tsc -p tsconfig.json --noEmit
         kind: コマンド
-        purpose: 出力せずに `tsconfig.json` の対象の型を確かめる（`npm run typecheck`）
-lead: TypeScript のコンパイラ。`tsc` で型を確かめる。
+        purpose: 出力せずに `tsconfig.json` の対象の型を確認する（`npm run typecheck`）
+lead: TypeScript のコンパイラ。`tsc` で型を確認する。
 purl: pkg:npm/typescript@5.9.3
 dependency_scope: 開発のみ
 used_in:
@@ -25,7 +25,7 @@ official_url: https://www.typescriptlang.org/
 verification:
   state: 済
   date: '2026-10-24'
-  detail: 'PoC PR #6（commit d79fd2a）で、型の取り込み方 (1)・(2) とも `npx tsc -p tsconfig.json --noEmit` が終了コード 0 で通ることを確かめた'
+  detail: 'PoC PR #6（commit d79fd2a）で、型の取り込み方 (1)・(2) とも `npx tsc -p tsconfig.json --noEmit` が終了コード 0 で通ることを確認した'
 install: |-
   ```bash
   npm install --save-dev --save-exact typescript@5.9.3

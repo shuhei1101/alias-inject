@@ -1,7 +1,7 @@
 id: MOD-3
 visibility: internal
 title: プラグイン / スキーマ / schema.ts
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `project-index.yaml` の `documents` の行）を検証する。検証はスキーマが使うキーワードだけを解釈し、外部のライブラリを使わない。'
+lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `project-index.yaml` の `documents` の行）を検証する。検証はスキーマが使用するキーワードだけを解釈し、外部のライブラリを使用しない。'
 test_files:
   - tests/unit/hooks/lib/schema.test.ts
 directory: |-
@@ -20,7 +20,7 @@ classes:
     title: スキーマの読み込みの失敗
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: 同梱のスキーマが読めない・書式が誤っている・解釈しないキーワードを含むことを、理由つきで伝える例外
+    summary: 同梱のスキーマを読み込めない・書式が誤っている・解釈しないキーワードを含むことを、理由つきで伝える例外
     inherits: Error
     properties:
       - name: message
@@ -34,10 +34,10 @@ constants:
     summary: 値の検証で解釈するキーワード
     value: '`type`・`enum`・`const`・`required`・`properties`・`additionalProperties`・`items`・`minItems`・`minLength`・`allOf`・`anyOf`・`if`・`then`・`$ref`・`$defs`'
   - name: ANNOTATION_KEYWORDS
-    title: 読み飛ばすキーワード
+    title: スキップするキーワード
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: 検証に効かない注釈のキーワード
+    summary: 検証に影響しない注釈のキーワード
     value: '`$schema`・`title`・`description`・`default`・`examples`'
 functions:
   - name: loadAliasSchema
@@ -45,7 +45,7 @@ functions:
     kind: 関数
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: 同梱のスキーマのキーワードを確かめて返す
+    summary: 同梱のスキーマのキーワードを確認して返却する
     scope: public
     is_async: false
     returns:
@@ -56,22 +56,22 @@ functions:
         condition: ALIAS_SCHEMA が解釈しないキーワードか解けない `$ref` を含む
     process: |-
       1. ALIAS_SCHEMA をキーワードの確認にかける
-      2. ALIAS_SCHEMA を返す
+      2. ALIAS_SCHEMA を返却する
     callees:
       - MOD-3#functions[checkKeywords]
     unit_tests:
       - name: test_load_alias_schema
         case: 正常
-        summary: 同梱のスキーマを返す
+        summary: 同梱のスキーマを返却する
         condition: 引数なし
         mock: なし
-        expected: "`items` が `{ $ref: '#/$defs/alias' }` のマッピングを返す"
+        expected: "`items` が `{ $ref: '#/$defs/alias' }` のマッピングを返却する"
   - name: checkKeywords
     title: キーワードの確認
     kind: 関数
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: スキーマが検証するキーワードと読み飛ばすキーワードだけを使い、`$ref` が `$defs` の要素を指すことを確かめる
+    summary: スキーマが検証するキーワードとスキップするキーワードだけを使用し、`$ref` が `$defs` の要素を指すことを確認する
     scope: internal
     is_async: false
     args:
@@ -82,15 +82,15 @@ functions:
         description: スキーマのルート
     returns:
       type: void
-      description: 何も返さない
+      description: 何も返却しない
     exceptions:
       - name: SchemaError
-        condition: 検証するキーワードにも読み飛ばすキーワードにも無いキーがある、または `$ref` が `#/$defs/{名前}` の形でない・指す要素が無い
+        condition: 検証するキーワードにもスキップするキーワードにも無いキーがある、または `$ref` が `#/$defs/{名前}` の書式でない・指す要素が無い
     process: |-
-      1. ルートからスキーマのマッピングをたどり、各キーが VALIDATION_KEYWORDS か ANNOTATION_KEYWORDS にあるかを確かめる
+      1. ルートからスキーマのマッピングをたどり、各キーが VALIDATION_KEYWORDS か ANNOTATION_KEYWORDS にあるかを確認する
       2. `properties`・`$defs` の値の各要素、`items`・`if`・`then`・マッピングの `additionalProperties`、`allOf`・`anyOf` の各要素をスキーマとしてたどる。`enum`・`const`・`required`・`default`・`examples` の中はたどらない
       3. 無いキーは、そのキーまでのパスとキーの名前で SchemaError を投げる
-      4. `$ref` は `#/$defs/{名前}` の形で、ルートの `$defs` にその名前があることを確かめ、無ければ SchemaError を投げる
+      4. `$ref` は `#/$defs/{名前}` の書式で、ルートの `$defs` にその名前があることを確認し、無ければ SchemaError を投げる
     unit_tests:
       - name: test_check_keywords
         case: 正常
@@ -101,7 +101,7 @@ functions:
       - name: test_check_keywords_when_unsupported
         case: 異常
         summary: 解釈しないキーワードと解けない `$ref` は例外
-        condition: "`$defs.alias.properties.id` に `pattern` を足した値、`anyOf` の要素に `pattern` を足した値、`$ref: '#/$defs/none'` を持つ値"
+        condition: "`$defs.alias.properties.id` に `pattern` を追加した値、`anyOf` の要素に `pattern` を追加した値、`$ref: '#/$defs/none'` を持つ値"
         mock: なし
         expected: どれも SchemaError で、メッセージに `pattern` か `#/$defs/none` を含む。`anyOf` の値のメッセージは `anyOf` を含むパスを持つ
         exception: 解釈しないキーワード・解けない `$ref`
@@ -110,7 +110,7 @@ functions:
     kind: 関数
     container: hooks/lib/schema.ts
     usecase: 共通
-    summary: 値をスキーマで検証し、合わない箇所をパスと理由の並びで返す
+    summary: 値をスキーマで検証し、合わない箇所をパスと理由の並びで返却する
     scope: public
     is_async: false
     args:
@@ -123,7 +123,7 @@ functions:
         type: unknown
         required: true
         passing: keyword
-        description: 検証に使うスキーマ（ルートか、その中のスキーマ）
+        description: 検証に使用するスキーマ（ルートか、その中のスキーマ）
       - name: value
         type: unknown
         required: true
@@ -143,7 +143,7 @@ functions:
       description: '`{パス}: {理由}` の並び。合うときは空'
     process: |-
       1. `$ref` があれば、ルートの `$defs` の要素で同じパスを検証した結果を加える
-      2. `type` があれば値の型（`null`・`boolean`・`integer`・`number`・`string`・`array`・`object`。整数は `number` にも当たる）と比べ、どれにも当たらなければ理由を加えて、このスキーマの残りのキーワードを見ない
+      2. `type` があれば値の型（`null`・`boolean`・`integer`・`number`・`string`・`array`・`object`。整数は `number` にも該当する）と比べ、どれにも該当しなければ理由を加えて、このスキーマの残りのキーワードを見ない
       3. `enum` は値と同じ要素が無いとき、`const` は値と同じでないときに理由を加える（同じかは、配列とマッピングを中まで比べる）
       4. 値がマッピングの場合
          - `required` のキーが無ければ、`{パス}.{キー}` で理由を加える
@@ -153,47 +153,47 @@ functions:
       6. 値が文字列の場合、コードポイントの数が `minLength` より少なければ理由を加える
       7. `allOf` の各要素で同じパスを検証した結果を加える。`if` で検証した結果が空なら、`then` で検証した結果を加える
       8. `anyOf` の各要素で同じパスを検証し、どれかの結果が空なら何も加えない。どれも空でなければ、全ての要素の結果を加える
-      9. 読み飛ばすキーワードは見ない
+      9. スキップするキーワードは見ない
     unit_tests:
       - name: test_validate_schema
         case: 正常
-        summary: スキーマに合う行は空を返す
-        condition: 'ALIAS_SCHEMA で、`alias_type` が term・doc・command・url・skill・tool・path・env・avoid の行と、`metadata` に列の名前（`name: title`・`description: meta.summary`・`inject_when: when`）を書いた行と、`records`・`body_file`・`enabled` と他のキー（行の `schema`・`metadata.tags`）を持つ行'
+        summary: スキーマに合う行は空を返却する
+        condition: 'ALIAS_SCHEMA で、`alias_type` が term・doc・command・url・skill・tool・path・env・avoid の行と、`metadata` に列の名前（`name: title`・`description: meta.summary`・`inject_when: when`）を記載した行と、`records`・`body_file`・`enabled` と他のキー（行の `schema`・`metadata.tags`）を持つ行'
         mock: なし
         expected: どれも空
       - name: test_validate_schema_when_required_missing
         case: 正常
-        summary: 無い必須のキーをパスつきで返す
+        summary: 無い必須のキーをパスつきで返却する
         condition: '`alias_type` が無い行、`paths` が無い行'
         mock: なし
         expected: '`aliases[0].alias_type` と `aliases[0].paths` を含む理由'
       - name: test_validate_schema_when_type_mismatch
         case: 正常
-        summary: 型・列挙・最小の数と長さに合わない値を返す
+        summary: 型・列挙・最小の数と長さに合わない値を返却する
         condition: '`id` が数値、`alias_type` が `memo`、`paths` が `[]`、`metadata.name` が空文字'
         mock: なし
         expected: それぞれ `aliases[0].id`・`aliases[0].alias_type`・`aliases[0].paths`・`aliases[0].metadata.name` の理由
       - name: test_validate_schema_when_additional_property
         case: 正常
-        summary: '`additionalProperties: false` のスキーマは書けないキーを返し、行と metadata の他のキーは許す'
+        summary: '`additionalProperties: false` のスキーマは記載できないキーを返却し、行と metadata の他のキーは許す'
         condition: '`additionalProperties: false` で `properties` に `a` だけを持つスキーマで `{a: 1, b: 2}` の値と、ALIAS_SCHEMA で行の最上位に `label`・`metadata` に `tags` を持つ行'
         mock: なし
         expected: 前者は `aliases[0].b` を含む理由、後者は空
       - name: test_validate_schema_when_if_not_matched
         case: 正常
-        summary: '`if` に合わないときは `then` を使わない'
+        summary: '`if` に合わないときは `then` を使用しない'
         condition: '`allOf` の `if` が `type: { const: url }`、`then` が `required: [url]` のスキーマで、`type: term` の値'
         mock: なし
         expected: 空
       - name: test_validate_schema_when_any_of_not_matched
         case: 正常
-        summary: '`anyOf` のどの要素にも合わないときだけ理由を返す'
+        summary: '`anyOf` のどの要素にも合わないときだけ理由を返却する'
         condition: '`anyOf` が `type: string` と `type: integer` のスキーマで、真偽値 true の値と、文字列 `a` の値'
         mock: なし
         expected: 前者は `anyOf` の両方の要素の理由、後者は空
       - name: test_validate_schema_when_scope
         case: 正常
-        summary: '`scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返す'
+        summary: '`scope.cwd` が 1 つ以上の空でない文字列の並びでない行と、`scope` の未知のキーを返却する'
         condition: 'ALIAS_SCHEMA で、`scope: {cwd: [/repo/a/**]}`・`scope: {cwd: []}`・`scope: {cwd: /repo/a/**}`・`scope: {cwd: [1]}`・`scope: {path: [/repo/a]}` の行'
         mock: なし
         expected: 1 件目は空。2〜4 件目は `aliases[0].scope.cwd` を含む理由、5 件目は `aliases[0].scope` を含む理由

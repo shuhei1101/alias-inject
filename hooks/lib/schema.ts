@@ -19,12 +19,12 @@ export const VALIDATION_KEYWORDS: readonly string[] = [
   '$defs',
 ]
 
-/** 検証に効かない注釈のキーワード */
+/** 検証に影響しない注釈のキーワード */
 export const ANNOTATION_KEYWORDS: readonly string[] = ['$schema', 'title', 'description', 'default', 'examples']
 
 const DEFS_REF_PREFIX = '#/$defs/'
 
-/** 同梱のスキーマが読めない・書式が誤っている・解釈しないキーワードを含むことを、理由つきで伝える例外 */
+/** 同梱のスキーマを読み込めない・書式が誤っている・解釈しないキーワードを含むことを、理由つきで伝える例外 */
 export class SchemaError extends Error {
   constructor(message: string) {
     super(message)
@@ -42,7 +42,7 @@ function hasOwn(value: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 
-// `#/$defs/{名前}` が指すルートの `$defs` の要素。形が違う・要素が無いときは undefined
+// `#/$defs/{名前}` が指すルートの `$defs` の要素。構造が違う・要素が無いときは undefined
 function resolveRef(root: Json, ref: string): unknown {
   if (!ref.startsWith(DEFS_REF_PREFIX)) return undefined
   const name = ref.slice(DEFS_REF_PREFIX.length)
@@ -50,7 +50,7 @@ function resolveRef(root: Json, ref: string): unknown {
   return isRecord(defs) && hasOwn(defs, name) ? defs[name] : undefined
 }
 
-// スキーマのマッピングをたどり、使うキーワードと `$ref` を確かめる。`pointer` は理由に使うキーまでのパス
+// スキーマのマッピングをたどり、使用するキーワードと `$ref` を確認する。`pointer` は理由に使用するキーまでのパス
 function walkKeywords(root: Json, schema: unknown, pointer: string): void {
   if (!isRecord(schema)) throw new SchemaError(`${pointer}: スキーマがマッピングではありません`)
   for (const key of Object.keys(schema)) {
@@ -85,12 +85,12 @@ function walkKeywords(root: Json, schema: unknown, pointer: string): void {
   }
 }
 
-/** スキーマが検証するキーワードと読み飛ばすキーワードだけを使い、`$ref` が `$defs` の要素を指すことを確かめる */
+/** スキーマが検証するキーワードとスキップするキーワードだけを使用し、`$ref` が `$defs` の要素を指すことを確認する */
 export function checkKeywords(root: Json): void {
   walkKeywords(root, root, 'schemas/aliases.schema.yaml')
 }
 
-/** 同梱のスキーマのキーワードを確かめて返す */
+/** 同梱のスキーマのキーワードを確認して返却する */
 export function loadAliasSchema(): Json {
   checkKeywords(ALIAS_SCHEMA)
   return ALIAS_SCHEMA
@@ -108,7 +108,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
   return a === b
 }
 
-// 値が `type` の名前に当たるか。整数は `number` にも当たる
+// 値が `type` の名前に該当するか。整数は `number` にも該当する
 function matchesType(type: string, value: unknown): boolean {
   switch (type) {
     case 'null':
@@ -130,7 +130,7 @@ function matchesType(type: string, value: unknown): boolean {
   }
 }
 
-/** 値をスキーマで検証し、合わない箇所をパスと理由の並びで返す */
+/** 値をスキーマで検証し、合わない箇所をパスと理由の並びで返却する */
 export function validateSchema({
   root,
   schema,
@@ -179,7 +179,7 @@ export function validateSchema({
     for (const [key, child] of Object.entries(properties)) {
       if (hasOwn(value, key)) reasons.push(...validate(child, value[key], `${path}.${key}`))
     }
-    // `properties` に無いキーは、false なら書けないキー、スキーマならそのスキーマで検証する
+    // `properties` に無いキーは、false なら記載できないキー、スキーマならそのスキーマで検証する
     for (const key of Object.keys(value)) {
       if (hasOwn(properties, key)) continue
       if (schema.additionalProperties === false) reasons.push(`${path}.${key}: 書けないキーです`)
@@ -210,7 +210,7 @@ export function validateSchema({
     const results = schema.anyOf.map((child) => validate(child, value, path))
     if (!results.some((result) => result.length === 0)) reasons.push(...results.flat())
   }
-  // `if` に合うときだけ `then` を当てる
+  // `if` に合うときだけ `then` を適用する
   if (schema.if !== undefined && schema.then !== undefined && validate(schema.if, value, path).length === 0) {
     reasons.push(...validate(schema.then, value, path))
   }

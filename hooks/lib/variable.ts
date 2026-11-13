@@ -4,17 +4,17 @@ export const VARIABLE_REFERENCE_TIMEOUT_MS = 20
 /** 1 回に値の行を作る名前の数の上限 */
 export const MAX_VARIABLE_REFERENCES = 50
 
-/** 1 つの値を書く文字数の上限 */
+/** 1 つの値を記載する文字数の上限 */
 export const MAX_VARIABLE_REFERENCE_VALUE_CHARS = 1000
 
 // `!{名前}` の名前。名前は英字かアンダースコアで始まる
 const REFERENCE = /!\{([A-Za-z_][A-Za-z0-9_]*)\}/g
 
-/** 本文の `!{名前}` の名前を出た順に、重なりを除いて返す */
+/** 本文の `!{名前}` の名前を出た順に、重なりを除いて返却する */
 export function findReferenceNames(text: string): string[] {
   const names = new Set<string>()
   for (const match of text.matchAll(REFERENCE)) {
-    // 括弧の 1 つ目は必ず当たるが、型は未定義を含むため外す
+    // 括弧の 1 つ目は必ず該当するが、型は未定義を含むため除外する
     if (match[1] !== undefined) names.add(match[1])
   }
   return [...names]
@@ -43,13 +43,13 @@ function formatValueLine(name: string, value: string): string {
   return `変数参照の値: !{${name}} = ${text}${note}`
 }
 
-/** 名前ごとに値の行を作り、改行でつないで返す */
+/** 名前ごとに値の行を作り、改行でつないで返却する */
 export function formatReferenceLines(names: string[], values: Map<string, string>): string {
   const lines = names.slice(0, MAX_VARIABLE_REFERENCES).map((name) => {
     const value = values.get(name)
     return value === undefined ? `変数参照の値: !{${name}} は環境変数が設定されていない` : formatValueLine(name, value)
   })
-  // 上限で外した名前は行を作らず、件数だけを最後に置く
+  // 上限で除外した名前は行を作らず、件数だけを最後に配置する
   const skipped = names.length - MAX_VARIABLE_REFERENCES
   if (skipped > 0) lines.push(`変数参照の値: ほか ${skipped} 件の変数参照は値を追加していない`)
   return lines.join('\n')

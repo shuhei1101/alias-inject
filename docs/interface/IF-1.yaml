@@ -6,12 +6,12 @@ entry:
   value: '`session.end`（セッションの終了ごと）'
 flows:
   - name: 正常系
-    summary: /clear で終わるセッションの記録を消す
+    summary: /clear で終わるセッションの記録を削除する
     setup:
       - name: Mock
-        description: 入力への引用の文脈の追加の正常系と同じ。テストの `on` の `session.end` は空の結果を返す
+        description: 入力への引用の文脈の追加の正常系と同じ。テストの `on` の `session.end` は空の結果を返却する
       - name: セッションの記録
-        description: 「term-a とは」を送り、そのセッション ID で term-a が記録済み
+        description: 「term-a とは」を送信し、そのセッション ID で term-a が記録済み
       - name: セッションの終了
         description: '`reason` が `clear`、`sessionId` が記録したセッション ID'
     flow: |-
@@ -22,7 +22,7 @@ flows:
         participant ST as $.state
 
         CC->>IF: reason: clear・sessionId
-        IF->>ST: sessionId の記録を消す
+        IF->>ST: sessionId の記録を削除する
         IF->>CC: next(e)
         CC-->>IF: 結果
         IF-->>CC: 結果
@@ -32,7 +32,7 @@ flows:
       - 返る結果が `next(e)` の結果と同じ
     test: test_normal
   - name: 正常系（クリア以外の終了）
-    summary: clear 以外の理由で終わるときは記録を消さない
+    summary: clear 以外の理由で終わるときは記録を削除しない
     setup:
       - name: Mock
         description: 正常系と同じ
@@ -50,15 +50,15 @@ flows:
         CC->>IF: reason: resume・sessionId
         IF->>CC: next(e)
         CC-->>IF: 結果
-        IF-->>CC: 結果（記録は消さない）
+        IF-->>CC: 結果（記録は削除しない）
       ```
     expected:
       - '`$.state` の記録に `sessionId` の term-a が残っている'
       - 返る結果が `next(e)` の結果と同じ
     test: test_normal_when_not_clear
-lead: '`/clear` で終わるセッションの追加済みの語の記録を消す。'
+lead: '`/clear` で終わるセッションの追加済みの単語の記録を削除する。'
 idempotent: true
-side_effects: '`$.state` の終わるセッション ID の記録を消す'
+side_effects: '`$.state` の終わるセッション ID の記録を削除する'
 callers:
   - LIB-1#
 exclusivity: 排他しない
@@ -67,16 +67,16 @@ request:
     type: SessionEndReason
     required: true
     location: argument
-    description: 終わる理由。`clear` のときだけ記録を消す
+    description: 終わる理由。`clear` のときだけ記録を削除する
   - name: sessionId
     type: string
     required: true
     location: argument
-    description: 終わるセッションの ID。この ID の記録を消す
+    description: 終わるセッションの ID。この ID の記録を削除する
 response:
   - name: '-'
     type: SessionEndResult
-    description: '`next(e)` の結果をそのまま返す'
+    description: '`next(e)` の結果をそのまま返却する'
 exceptions:
   - name: なし（正常終了）
     condition: 全ての場合
@@ -84,9 +84,9 @@ constraints:
   - item: 処理時間
     constraint: Claude Code が全てのフックに与える上限（既定 1.5 秒）の中で終える
     notes: '`$.state` への書き込み 1 回だけ'
-  - item: 消す範囲
+  - item: 削除する範囲
     constraint: '`sessionId` の記録だけ'
-    notes: サブエージェントの記録（セッション ID と `agentId` の組）は消さない。`/clear` の後は新しいセッション ID で記録するため、読まれない
+    notes: サブエージェントの記録（セッション ID と `agentId` の組）は削除しない。`/clear` の後は新しいセッション ID で記録するため、参照されない
 refs:
   - SC-4#
   - IF-3#

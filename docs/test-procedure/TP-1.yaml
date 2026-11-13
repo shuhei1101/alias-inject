@@ -4,7 +4,7 @@ title: "テスト実行方法"
 layers:
   - id: TL-1
     name: 単体テスト（バック）
-    description: '`claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で流す。'
+    description: '`claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で実行する。'
     prerequisites:
       - Claude Code 2.1.310 以上（`claude` が PATH にある）
       - '`hooks/hooks.json` が `modules` で入口を指している（無いと `no hooks module to load` で失敗する）'
@@ -18,7 +18,7 @@ layers:
       ```bash
       claude plugin test .
       ```
-    description: '`tests/integration/` の下のテストを、単体テストと同じ `claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で、`on` に応答を登録して `$.prompt.submit`・`$.session.compact`・`$.session.end` を流す。ファイルの指定はできないため、`tests/unit/` の単体テストも同時に流れる。'
+    description: '`tests/integration/` の下のテストを、単体テストと同じ `claude plugin test` で実行する。`claude-code/testing` の `test` が hooks モジュールを読み込んだ環境で、`on` に応答を登録して `$.prompt.submit`・`$.session.compact`・`$.session.end` を実行する。ファイルの指定はできないため、`tests/unit/` の単体テストも同時に流れる。'
     prerequisites:
       - Claude Code 2.1.310 以上（`claude` が PATH にある）
       - '`hooks/hooks.json` が `modules` で入口を指している'

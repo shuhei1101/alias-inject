@@ -10,7 +10,7 @@ export type FileStamp = {
 /** 変わったファイルの読み込みの種類。キャッシュのキーに含める */
 export type ReadKind = 'config' | 'repository' | 'alias'
 
-/** パースした値か、読めなかった理由 */
+/** パースした値か、読み込めなかった理由 */
 export type YamlResult = { ok: true; value: unknown } | { ok: false; reason: string }
 
 type CacheEntry = { mtimeMs: number; value: unknown }
@@ -47,13 +47,13 @@ export function resolvePath({ path, home, baseDir }: { path: string; home: strin
   return `/${segments.join('/')}`
 }
 
-/** 絶対パスのファイルを置いたフォルダを返す */
+/** 絶対パスのファイルを配置したフォルダを返却する */
 export function parentDir(path: string): string {
   const index = path.lastIndexOf('/')
   return index <= 0 ? '/' : path.slice(0, index)
 }
 
-/** ファイル名が `*` を含む glob の 1 区切りに当たるかを判定する */
+/** ファイル名が `*` を含む glob の 1 区切りに該当するかを判定する */
 export function matchSegment(name: string, segment: string): boolean {
   const pieces = segment.split('*')
   if (pieces.length === 1) return name === segment
@@ -72,12 +72,12 @@ export function matchSegment(name: string, segment: string): boolean {
   return true
 }
 
-// 区切りの並びの `index` 以降が、パスの区切りの並びの `position` 以降に当たるか
+// 区切りの並びの `index` 以降が、パスの区切りの並びの `position` 以降に該当するか
 function matchSegments(patternParts: string[], index: number, pathParts: string[], position: number): boolean {
   if (index === patternParts.length) return position === pathParts.length
   const part = patternParts[index] as string
   if (part === '**') {
-    // `**` は 0 個以上の区切りに当たる
+    // `**` は 0 個以上の区切りに該当する
     for (let next = position; next <= pathParts.length; next++) {
       if (matchSegments(patternParts, index + 1, pathParts, next)) return true
     }
@@ -89,7 +89,7 @@ function matchSegments(patternParts: string[], index: number, pathParts: string[
   return matched && matchSegments(patternParts, index + 1, pathParts, position + 1)
 }
 
-/** 絶対パスのフォルダが、`*`・`**` を含む絶対パスの glob に当たるかを判定する */
+/** 絶対パスのフォルダが、`*`・`**` を含む絶対パスの glob に該当するかを判定する */
 export function matchPathGlob({ pattern, path }: { pattern: string; path: string }): boolean {
   const split = (value: string) => value.split('/').filter((part) => part !== '')
   return matchSegments(split(pattern), 0, split(path), 0)
@@ -139,7 +139,7 @@ async function withDescendants($: EngineInterface, root: string, visited: Set<st
   return folders
 }
 
-/** 絶対パスの glob に当たるファイルを、更新時刻つきでパスの順に返す */
+/** 絶対パスの glob に該当するファイルを、更新時刻つきでパスの順に返却する */
 export async function expandFiles($: EngineInterface, { pattern }: { pattern: string }): Promise<FileStamp[]> {
   if (!pattern.includes('*')) {
     try {
@@ -182,7 +182,7 @@ export async function expandFiles($: EngineInterface, { pattern }: { pattern: st
   return [...files.values()].sort((a, b) => (a.path < b.path ? -1 : 1))
 }
 
-/** 更新時刻が前回と同じファイルは読まずに前回の値を返し、変わったときだけ読んで変換する */
+/** 更新時刻が前回と同じファイルは読み込まずに前回の値を返却し、変わったときだけ読み込んで変換する */
 export async function readIfChanged<T>(
   $: EngineInterface,
   { file, convert, kind }: { file: FileStamp; convert: (text: string) => T; kind: ReadKind },
@@ -205,7 +205,7 @@ function isBlankYaml(text: string): boolean {
   })
 }
 
-/** YAML の文字列を値にし、書式の誤りを例外ではなく理由で返す */
+/** YAML の文字列を値にし、書式の誤りを例外ではなく理由で返却する */
 export function parseYaml(text: string): YamlResult {
   const body = text.startsWith(BOM) ? text.slice(1) : text
   if (isBlankYaml(body)) return { ok: true, value: null }

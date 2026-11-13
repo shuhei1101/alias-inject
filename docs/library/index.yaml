@@ -3,6 +3,6 @@ items:
   - page: LIB-1.yaml
     summary: mod の hooks モジュールの型とテストの道具
   - page: LIB-2.yaml
-    summary: 設定ファイルと照合する YAML を読むパーサー
+    summary: 設定ファイルと照合する YAML を読み込むパーサー
   - page: LIB-3.yaml
-    summary: 型の確認に使う TypeScript のコンパイラ
+    summary: 型の確認に使用する TypeScript のコンパイラ

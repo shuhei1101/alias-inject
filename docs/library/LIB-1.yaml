@@ -21,17 +21,17 @@ catalogs:
         purpose: '`claude-code/testing` の期待値の確認'
       - name: $.settings.read
         kind: 関数
-        purpose: Claude Code の設定を、スコープ（`source`）とキー（`key`）を指定して読む
+        purpose: Claude Code の設定を、スコープ（`source`）とキー（`key`）を指定して参照する
         params:
           - name: source
             type: "'user' | 'project' | 'local' | 'flag' | 'policy'"
             default: 全スコープを重ねた値
-            description: 読むスコープ
-            notes: ユーザースコープだけを読むときは `user`
+            description: 参照するスコープ
+            notes: ユーザースコープだけを参照するときは `user`
           - name: key
             type: string
-            description: 読むキー。ドットで階層を指す
-            notes: 省くと設定のオブジェクト全体を返す
+            description: 参照するキー。ドットで階層を指す
+            notes: 省くと設定のオブジェクト全体を返却する
         returns:
           - name: '-'
             type: Promise<unknown>
@@ -42,7 +42,7 @@ catalogs:
           ```
       - name: $.env.get
         kind: 関数
-        purpose: 環境変数の値を読む
+        purpose: 環境変数の値を参照する
         params:
           - name: name
             type: string
@@ -54,12 +54,12 @@ catalogs:
             description: 環境変数の値。無いときは undefined
       - name: $.fs.read
         kind: 関数
-        purpose: ファイルをテキストで読む
+        purpose: ファイルをテキストで読み込む
         params:
           - name: path
             type: string
             required: true
-            description: 読むファイルの絶対パス
+            description: 読み込むファイルの絶対パス
         returns:
           - name: '-'
             type: Promise<string>
@@ -118,25 +118,25 @@ catalogs:
             description: シンボリックリンクか
       - name: $.state
         kind: オブジェクト
-        purpose: プラグインの状態を名前（`plugin`・`key`）で読み書きする
-        description: '`get(ref)` が `{ value, version }` を返し、`set(ref, value, options?)` が値を書く。名前に使える `plugin` と `key` は `PluginState` の宣言に挙げたものに限る。`options.ifVersion` を渡すと、読んだバージョンと一致したときだけ書く。'
+        purpose: プラグインの状態を名前（`plugin`・`key`）で取得・書き込みする
+        description: '`get(ref)` が `{ value, version }` を返却し、`set(ref, value, options?)` が値を書き込む。名前に使用できる `plugin` と `key` は `PluginState` の宣言に挙げたものに限る。`options.ifVersion` を指定すると、参照したバージョンと一致したときだけ書き込む。'
       - name: $.session.id
         kind: 関数
-        purpose: 今のセッションの ID を返す
+        purpose: 今のセッションの ID を返却する
         returns:
           - name: '-'
             type: Promise<string>
             description: セッション ID
       - name: $.session.root
         kind: 関数
-        purpose: セッションを起動したプロジェクトの直下のパスを返す
+        purpose: セッションを起動したプロジェクトの直下のパスを返却する
         returns:
           - name: '-'
             type: Promise<string>
             description: プロジェクトの直下の絶対パス
       - name: $.session.repo
         kind: 関数
-        purpose: セッションのリポジトリの情報を返す
+        purpose: セッションのリポジトリの情報を返却する
         returns:
           - name: root
             type: string
@@ -167,7 +167,7 @@ catalogs:
             notes: '`debug` はデバッグログに出す'
       - name: $.process.run
         kind: 関数
-        purpose: 子プロセスを起こして終了を待ち、終了コードと標準出力を返す
+        purpose: 子プロセスを起動して終了を待ち、終了コードと標準出力を返却する
         params:
           - name: argv
             type: string[]
@@ -195,7 +195,7 @@ catalogs:
     entries:
       - name: claude plugin test
         kind: コマンド
-        purpose: 指定のフォルダの下の `*.test.ts` / `*.test.tsx` を全て流す。失敗があれば終了コード 1
+        purpose: 指定のフォルダの下の `*.test.ts` / `*.test.tsx` を全て実行する。失敗があれば終了コード 1
       - name: claude plugin validate
         kind: コマンド
         purpose: プラグインと hooks モジュールの定義を検証する
@@ -204,7 +204,7 @@ catalogs:
     entries:
       - name: prompt.submit
         kind: イベント
-        purpose: 入力の送信ごとに呼ばれ、入力の文と追加の文脈を受けて次の処理へ渡す
+        purpose: 入力の送信ごとに呼ばれ、入力の文と追加の文脈を受けて次の処理へ引き渡す
         params:
           - name: e.text
             type: string
@@ -223,13 +223,13 @@ catalogs:
         returns:
           - name: text
             type: string
-            description: モデルへ渡す入力の文
+            description: モデルへ送信する入力の文
           - name: context
             type: readonly string[]
             description: モデルにだけ追加する文脈
       - name: session.compact
         kind: イベント
-        purpose: 会話の圧縮ごとに呼ばれ、`next(e)` が圧縮した結果か見送りを返す
+        purpose: 会話の圧縮ごとに呼ばれ、`next(e)` が圧縮した結果か見送りを返却する
         params:
           - name: e.trigger
             type: "'manual' | 'auto' | 'plugin' | 'precompute'"
@@ -260,12 +260,12 @@ catalogs:
             description: 終わったセッションの ID
       - name: tool.call
         kind: イベント
-        purpose: ツールの呼び出しごとに呼ばれ、`next(e)` がツールを実行して結果を返す
+        purpose: ツールの呼び出しごとに呼ばれ、`next(e)` がツールを実行して結果を返却する
         params:
           - name: e
             type: ToolCallInput
             required: true
-            description: ツールの呼び出し。そのまま `next(e)` に渡す
+            description: ツールの呼び出し。そのまま `next(e)` に引き渡す
           - name: e.tool
             type: string
             required: true
@@ -278,7 +278,7 @@ catalogs:
             type: unknown
             required: false
             description: ツールの引数。`e` の直下に展開されて入る
-            notes: Read は `e.file_path`（読んだファイルの絶対パス）、Bash は `e.command`、MCP のツールは呼び出しの引数（dev-docs の `search_docs` なら `e.source`・`e.filter`・`e.view`・`e.limit`）
+            notes: Read は `e.file_path`（参照したファイルの絶対パス）、Bash は `e.command`、MCP のツールは呼び出しの引数（dev-docs の `search_docs` なら `e.source`・`e.filter`・`e.view`・`e.limit`）
           - name: e.agentId
             type: string
             required: false
@@ -288,7 +288,7 @@ catalogs:
           - name: text?
             type: string
             description: ツールの結果の本文
-            notes: 組み込みのツールと MCP のツールのどちらでも読める。本文が無い結果では入らない
+            notes: 組み込みのツールと MCP のツールのどちらでも読み込める。本文が無い結果では入らない
           - name: isError?
             type: boolean
             description: エラーの結果のとき true
@@ -299,7 +299,7 @@ catalogs:
             type: readonly string[]
             description: モデルにだけ追加する文脈
             notes: '末尾に追加した文字列が、ツールの結果の後ろの文脈としてモデルに届く'
-lead: Claude Code が mod に渡す hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
+lead: Claude Code が mod に提供する hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
 used_in:
   - hooks/register.tsx
   - tests/unit/hooks/register.test.ts
@@ -310,4 +310,4 @@ used_in:
 verification:
   state: 済
   date: '2026-10-31'
-  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確かめた。PoC PR #16（commit 0a72f27）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで読め、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確かめた。PoC PR #53（Claude Code 2.1.316）で、`tool.call` の `e` にツールの名前（`tool`）・呼び出しの ID（`tool_use_id`）・直下に展開したツールの引数（Read の `file_path`・Bash の `command`・MCP の引数）が入り、`agentId` がサブエージェントの中の呼び出しにだけ入ることと、`context` に並べた 2 つの文字列がどちらもモデルに届くことを確かめた'
+  detail: 'PoC PR #6（commit d79fd2a）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確認した。PoC PR #16（commit 0a72f27）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで参照でき、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確認した。PoC PR #53（Claude Code 2.1.316）で、`tool.call` の `e` にツールの名前（`tool`）・呼び出しの ID（`tool_use_id`）・直下に展開したツールの引数（Read の `file_path`・Bash の `command`・MCP の引数）が入り、`agentId` がサブエージェントの中の呼び出しにだけ入ることと、`context` に並べた 2 つの文字列がどちらもモデルに届くことを確認した'

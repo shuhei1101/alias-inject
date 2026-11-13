@@ -1,7 +1,7 @@
 id: MOD-12
 visibility: internal
 title: プラグイン / 状態の型 / index.d.ts
-lead: '`$.state` に置く値の型の契約。`.claude-plugin/plugin.json` の `types` が指す。'
+lead: '`$.state` に配置する値の型の契約。`.claude-plugin/plugin.json` の `types` が指す。'
 directory: |-
   ```text
   types/
@@ -13,9 +13,9 @@ data_models:
     container: types/index.d.ts
     usecase: 共通
     role: 型の契約
-    summary: '`$.state` に置く値の宣言。plugin.json の `types` が指す'
+    summary: '`$.state` に配置する値の宣言。plugin.json の `types` が指す'
     description: "`interface PluginState { 'alias-inject': { recorded: StateFamily<string[]> } }` を `declare module 'claude-code'` の中で宣言する。"
     properties:
       - name: "'alias-inject'.recorded"
         type: StateFamily<string[]>
-        description: 記録の ID（メインの会話はセッション ID、サブエージェントはセッション ID と `agentId` の組）を `id` にした、文脈を追加した語の記録のキーの並び
+        description: 記録の ID（メインの会話はセッション ID、サブエージェントはセッション ID と `agentId` の組）を `id` にした、文脈を追加した単語の記録のキーの並び

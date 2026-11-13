@@ -1,6 +1,6 @@
 id: SC-6
 visibility: internal
-title: "設定とYAMLの読み直し"
+title: "設定とYAMLの再読み込み"
 scenarios:
   - name: 正常シナリオ
     setup:
@@ -8,8 +8,8 @@ scenarios:
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
         notes: '-'
       - name: 用語の YAML
-        description: '配列 `terms` に語 `term-a` を持ち、`project-index.yaml` の `records: terms` の用語の行の `paths` の glob に当たる'
-        notes: 書き換えで `terms` に語 `term-c` を追加し、同じ glob に当たる YAML を 1 つ追加する
+        description: '配列 `terms` に単語 `term-a` を持ち、`project-index.yaml` の `records: terms` の用語の行の `paths` の glob に該当する'
+        notes: 書き換えで `terms` に単語 `term-c` を追加し、同じ glob に該当する YAML を 1 つ追加する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -17,17 +17,17 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: 用語の YAML に term-c を追加し、glob に当たる YAML を追加
-        U->>CC: term-c と追加した YAML の語を含む入力を送信
+        U->>U: 用語の YAML に term-c を追加し、glob に該当する YAML を追加
+        U->>CC: term-c と追加した YAML の単語を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 設定ファイルと project-index.yaml と YAML の更新時刻とフォルダの一覧を確かめる
-        P->>P: 変わった YAML だけを読み直す
-        P->>CC: term-c と追加した YAML の語の文脈を context に追加
+        P->>P: 設定ファイルと project-index.yaml と YAML の更新時刻とフォルダの一覧を確認する
+        P->>P: 変わった YAML だけを再読み込みする
+        P->>CC: term-c と追加した YAML の単語の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
       - 書き換えた直後の入力で、term-c の文脈が追加されている
-      - glob に当たるように追加した YAML の語の文脈も追加されている
+      - glob に該当するように追加した YAML の単語の文脈も追加されている
     test: test_normal
   - name: 正常シナリオ（project-index.yaml の書き換え）
     setup:
@@ -36,7 +36,7 @@ scenarios:
         notes: '-'
       - name: project-index.yaml
         description: '`documents` に `alias_type` が term の行を 1 つ持つ'
-        notes: 書き換えで、語 `cmd-a` を持つコマンドの YAML を指す `alias_type` が command の行を追加する
+        notes: 書き換えで、単語 `cmd-a` を持つコマンドの YAML を指す `alias_type` が command の行を追加する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -47,12 +47,12 @@ scenarios:
         U->>U: project-index.yaml の documents に command の行を追加
         U->>CC: cmd-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: project-index.yaml の更新時刻が変わったので読み直す
+        P->>P: project-index.yaml の更新時刻が変わったので再読み込みする
         P->>CC: cmd-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - 書き換えた直後の入力で、cmd-a の語・`id`・`command` の文脈が追加されている
+      - 書き換えた直後の入力で、cmd-a の単語・`id`・`command` の文脈が追加されている
     test: test_normal_when_repository_config_changed
   - name: 異常シナリオ（YAML の書式の誤り）
     setup:
@@ -68,15 +68,15 @@ scenarios:
         participant P as alias-inject
         participant M as モデル
         U->>U: 片方の YAML を書式の誤った内容に書き換える
-        U->>CC: 両方の行の語を含む入力を送信
+        U->>CC: 両方の行の単語を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 書式の誤った YAML を照合から外す
+        P->>P: 書式の誤った YAML を照合から除外する
         P->>CC: もう一方の行の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - 書式の誤った YAML の語の文脈は追加されていない
-      - もう一方の行の語の文脈は追加されている
+      - 書式の誤った YAML の単語の文脈は追加されていない
+      - もう一方の行の単語の文脈は追加されている
       - 入力の送信は止まっていない
     test: test_error_when_yaml_malformed
 lead: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から書き換え後の内容で照合する。
@@ -85,6 +85,6 @@ primary_actor: 利用者
 trigger: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:
   - 同じセッションで 1 回以上入力を送信し、設定ファイル・`project-index.yaml`・照合の YAML を読み込み済み
-success_guarantee: 書き換えた直後の入力から、書き換え後の語とエイリアスの行で照合される。
-minimal_guarantee: 書き換え後の YAML が読めないときも、入力の送信は止まらず、他のエイリアスの行の照合は続く。
+success_guarantee: 書き換えた直後の入力から、書き換え後の単語とエイリアスの行で照合される。
+minimal_guarantee: 書き換え後の YAML を読み込めないときも、入力の送信は止まらず、他のエイリアスの行の照合は続く。
 test_file: tests/e2e/単一ユースケース/test_reload.py

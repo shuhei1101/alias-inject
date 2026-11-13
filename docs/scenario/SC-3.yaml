@@ -6,15 +6,15 @@ scenarios:
     setup:
       - name: Mock
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
-        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
+        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を配置する'
       - name: 設定ファイル
         description: '`global.repositories` に、一時のリポジトリの `project-index.yaml` を指す要素を 1 つ持つ'
         notes: '-'
       - name: project-index.yaml
-        description: '`documents` に、`alias_type` が `term` で `paths` の相対パスが用語の YAML に当たる行と、`alias_type` を持たず語 `doc-z` を持つ YAML に当たる行を持つ'
-        notes: 用語の行は `metadata` を書かず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る
+        description: '`documents` に、`alias_type` が `term` で `paths` の相対パスが用語の YAML に該当する行と、`alias_type` を持たず単語 `doc-z` を持つ YAML に該当する行を持つ'
+        notes: 用語の行は `metadata` を記載せず、`id`・`name`・`aliases`・`description` を同じ名前の列から取る
       - name: 用語の YAML
-        description: 語 `term-a`（エイリアス `用語エー`）と `term-b` を、1 ファイルに 1 語ずつ持つ
+        description: 単語 `term-a`（エイリアス `用語エー`）と `term-b` を、1 ファイルに 1 つずつ持つ
         notes: '-'
     flow: |-
       ```mermaid
@@ -25,19 +25,19 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と doc-z を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 設定ファイルと project-index.yaml の alias_type を持つ行と用語の YAML を読む
-        P->>P: 入力と語を正規化して照合し term-a が当たる
+        P->>P: 設定ファイルと project-index.yaml の alias_type を持つ行と用語の YAML を参照する
+        P->>P: 入力と単語を正規化して照合し term-a がヒットする
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 入力の文はそのままに、term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - モデルに届いた文脈に、見出し「この発言に出る用語」の下で term-a の語・`id`・`description` が並んでいる
+      - モデルに届いた文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
       - term-b の文脈は追加されていない
       - '`alias_type` を持たない行の doc-z の文脈は追加されていない'
       - 入力の文は送信したとおりのまま届いている
     test: test_normal
-  - name: 正常シナリオ（記録済みの語だけ）
+  - name: 正常シナリオ（記録済みの単語だけ）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
@@ -52,8 +52,8 @@ scenarios:
         participant M as モデル
         U->>CC: term-a を含む入力をもう一度送信
         CC->>P: prompt.submit
-        P->>P: 照合で term-a が当たるが記録済み
-        P->>CC: 入力をそのまま渡す
+        P->>P: 照合で term-a がヒットするが記録済み
+        P->>CC: 入力をそのまま返却する
         CC->>M: 入力だけを送信
       ```
     expected:
@@ -68,7 +68,7 @@ scenarios:
         description: '`max_items` を 1 にする'
       - name: 1 回目の入力
         description: term-a と term-b を含み、term-a が先に出る
-        notes: 例「term-a と term-b の違い」。入力に最初に出た位置の早い語から選ぶので term-a が選ばれる
+        notes: 例「term-a と term-b の違い」。入力に最初に出た位置の早い単語から選ぶので term-a が選ばれる
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -78,7 +78,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a が先に出て term-b が後に出る入力を送信
         CC->>P: prompt.submit
-        P->>P: 照合で 2 語が当たり、入力に先に出た term-a だけを選ぶ
+        P->>P: 照合で 2 つの単語がヒットし、入力に先に出た term-a だけを選ぶ
         P->>P: term-a だけを記録に入れる
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
@@ -109,12 +109,12 @@ scenarios:
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit（origin は composer）
         P->>P: 出所が origins に無い
-        P->>CC: 入力をそのまま渡す
+        P->>CC: 入力をそのまま返却する
         CC->>M: 入力だけを送信
         U->>CC: 設定ファイルの origins を既定に戻す
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit（origin は composer）
-        P->>P: 設定を読み直し、term-a は記録に無い
+        P->>P: 設定を再読み込みし、term-a は記録に無い
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
@@ -142,20 +142,20 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: project-index.yaml の documents の行と設定ファイルの aliases の行の両方の語と照合する
+        P->>P: project-index.yaml の documents の行と設定ファイルの aliases の行の両方の単語と照合する
         P->>CC: term-a と link-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - モデルに届いた文脈に、term-a の文脈と、link-a の語・`id`・`url` が並んでいる
+      - モデルに届いた文脈に、term-a の文脈と、link-a の単語・`id`・`url` が並んでいる
     test: test_normal_when_config_aliases
-  - name: 異常シナリオ（設定ファイルが読めない）
+  - name: 異常シナリオ（設定ファイルを読み込めない）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: '`ALIAS_INJECT_CONFIG` が無いファイルを指す'
-        notes: 書式の誤った YAML でも同じ結末になる。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置く（`ALIAS_INJECT_CONFIG` が読めないときに既定のパスを参照しない）
+        notes: 書式の誤った YAML でも同じ結末になる。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを配置する（`ALIAS_INJECT_CONFIG` を読み込めないときに既定のパスを参照しない）
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -165,15 +165,15 @@ scenarios:
         participant M as モデル
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 設定ファイルが読めない
-        P->>CC: 入力をそのまま渡す
+        P->>P: 設定ファイルを読み込めない
+        P->>CC: 入力をそのまま返却する
         CC->>M: 入力だけを送信
       ```
     expected:
       - 文脈が追加されていない
       - 入力の送信は止まらず、モデルの返事が返っている
     test: test_error_when_config_unreadable
-  - name: 異常シナリオ（project-index.yaml が読めない）
+  - name: 異常シナリオ（project-index.yaml を読み込めない）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
@@ -190,8 +190,8 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 読めない project-index.yaml のリポジトリを照合から外す
-        P->>CC: 読めたリポジトリと設定ファイルの aliases の行の文脈を追加
+        P->>P: 読み込めない project-index.yaml のリポジトリを照合から除外する
+        P->>CC: 読み込めたリポジトリと設定ファイルの aliases の行の文脈を追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
@@ -204,8 +204,8 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: project-index.yaml
-        description: 正常シナリオの行に加え、`alias_type` が term で、`metadata.name` を空の文字列で書いた行を 1 つ持つ
-        notes: 合わない行の `paths` は語 `term-x` を持つ YAML に当たる。`name` の列も持つので、スキーマで検証しなければ term-x が当たる
+        description: 正常シナリオの行に加え、`alias_type` が term で、`metadata.name` を空の文字列で記載した行を 1 つ持つ
+        notes: 合わない行の `paths` は単語 `term-x` を持つ YAML に該当する。`name` の列も持つので、スキーマで検証しなければ term-x がヒットする
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -215,7 +215,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と term-x を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: alias_type を持つ行をスキーマで検証し、合わない行を照合から外す
+        P->>P: alias_type を持つ行をスキーマで検証し、合わない行を照合から除外する
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
@@ -231,9 +231,9 @@ scenarios:
         notes: '-'
       - name: 設定ファイル
         description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `skill`・`tool`・`path`・`env`・`avoid` の行を 1 つずつ持つ
-        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。env の行が当たる YAML は `url` と `port` の両方を持つ'
+        notes: '`paths` の相対パスは設定ファイルのフォルダから解決する。env の行がヒットする YAML は `url` と `port` の両方を持つ'
       - name: 種類ごとの YAML
-        description: 語 `skill-a`（スキル名）・`tool-a`（ツール名）・`path-a`（パス）・`env-a`（URL とポート）・`avoid-a`（正しい語）を、それぞれの種類の YAML に 1 つずつ持つ
+        description: 単語 `skill-a`（スキル名）・`tool-a`（ツール名）・`path-a`（パス）・`env-a`（URL とポート）・`avoid-a`（正しい単語）を、それぞれの種類の YAML に 1 つずつ持つ
         notes: '-'
     flow: |-
       ```mermaid
@@ -244,27 +244,27 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と skill-a・tool-a・path-a・env-a・avoid-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: aliases の行をスキーマで検証し、全ての行の語と照合する
-        P->>P: 当たった 6 語を記録に入れる
+        P->>P: aliases の行をスキーマで検証し、全ての行の単語と照合する
+        P->>P: 該当した 6 つの単語を記録に入れる
         P->>CC: 種類ごとのセクションに分けた文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
       - モデルに届いた文脈に、見出し「この発言に出る用語」の下で、セクション「用語」「スキル」「ツール」「パス」「環境」「使用しない単語」がこの順に並んでいる
-      - skill-a の語・`id`・`skill`、tool-a の語・`id`・`tool`、path-a の語・`id`・`path`、env-a の語・`id`・`url`・`port`、avoid-a の語・`id`・`replacement` がそれぞれのセクションに並んでいる
+      - skill-a の単語・`id`・`skill`、tool-a の単語・`id`・`tool`、path-a の単語・`id`・`path`、env-a の単語・`id`・`url`・`port`、avoid-a の単語・`id`・`replacement` がそれぞれのセクションに並んでいる
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_added_types
-  - name: 異常シナリオ（旧い構造の aliases）
+  - name: 異常シナリオ（旧構造の aliases）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に旧い構造（`type: url` と `fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の要素を 1 つずつ持つ'
-        notes: '`type: url` の要素の `paths` は語 `link-a` を持つ URL の YAML に、`metadata.alias_type` の要素の `paths` は語 `term-w` を持つ YAML に当たる'
+        description: '正常シナリオの `global.repositories` に加え、`global.aliases` に旧構造（`type: url` と `fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の要素を 1 つずつ持つ'
+        notes: '`type: url` の要素の `paths` は単語 `link-a` を持つ URL の YAML に、`metadata.alias_type` の要素の `paths` は単語 `term-w` を持つ YAML に該当する'
       - name: project-index.yaml
-        description: '正常シナリオの `documents` の行に加え、トップレベルの `aliases` に旧い構造の `type: term` の要素と、`documents` に行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の行を 1 つずつ持つ'
-        notes: トップレベルの要素の `paths` は語 `term-y` を持つ YAML に、`documents` の行の `paths` は語 `term-v` を持つ YAML に当たる
+        description: '正常シナリオの `documents` の行に加え、トップレベルの `aliases` に旧構造の `type: term` の要素と、`documents` に行の `alias_type` を持たず `metadata.alias_type` が `{type: custom, value: term}` の行を 1 つずつ持つ'
+        notes: トップレベルの要素の `paths` は単語 `term-y` を持つ YAML に、`documents` の行の `paths` は単語 `term-v` を持つ YAML に該当する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -274,8 +274,8 @@ scenarios:
         participant M as モデル
         U->>CC: term-a・link-a・term-y・term-w・term-v を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: project-index.yaml のトップレベルの aliases と、alias_type を持たない documents の行を読まない
-        P->>P: 設定ファイルの旧い構造の 2 つの要素をスキーマに合わない行として照合から外す
+        P->>P: project-index.yaml のトップレベルの aliases と、alias_type を持たない documents の行を参照しない
+        P->>P: 設定ファイルの旧構造の 2 つの要素をスキーマに合わない行として照合から除外する
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
@@ -290,7 +290,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 用語の YAML
-        description: 正常シナリオの用語の行の `paths` に当たるフォルダに、`description` を持たない語 `term-n` の YAML を加える
+        description: 正常シナリオの用語の行の `paths` に該当するフォルダに、`description` を持たない単語 `term-n` の YAML を加える
         notes: term の必須のキーは `id`・`name`・`description`
     flow: |-
       ```mermaid
@@ -301,7 +301,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と term-n を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 文書ごとに必須のキーの値を確かめ、term-n を照合から外す
+        P->>P: 文書ごとに必須のキーの値を確認し、term-n を照合から除外する
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
@@ -316,7 +316,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 用語の YAML
-        description: 正常シナリオの用語の行の `paths` に当たるフォルダに、照合条件を持つ語 `term-c` の YAML を加える
+        description: 正常シナリオの用語の行の `paths` に該当するフォルダに、照合条件を持つ単語 `term-c` の YAML を加える
         notes: '照合条件は「`React` か `tsx` を含み、かつ `Python` を含まない」（`and` の束に `contains`（`match: any`）と `not_contains` の 2 条件）を `inject_when` に記載する'
     flow: |-
       ```mermaid
@@ -327,14 +327,14 @@ scenarios:
         participant M as モデル
         U->>CC: term-a・term-c・React・Python を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 照合で term-a と term-c が当たる
-        P->>P: term-c の照合条件を入力の文で評価し、当たらないので外す
+        P->>P: 照合で term-a と term-c がヒットする
+        P->>P: term-c の照合条件を入力の文で評価し、該当しないので除外する
         P->>P: term-a だけを記録に入れる
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
         U->>CC: term-c と tsx を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 照合で term-c が当たり、照合条件にも当たる
+        P->>P: 照合で term-c がヒットし、照合条件にも該当する
         P->>P: term-c を記録に入れる
         P->>CC: term-c の文脈を context に追加
         CC->>M: 入力と文脈を送信
@@ -350,7 +350,7 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 用語の YAML
-        description: 正常シナリオの用語の行の `paths` に当たるフォルダに、照合条件が空の `and` の束の語 `term-e` の YAML を加える
+        description: 正常シナリオの用語の行の `paths` に該当するフォルダに、照合条件が空の `and` の束の単語 `term-e` の YAML を加える
         notes: 4 レイヤー以上の入れ子・知らない比べ方の照合条件も同じ結末になる
     flow: |-
       ```mermaid
@@ -361,7 +361,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と term-e を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 文書ごとに照合条件を検査し、term-e を照合から外す
+        P->>P: 文書ごとに照合条件を検査し、term-e を照合から除外する
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
@@ -376,10 +376,10 @@ scenarios:
         description: 正常シナリオと同じ。`claude` は一時の作業場所のフォルダで起動する
         notes: '-'
       - name: 設定ファイル
-        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `url` の行を 2 つ持つ。1 つ目の行は作業場所の絞りに起動したフォルダに当たる glob を、2 つ目の行は起動したフォルダに当たらない別のフォルダの glob を記載する
-        notes: キーの名前と glob の書き方はインターフェース定義設計で決める
+        description: 正常シナリオの `global.repositories` に加え、`global.aliases` に `alias_type` が `url` の行を 2 つ持つ。1 つ目の行は作業場所の絞りに起動したフォルダに該当する glob を、2 つ目の行は起動したフォルダに該当しない別のフォルダの glob を記載する
+        notes: キーの名前と glob の記載方法はインターフェース定義設計で決める
       - name: URL の YAML
-        description: 1 つ目の行が語 `link-a`、2 つ目の行が語 `link-b` を持つ YAML に当たる
+        description: 1 つ目の行が単語 `link-a`、2 つ目の行が単語 `link-b` を持つ YAML に該当する
         notes: '-'
     flow: |-
       ```mermaid
@@ -390,8 +390,8 @@ scenarios:
         participant M as モデル
         U->>CC: term-a・link-a・link-b を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 作業場所が絞りの glob に当たらない 2 つ目の行を照合から外す
-        P->>P: 照合で term-a と link-a が当たる
+        P->>P: 作業場所が絞りの glob に該当しない 2 つ目の行を照合から除外する
+        P->>P: 照合で term-a と link-a がヒットする
         P->>CC: term-a と link-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
@@ -407,7 +407,7 @@ scenarios:
         notes: '-'
       - name: 設定ファイル
         description: 正常シナリオの `global.repositories` に加え、`global.aliases` に、作業場所の絞りを空の並びで記載した `alias_type` が `url` の行を 1 つ持つ
-        notes: 行の `paths` は語 `link-e` を持つ YAML に当たる。並びでない値・文字列でない要素も同じ結末になる
+        notes: 行の `paths` は単語 `link-e` を持つ YAML に該当する。並びでない値・文字列でない要素も同じ結末になる
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -417,7 +417,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-e を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 作業場所の絞りが誤っている行を照合から外す
+        P->>P: 作業場所の絞りが誤っている行を照合から除外する
         P->>CC: term-a の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
@@ -430,9 +430,9 @@ scenarios:
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を置かず、シェルの環境変数にも置かない。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにする
+        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を配置せず、シェルの環境変数にも配置しない。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにする
       - name: 設定ファイル
-        description: 正常シナリオと同じ内容を、`{XDG_CONFIG_HOME}/alias-inject/settings.yaml` に置く
+        description: 正常シナリオと同じ内容を、`{XDG_CONFIG_HOME}/alias-inject/settings.yaml` に配置する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -443,19 +443,19 @@ scenarios:
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit
         P->>P: settings.json の env とシェルの環境変数に ALIAS_INJECT_CONFIG が無い
-        P->>P: XDG_CONFIG_HOME の下の alias-inject/settings.yaml を読む
+        P->>P: XDG_CONFIG_HOME の下の alias-inject/settings.yaml を参照する
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - モデルに届いた文脈に、term-a の語・`id`・`description` が並んでいる
+      - モデルに届いた文脈に、term-a の単語・`id`・`description` が並んでいる
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_default_config_path
   - name: 正常シナリオ（シェルの環境変数の設定ファイル）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を置かない。`claude` の起動時に環境変数 `ALIAS_INJECT_CONFIG` を設定ファイルのパスにし、`XDG_CONFIG_HOME` を設定ファイルを置かない一時のフォルダにする
+        notes: settings.json の `env` に `ALIAS_INJECT_CONFIG` を配置しない。`claude` の起動時に環境変数 `ALIAS_INJECT_CONFIG` を設定ファイルのパスにし、`XDG_CONFIG_HOME` を設定ファイルを配置しない一時のフォルダにする
       - name: 設定ファイル
         description: 正常シナリオと同じ
     flow: |-
@@ -468,12 +468,12 @@ scenarios:
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit
         P->>P: settings.json の env に ALIAS_INJECT_CONFIG が無い
-        P->>P: シェルの環境変数の ALIAS_INJECT_CONFIG が指す設定ファイルを読む
+        P->>P: シェルの環境変数の ALIAS_INJECT_CONFIG が指す設定ファイルを参照する
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
     expected:
-      - モデルに届いた文脈に、term-a の語・`id`・`description` が並んでいる
+      - モデルに届いた文脈に、term-a の単語・`id`・`description` が並んでいる
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_config_from_shell_env
   - name: 正常シナリオ（settings.json の env を優先）
@@ -484,7 +484,7 @@ scenarios:
       - name: 1 つ目の設定ファイル
         description: 正常シナリオと同じ
       - name: 2 つ目の設定ファイル
-        description: '`global.aliases` に、語 `link-a` を持つ URL の YAML を指す `alias_type` が `url` の行だけを持つ'
+        description: '`global.aliases` に、単語 `link-a` を持つ URL の YAML を指す `alias_type` が `url` の行だけを持つ'
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -494,7 +494,7 @@ scenarios:
         participant M as モデル
         U->>CC: term-a と link-a を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: settings.json の env の ALIAS_INJECT_CONFIG が指す 1 つ目の設定ファイルを読む
+        P->>P: settings.json の env の ALIAS_INJECT_CONFIG が指す 1 つ目の設定ファイルを参照する
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
@@ -506,7 +506,7 @@ scenarios:
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-        notes: settings.json の `env` とシェルの環境変数に `ALIAS_INJECT_CONFIG` を置かず、`XDG_CONFIG_HOME` を設定ファイルを置かない一時のフォルダにする
+        notes: settings.json の `env` とシェルの環境変数に `ALIAS_INJECT_CONFIG` を配置せず、`XDG_CONFIG_HOME` を設定ファイルを配置しない一時のフォルダにする
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -517,7 +517,7 @@ scenarios:
         U->>CC: term-a を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 既定のパスに設定ファイルが無い
-        P->>CC: 入力をそのまま渡す
+        P->>CC: 入力をそのまま返却する
         CC->>M: 入力だけを送信
       ```
     expected:
@@ -531,7 +531,7 @@ scenarios:
         notes: '-'
       - name: 用語の YAML
         description: 正常シナリオの term-a に、やめた言い方 `旧エー` を `avoid` の列で持たせる
-        notes: 用語の行は `metadata` を書かず、`avoid` も同じ名前の列から取る。`avoid` の列は文字列でも並びでも同じ結末になる
+        notes: 用語の行は `metadata` を記載せず、`avoid` も同じ名前の列から取る。`avoid` の列は文字列でも並びでも同じ結末になる
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -541,29 +541,29 @@ scenarios:
         participant M as モデル
         U->>CC: term-b と 旧エー を含む入力を送信
         CC->>P: prompt.submit
-        P->>P: 用語の name・aliases と、用語のやめた言い方を照合し、term-b と 旧エー が当たる
+        P->>P: 用語の name・aliases と、用語のやめた言い方を照合し、term-b と 旧エー がヒットする
         P->>P: term-b と 旧エー を記録に入れる
         P->>CC: term-b を用語、旧エー を使用しない単語のセクションに分けた文脈を context に追加
         CC->>M: 入力と文脈を送信
         U->>CC: 旧エー を含む入力をもう一度送信
         CC->>P: prompt.submit
-        P->>P: 照合で 旧エー が当たるが記録済み
-        P->>CC: 入力をそのまま渡す
+        P->>P: 照合で 旧エー がヒットするが記録済み
+        P->>CC: 入力をそのまま返却する
         CC->>M: 入力だけを送信
       ```
     expected:
-      - 1 回目の入力の文脈に、セクション「用語」の下で term-b の語・`id`・`description` が並んでいる
-      - 1 回目の入力の文脈に、セクション「使用しない単語」の下で 旧エー の語と、`replacement` として term-a が並んでいる
+      - 1 回目の入力の文脈に、セクション「用語」の下で term-b の単語・`id`・`description` が並んでいる
+      - 1 回目の入力の文脈に、セクション「使用しない単語」の下で 旧エー の単語と、`replacement` として term-a が並んでいる
       - 1 回目の入力の文脈のセクション「用語」に term-a は並んでいない
       - 2 回目の入力には文脈が追加されていない
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_term_avoid
-lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
+lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
 issue: 1
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する
 preconditions:
   - 設定ファイルのパス（ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG`、無ければシェルの環境変数の `ALIAS_INJECT_CONFIG`、どちらも無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`）に設定ファイルがある
-success_guarantee: 初めて出た語の引用の文脈が `heading` の見出しの下に並んでモデルに届き、入力の文は変わらない。
+success_guarantee: 初めて出た単語の引用の文脈が `heading` の見出しの下に並んでモデルに届き、入力の文は変わらない。
 minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_prompt_context.py

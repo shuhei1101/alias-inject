@@ -6,37 +6,37 @@ import { parseCondition } from './condition'
 import type { Condition } from './condition'
 import { normalize } from './match'
 
-/** 行が指す YAML の 1 文書。照合する語と、文脈に並べる列 */
+/** 行が指す YAML の 1 文書。照合する単語と、文脈に並べる列 */
 export type Entry = {
-  /** 読む行の並びでの位置 */
+  /** 参照する行の並びでの位置 */
   aliasIndex: number
   /** 行の中の文書の並び（ファイルのパスの順、ファイルの中の `records` の順） */
   itemIndex: number
-  /** 行を書いた `project-index.yaml` か設定ファイルの絶対パス */
+  /** 行を記載した `project-index.yaml` か設定ファイルの絶対パス */
   origin: string
   aliasId: string
   type: AliasType
   id: string
-  /** 文脈に出す語 */
+  /** 文脈に出す単語 */
   word: string
-  /** 照合する語（`name` と `aliases`。やめた言い方の語は、そのやめた言い方）を正規化したもの。空文字と重複を除く */
+  /** 照合する単語（`name` と `aliases`。やめた言い方の単語は、そのやめた言い方）を正規化したもの。空文字と重複を除く */
   keys: string[]
   /** 文脈の箇条書きの子に並べる列。type ごとの順で、値のあるものだけ */
   fields: { name: string; value: string }[]
   /** 文書を持つ YAML の絶対パス */
   path: string
-  /** `records` の要素で、行の `body_file` が指す列の値（書いたまま）。それ以外は undefined */
+  /** `records` の要素で、行の `body_file` が指す列の値（記載したまま）。それ以外は undefined */
   bodyFile: string | undefined
-  /** 解決した `inject_when` の値を照合条件の検査に通したもの。値が無い・null なら undefined */
+  /** 解決した `inject_when` の値に照合条件の検査を適用したもの。値が無い・null なら undefined */
   condition: Condition | undefined
-  /** 用語の `avoid` のやめた言い方から作った語のとき、そのやめた言い方（書いたまま）。それ以外は undefined */
+  /** 用語の `avoid` のやめた言い方から作った単語のとき、そのやめた言い方（記載したまま）。それ以外は undefined */
   avoid: string | undefined
 }
 
-/** 1 つの行から作った語と、読めなかった YAML・外した文書 */
+/** 1 つの行から作った単語と、読み込めなかった YAML・除外した文書 */
 export type LoadedEntries = {
   entries: Entry[]
-  /** 読めない・書式の誤った YAML と、必須の値が空の文書・照合条件が誤っている文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す */
+  /** 読み込めない・書式の誤った YAML と、必須の値が空の文書・照合条件が誤っている文書の、YAML の絶対パスと理由。呼び出し元が debug log に出す */
   failures: { path: string; reason: string }[]
 }
 
@@ -153,7 +153,7 @@ function baseName(path: string): string {
   return dot <= 0 ? file : file.slice(0, dot)
 }
 
-// 用語のやめた言い方ごとに、使用しない単語の語を作る。空・重なり・用語の照合する語と同じものは作らない
+// 用語のやめた言い方ごとに、使用しない単語のセクションの項目を作る。空・重なり・用語の照合する単語と同じものは作らない
 function avoidEntries(term: Entry, value: unknown): Entry[] {
   const seen = new Set(term.keys)
   const entries: Entry[] = []
@@ -166,7 +166,7 @@ function avoidEntries(term: Entry, value: unknown): Entry[] {
   return entries
 }
 
-/** 1 つの行の全ての文書から `metadata` の値を解決し、照合する語と文脈に並べる列を持つ語を作る。必須の値が空の文書と照合条件が誤っている文書は外す */
+/** 1 つの行の全ての文書から `metadata` の値を解決し、照合する単語と文脈に並べる列を持つ単語を作る。必須の値が空の文書と照合条件が誤っている文書は除外する */
 export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, aliasIndex: number): LoadedEntries {
   const failures: LoadedEntries['failures'] = []
   const kept: {
@@ -180,7 +180,7 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
   for (const [itemIndex, document] of documents.entries()) {
     const values = resolveMetadata(alias.metadata, document.value)
     const bodyFile = document.index === null || alias.body_file === undefined ? undefined : textOf(getColumn(document.value, alias.body_file))
-    // name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を使う
+    // name が空なら、ファイルの文書はファイル名、records の要素は body_file の列のファイル名、それも空なら id を使用する
     if (textOf(values.name) === undefined) {
       values.name = document.index === null ? baseName(document.path) : bodyFile === undefined ? textOf(values.id) : baseName(bodyFile)
     }
@@ -206,7 +206,7 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
     kept.push({ itemIndex, values, path: document.path, bodyFile, condition })
   }
 
-  // 関連する文書の名前を引くため、この行の残った文書の ID から語を引く表を作る
+  // 関連する文書の名前を取得するため、この行の残った文書の ID から単語を取得する表を作る
   const wordOfId = new Map<string, string>()
   for (const { values } of kept) wordOfId.set(String(values.id), textOf(values.name) ?? '')
 
@@ -231,7 +231,7 @@ export function buildEntries(documents: SourceDocument[], alias: ResolvedAlias, 
   return { entries, failures }
 }
 
-/** 行の `patterns` に当たる YAML を更新時刻が変わったものだけ読み直し、語の一覧を返す */
+/** 行の `patterns` に該当する YAML を更新時刻が変わったものだけ再読み込みし、単語の一覧を返却する */
 export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias, aliasIndex: number): Promise<LoadedEntries> {
   const stamps = new Map<string, { path: string; mtimeMs: number }>()
   for (const pattern of alias.patterns) {
@@ -242,7 +242,7 @@ export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias,
   const documents: SourceDocument[] = []
   const failures: LoadedEntries['failures'] = []
   for (const file of files) {
-    // 読めない・書式の誤った YAML だけを外して続ける
+    // 読み込めない・書式の誤った YAML だけを除外して続ける
     let result: YamlResult
     try {
       result = await readIfChanged($, { file, convert: parseYaml, kind: 'alias' })
@@ -254,7 +254,7 @@ export async function loadAliasEntries($: EngineInterface, alias: ResolvedAlias,
       failures.push({ path: file.path, reason: result.reason })
       continue
     }
-    // records の配列が無い YAML も、その YAML だけを外す
+    // records の配列が無い YAML も、その YAML だけを除外する
     const parsed = parseDocuments(result.value, alias.records)
     if (!parsed.ok) {
       failures.push({ path: file.path, reason: parsed.reason })

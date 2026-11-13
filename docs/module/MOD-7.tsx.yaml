@@ -2,15 +2,15 @@ id: MOD-7
 visibility: internal
 title: プラグイン / 入口 / register.tsx
 lead: |-
-  Claude Code が `hooks/hooks.json` の `modules` から読む hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル。
+  Claude Code が `hooks/hooks.json` の `modules` から参照する hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル。
   入口は `prompt.submit`・`session.compact`・`session.end`・`tool.call` に処理を登録する。
 test_files:
   - tests/unit/hooks/register.test.ts
 directory: |-
   ```text
   .claude-plugin/
-    plugin.json          プラグインの定義（名前 alias-inject・説明・types は ./types/index.d.ts。version は置かない）
-    marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を載せる）
+    plugin.json          プラグインの定義（名前 alias-inject・説明・types は ./types/index.d.ts。version は配置しない）
+    marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を記載する）
     types/               エンジンが書き出す mod の型の宣言（git に入れない）
   hooks/
     hooks.json           { "modules": ["./register.tsx"] }
@@ -30,7 +30,7 @@ directory: |-
   tests/
     unit/
       hooks/
-        register.test.ts register の単体テスト（claude plugin test で流す）
+        register.test.ts register の単体テスト（claude plugin test で実行する）
         handlers.test.ts handlers.ts の単体テスト
   package.json           private・type module・script typecheck（tsc -p tsconfig.json --noEmit）・devDependencies typescript 5.9.3
   tsconfig.json          { "extends": "./.claude-plugin/types/tsconfig.json" }（エンジンが書き出し、git に入れる）
@@ -52,7 +52,7 @@ functions:
         type: On（claude-code の Register の引数）
         required: true
         passing: injected
-        description: イベントへ処理を登録する関数。エンジンが渡す
+        description: イベントへ処理を登録する関数。エンジンから受け取る
         notes: 4 回呼ぶ
     args_example: |-
       ```ts
@@ -67,14 +67,14 @@ functions:
       ```
     returns:
       type: void
-      description: 何も返さない
+      description: 何も返却しない
     process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)`・`on('tool.call', handleToolCall)` を呼ぶ
     unit_tests:
       - name: test_register
         case: 正常
         summary: 設定ファイルのパスが無いとき、入力の送信が変わらずに届く
-        condition: "テストの中で `prompt.submit` に届いた text と context をそのまま返す処理を登録し、`$.prompt.submit({ text: 'hello', wait: false, origin: { kind: 'composer' } })` を流す"
-        mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で流す）
+        condition: "テストの中で `prompt.submit` に届いた text と context をそのまま返却する処理を登録し、`$.prompt.submit({ text: 'hello', wait: false, origin: { kind: 'composer' } })` を実行する"
+        mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で実行する）
         expected: 結果の `text` が `hello` で、`context` に何も追加されていない（`undefined` か空の配列）
     implementation: hooks/register.tsx#register
     status: implemented
@@ -82,6 +82,6 @@ functions:
       pr: 5
 notes:
   テストと型の確認: |-
-    - テストは `claude plugin test` で流す。`dir` の下の `*.test.ts` を全て流すので、`tests/` の下に置いても読まれる
+    - テストは `claude plugin test` で実行する。`dir` の下の `*.test.ts` を全て実行するので、`tests/` の下に配置しても参照される
     - 型の確認は `npm run typecheck`。対象のファイルは `.claude-plugin/types/tsconfig.json` の `include` に従う。`tests/` が対象に入らないときは planner へ差し戻す
     - `.claude-plugin/types/` は、信頼済みのフォルダから `claude --plugin-dir {worktree}` の対話のセッションを 1 度起動すると書き出される（[PoC 結果](../pr/5/プラグイン.md)）

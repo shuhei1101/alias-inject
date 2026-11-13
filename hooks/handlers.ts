@@ -41,7 +41,7 @@ function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// 外した行と無視した値の理由を、読み込みの結果が変わらないうち 1 回だけ debug log に出す
+// 除外した行と無視した値の理由を、読み込みの結果が変わらないうち 1 回だけ debug log に出す
 function logWarningsOnce($: EngineInterface, owner: object, path: string, warnings: string[]): void {
   const logged = loggedWarnings.get(owner) ?? new Set<string>()
   loggedWarnings.set(owner, logged)
@@ -52,7 +52,7 @@ function logWarningsOnce($: EngineInterface, owner: object, path: string, warnin
   }
 }
 
-// 設定ファイルを更新時刻が変わったときだけ読み直す
+// 設定ファイルを更新時刻が変わったときだけ再読み込みする
 async function loadConfig($: EngineInterface, configPath: string, schema: Record<string, unknown>): Promise<Config> {
   const stat = await $.fs.stat(configPath)
   const loaded = await readIfChanged($, {
@@ -67,7 +67,7 @@ async function loadConfig($: EngineInterface, configPath: string, schema: Record
   return loaded.config
 }
 
-// 読むリポジトリの行を repositories の順に並べる。読めない project-index.yaml は、そのリポジトリだけを外す
+// 参照するリポジトリの行を repositories の順に並べる。読み込めない project-index.yaml は、そのリポジトリだけを除外する
 async function loadRepositories(
   $: EngineInterface,
   repositories: string[],
@@ -88,7 +88,7 @@ async function loadRepositories(
   return aliases
 }
 
-// 設定ファイルを読み、実効の設定を組み立てる。設定ファイルのパスが無いとき、読めない設定のときは null
+// 設定ファイルを読み込み、実効の設定を組み立てる。設定ファイルのパスが無いとき、読み込めない設定のときは null
 async function loadSettings(
   $: EngineInterface,
 ): Promise<{ settings: Settings; schema: Record<string, unknown>; home: string; projectRoot: string } | null> {
@@ -114,7 +114,7 @@ async function loadSettings(
   return { settings, schema, home, projectRoot }
 }
 
-// 読むリポジトリの行の後ろに、設定ファイルの aliases の行を並べ、作業場所に当たる行だけの語を読む。読めない YAML と必須の値が空の文書だけを外す
+// 参照するリポジトリの行の後ろに、設定ファイルの aliases の行を並べ、作業場所に該当する行だけの単語を参照する。読み込めない YAML と必須の値が空の文書だけを除外する
 async function loadEntries(
   $: EngineInterface,
   {
@@ -137,13 +137,13 @@ async function loadEntries(
   return entries
 }
 
-// 当たった語から、その会話で初めて出た語を選んで記録に追加する。追加する語が無ければ null
+// 該当した単語から、その会話で初めて出た単語を選んで記録に追加する。追加する単語が無ければ null
 function addSelected($: EngineInterface, hits: Hit[], settings: Settings, recordId: string): Promise<Selection | null> {
   const limits = { heading: settings.heading, maxItems: settings.maxItems, maxChars: settings.maxChars }
   return addRecorded($, { recordId, select: (recorded) => selectEntries(hits, recorded, { limits }) })
 }
 
-/** 入力を読むリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の語と照合し、そのセッションで初めて出た語の文脈を `context` の末尾に追加して渡す */
+/** 入力を参照するリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の文脈を `context` の末尾に追加して返却する */
 export async function handlePromptSubmit(
   $: EngineInterface,
   e: PromptSubmitInput,
@@ -193,7 +193,7 @@ export async function handleSessionEnd(
   return next(e)
 }
 
-// ツールの結果の本文を照合し、その会話で初めて出た語の引用の文脈を返す。追加しないときは null
+// ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を返却する。追加しないときは null
 async function quoteToolResult($: EngineInterface, e: ToolCallInput, text: string): Promise<string | null> {
   try {
     const loaded = await loadSettings($)
@@ -213,7 +213,7 @@ async function quoteToolResult($: EngineInterface, e: ToolCallInput, text: strin
   }
 }
 
-// ツールの結果の本文の `!{名前}` の値の行を返す。変数参照が無いとき、値を引けないときは null
+// ツールの結果の本文の `!{名前}` の値の行を返却する。変数参照が無いとき、値を取得できないときは null
 async function formatToolResultReferences($: EngineInterface, text: string): Promise<string | null> {
   const names = findReferenceNames(text)
   if (names.length === 0) return null
@@ -226,13 +226,13 @@ async function formatToolResultReferences($: EngineInterface, text: string): Pro
     }
     return formatReferenceLines(names, parseEnvOutput(run.stdout))
   } catch (error) {
-    // 起動できない・待ちの上限の超過を含め、値を引けなくてもツールの結果は止めない
+    // 起動できない・待ちの上限の超過を含め、値を取得できなくてもツールの結果は止めない
     logDebug($, `変数参照の値を引けません: ${describe(error)}`)
     return null
   }
 }
 
-/** ツールの結果の本文を照合してその会話で初めて出た語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返す */
+/** ツールの結果の本文を照合してその会話で初めて出た単語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返却する */
 export async function handleToolCall(
   $: EngineInterface,
   e: ToolCallInput,

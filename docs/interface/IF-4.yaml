@@ -6,12 +6,12 @@ entry:
   value: '`session.compact`（会話の圧縮ごと）'
 flows:
   - name: 正常系
-    summary: 圧縮の後に記録を消し、同じ語の文脈がもう一度追加される
+    summary: 圧縮の後に記録を削除し、同じ単語の文脈がもう一度追加される
     setup:
       - name: Mock
-        description: '入力への引用の文脈の追加の正常系と同じ。テストの `on` の `session.compact` は圧縮した結果（`messages: []`）を返す'
+        description: '入力への引用の文脈の追加の正常系と同じ。テストの `on` の `session.compact` は圧縮した結果（`messages: []`）を返却する'
       - name: セッションの記録
-        description: 「term-a とは」を送り、term-a が記録済み
+        description: 「term-a とは」を送信し、term-a が記録済み
       - name: 圧縮
         description: '`trigger` が `manual`'
     flow: |-
@@ -24,22 +24,22 @@ flows:
         CC->>IF: trigger: manual
         IF->>CC: next(e)
         CC-->>IF: 圧縮した結果
-        IF->>ST: そのセッションの記録を消す
+        IF->>ST: そのセッションの記録を削除する
         IF-->>CC: 圧縮した結果
       ```
     expected:
       - 返る結果が `next(e)` の結果と同じ
-      - 続けて「term-a とは」を送ると、term-a の文脈がもう一度追加される
+      - 続けて「term-a とは」を送信すると、term-a の文脈がもう一度追加される
     test: test_normal
   - name: 正常系（圧縮しなかった）
     summary: precompute・見送りでは記録を残す
     setup:
       - name: Mock
-        description: 正常系と同じ。見送りのケースではテストの `on` の `session.compact` が `skip` を返す
+        description: 正常系と同じ。見送りのケースではテストの `on` の `session.compact` が `skip` を返却する
       - name: セッションの記録
         description: 正常系と同じ
       - name: 圧縮
-        description: '次の 2 つを順に起こす: `trigger` が `precompute` / `trigger` が `manual` で結果が `skip`'
+        description: '次の 2 つを順に発生させる: `trigger` が `precompute` / `trigger` が `manual` で結果が `skip`'
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -48,18 +48,18 @@ flows:
         CC->>IF: precompute / 見送り
         IF->>CC: next(e)
         CC-->>IF: 結果
-        IF-->>CC: 結果（記録は消さない）
+        IF-->>CC: 結果（記録は削除しない）
     expected:
       - 返る結果が `next(e)` の結果と同じ
-      - 2 つの圧縮の後に「term-a とは」を送ると、返る `context` が空（term-a が記録に残っている）
+      - 2 つの圧縮の後に「term-a とは」を送信すると、返る `context` が空（term-a が記録に残っている）
     test: test_normal_when_not_compacted
   - name: 正常系（サブエージェントの圧縮）
-    summary: agentId のある圧縮ではそのサブエージェントの記録だけを消す
+    summary: agentId のある圧縮ではそのサブエージェントの記録だけを削除する
     setup:
       - name: Mock
-        description: 正常系と同じ。テストの `on` の `tool.call` は `text` が「term-b」の結果を返す
+        description: 正常系と同じ。テストの `on` の `tool.call` は `text` が「term-b」の結果を返却する
       - name: セッションの記録
-        description: 「term-a とは」を送り、メインの会話で term-a が記録済み。`agentId` が `agent-1` の `tool.call` で term-b が agent-1 の記録に記録済み
+        description: 「term-a とは」を送信し、メインの会話で term-a が記録済み。`agentId` が `agent-1` の `tool.call` で term-b が agent-1 の記録に記録済み
       - name: 圧縮
         description: '`trigger` が `auto` で `agentId` が `agent-1`'
     flow: |-
@@ -71,16 +71,16 @@ flows:
         CC->>IF: trigger: auto・agentId: agent-1
         IF->>CC: next(e)
         CC-->>IF: 圧縮した結果
-        IF->>ST: セッションと agent-1 の記録を消す
+        IF->>ST: セッションと agent-1 の記録を削除する
         IF-->>CC: 圧縮した結果
     expected:
       - 返る結果が `next(e)` の結果と同じ
-      - 続けて `agentId` が `agent-1` の `tool.call` で term-b を含む結果を返すと、term-b の文脈がもう一度追加される
-      - 続けて「term-a とは」を送ると、返る `context` が空（メインの会話の記録は残っている）
+      - 続けて `agentId` が `agent-1` の `tool.call` で term-b を含む結果を返却すると、term-b の文脈がもう一度追加される
+      - 続けて「term-a とは」を送信すると、返る `context` が空（メインの会話の記録は残っている）
     test: test_normal_when_subagent_compacted
-lead: 会話の圧縮が終わった後、その会話の追加済みの語の記録を消す。メインの会話はセッションの記録、サブエージェントはその `agentId` の記録だけを消す。
+lead: 会話の圧縮が終わった後、その会話の追加済みの単語の記録を削除する。メインの会話はセッションの記録、サブエージェントはその `agentId` の記録だけを削除する。
 idempotent: true
-side_effects: '`$.state` のそのセッション ID、またはセッション ID と `agentId` の組の記録を消す'
+side_effects: '`$.state` のそのセッション ID、またはセッション ID と `agentId` の組の記録を削除する'
 callers:
   - LIB-1#
 exclusivity: 排他しない
@@ -89,24 +89,24 @@ request:
     type: "'manual' | 'auto' | 'plugin' | 'precompute'"
     required: true
     location: argument
-    description: 圧縮のきっかけ。`precompute` は会話を圧縮しないため記録を消さない
+    description: 圧縮のきっかけ。`precompute` は会話を圧縮しないため記録を削除しない
   - name: agentId
     type: string
     required: false
     default: なし（メインの会話）
     location: argument
-    description: サブエージェント・フォークの会話の圧縮のときに入る。入っているときはセッション ID と `agentId` の組の記録だけを消し、メインの会話の記録は残す
+    description: サブエージェント・フォークの会話の圧縮のときに入る。入っているときはセッション ID と `agentId` の組の記録だけを削除し、メインの会話の記録は残す
 response:
   - name: '-'
     type: SessionCompactResult
-    description: '`next(e)` の結果をそのまま返す'
+    description: '`next(e)` の結果をそのまま返却する'
 exceptions:
   - name: なし（正常終了）
     condition: 全ての場合
 constraints:
-  - item: 消す時期
-    constraint: '`next(e)` が圧縮した結果（`skip` が無い）を返した後'
-  - item: 消す範囲
+  - item: 削除する時期
+    constraint: '`next(e)` が圧縮した結果（`skip` が無い）を返却した後'
+  - item: 削除する範囲
     constraint: '`agentId` が無いときはそのセッション ID（`$.session.id()`）の記録だけ、あるときはセッション ID と `agentId` の組の記録だけ'
   - item: 処理時間
     constraint: 制限なし
