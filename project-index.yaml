@@ -1,6 +1,11 @@
 version: "3"
 name: alias-inject
 worktrees: [".claude/worktrees/*"]
+description: 入力の語を設定の YAML と照合し、引用の文脈を Claude Code に追加するプラグイン alias-inject の設計書・公開ドキュメント
+when:
+  - alias-inject が入力や読んだ本文に追加する引用の文脈（用語・エイリアス・変数参照の値）の仕様を調べるとき
+  - alias-inject の設定ファイルと、project-index.yaml の alias_type を持つ行の書き方を調べるとき
+  - alias-inject のフックのモジュール構成・テスト実行方法・開発コマンドを調べるとき
 documents:
   - id: docs
     title: 公開ドキュメント
