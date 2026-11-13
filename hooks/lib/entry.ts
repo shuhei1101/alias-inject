@@ -153,7 +153,7 @@ function baseName(path: string): string {
   return dot <= 0 ? file : file.slice(0, dot)
 }
 
-// 用語のやめた言い方ごとに、避ける語の語を作る。空・重なり・用語の照合する語と同じものは作らない
+// 用語のやめた言い方ごとに、使用しない単語の語を作る。空・重なり・用語の照合する語と同じものは作らない
 function avoidEntries(term: Entry, value: unknown): Entry[] {
   const seen = new Set(term.keys)
   const entries: Entry[] = []
