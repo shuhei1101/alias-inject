@@ -102,7 +102,7 @@ functions:
         summary: aliases の要素の glob が設定ファイルに該当しても、その要素の他の単語の文脈を追加する
         condition: "設定ファイルの `global.aliases` に `paths: ['*.yaml']` の term の要素、同じフォルダに term-a.yaml、入力「term-a とは」"
         mock: 同上
-        expected: 返る `context` の末尾が term-a の文脈で、`照合から除外しました` の debug log が出ない
+        expected: 返る `context` の末尾が term-a の文脈で、`照合から除外しました` の debug log は、設定ファイル自身を必須の値が空の文書として除外した行（理由 `… が空です`）だけが出る
       - name: test_handle_prompt_submit_when_inject_condition
         case: 正常
         summary: 照合条件に該当しない単語の文脈を追加せず、記録にも入れない
