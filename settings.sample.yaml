@@ -1,24 +1,24 @@
 # alias-inject の設定ファイルのサンプル。実値は入れていない
-# ~/.config/alias-inject/settings.yaml にコピーする。別の場所に置くときは、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
+# ~/.config/alias-inject/settings.yaml にコピーする。別の場所に配置するときは、~/.claude/settings.json の env の ALIAS_INJECT_CONFIG にそのパスを指定する
 global:
   # false のとき、何も追加しない
   enabled: true
 
-  # 読むリポジトリの project-index.yaml。その documents のうち alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
+  # 参照するリポジトリの project-index.yaml。その documents のうち alias_type を持つ行が照合の定義になる。config の相対パスは、この設定ファイルのフォルダから解決する
   repositories:
     - config: ~/repo/knowledge/project-index.yaml
     - config: ../old-notes/project-index.yaml
-      # false のとき、このリポジトリを読まない
+      # false のとき、このリポジトリを参照しない
       enabled: false
 
   # 端末だけのエイリアス。要素は schemas/aliases.schema.yaml のエイリアスの元の行と同じ構造。paths の相対パスは、この設定ファイルのフォルダから解決する
-  # alias_type は引用の種類で、行の全文書に同じ種類を使う。metadata の各キーは、値を取る文書の列の名前。書かないキーは同じ名前の列から取る
+  # alias_type は引用の種類で、行の全文書に同じ種類を使用する。metadata の各キーは、値を取る文書の列の名前。記載しないキーは同じ名前の列から取る
   aliases:
     - id: terms
       paths: [terms/*.yaml]
       alias_type: term
       metadata:
-        # 文脈に出す語を title の列から取る
+        # 文脈に出す単語を title の列から取る
         name: title
     - id: docs
       paths: [docs/*.yaml]
@@ -28,7 +28,7 @@ global:
       alias_type: command
     - id: urls
       paths: [urls/*.yaml]
-      # false のとき、この行を使わない
+      # false のとき、この行を使用しない
       enabled: true
       alias_type: url
     - id: skills
@@ -43,45 +43,45 @@ global:
     - id: envs
       paths: [envs/*.yaml]
       alias_type: env
-      # url と port は、どちらか 1 つ以上を指定する（書かなくても同じ名前の列から取る）
+      # url と port は、どちらか 1 つ以上を指定する（記載しなくても同じ名前の列から取る）
       metadata:
         url: url
         port: port
     - id: avoids
       paths: [avoids/*.yaml]
       alias_type: avoid
-      # 行を照合に使用する作業場所の glob。/** で終わる glob はそのフォルダと配下のフォルダに当たる。記載しないときは全ての作業場所で使用する
+      # 行を照合に使用する作業場所の glob。/** で終わる glob はそのフォルダと配下のフォルダに該当する。記載しないときは全ての作業場所で使用する
       scope:
         cwd: [~/repo/sample/**]
     - id: guides
       paths: [guides/files.yaml]
       alias_type: doc
-      # 文書の並びを持つ配列のキー。body_file は、その要素の本文のファイルのパスを持つ列で、name が空の要素の名前に使う
+      # 文書の並びを持つ配列のキー。body_file は、その要素の本文のファイルのパスを持つ列で、name が空の要素の名前に使用する
       records: files
       body_file: path
       # files.yaml の要素は id を持たないため、path の列を id にする
       metadata:
         id: path
 
-  # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。書かないときはすべての出所
+  # 文脈を追加する入力の出所。user（利用者の入力）と plugin（プラグインが送信した入力）。記載しないときはすべての出所
   origins: [user, plugin]
 
-  # 1 回に追加する語の上限
+  # 1 回に追加する単語の上限
   max_items: 20
 
   # 1 回に追加する文脈全体（見出しを含む）の文字数の上限
   max_chars: 4000
 
-  # 照合しない語
+  # 照合しない単語
   exclude: [それ]
 
-  # 結果の本文を照合しないツールの名前。書かないときは全てのツールの結果を照合する
+  # 結果の本文を照合しないツールの名前。記載しないときは全てのツールの結果を照合する
   exclude_tools: [Bash]
 
   # 文脈の先頭の見出し
   heading: この発言に出る用語
 
-# match が当たったプロジェクトの要素だけを、並びの順に global へ重ねる
+# match が該当したプロジェクトの要素だけを、並びの順に global へ重ねる
 projects:
   # match は絶対パスかプロジェクト名。repositories・aliases の相対パスは、起動したプロジェクトの直下から解決する
   - match: sample-project
@@ -92,5 +92,5 @@ projects:
       - id: project-commands
         paths: [docs/command.yaml]
         alias_type: command
-        # 文書の並びを持つ配列のキー。書かないときは各ファイルが 1 件の文書
+        # 文書の並びを持つ配列のキー。記載しないときは各ファイルが 1 件の文書
         records: commands

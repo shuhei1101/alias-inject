@@ -1,0 +1,7 @@
+confirmations:
+  - topic: plugin.json の description の置き換え後の文言
+    decision: 「入力とツールの結果の単語に該当する引用の文脈と、参照した本文の変数参照の値をモデルへ追加する mod」（推奨案 A）
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/98#discussion_r4565773405
