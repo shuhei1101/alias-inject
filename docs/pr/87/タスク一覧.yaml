@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T00:30:57.108331+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/config/CFG-1.yaml・docs/guide の 3 ページ・README.md・CLAUDE.md の呼び名
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:46.042152+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: tests/unit に見出し `避ける語` を期待する箇所が無い

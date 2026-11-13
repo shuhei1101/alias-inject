@@ -14,23 +14,33 @@ docs:
   - page: docs/guide/エイリアスのスキーマ.md
     new: false
     change: 引用の種類の並び（7 行目）の呼び名を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:43.451569+00:00'
   - page: docs/guide/コアコンセプト-引用の文脈.md
     new: false
     change: セクションの呼び名（152・157 行目）を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:43.451569+00:00'
   - page: docs/guide/設定ファイル.md
     new: false
     change: avoid の説明と見出しの表（121・157 行目）の呼び名を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:43.451569+00:00'
   - page: README.md
     new: false
     change: プラグインの説明（3 行目）の呼び名を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:43.451569+00:00'
   - page: CLAUDE.md
     new: false
     change: プラグインの説明（3 行目）の呼び名を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:35:43.451569+00:00'
 scope_out:
   - item: 設定のキー `avoid` とスキーマの構造の変更
     reason: 呼び名だけを揃える要望で、キーを変えると既存の設定ファイルが読めなくなる
