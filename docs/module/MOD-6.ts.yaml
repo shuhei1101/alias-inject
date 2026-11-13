@@ -1,7 +1,7 @@
 id: MOD-6
 visibility: internal
 title: プラグイン / リポジトリ / repository.ts
-lead: 読むリポジトリの `project-index.yaml` を更新時刻が変わったときだけ読み、`documents` のうち `alias_type` を持つ行だけを取り出して `paths` をそのフォルダから解決する。
+lead: 参照するリポジトリの `project-index.yaml` を更新時刻が変わったときだけ参照し、`documents` のうち `alias_type` を持つ行だけを取り出して `paths` をそのフォルダから解決する。
 test_files:
   - tests/unit/hooks/lib/repository.test.ts
 directory: |-
@@ -21,25 +21,25 @@ data_models:
     container: hooks/lib/repository.ts
     usecase: 共通
     role: DTO
-    summary: 1 つの `project-index.yaml` の `documents` から取り出したエイリアスの元の行と、外した行の理由
+    summary: 1 つの `project-index.yaml` の `documents` から取り出したエイリアスの元の行と、除外した行の理由
     properties:
       - name: aliases
         type: ResolvedAlias[]
         description: '`alias_type` を持ち、有効で検証を通った行（並びの順）。`origin` は `project-index.yaml` の絶対パス'
       - name: warnings
         type: string[]
-        description: スキーマに合わない行・旧い構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す
+        description: スキーマに合わない行・旧構造の行・`id` の重なった行の理由。呼び出し元が debug log に出す
 classes:
   - name: RepositoryError
     title: project-index.yaml の読み込みの失敗
     container: hooks/lib/repository.ts
     usecase: 共通
-    summary: '`project-index.yaml` が無い・読めない・書式が誤っていることを、パスと理由つきで伝える例外'
+    summary: '`project-index.yaml` が無い・読み込めない・書式が誤っていることを、パスと理由つきで伝える例外'
     inherits: Error
     properties:
       - name: path
         type: string
-        description: 読めなかった `project-index.yaml` の絶対パス
+        description: 読み込めなかった `project-index.yaml` の絶対パス
       - name: reason
         type: string
         description: 理由（`$.fs` の例外のメッセージ・YAML のパースの理由・書式の誤り）
@@ -80,11 +80,11 @@ functions:
       - name: RepositoryError
         condition: YAML の書式が誤っている・最上位がマッピングでも null でもない・`documents` が並びでない
     process: |-
-      1. YAML のパースに通し、`ok` が false なら path と理由で RepositoryError を投げる
-      2. 値が null、または `documents` を持たないマッピングなら、行も理由も空で返す。それ以外のマッピングでない値は RepositoryError を投げる
-      3. `documents` が並びでなければ RepositoryError を投げる。トップレベルの `aliases` と他のキーは読まない
+      1. YAML のパースを適用し、`ok` が false なら path と理由で RepositoryError を投げる
+      2. 値が null、または `documents` を持たないマッピングなら、行も理由も空で返却する。それ以外のマッピングでない値は RepositoryError を投げる
+      3. `documents` が並びでなければ RepositoryError を投げる。トップレベルの `aliases` と他のキーは参照しない
       4. 行の取り出し（path は `documents`、`aliasTypeOnly` は true）と id の重なりの確認をし、両方の理由を warnings につなぐ
-      5. 各行の `paths` を `project-index.yaml` のフォルダ（親のフォルダ）を基準にパスの解決に通して `patterns` にし、`scope` を持つ行は `scope.cwd` を同じ基準でパスの解決に通して `cwdPatterns` にし（持たない行は undefined）、`origin` を path にする
+      5. 各行の `paths` を `project-index.yaml` のフォルダ（親のフォルダ）を基準にパスの解決を適用して `patterns` にし、`scope` を持つ行は `scope.cwd` を同じ基準でパスの解決を適用して `cwdPatterns` にし（持たない行は undefined）、`origin` を path にする
     callees:
       - MOD-16#functions[parseYaml]
       - MOD-2#functions[parseAliases]
@@ -94,19 +94,19 @@ functions:
     unit_tests:
       - name: test_parse_repository
         case: 正常
-        summary: '`documents` の alias_type を持つ行の `paths` を `project-index.yaml` のフォルダから解決し、他の行とキーは読まない'
+        summary: '`documents` の alias_type を持つ行の `paths` を `project-index.yaml` のフォルダから解決し、他の行とキーは参照しない'
         condition: 'path が `/repo/knowledge/project-index.yaml`。`enabled: false` と、`documents` に `paths: [terms/*.yaml]` で `alias_type: term` の行と、`alias_type` も `metadata.alias_type` も持たない行を持つ'
         mock: なし
         expected: aliases が 1 件で、`patterns` が `['/repo/knowledge/terms/*.yaml']`、`origin` が path、warnings が空
       - name: test_parse_repository_when_documents_missing
         case: 正常
-        summary: '`documents` を持たない・空の `project-index.yaml` は行 0 件。トップレベルの `aliases` は読まない'
-        condition: 旧い構造の `aliases` だけのマッピング、空の文字列
+        summary: '`documents` を持たない・空の `project-index.yaml` は行 0 件。トップレベルの `aliases` は参照しない'
+        condition: 旧構造の `aliases` だけのマッピング、空の文字列
         mock: なし
         expected: どちらも aliases も warnings も空
       - name: test_parse_repository_when_alias_invalid
         case: 正常
-        summary: スキーマに合わない行・旧い構造の行・id の重なった行を外す
+        summary: スキーマに合わない行・旧構造の行・id の重なった行を除外する
         condition: '`documents` に、`alias_type: term` の `id: terms` の行、`alias_type: term` で `metadata.name` が空文字の `id: bad` の行、`alias_type: glossary` の `id: unknown` の行、行の `alias_type` を持たず `metadata.alias_type` を持つ `id: old` の行、同じ `id: terms` の行'
         mock: なし
         expected: aliases が先の terms の 1 件で、warnings に `bad`・`unknown`・`old`・`terms` の理由。理由のパスは `documents[{位置}]`
@@ -128,7 +128,7 @@ functions:
     kind: 関数
     container: hooks/lib/repository.ts
     usecase: 共通
-    summary: '`project-index.yaml` を更新時刻が変わったときだけ読み直し、取り出した行を返す'
+    summary: '`project-index.yaml` を更新時刻が変わったときだけ再読み込みし、取り出した行を返却する'
     scope: public
     is_async: true
     args:
@@ -136,7 +136,7 @@ functions:
         type: EngineInterface
         required: true
         passing: injected
-        description: '`$.fs` を使う'
+        description: '`$.fs` を使用する'
       - name: path
         type: string
         required: true
@@ -157,18 +157,18 @@ functions:
       description: 取り出した行と理由。更新時刻が変わらないうちは前回と同じ値
     exceptions:
       - name: RepositoryError
-        condition: '`project-index.yaml` が無い・読めない'
+        condition: '`project-index.yaml` が無い・読み込めない'
     process: |-
-      1. path を `$.fs.stat` で確かめ、変わったファイルの読み込み（種類は `repository`、変換は project-index.yaml の検証）で読む
+      1. path を `$.fs.stat` で確認し、変わったファイルの読み込み（種類は `repository`、変換は project-index.yaml の検証）で参照する
       2. `$.fs.stat`・`$.fs.read` の例外は、path と例外のメッセージで RepositoryError にして投げる。検証の RepositoryError はそのまま伝える
-      3. 読んだ値を返す
+      3. 参照した値を返却する
     callees:
       - MOD-16#functions[readIfChanged]
       - MOD-6#functions[parseRepository]
     unit_tests:
       - name: test_load_repository_aliases
         case: 正常
-        summary: 更新時刻が同じうちは読み直さず、変わると読み直す
+        summary: 更新時刻が同じうちは再読み込みせず、変わると再読み込みする
         condition: 同じ `project-index.yaml` で 2 回呼び、3 回目は `mtimeMs` を進めて `documents` に alias_type を持つ行を追加する
         mock: テストの `on` で `fs.stat`・`fs.read` をメモリのファイル表から応答し、`fs.read` の呼ばれた回数を数える
         expected: '`fs.read` は 2 回。1・2 回目は同じ値で、3 回目は追加した行を含む'

@@ -1,7 +1,7 @@
 id: MOD-10
 visibility: internal
 title: プラグイン / 照合 / match.ts
-lead: 入力と語を同じ正規化でそろえ、部分文字列として含まれる語を返し、出た位置か出た回数の順に並べる。正規表現は使わない。
+lead: 入力と単語を同じ正規化でそろえ、部分文字列として含まれる単語を返却し、出た位置か出た回数の順に並べる。正規表現は使用しない。
 test_files:
   - tests/unit/hooks/lib/match.test.ts
 directory: |-
@@ -17,24 +17,24 @@ directory: |-
   ```
 data_models:
   - name: Hit
-    title: 当たった語
+    title: 該当した単語
     container: hooks/lib/match.ts
     usecase: 共通
     role: DTO
-    summary: 入力に当たった語と、最初に出た位置
+    summary: 入力に該当した単語と、最初に出た位置
     properties:
       - name: entry
         type: Entry
-        description: 当たった語
+        description: 該当した単語
       - name: position
         type: number
-        description: 正規化した入力で、その語の keys のどれかが最初に出た位置
+        description: 正規化した入力で、その単語の keys のどれかが最初に出た位置
       - name: length
         type: number
-        description: その位置で当たった key のうち最も長いものの長さ
+        description: その位置で該当した key のうち最も長いものの長さ
       - name: count
         type: number
-        description: 正規化した入力で、その語の keys のどれかが始まる位置の数（同じ位置は 1 回）
+        description: 正規化した入力で、その単語の keys のどれかが始まる位置の数（同じ位置は 1 回）
         notes: 'PR #52 で追加'
 functions:
   - name: normalize
@@ -54,7 +54,7 @@ functions:
     returns:
       type: string
       description: 正規化した文字列
-    process: 1. `text.normalize('NFKC').toLowerCase().trim()` を返す
+    process: 1. `text.normalize('NFKC').toLowerCase().trim()` を返却する
     unit_tests:
       - name: test_normalize
         case: 正常
@@ -67,7 +67,7 @@ functions:
     kind: 関数
     container: hooks/lib/match.ts
     usecase: 共通
-    summary: 入力に含まれる語を、最初に出た位置の順に返す
+    summary: 入力に含まれる単語を、最初に出た位置の順に返却する
     scope: public
     is_async: false
     args:
@@ -80,51 +80,51 @@ functions:
         type: Entry[]
         required: true
         passing: positional
-        description: 全ての `aliases` の要素の語（読む `aliases` の要素の順、要素の中は項目の順）
+        description: 全ての `aliases` の要素の単語（参照する `aliases` の要素の順、要素の中は項目の順）
       - name: exclude
         type: string[]
         required: true
         passing: positional
-        description: 照合しない語（正規化前）
+        description: 照合しない単語（正規化前）
     returns:
       type: Hit[]
-      description: 当たった語。位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順
+      description: 該当した単語。位置の昇順、同じ位置なら長い単語が先、それも同じなら aliasIndex・itemIndex の順
     process: |-
-      1. `text` と `exclude` の各要素を照合の正規化に通す
-      2. 各語の keys のうち exclude に無いものを `indexOf` で探し、最も小さい位置と、その位置で当たった最も長い key の長さを取る。どれも当たらない語は外す
-      3. 当たった語ごとに、keys のどれかが始まる位置を入力の末尾まで集め、その数を count にする
-      4. 戻り値の順に並べて返す。同じ語は 1 回だけ返す
+      1. `text` と `exclude` の各要素に照合の正規化を適用する
+      2. 各語の keys のうち exclude に無いものを `indexOf` で探し、最も小さい位置と、その位置で該当した最も長い key の長さを取る。どれも該当しない単語は除外する
+      3. 該当した単語ごとに、keys のどれかが始まる位置を入力の末尾まで集め、その数を count にする
+      4. 戻り値の順に並べて返却する。同じ単語は 1 回だけ返却する
     callees:
       - MOD-10#functions[normalize]
     unit_tests:
       - name: test_find_hits
         case: 正常
-        summary: 入力に先に出た語から並べる
+        summary: 入力に先に出た単語から並べる
         condition: '入力「term-b と 用語エー の違い」、term-a（keys: term-a・用語エー）と term-b'
         mock: なし
         expected: term-b・term-a の順
       - name: test_find_hits_when_same_position
         case: 正常
-        summary: 同じ位置なら長い語が先
-        condition: 入力「レビュースレッドの扱い」、語「レビュー」と「レビュースレッド」
+        summary: 同じ位置なら長い単語が先
+        condition: 入力「レビュースレッドの扱い」、単語「レビュー」と「レビュースレッド」
         mock: なし
         expected: レビュースレッド・レビューの順
       - name: test_find_hits_when_excluded
         case: 正常
-        summary: exclude の語は照合しない
+        summary: exclude の単語は照合しない
         condition: exclude が `[ＴＥＲＭ－Ａ]`、term-a の keys が term-a・用語エー、入力「term-a と用語エー」
         mock: なし
         expected: term-a が用語エーの位置で 1 件で、count が 1
       - name: test_find_hits_when_counted
         case: 正常
         summary: keys のどれかが始まる位置の数を数える
-        condition: 'term-a（keys: term-a・用語エー）、入力「term-a と用語エーと term-a」。語「レビュー」（keys: レビュー・レビュースレッド）、入力「レビュースレッド」'
+        condition: 'term-a（keys: term-a・用語エー）、入力「term-a と用語エーと term-a」。単語「レビュー」（keys: レビュー・レビュースレッド）、入力「レビュースレッド」'
         mock: なし
         expected: term-a の count が 3、レビューの count が 1
         notes: 'PR #52 で追加'
       - name: test_find_hits_when_no_match
         case: 正常
-        summary: 当たらなければ空
+        summary: 該当しなければ空
         condition: 入力「こんにちは」
         mock: なし
         expected: 空
@@ -144,14 +144,14 @@ functions:
         description: 照合の結果
     returns:
       type: Hit[]
-      description: count の降順。同じ count なら findHits の順（位置の昇順、同じ位置なら長い語が先、それも同じなら aliasIndex・itemIndex の順）
-    process: 1. hits を複製し、count の降順・位置の昇順・長さの降順・aliasIndex・itemIndex の順で並べて返す
+      description: count の降順。同じ count なら findHits の順（位置の昇順、同じ位置なら長い単語が先、それも同じなら aliasIndex・itemIndex の順）
+    process: 1. hits を複製し、count の降順・位置の昇順・長さの降順・aliasIndex・itemIndex の順で並べて返却する
     refs:
       - IF-2#constraints[並び]
     unit_tests:
       - name: test_sort_by_count
         case: 正常
-        summary: 出た回数の多い語が先、同じ回数なら先に出た語が先
+        summary: 出た回数の多い単語が先、同じ回数なら先に出た単語が先
         condition: 入力「term-a、term-b、term-b、term-c」の findHits の結果
         mock: なし
         expected: term-b・term-a・term-c の順

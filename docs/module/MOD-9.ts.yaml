@@ -1,14 +1,14 @@
 id: MOD-9
 visibility: internal
 title: プラグイン / 文脈 / context.ts
-lead: 当たった語から記録済みの語を除き、`max_items`・`max_chars` に収まる語を選んで、追加する文脈の文字列を組み立てる。
+lead: 該当した単語から記録済みの単語を除き、`max_items`・`max_chars` に収まる単語を選んで、追加する文脈の文字列を組み立てる。
 test_files:
   - tests/unit/hooks/lib/context.test.ts
 directory: |-
   ```text
   hooks/
     lib/
-      context.ts         語の選択と文脈の組み立て
+      context.ts         単語の選択と文脈の組み立て
   tests/
     unit/
       hooks/
@@ -17,18 +17,18 @@ directory: |-
   ```
 data_models:
   - name: Selection
-    title: 選んだ語と文脈
+    title: 選んだ単語と文脈
     container: hooks/lib/context.ts
     usecase: 共通
     role: DTO
-    summary: 追加する文脈と、記録に入れる語のキー
+    summary: 追加する文脈と、記録に入れる単語のキー
     properties:
       - name: text
         type: string
         description: 追加する文脈
       - name: keys
         type: string[]
-        description: 選んだ語の記録のキー
+        description: 選んだ単語の記録のキー
 constants:
   - name: SECTION_HEADINGS
     title: セクションの見出し
@@ -60,7 +60,7 @@ functions:
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の語は、やめた言い方も）の組を 1 つの文字列にする
+    summary: 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の単語は、やめた言い方も）の組を 1 つの文字列にする
     scope: public
     is_async: false
     args:
@@ -68,7 +68,7 @@ functions:
         type: Entry
         required: true
         passing: positional
-        description: 語
+        description: 単語
     returns:
       type: string
       description: '`{origin}\u0000{aliasId}\u0000{id}`。`avoid` があるときは `{origin}\u0000{aliasId}\u0000{id}\u0000{avoid}`'
@@ -84,7 +84,7 @@ functions:
         expected: どちらの組も 2 つのキーが異なる
       - name: test_entry_key_when_avoid
         case: 正常
-        summary: 用語のやめた言い方の語は、用語とやめた言い方ごとにキーが違う
+        summary: 用語のやめた言い方の単語は、用語とやめた言い方ごとにキーが違う
         condition: origin・aliasId・id が同じで、avoid が undefined・`旧エー`・`OldA` の 3 つ
         mock: なし
         expected: 3 つのキーが互いに異なり、avoid が undefined のキーは `{origin}\u0000{aliasId}\u0000{id}` のまま
@@ -94,7 +94,7 @@ functions:
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: 選んだ語を、見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする
+    summary: 選んだ単語を、見出し・引用の種類ごとのセクション・単語ごとの箇条書きの Markdown にする
     scope: public
     is_async: false
     args:
@@ -107,34 +107,34 @@ functions:
         type: Entry[]
         required: true
         passing: positional
-        description: 選んだ語（選んだ順）
+        description: 選んだ単語（選んだ順）
     returns:
       type: string
       description: 文脈の Markdown
     process: |-
-      1. 先頭に `# {heading}` を置く
-      2. 語を type ごとのセクションに分け、SECTION_HEADINGS の順に並べる。各セクションは空行の後に `## {見出し}` と空行を置く。セクションの中は選んだ順で、出所や `aliases` の要素が違っても同じセクションに並べる
-      3. 語ごとに `- {word}（id: {id}）` と、fields の各要素を `  - {name}: {value}` で並べる
-      4. 行を改行でつないで返す（末尾に改行を付けない）
+      1. 先頭に `# {heading}` を配置する
+      2. 単語を type ごとのセクションに分け、SECTION_HEADINGS の順に並べる。各セクションは空行の後に `## {見出し}` と空行を配置する。セクションの中は選んだ順で、出所や `aliases` の要素が違っても同じセクションに並べる
+      3. 単語ごとに `- {word}（id: {id}）` と、fields の各要素を `  - {name}: {value}` で並べる
+      4. 行を改行でつないで返却する（末尾に改行を付けない）
     unit_tests:
       - name: test_render_context
         case: 正常
         summary: インターフェース定義の例と同じ Markdown になる
-        condition: command の cmd-setup を先、term の term-single-usecase を後に渡し、heading が既定
+        condition: command の cmd-setup を先、term の term-single-usecase を後に指定し、heading が既定
         mock: なし
         expected: インターフェース定義『入力への引用の文脈の追加』のレスポンス例と一致する（`## 用語` が `## コマンド` より先）
       - name: test_render_context_when_same_id_in_repositories
         case: 正常
-        summary: 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる
-        condition: origin `/b/project-index.yaml` の term-a を先、origin `/a/project-index.yaml` の term-a を後に渡す
+        summary: 別の出所の同じ ID の単語は 1 つのセクションに選んだ順で並べる
+        condition: origin `/b/project-index.yaml` の term-a を先、origin `/a/project-index.yaml` の term-a を後に指定する
         mock: なし
         expected: '`## 用語` が 1 つで、`/b` の term-a・`/a` の term-a の順に並ぶ'
   - name: selectEntries
-    title: 語の選択
+    title: 単語の選択
     kind: 関数
     container: hooks/lib/context.ts
     usecase: 共通
-    summary: 当たった語から記録済みの語を除き、語の数と文字数の上限に収まる語を選んで文脈にする
+    summary: 該当した単語から記録済みの単語を除き、単語の数と文字数の上限に収まる単語を選んで文脈にする
     scope: public
     is_async: false
     args:
@@ -155,37 +155,37 @@ functions:
         description: 実効の設定の見出しと上限
     returns:
       type: Selection | null
-      description: 選んだ語の文脈とキー。1 語も選ばないときは null
+      description: 選んだ単語の文脈とキー。1 つの単語も選ばないときは null
     process: |-
-      1. hits を順に見て、記録のキーが recorded にある語と、既に選んだ語を飛ばす
-      2. その語を加えて文脈を書式化し、文字数（コードポイントの数）が maxChars を超えるなら加えずに次へ進む
-      3. 選んだ語が maxItems に達したら止める
-      4. 1 語も選ばなければ null、選んだら最後に書式化した文脈と選んだ語のキーを返す
+      1. hits を順に確認して、記録のキーが recorded にある単語と、既に選んだ単語を飛ばす
+      2. その単語を加えて文脈を書式化し、文字数（コードポイントの数）が maxChars を超えるなら加えずに次へ進む
+      3. 選んだ単語が maxItems に達したら止める
+      4. 1 つの単語も選ばなければ null、選んだら最後に書式化した文脈と選んだ単語のキーを返却する
     callees:
       - MOD-9#functions[entryKey]
       - MOD-9#functions[renderContext]
     unit_tests:
       - name: test_select_entries
         case: 正常
-        summary: 記録済みの語を除いて選ぶ
+        summary: 記録済みの単語を除いて選ぶ
         condition: hits が term-a・term-b、recorded に term-a のキー
         mock: なし
         expected: keys が term-b のキーだけで、text に term-b を含み term-a を含まない
       - name: test_select_entries_when_over_item_limit
         case: 正常
-        summary: maxItems 語で止める
-        condition: hits が 3 語、maxItems が 2
+        summary: maxItems 単語で止める
+        condition: hits が 3 つの単語、maxItems が 2
         mock: なし
-        expected: 先の 2 語だけ
+        expected: 先の 2 つの単語だけ
       - name: test_select_entries_when_over_char_limit
         case: 正常
-        summary: 足すと maxChars を超える語を飛ばし、後ろの収まる語を足す
+        summary: 追加すると maxChars を超える単語を飛ばし、後ろの収まる単語を追加する
         condition: hits が term-a・term-long（description が 500 文字）・term-b、maxChars が 300
         mock: なし
         expected: term-a と term-b を選び、text が 300 文字以下
       - name: test_select_entries_when_nothing_selected
         case: 正常
-        summary: 選ぶ語が無ければ null
+        summary: 選ぶ単語が無ければ null
         condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
         mock: なし
         expected: どれも null

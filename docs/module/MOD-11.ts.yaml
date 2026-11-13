@@ -1,7 +1,7 @@
 id: MOD-11
 visibility: internal
 title: プラグイン / 照合条件 / condition.ts
-lead: '文書の `inject_when` の値を照合条件として検査し、照合した本文で評価して、照合条件に当たらない語を当たった語から外す。'
+lead: '文書の `inject_when` の値を照合条件として検査し、照合した本文で評価して、照合条件に該当しない単語を該当した単語から除外する。'
 test_files:
   - tests/unit/hooks/lib/condition.test.ts
 directory: |-
@@ -28,10 +28,10 @@ data_models:
         description: 比べ方。`not_contains` は同じ `values`・`match` の `contains` の否定
       - name: values
         type: string[]
-        description: 比べる値。`caseSensitive` が false なら照合の正規化に通したもの
+        description: 比べる値。`caseSensitive` が false なら照合の正規化を適用したもの
       - name: match
         type: "'any' | 'all'"
-        description: '`values` のどれか（any）か全て（all）を本文が含めば当たる'
+        description: '`values` のどれか（any）か全て（all）を本文が含めば該当する'
       - name: caseSensitive
         type: boolean
         description: true なら本文と値を正規化せずに比べる
@@ -66,7 +66,7 @@ functions:
     kind: 関数
     container: hooks/lib/condition.ts
     usecase: 共通
-    summary: '`inject_when` の値を検査し、照合条件にするか、誤りの箇所と理由を返す'
+    summary: '`inject_when` の値を検査し、照合条件にするか、誤りの箇所と理由を返却する'
     scope: public
     is_async: false
     args:
@@ -90,7 +90,7 @@ functions:
          - `values` が 1 つ以上の空でない文字列の並びでなければ誤り
          - `match` は無ければ `any`。`any`・`all` でなければ誤り
          - `case_sensitive` は無ければ false。真偽値でなければ誤り
-         - `case_sensitive` が false なら `values` の各要素を照合の正規化に通し、空になる要素があれば誤り
+         - `case_sensitive` が false なら `values` の各要素に照合の正規化を適用し、空になる要素があれば誤り
     callees:
       - MOD-10#functions[normalize]
     refs:
@@ -99,12 +99,12 @@ functions:
       - name: test_parse_condition
         case: 正常
         summary: 条件と 3 レイヤーまでの束を照合条件にし、既定を補う
-        condition: '`{field: text, op: contains, values: [Ｒｅａｃｔ]}` と、`and` の中に `or` の中に `not` の条件を置いた束'
+        condition: '`{field: text, op: contains, values: [Ｒｅａｃｔ]}` と、`and` の中に `or` の中に `not` の条件を配置した束'
         mock: なし
         expected: 'どちらも ok が true。前者の match が `any`、caseSensitive が false、values が `[react]`'
       - name: test_parse_condition_when_invalid
         case: 正常
-        summary: 誤りの箇所と理由を返す
+        summary: 誤りの箇所と理由を返却する
         condition: '`{and: []}`、`{and: [{field: text, op: regex, values: [f]}]}`、`{and: [...], or: [...]}`、`{field: name, op: contains, values: [a]}`、`{field: text, op: contains, values: []}`、`{field: text, op: not_contains, values: [" "]}`、`{field: text, op: contains, values: [a], match: some}`、`{field: text, op: contains, values: [a], case_sensitive: yes}`、`{field: text, op: contains, values: [a], value: b}`、4 レイヤーの束'
         mock: なし
         expected: 'どれも ok が false。path が順に `inject_when.and`・`inject_when.and[0].op`・`inject_when`・`inject_when.field`・`inject_when.values`・`inject_when.values`・`inject_when.match`・`inject_when.case_sensitive`・`inject_when.value`・4 レイヤー目の束のパス'
@@ -132,10 +132,10 @@ functions:
         description: 照合した本文（正規化前）
     returns:
       type: boolean
-      description: 照合条件に当たれば true
+      description: 照合条件に該当すれば true
     process: |-
-      1. 条件は、`caseSensitive` が false なら本文を照合の正規化に通し、`values` のどれか（any）か全て（all）を含むかを `includes` で比べる。`not_contains` はその否定
-      2. `and` は全ての要素、`or` はどれかの要素が当たれば true、`not` は要素が当たらなければ true
+      1. 条件は、`caseSensitive` が false なら本文に照合の正規化を適用し、`values` のどれか（any）か全て（all）を含むかを `includes` で比べる。`not_contains` はその否定
+      2. `and` は全ての要素、`or` はどれかの要素が該当すれば true、`not` は要素がヒットしななければ true
     callees:
       - MOD-10#functions[normalize]
     unit_tests:
@@ -159,7 +159,7 @@ functions:
     kind: 関数
     container: hooks/lib/condition.ts
     usecase: 共通
-    summary: 当たった語のうち、照合条件に当たらない語を外す
+    summary: 該当した単語のうち、照合条件に該当しない単語を除外する
     scope: public
     is_async: false
     args:
@@ -175,14 +175,14 @@ functions:
         description: 照合した本文（正規化前）
     returns:
       type: Hit[]
-      description: '`entry.condition` が undefined か、照合条件に当たる語。hits の順のまま'
-    process: 1. `entry.condition` が undefined の語は残し、それ以外は照合条件の評価が true の語だけを残す
+      description: '`entry.condition` が undefined か、照合条件に該当する単語。hits の順のまま'
+    process: 1. `entry.condition` が undefined の単語は残し、それ以外は照合条件の評価が true の単語だけを残す
     callees:
       - MOD-11#functions[evaluateCondition]
     unit_tests:
       - name: test_filter_by_condition
         case: 正常
-        summary: 照合条件を持たない語は残し、照合条件に当たらない語を外す
+        summary: 照合条件を持たない単語は残し、照合条件に該当しない単語を除外する
         condition: '本文「term-a と term-c を Python で」。term-a は照合条件なし、term-c は `not_contains [python]`'
         mock: なし
         expected: term-a だけ
