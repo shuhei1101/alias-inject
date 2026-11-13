@@ -19,7 +19,7 @@ categories:
     verification:
       state: 済
       date: '2026-10-25'
-      detail: 作業ツリーで `npm ci` が終了コード 0 で通り、tmux の中で `claude --plugin-dir {worktree}` を起動すると `.claude-plugin/types/` が書き出され、`npm run typecheck` が終了コード 0 で通ることを確かめた
+      detail: 作業ツリーで `npm ci` が終了コード 0 で通り、tmux の中で `claude --plugin-dir {worktree}` を起動すると `.claude-plugin/types/` が書き出され、`npm run typecheck` が終了コード 0 で通ることを確認した
   - name: 取り込み後の追従（pull 後）
     commands: |-
       1. 依存を lock に合わせる
@@ -30,7 +30,7 @@ categories:
     verification:
       state: 済
       date: '2026-10-25'
-      detail: 作業ツリーで `npm ci` が終了コード 0 で通ることを確かめた
+      detail: 作業ツリーで `npm ci` が終了コード 0 で通ることを確認した
   - name: 依存の追加・更新・削除
     commands: |-
       1. 依存を追加・更新する（バージョンは完全一致で固定する）
@@ -47,7 +47,7 @@ categories:
     verification:
       state: 済
       date: '2026-10-25'
-      detail: 作業ツリーの複製で `npm uninstall typescript` と `npm install --save-dev --save-exact typescript@5.9.3` がどちらも終了コード 0 で通り、`package.json` の `devDependencies` が元どおり `5.9.3` に戻ることを確かめた
+      detail: 作業ツリーの複製で `npm uninstall typescript` と `npm install --save-dev --save-exact typescript@5.9.3` がどちらも終了コード 0 で通り、`package.json` の `devDependencies` が元どおり `5.9.3` に戻ることを確認した
   - name: 起動・停止
     commands: 未確定
   - name: テスト
@@ -58,7 +58,7 @@ categories:
       - TP-1#layers[lint]
   - name: ビルド・生成
     commands: |-
-      1. `schemas/aliases.schema.yaml` を書き換えた後に、hooks モジュールが import する `hooks/lib/aliases-schema.ts` を生成し直す
+      1. `schemas/aliases.schema.yaml` を書き換えた後に、hooks モジュールが import する `hooks/lib/aliases-schema.ts` を再生成する
 
       ```bash
       node scripts/gen-aliases-schema.mjs
@@ -66,7 +66,7 @@ categories:
     verification:
       state: 済
       date: '2026-10-26'
-      detail: 作業ツリーで `node scripts/gen-aliases-schema.mjs` が終了コード 0 で `hooks/lib/aliases-schema.ts` を書き出し、続けて `--check` が終了コード 0 で通ることを確かめた。書き出した後に `hooks/lib/aliases-schema.ts` を書き換えると `--check` が終了コード 1 になることも確かめた
+      detail: 作業ツリーで `node scripts/gen-aliases-schema.mjs` が終了コード 0 で `hooks/lib/aliases-schema.ts` を書き出し、続けて `--check` が終了コード 0 で通ることを確認した。書き出した後に `hooks/lib/aliases-schema.ts` を書き換えると `--check` が終了コード 1 になることも確認した
   - name: 取り込み前の検査
     commands: 未確定
   - name: 管理作業

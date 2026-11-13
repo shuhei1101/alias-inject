@@ -7,5 +7,5 @@
 | ページ | 概要 |
 | --- | --- |
 | [claude-code](./LIB-1.yaml) | mod の hooks モジュールの型とテストの道具 |
-| [js-yaml](./LIB-2.yaml) | 設定ファイルと照合する YAML を読むパーサー |
-| [typescript](./LIB-3.yaml) | 型の確認に使う TypeScript のコンパイラ |
+| [js-yaml](./LIB-2.yaml) | 設定ファイルと照合する YAML を読み込むパーサー |
+| [typescript](./LIB-3.yaml) | 型の確認に使用する TypeScript のコンパイラ |

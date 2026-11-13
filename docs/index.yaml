@@ -2,7 +2,7 @@ title: alias-inject
 summary: alias-inject のドキュメント全体の目次
 items:
   - page: architecture/
-    summary: システム全体構成（Claude Code・hooks モジュール・設定ファイル・照合に使う YAML の関係）
+    summary: システム全体構成（Claude Code・hooks モジュール・設定ファイル・照合に使用する YAML の関係）
   - page: nonfunctional/
     summary: 外部の制約から逆算したアプリ側の決定値（非機能要件テストの元）
   - page: scenario/
@@ -16,8 +16,8 @@ items:
   - page: test-procedure/
     summary: プロジェクト固有のテスト起動コマンドと前提条件
   - page: dev-command/
-    summary: 開発で使うコマンドの分類ごとの前提・順序・コマンド
+    summary: 開発で使用するコマンドの分類ごとの前提・順序・コマンド
   - page: library/
     summary: 採用済みの外部ライブラリ / 外部ツールのリファレンス
   - page: guide/
-    summary: alias-inject の使い方（はじめに・使い方・リファレンス）
+    summary: alias-inject の使用方法（はじめに・使い方・リファレンス）
