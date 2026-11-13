@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T01:16:14.926613+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: hooks/ の .ts・.tsx のコメントの置き換え
+    updated_by: planner
+    updated_at: '2026-11-13T05:50:08.578287+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: コメントだけを置き換え、動作を変えないためテストを追加しない（実装の工程で既存の結合テストを実行する）
