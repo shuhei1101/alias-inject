@@ -1,0 +1,1 @@
+# plugin.json・settings.sample.yaml・rules.yaml に残る AI slop の単語を対応表に合わせて修正する
