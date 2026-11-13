@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T15:49:55.986648+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: 直下の project-index.yaml に配信元の description と when を記載する
+    updated_by: planner
+    updated_at: '2026-11-13T16:03:28.236927+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: コードは変わらない
