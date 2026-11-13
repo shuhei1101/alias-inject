@@ -84,9 +84,9 @@ functions:
          - `and`・`or` は 1 つ以上の要素の並びでなければ誤り（理由 `空の束です` か `並びではありません`）。各要素を `{パス}[{位置}]` で検査する
          - `not` は値を `{パス}.not` で検査する
          - 束の深さ（最上位の束を 1）が MAX_CONDITION_DEPTH を超えたら誤り（理由 `入れ子が {MAX_CONDITION_DEPTH} レイヤーを超えています`）
-      3. それ以外は条件にする。`field`・`op`・`values`・`match`・`case_sensitive` 以外のキーがあれば誤り（理由 `{キー} は書けません`）
-         - `field` が `text` でなければ誤り（理由 `field は text だけを書けます`）
-         - `op` が `contains`・`not_contains` でなければ誤り（理由 `op は contains・not_contains だけを書けます`）
+      3. それ以外は条件にする。`field`・`op`・`values`・`match`・`case_sensitive` 以外のキーがあれば誤り（理由 `{キー} は記載できません`）
+         - `field` が `text` でなければ誤り（理由 `field は text だけを記載できます`）
+         - `op` が `contains`・`not_contains` でなければ誤り（理由 `op は contains・not_contains だけを記載できます`）
          - `values` が 1 つ以上の空でない文字列の並びでなければ誤り
          - `match` は無ければ `any`。`any`・`all` でなければ誤り
          - `case_sensitive` は無ければ false。真偽値でなければ誤り
