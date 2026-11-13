@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import { findReferenceNames, formatReferenceLines, parseEnvOutput } from '../../../../hooks/lib/variable'
 import { numberedNames } from '../support/engine'
 
-// 名前を出た順に重なりを除いて返す（正常系）
+// 名前を出た順に重なりを除いて返却する（正常系）
 test('test_find_reference_names', () => {
   // 準備
   const text = '!{B} !{A} !{B}'
@@ -14,7 +14,7 @@ test('test_find_reference_names', () => {
   expect(names).toEqual(['B', 'A'])
 })
 
-// 名前の書式に合わないものを拾わない（正常系）
+// 名前の書式に合わないものを取得しない（正常系）
 test('test_find_reference_names_when_not_name', () => {
   // 準備
   const text = '!{} !{1ABC} !{A-B} {A} ${A}'
@@ -66,7 +66,7 @@ test('test_format_reference_lines_when_multiline', () => {
   expect(lines).toBe('変数参照の値: !{C} = "line1\\nline2"')
 })
 
-// 上限を超える値は先頭だけを書き、全体の文字数を添える（正常系）
+// 上限を超える値は先頭だけを記載し、全体の文字数を添える（正常系）
 test('test_format_reference_lines_when_value_too_long', () => {
   // 準備
   const over = new Map([['L', 'x'.repeat(1001)]])
@@ -95,7 +95,7 @@ test('test_format_reference_lines_when_too_many', () => {
   const exactLines = formatReferenceLines(exact, values).split('\n')
 
   // 検証
-  // 51 個では 50 行の後ろに、外した件数の行が付く
+  // 51 個では 50 行の後ろに、除外した件数の行が付く
   expect(overLines.length).toBe(51)
   expect(overLines[0]).toBe('変数参照の値: !{NAME_01} = v')
   expect(overLines[49]).toBe('変数参照の値: !{NAME_50} = v')

@@ -25,7 +25,7 @@ test('test_record_id_of', () => {
   expect(new Set([main, agent1, agent2]).size).toBe(3)
 })
 
-// 書いていない記録は空になる（正常系）
+// 書き込んでいない記録は空になる（正常系）
 test('test_read_recorded_when_never_written', async () => {
   // 準備
   const { $ } = createFakeEngine()
@@ -39,7 +39,7 @@ test('test_read_recorded_when_never_written', async () => {
   expect(recorded.version).toBe(0)
 })
 
-// 選んだ語のキーがその会話の記録だけに残り、次の select に記録済みのキーが渡る（正常系）
+// 選んだ単語のキーがその会話の記録だけに残り、次の select に記録済みのキーが指定される（正常系）
 test('test_add_recorded', async () => {
   // 準備
   const { $ } = createFakeEngine()
@@ -55,7 +55,7 @@ test('test_add_recorded', async () => {
   expect((await readRecorded($, 's2')).keys.size).toBe(0)
 })
 
-// select が null なら書かずに null を返す（正常系）
+// select が null なら書き込まずに null を返却する（正常系）
 test('test_add_recorded_when_nothing_selected', async () => {
   // 準備
   let setCalls = 0
@@ -74,7 +74,7 @@ test('test_add_recorded_when_nothing_selected', async () => {
   expect(setCalls).toBe(0)
 })
 
-// ifVersion が外れたら読み直して選び直す（正常系）
+// ifVersion が一致しなければ再読み込みして再選択する（正常系）
 test('test_add_recorded_when_conflicted', async () => {
   // 準備
   // 1 回目の書き込みの前に、同じ記録へ a を書き込んで version を進める
@@ -99,10 +99,10 @@ test('test_add_recorded_when_conflicted', async () => {
   expect([...(await readRecorded($, 's1')).keys].sort()).toEqual(['a', 'b'])
 })
 
-// 上限まで外れたら例外を投げる（異常系）
+// 上限まで失敗したら例外を投げる（異常系）
 test('test_add_recorded_when_conflicts_exhausted', async () => {
   // 準備
-  // ifVersion を付けた書き込みには常に外れたと返す
+  // ifVersion を付けた書き込みには常に一致しなかったと返却する
   let setCalls = 0
   const { $ } = createFakeEngine({
     onStateSet: (write, store) => {

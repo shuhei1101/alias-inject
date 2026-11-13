@@ -5,7 +5,7 @@ import type { Hit } from '../../../../hooks/lib/match'
 
 const HEADING = 'この発言に出る用語'
 
-// テスト用の語。説明を渡すと description の列を持つ
+// テスト用の単語。説明を指定すると description の列を持つ
 function makeEntry(
   id: string,
   options: { origin?: string; aliasId?: string; type?: Entry['type']; description?: string; avoid?: string } = {},
@@ -27,7 +27,7 @@ function makeEntry(
   }
 }
 
-// 照合の結果の形にする
+// 照合の結果の構造にする
 function makeHit(entry: Entry, position: number): Hit {
   return { entry, position, length: entry.word.length, count: 1 }
 }
@@ -50,7 +50,7 @@ test('test_entry_key', () => {
   expect(originKeys[0]).not.toBe(originKeys[1])
 })
 
-// 用語のやめた言い方の語は、用語とやめた言い方ごとにキーが違う（正常系）
+// 用語のやめた言い方の単語は、用語とやめた言い方ごとにキーが違う（正常系）
 test('test_entry_key_when_avoid', () => {
   // 準備
   const term = makeEntry('term-a', { origin: '/a', aliasId: 'terms' })
@@ -65,7 +65,7 @@ test('test_entry_key_when_avoid', () => {
   expect(keys[0]).toBe('/a\u0000terms\u0000term-a')
 })
 
-// 見出し・引用の種類ごとのセクション・語ごとの箇条書きの Markdown にする（正常系）
+// 見出し・引用の種類ごとのセクション・単語ごとの箇条書きの Markdown にする（正常系）
 test('test_render_context', () => {
   // 準備
   const setup: Entry = {
@@ -97,7 +97,7 @@ test('test_render_context', () => {
     word: '単一ユースケース',
     keys: ['単一ユースケース'],
     fields: [
-      { name: 'description', value: '1 つの操作を始めから終わりまで書くシナリオの単位' },
+      { name: 'description', value: '1 つの操作を始めから終わりまで記載するシナリオの単位' },
       { name: 'related', value: 'tpl-scenario（シナリオのテンプレート）' },
     ],
     path: '/mnt/c/Users/shuhe/repo/knowledge/terms/term-single-usecase.yaml',
@@ -117,7 +117,7 @@ test('test_render_context', () => {
       '## 用語',
       '',
       '- 単一ユースケース（id: term-single-usecase）',
-      '  - description: 1 つの操作を始めから終わりまで書くシナリオの単位',
+      '  - description: 1 つの操作を始めから終わりまで記載するシナリオの単位',
       '  - related: tpl-scenario（シナリオのテンプレート）',
       '',
       '## コマンド',
@@ -130,7 +130,7 @@ test('test_render_context', () => {
   )
 })
 
-// 別の出所の同じ ID の語は 1 つのセクションに選んだ順で並べる（正常系）
+// 別の出所の同じ ID の単語は 1 つのセクションに選んだ順で並べる（正常系）
 test('test_render_context_when_same_id_in_repositories', () => {
   // 準備
   const later = makeEntry('term-a', { origin: '/b/project-index.yaml', description: 'b の説明' })
@@ -145,7 +145,7 @@ test('test_render_context_when_same_id_in_repositories', () => {
   expect(text.indexOf('b の説明')).toBeLessThan(text.indexOf('a の説明'))
 })
 
-// 記録済みの語を除いて選ぶ（正常系）
+// 記録済みの単語を除いて選ぶ（正常系）
 test('test_select_entries', () => {
   // 準備
   const termA = makeEntry('term-a')
@@ -161,7 +161,7 @@ test('test_select_entries', () => {
   expect(selection?.text).not.toContain('term-a')
 })
 
-// maxItems 語で止める（正常系）
+// maxItems 個の単語で止める（正常系）
 test('test_select_entries_when_over_item_limit', () => {
   // 準備
   const entries = ['term-a', 'term-b', 'term-c'].map((id) => makeEntry(id))
@@ -174,7 +174,7 @@ test('test_select_entries_when_over_item_limit', () => {
   expect(selection?.keys).toEqual([entryKey(entries[0]!), entryKey(entries[1]!)])
 })
 
-// 足すと maxChars を超える語を飛ばし、後ろの収まる語を足す（正常系）
+// 追加すると maxChars を超える単語を飛ばし、後ろの収まる単語を追加する（正常系）
 test('test_select_entries_when_over_char_limit', () => {
   // 準備
   const termA = makeEntry('term-a', { description: '短い説明' })
@@ -190,7 +190,7 @@ test('test_select_entries_when_over_char_limit', () => {
   expect([...(selection?.text ?? '')].length).toBeLessThanOrEqual(300)
 })
 
-// 選ぶ語が無ければ null を返す（正常系）
+// 選ぶ単語が無ければ null を返却する（正常系）
 test('test_select_entries_when_nothing_selected', () => {
   // 準備
   const termA = makeEntry('term-a')

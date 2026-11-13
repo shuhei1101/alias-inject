@@ -9,7 +9,7 @@ import { thrown, thrownAsync } from '../support/thrown'
 const HOME = '/home/u'
 const DEV_DOCS = '/repo/knowledge/project-index.yaml'
 
-// documents の 1 行の YAML。`metadata` に足したい行を渡せる
+// documents の 1 行の YAML。`metadata` に追加したい行を指定できる
 function termRowYaml(id: string, paths: string, extraMetadata: string[] = []): string[] {
   return [
     `  - id: ${id}`,
@@ -24,7 +24,7 @@ function devDocs(...rowBlocks: string[][]): string {
   return ['documents:', ...rowBlocks.flat(), ''].join('\n')
 }
 
-// `documents` の `alias_type` を持つ行の `paths` を project-index.yaml のフォルダから解決し、他の行とキーは読まない（正常系）
+// `documents` の `alias_type` を持つ行の `paths` を project-index.yaml のフォルダから解決し、他の行とキーは読み込まない（正常系）
 test('test_parse_repository', () => {
   // 準備
   const text = [
@@ -43,7 +43,7 @@ test('test_parse_repository', () => {
   expect(result.warnings).toEqual([])
 })
 
-// `documents` を持たない・空の project-index.yaml は行 0 件になり、トップレベルの `aliases` は読まない（正常系）
+// `documents` を持たない・空の project-index.yaml は行 0 件になり、トップレベルの `aliases` は読み込まない（正常系）
 test('test_parse_repository_when_documents_missing', () => {
   // 準備
   const legacy = [
@@ -69,7 +69,7 @@ test('test_parse_repository_when_documents_missing', () => {
   ])
 })
 
-// スキーマに合わない行・旧い構造の行・id の重なった行を外す（正常系）
+// スキーマに合わない行・旧構造の行・id の重なった行を除外する（正常系）
 test('test_parse_repository_when_alias_invalid', () => {
   // 準備
   const unknownRow = ['  - id: unknown', '    paths: [unknown/*.yaml]', '    alias_type: glossary']
@@ -118,7 +118,7 @@ test('test_parse_repository_when_malformed', () => {
   }
 })
 
-// 更新時刻が同じうちは読み直さず、変わると読み直す（正常系）
+// 更新時刻が同じうちは再読み込みせず、変わると再読み込みする（正常系）
 test('test_load_repository_aliases', async () => {
   // 準備
   clearCache()

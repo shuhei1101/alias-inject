@@ -29,7 +29,7 @@ const MAX_LINK_DEPTH = 32
 
 /** メモリ上のファイル表。ファイル・フォルダ・シンボリックリンクを持つ */
 export class MemoryFs {
-  /** `read` に渡されたパス（呼ばれた順） */
+  /** `read` に指定されたパス（呼ばれた順） */
   readonly reads: string[] = []
 
   private readonly files = new Map<string, StoredFile>()
@@ -40,18 +40,18 @@ export class MemoryFs {
     for (const [path, text] of Object.entries(files)) this.write(path, text)
   }
 
-  /** ファイルを置く。置き直すと更新時刻が進む */
+  /** ファイルを配置する。再配置すると更新時刻が進む */
   write(path: string, text: string): void {
     this.files.set(path, { text, mtimeMs: ++clock })
     this.addAncestors(path)
   }
 
-  /** ファイルを消す */
+  /** ファイルを削除する */
   remove(path: string): void {
     this.files.delete(path)
   }
 
-  /** シンボリックリンクを置く */
+  /** シンボリックリンクを配置する */
   link(path: string, target: string): void {
     this.links.set(path, { target, mtimeMs: ++clock })
     this.addAncestors(path)
@@ -64,7 +64,7 @@ export class MemoryFs {
     return file.mtimeMs
   }
 
-  /** ファイルをテキストで読む。無ければ例外 */
+  /** ファイルをテキストで読み込む。無ければ例外 */
   read(path: string): string {
     this.reads.push(path)
     const file = this.files.get(this.resolve(path))
@@ -90,7 +90,7 @@ export class MemoryFs {
     }
   }
 
-  /** フォルダの直下の項目を名前の順に返す。フォルダが無ければ例外 */
+  /** フォルダの直下の項目を名前の順に返却する。フォルダが無ければ例外 */
   list(path: string): ListedEntry[] {
     const real = this.resolve(path)
     if (!this.dirs.has(real)) throw new Error(`ENOENT: no such file or directory, scandir '${path}'`)
@@ -120,7 +120,7 @@ export class MemoryFs {
     return [...entries.values()].sort((a, b) => (a.name < b.name ? -1 : 1))
   }
 
-  // リンクをたどった先のパスを返す。パスの途中のフォルダがリンクのときも置き換える
+  // リンクをたどった先のパスを返却する。パスの途中のフォルダがリンクのときも置き換える
   private resolve(path: string): string {
     let current = path
     for (let depth = 0; depth < MAX_LINK_DEPTH; depth += 1) {

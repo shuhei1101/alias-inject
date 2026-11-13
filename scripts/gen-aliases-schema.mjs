@@ -8,7 +8,7 @@ const SCHEMA_PATH = join(ROOT, 'schemas', 'aliases.schema.yaml')
 const OUTPUT_PATH = join(ROOT, 'hooks', 'lib', 'aliases-schema.ts')
 const HEADER = '// schemas/aliases.schema.yaml から scripts/gen-aliases-schema.mjs が生成する。直接編集しない'
 
-/** schemas/aliases.schema.yaml から hooks/lib/aliases-schema.ts を書き出す。check が true のときは書き出さずに一致を確かめる */
+/** schemas/aliases.schema.yaml から hooks/lib/aliases-schema.ts を書き出す。check が true のときは書き出さずに一致を確認する */
 function generateAliasSchema(check) {
   const schema = load(readFileSync(SCHEMA_PATH, 'utf8'))
   const body = `${HEADER}\nexport const ALIAS_SCHEMA: Record<string, unknown> = ${JSON.stringify(schema, null, 2)}\n`

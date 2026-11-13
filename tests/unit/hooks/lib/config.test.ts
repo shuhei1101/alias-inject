@@ -34,7 +34,7 @@ const WHERE = {
   home: '/home/u',
 }
 
-// `~` を展開したパスを返す（正常系）
+// `~` を展開したパスを返却する（正常系）
 test('test_read_config_path', async () => {
   // 準備
   const { $ } = createFakeEngine({
@@ -49,7 +49,7 @@ test('test_read_config_path', async () => {
   expect(result).toBe('/home/u/.config/alias-inject/settings.yaml')
 })
 
-// 値が無く、既定のパスにファイルが無いときは null を返す（正常系）
+// 値が無く、既定のパスにファイルが無いときは null を返却する（正常系）
 test('test_read_config_path_when_missing', async () => {
   // 準備
   const settingsList = [{}, { env: {} }, { env: { ALIAS_INJECT_CONFIG: '' } }, { env: { ALIAS_INJECT_CONFIG: 5 } }]
@@ -67,7 +67,7 @@ test('test_read_config_path_when_missing', async () => {
   expect(results).toEqual(new Array(settingsList.length * envList.length).fill(null))
 })
 
-// settings に値が無いときは環境変数の値を返す（正常系）
+// settings に値が無いときは環境変数の値を返却する（正常系）
 test('test_read_config_path_when_shell_env', async () => {
   // 準備
   const { $ } = createFakeEngine({ env: { ALIAS_INJECT_CONFIG: '~/shell/settings.yaml' }, home: '/home/u' })
@@ -79,7 +79,7 @@ test('test_read_config_path_when_shell_env', async () => {
   expect(result).toBe('/home/u/shell/settings.yaml')
 })
 
-// settings と環境変数の両方に値があるときは settings の値を返す（正常系）
+// settings と環境変数の両方に値があるときは settings の値を返却する（正常系）
 test('test_read_config_path_when_settings_preferred', async () => {
   // 準備
   const { $ } = createFakeEngine({
@@ -94,7 +94,7 @@ test('test_read_config_path_when_settings_preferred', async () => {
   expect(result).toBe('/a/settings.yaml')
 })
 
-// ALIAS_INJECT_CONFIG が無いときは既定のパスを返す（正常系）
+// ALIAS_INJECT_CONFIG が無いときは既定のパスを返却する（正常系）
 test('test_read_config_path_when_default_path', async () => {
   // 準備
   const cases: { env?: Record<string, string>; path: string }[] = [
@@ -128,7 +128,7 @@ test('test_read_config_path_when_explicit_file_missing', async () => {
   expect(result).toBe('/missing/settings.yaml')
 })
 
-// 全キーを書いた設定を読む（正常系）
+// 全キーを記載した設定を読み込む（正常系）
 test('test_parse_config', () => {
   // 準備
   const termAlias = {
@@ -186,7 +186,7 @@ test('test_parse_config', () => {
   expect(config.warnings).toEqual([])
 })
 
-// 書かないキーは既定値になる（正常系）
+// 記載しないキーは既定値になる（正常系）
 test('test_parse_config_when_keys_omitted', () => {
   // 実行
   const config = parse({ global: {} })
@@ -205,7 +205,7 @@ test('test_parse_config_when_keys_omitted', () => {
   expect(config.warnings).toEqual([])
 })
 
-// スキーマに合わない aliases の要素と、並びでない repositories・aliases は外して理由を残す（正常系）
+// スキーマに合わない aliases の要素と、並びでない repositories・aliases は除外して理由を残す（正常系）
 test('test_parse_config_when_alias_invalid', () => {
   // 準備
   const invalid = { id: 'bad', paths: ['a.yaml'], alias_type: 'memo' }
@@ -242,7 +242,7 @@ test('test_parse_config_when_origins_empty', () => {
   expect(mixed.warnings.some((warning) => warning.includes('foo'))).toBe(true)
 })
 
-// 誤った上限は既定値を使い、理由を warnings に残す（正常系）
+// 誤った上限は既定値を使用し、理由を warnings に残す（正常系）
 test('test_parse_config_when_limit_invalid', () => {
   // 準備
   const invalidItems = [0, -1, 1.5, '10']
@@ -260,7 +260,7 @@ test('test_parse_config_when_limit_invalid', () => {
   expect(charConfig.warnings.length).toBeGreaterThan(0)
 })
 
-// `match` の無い projects の要素は外し、残した要素は書いたキーだけを持つ（正常系）
+// `match` の無い projects の要素は除外し、残した要素は記載したキーだけを持つ（正常系）
 test('test_parse_config_when_project_without_match', () => {
   // 実行
   const config = parse({
@@ -294,7 +294,7 @@ test('test_parse_config_when_not_mapping', () => {
   for (const error of errors) expect(error).toBeInstanceOf(ConfigError)
 })
 
-// 絶対パスは同じパスと配下に当たる（正常系）
+// 絶対パスは同じパスと配下にヒットする（正常系）
 test('test_match_project_when_absolute', () => {
   // 実行
   const results = ['/repo/sample', '/repo/sample/sub', '/repo/sample2'].map((repoRoot) =>
@@ -305,7 +305,7 @@ test('test_match_project_when_absolute', () => {
   expect(results).toEqual([true, true, false])
 })
 
-// プロジェクト名はフォルダ名の一致で当たる（正常系）
+// プロジェクト名はフォルダ名の一致でヒットする（正常系）
 test('test_match_project_when_name', () => {
   // 実行
   const results = ['/repo/sample', '/repo/other'].map((repoRoot) => matchProject('sample', repoRoot, '/home/u'))
@@ -314,7 +314,7 @@ test('test_match_project_when_name', () => {
   expect(results).toEqual([true, false])
 })
 
-// 当たった projects の repositories と aliases だけを後ろに重ねる（正常系）
+// 該当した projects の repositories と aliases だけを後ろに重ねる（正常系）
 test('test_resolve_settings', () => {
   // 準備
   const config = parse({
@@ -372,7 +372,7 @@ test('test_resolve_settings_when_relative_paths', () => {
   expect(settings.aliases[1]?.patterns).toEqual(['/repo/sample/wt/docs/command/*.yaml'])
 })
 
-// 同じ project-index.yaml は 1 つにし、同じ id の aliases の要素は後を外す（正常系）
+// 同じ project-index.yaml は 1 つにし、同じ id の aliases の要素は後を除外する（正常系）
 test('test_resolve_settings_when_duplicated', () => {
   // 準備
   const config = parse({
@@ -421,7 +421,7 @@ test('test_resolve_settings_when_cwd_scope', () => {
   ])
 })
 
-// 当たった要素の exclude・excludeTools は追加し、max_items は置き換え、書かないキーは global のままにする（正常系）
+// 該当した要素の exclude・excludeTools は追加し、max_items は置き換え、記載しないキーは global のままにする（正常系）
 test('test_resolve_settings_when_project_overrides', () => {
   // 準備
   const config = parse({
@@ -454,7 +454,7 @@ test('test_is_origin_allowed', () => {
   expect(userOnly).toEqual([true, false])
 })
 
-// origins を書かないときはすべての出所が対象になる（正常系）
+// origins を記載しないときはすべての出所が対象になる（正常系）
 test('test_is_origin_allowed_when_origins_null', () => {
   // 実行
   const results = (['composer', 'plugin', 'task-notification'] as const).map((kind) => isOriginAllowed(null, kind))
@@ -463,7 +463,7 @@ test('test_is_origin_allowed_when_origins_null', () => {
   expect(results).toEqual([true, true, true])
 })
 
-// `config` を読み、`enabled` を書かない要素は有効になる（正常系）
+// `config` を読み込み、`enabled` を記載しない要素は有効になる（正常系）
 test('test_parse_repository_config', () => {
   // 実行
   const withoutEnabled = parseRepositoryConfig({ config: '../knowledge/project-index.yaml' }, 'config')
@@ -474,7 +474,7 @@ test('test_parse_repository_config', () => {
   expect(withEnabled).toEqual({ config: '../knowledge/project-index.yaml', baseDir: 'config' })
 })
 
-// `enabled: false` は null を返す（正常系）
+// `enabled: false` は null を返却する（正常系）
 test('test_parse_repository_config_when_disabled', () => {
   // 実行
   const result = parseRepositoryConfig({ config: '../knowledge/project-index.yaml', enabled: false }, 'config')
@@ -483,7 +483,7 @@ test('test_parse_repository_config_when_disabled', () => {
   expect(result).toBeNull()
 })
 
-// 誤った要素は、無い・誤ったキーの名前を含む理由を返す（正常系）
+// 誤った要素は、無い・誤ったキーの名前を含む理由を返却する（正常系）
 test('test_parse_repository_config_when_invalid', () => {
   // 準備
   const cases: [unknown, string | null][] = [

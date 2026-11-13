@@ -51,7 +51,7 @@ test('test_resolve_path', () => {
   expect(result).toBe('/repo/sample/docs/command/*.yaml')
 })
 
-// 絶対パスと `~` は基準のフォルダを使わない（正常系）
+// 絶対パスと `~` は基準のフォルダを使用しない（正常系）
 test('test_resolve_path_when_absolute', () => {
   // 実行
   const absolute = resolvePath({ path: '/a/b.yaml', home: '/home/u', baseDir: '/repo/sample' })
@@ -77,7 +77,7 @@ test('test_resolve_path_when_dot_segments', () => {
   expect(aboveRoot).toBe('/a/**/*.yaml')
 })
 
-// `*` が任意の文字列に当たる（正常系）
+// `*` が任意の文字列にヒットする（正常系）
 test('test_match_segment', () => {
   // 実行
   const results = ['term-a.yaml', 'term-.yaml', 'rule-a.yaml', 'term-a.yml'].map((name) =>
@@ -88,7 +88,7 @@ test('test_match_segment', () => {
   expect(results).toEqual([true, true, false, false])
 })
 
-// 複数の `*` は順に重ならずに当てる（正常系）
+// 複数の `*` は順に重ならずにヒットさせる（正常系）
 test('test_match_segment_when_multiple_stars', () => {
   // 実行
   const results = ['axbyc', 'abc', 'acb'].map((name) => matchSegment(name, 'a*b*c'))
@@ -97,7 +97,7 @@ test('test_match_segment_when_multiple_stars', () => {
   expect(results).toEqual([true, true, false])
 })
 
-// 区切りの `*` に当たるファイルだけを、パスの順に更新時刻つきで返す（正常系）
+// 区切りの `*` にヒットするファイルだけを、パスの順に更新時刻つきで返却する（正常系）
 test('test_expand_files', async () => {
   // 準備
   const fs = new MemoryFs({
@@ -118,7 +118,7 @@ test('test_expand_files', async () => {
   ])
 })
 
-// `**` は 0 階層以上のフォルダに当たる（正常系）
+// `**` は 0 階層以上のフォルダにヒットする（正常系）
 test('test_expand_files_when_double_star', async () => {
   // 準備
   const fs = new MemoryFs({
@@ -135,7 +135,7 @@ test('test_expand_files_when_double_star', async () => {
   expect(result.map((file) => file.path)).toEqual(['/d/a.yaml', '/d/x/b.yaml', '/d/x/y/c.yaml'])
 })
 
-// `*` の無いパスはそのファイルだけを返す（正常系）
+// `*` の無いパスはそのファイルだけを返却する（正常系）
 test('test_expand_files_when_no_star', async () => {
   // 準備
   const fs = new MemoryFs({ '/d/a.yaml': 'a', '/d/dir/inner.yaml': 'i' })
@@ -152,7 +152,7 @@ test('test_expand_files_when_no_star', async () => {
   expect(folder).toEqual([])
 })
 
-// 起点のフォルダが無いときは空を返す（正常系）
+// 起点のフォルダが無いときは空を返却する（正常系）
 test('test_expand_files_when_dir_missing', async () => {
   // 準備
   const { $ } = createFakeEngine({ fs: new MemoryFs({ '/d/a.yaml': 'a' }) })
@@ -186,7 +186,7 @@ test('test_expand_files_when_symlink', async () => {
   expect(result[0]?.mtimeMs).toBe(fs.mtime('/t/target.yaml'))
 })
 
-// 更新時刻が同じうちは読み直さない（正常系）
+// 更新時刻が同じうちは再読み込みしない（正常系）
 test('test_read_if_changed', async () => {
   // 準備
   clearCache()
@@ -204,7 +204,7 @@ test('test_read_if_changed', async () => {
   expect(second).toBe(first)
 })
 
-// 更新時刻が変わると読み直す（正常系）
+// 更新時刻が変わると再読み込みする（正常系）
 test('test_read_if_changed_when_mtime_changed', async () => {
   // 準備
   clearCache()
@@ -223,7 +223,7 @@ test('test_read_if_changed_when_mtime_changed', async () => {
   expect(fs.reads).toEqual(['/d/a.yaml', '/d/a.yaml'])
 })
 
-// 種類が違えば同じファイルでも別に読んで変換する（正常系）
+// 種類が違えば同じファイルでも別に読み込んで変換する（正常系）
 test('test_read_if_changed_when_kind_differs', async () => {
   // 準備
   clearCache()
@@ -241,7 +241,7 @@ test('test_read_if_changed_when_kind_differs', async () => {
   expect(asAlias).toEqual({ ok: true, value: 'one' })
 })
 
-// ブロック・フロー・複数行の文字列を読む（正常系）
+// ブロック・フロー・複数行の文字列を読み込む（正常系）
 test('test_parse_yaml', () => {
   // 準備
   const text = ['a: |', '  line1', '  line2', 'b: >-', '  folded', '  text', 'c: [1, two, {k: v}]'].join('\n')
@@ -268,7 +268,7 @@ test('test_parse_yaml_when_empty', () => {
   for (const result of results) expect(result).toEqual({ ok: true, value: null })
 })
 
-// 書式の誤りは行と列つきの理由で返し、例外にならない（異常系）
+// 書式の誤りは行と列つきの理由で返却し、例外にならない（異常系）
 test('test_parse_yaml_when_malformed', () => {
   // 準備
   const inputs = ['a: [1, 2', 'a: 1\na: 2', 'a: !foo bar']
@@ -292,7 +292,7 @@ test('test_parse_yaml_when_proto_key', () => {
   expect(({} as Record<string, unknown>).polluted).toBeUndefined()
 })
 
-// ファイルを置いたフォルダを返す（正常系）
+// ファイルを配置したフォルダを返却する（正常系）
 test('test_parent_dir', () => {
   // 実行
   const nested = parentDir('/repo/knowledge/project-index.yaml')
@@ -303,7 +303,7 @@ test('test_parent_dir', () => {
   expect(root).toBe('/')
 })
 
-// `/**` で終わる glob はそのフォルダと配下のフォルダに当たる（正常系）
+// `/**` で終わる glob はそのフォルダと配下のフォルダにヒットする（正常系）
 test('test_match_path_glob_when_descendants', () => {
   // 実行
   const results = ['/repo/sample', '/repo/sample/.claude/worktrees/feat-x', '/repo/sample2', '/repo'].map((path) =>
@@ -314,7 +314,7 @@ test('test_match_path_glob_when_descendants', () => {
   expect(results).toEqual([true, true, false, false])
 })
 
-// `/**` を付けないパスはそのフォルダだけに当たる（正常系）
+// `/**` を付けないパスはそのフォルダだけにヒットする（正常系）
 test('test_match_path_glob_when_folder_only', () => {
   // 実行
   const results = ['/repo/sample', '/repo/sample/sub'].map((path) => matchPathGlob({ pattern: '/repo/sample/', path }))
@@ -323,7 +323,7 @@ test('test_match_path_glob_when_folder_only', () => {
   expect(results).toEqual([true, false])
 })
 
-// `*` は 1 つの区切り、途中の `**` は任意の深さに当たる（正常系）
+// `*` は 1 つの区切り、途中の `**` は任意の深さにヒットする（正常系）
 test('test_match_path_glob_when_stars', () => {
   // 実行
   const single = ['/repo/a/docs', '/repo/a/b/docs'].map((path) => matchPathGlob({ pattern: '/repo/*/docs', path }))

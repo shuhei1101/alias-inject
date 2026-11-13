@@ -4,7 +4,7 @@ import { dedupeAliases, filterByScope, missingKeys, parseAliases, resolveMetadat
 import type { AliasKey, AliasMetadata, ResolvedAlias } from '../../../../hooks/lib/alias'
 
 // スキーマに合う term の行（設定ファイルや project-index.yaml の documents に記載する構造）。
-// 行の `enabled` と `schema`、`metadata` の `tags` はエイリアスの元の行が持たないキーで、取り出すときに外れる
+// 行の `enabled` と `schema`、`metadata` の `tags` はエイリアスの元の行が持たないキーで、取り出すときに除外される
 const TERM_ROW = {
   id: 'terms',
   enabled: true,
@@ -24,7 +24,7 @@ const DOC_ROW = {
   metadata: { name: 'title' },
 }
 
-// 解決した値の表。書いたキー以外は持たない
+// 解決した値の表。記載したキー以外は持たない
 function resolved(values: Record<string, unknown>): Record<AliasKey, unknown> {
   return values as Record<AliasKey, unknown>
 }
@@ -61,7 +61,7 @@ test('test_parse_aliases_when_disabled', () => {
   expect(result).toEqual({ aliases: [], warnings: [] })
 })
 
-// aliasTypeOnly のとき alias_type を持たない行は飛ばし、metadata.alias_type を持つ行は旧い構造として外す。位置は元の並びで数える（正常系）
+// aliasTypeOnly のとき alias_type を持たない行は飛ばし、metadata.alias_type を持つ行は旧構造として除外する。位置は元の並びで数える（正常系）
 test('test_parse_aliases_when_alias_type_only', () => {
   // 準備
   const withoutMetadata = { id: 'doc-a', paths: ['docs/*.yaml'] }
@@ -89,7 +89,7 @@ test('test_parse_aliases_when_alias_type_only', () => {
   expect(result.warnings[1]).toMatch(/^documents\[3\]（id: bad）/)
 })
 
-// スキーマに合わない行は外し、位置と id つきの理由を残す（正常系）
+// スキーマに合わない行は除外し、位置と id つきの理由を残す（正常系）
 test('test_parse_aliases_when_invalid', () => {
   // 準備
   const legacy = {
@@ -130,7 +130,7 @@ test('test_parse_aliases_when_invalid', () => {
   expect(result.warnings[3]).toContain('metadata.name')
 })
 
-// 後の重なった要素だけを外す（正常系）
+// 後の重なった要素だけを除外する（正常系）
 test('test_dedupe_aliases', () => {
   // 準備
   const aliases = [
@@ -151,7 +151,7 @@ test('test_dedupe_aliases', () => {
   expect(result.warnings[0]).toContain('terms')
 })
 
-// 書いたキーは指した列、書かないキーは同じ名前の列から取る（正常系）
+// 記載したキーは指した列、記載しないキーは同じ名前の列から取る（正常系）
 test('test_resolve_metadata', () => {
   // 準備
   const metadata: AliasMetadata = { name: 'title' }
@@ -181,7 +181,7 @@ test('test_resolve_metadata_when_nested', () => {
   expect(values.url).toBeUndefined()
 })
 
-// 種類の必須のキーで値が空のものを返す（正常系）
+// 種類の必須のキーで値が空のものを返却する（正常系）
 test('test_missing_keys', () => {
   // 準備
   const termValues = resolved({ id: 'term-a', name: 'Term-A', description: '' })
@@ -226,7 +226,7 @@ test('test_parse_aliases_when_scope', () => {
   expect(result.warnings).toEqual([])
 })
 
-// 読む行。`cwdPatterns` だけを変える
+// 読み込む行。`cwdPatterns` だけを変える
 function scopedRow(id: string, cwdPatterns: string[] | undefined): ResolvedAlias {
   return {
     id,
@@ -239,7 +239,7 @@ function scopedRow(id: string, cwdPatterns: string[] | undefined): ResolvedAlias
   }
 }
 
-// 絞りを持たない行は残し、作業場所が当たらない行を除外する（正常系）
+// 絞りを持たない行は残し、作業場所が該当しない行を除外する（正常系）
 test('test_filter_by_scope', () => {
   // 準備
   const aliases = [

@@ -13,7 +13,7 @@ const VALUE_A_LINE = '変数参照の値: !{VALUE_A} = value-a'
 // サブエージェント agent-1 の中の Read の呼び出し
 const AGENT_READ = { tool: 'Read', file_path: '/repo/sample/note.md', agentId: 'agent-1' }
 
-// 行の `alias_type` を指定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める。`metadata` に足したい行を渡せる
+// 行の `alias_type` を指定する aliases の行の YAML の行。`- id:` を `indent` 個の空白で始める。`metadata` に追加したい行を指定できる
 function aliasLines(id: string, paths: string, aliasType: string, indent: number, extraMetadata: string[] = []): string[] {
   const pad = ' '.repeat(indent)
   return [
@@ -30,11 +30,11 @@ function termAliasLines(id: string, paths: string, indent: number): string[] {
 }
 
 type FsOptions = {
-  /** 設定ファイルの `global` に足す行（字下げなし） */
+  /** 設定ファイルの `global` に追加する行（字下げなし） */
   globalExtra?: string[]
-  /** 設定ファイルの `global.aliases` に足す行（字下げ込み） */
+  /** 設定ファイルの `global.aliases` に追加する行（字下げ込み） */
   extraAliases?: string[]
-  /** 置くと設定ファイルの `global.repositories` が指す project-index.yaml の行（字下げ込み） */
+  /** 配置すると設定ファイルの `global.repositories` が指す project-index.yaml の行（字下げ込み） */
   devDocs?: string[]
   /** 設定ファイルの `global.aliases` の term の要素の `paths` */
   termPaths?: string
@@ -64,7 +64,7 @@ function debugLines(logs: LogLine[], path: string, key: string): LogLine[] {
   return logs.filter((line) => line.to === 'debug' && line.text.includes(path) && line.text.includes(key))
 }
 
-// enabled が false のときはそのまま渡す（正常系）
+// enabled が false のときはそのまま返却する（正常系）
 test('test_handle_prompt_submit_when_disabled', async ($, on) => {
   // 準備
   const fs = makeFs({
@@ -98,7 +98,7 @@ test('test_handle_prompt_submit_when_context_given', async ($, on) => {
   expect(result.context?.[1]).toContain('Term-A')
 })
 
-// 外した設定の値と aliases の行は、読み込みの結果が変わらないうち 1 回だけ debug log に出す（正常系）
+// 除外した設定の値と aliases の行は、読み込みの結果が変わらないうち 1 回だけ debug log に出す（正常系）
 test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   // 準備
   const memoAlias = aliasLines('memo', 'memo/*.yaml', 'memo', 4)
@@ -115,7 +115,7 @@ test('test_handle_prompt_submit_when_settings_warned', async ($, on) => {
   expect(debugLines(world.logs, DEV_DOCS_PATH, 'metadata.name').length).toBe(1)
 })
 
-// 照合条件に当たらない語の文脈を追加せず、記録にも入れない（正常系）
+// 照合条件に該当しない単語の文脈を追加せず、記録にも入れない（正常系）
 test('test_handle_prompt_submit_when_inject_condition', async ($, on) => {
   // 準備
   const fs = makeFs()
@@ -138,7 +138,7 @@ test('test_handle_prompt_submit_when_inject_condition', async ($, on) => {
   expect(second.context?.[0]).toContain('Term-C')
 })
 
-// 作業場所が scope.cwd に当たらない行の YAML を読み込まず、その語の文脈を追加しない（正常系）
+// 作業場所が scope.cwd に該当しない行の YAML を読み込まず、その単語の文脈を追加しない（正常系）
 test('test_handle_prompt_submit_when_cwd_scoped', async ($, on) => {
   // 準備
   const termSPath = `${CONFIG_DIR}/scoped/term-s.yaml`
@@ -181,7 +181,7 @@ test('test_handle_session_compact_when_not_compacted', async ($, on) => {
   const before = await submit($, 'term-a とは')
 
   // 実行
-  // 圧縮の事前の計算、圧縮の見送りの 2 通りを順に起こす
+  // 圧縮の事前の計算、圧縮の見送りの 2 通りを順に発生させる
   await $.session.compact({ trigger: 'precompute', messages: [COMPACTED_MESSAGE] })
   world.compactResult = { skip: 'not compacted' }
   const skipped = await $.session.compact({ trigger: 'manual', messages: [COMPACTED_MESSAGE] })
@@ -216,10 +216,10 @@ test('test_handle_session_compact_when_subagent', async ($, on) => {
   expect(afterMain.context ?? []).toEqual([])
 })
 
-// aliases の行の glob が設定ファイルに当たっても、その行の他の語の文脈を追加する（正常系）
+// aliases の行の glob が設定ファイルにヒットしても、その行の他の単語の文脈を追加する（正常系）
 test('test_handle_prompt_submit_when_alias_paths_match_config', async ($, on) => {
   // 準備
-  // 設定ファイルと同じフォルダに term-a.yaml を置き、paths: '*.yaml' が設定ファイル自身にも当たるようにする
+  // 設定ファイルと同じフォルダに term-a.yaml を配置し、paths: '*.yaml' が設定ファイル自身にもヒットするようにする
   const fs = makeFs({ termPaths: '*.yaml' })
   fs.write(`${CONFIG_DIR}/term-a.yaml`, 'id: term-a\nname: Term-A\ndescription: 説明 A\n')
   const world = installWorld(on, { fs, settings: SETTINGS })
@@ -278,7 +278,7 @@ test('test_handle_tool_call_when_context_given', async ($, on) => {
   expect(world.runs).toEqual([{ argv: ['env', '-0'], timeoutMs: 20 }])
 })
 
-// deny・エラーの結果・本文が無い結果・語も変数参照も無い結果はそのまま返す（正常系）
+// deny・エラーの結果・本文が無い結果・単語も変数参照も無い結果はそのまま返却する（正常系）
 test('test_handle_tool_call_when_skipped', async ($, on) => {
   // 準備
   const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
@@ -287,7 +287,7 @@ test('test_handle_tool_call_when_skipped', async ($, on) => {
     { deny: 'no' },
     { result: 'r', text: 'term-a と !{VALUE_A}', isError: true },
     { result: 'r' },
-    { result: 'r', text: '語も変数参照も無い本文' },
+    { result: 'r', text: '単語も変数参照も無い本文' },
   ]
 
   for (const answer of answers) {
@@ -322,7 +322,7 @@ test('test_handle_tool_call_when_quote_added', async ($, on) => {
   expect((await submit($, 'term-a とは')).context ?? []).toEqual([])
 })
 
-// exclude_tools のツールは語を読み込まずにそのまま返す（正常系）
+// exclude_tools のツールは単語を読み込まずにそのまま返却する（正常系）
 test('test_handle_tool_call_when_tool_excluded', async ($, on) => {
   // 準備
   const fs = makeFs({ globalExtra: ['exclude_tools: [Bash]'] })
@@ -352,7 +352,7 @@ test('test_handle_tool_call_when_inject_condition', async ($, on) => {
   // 実行
   world.answer = firstAnswer
   const first = await callTool($)
-  world.answer = { result: 'r', text: 'term-c を tsx で使う' }
+  world.answer = { result: 'r', text: 'term-c を tsx で使用する' }
   const second = await callTool($)
 
   // 検証
@@ -380,7 +380,7 @@ test('test_handle_tool_call_when_in_subagent', async ($, on) => {
   expect(again).toEqual(world.answer)
 })
 
-// 終了コードが 0 以外・例外のときは debug log に出してそのまま返す（異常系）
+// 終了コードが 0 以外・例外のときは debug log に出してそのまま返却する（異常系）
 test('test_handle_tool_call_when_process_failed', async ($, on) => {
   // 準備
   const world = installToolWorld(on)
@@ -406,13 +406,13 @@ test('test_handle_tool_call_when_process_failed', async ($, on) => {
   expect(failedLogs.length).toBe(1)
 })
 
-// 記録の書き込みが上限まで外れたら、引用の文脈を追加せずに値の行だけを追加する（異常系）
+// 記録の書き込みが上限まで失敗したら、引用の文脈を追加せずに値の行だけを追加する（異常系）
 test('test_handle_tool_call_when_record_conflicts_exhausted', async ($, on) => {
   // 準備
   const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
   world.answer = { result: 'r', text: 'term-a と !{VALUE_A}', context: ['other'] }
   world.run = VALUE_A_RUN
-  // ifVersion を付けた書き込みには常に外れたと返す
+  // ifVersion を付けた書き込みには常に一致しなかったと返却する
   on('state.set', (_, e, next) => {
     if (e.ifVersion !== undefined) return { value: { isSet: false, version: e.ifVersion + 1 } }
     return next(e)
