@@ -25,7 +25,7 @@ requirements:
     source_kind: 実行基盤の制限
     source: https://github.com/shuhei1101/alias-inject/pull/6
     value: 2.1.310 以上
-    rationale: PoC 検証で読み込みとテスト・型の確認を実施した最も古いバージョン。それより前のバージョンは確認していない。新しいバージョンでは保証しない。Claude Code を上げたときに測り方の手順で確認し修正する
+    rationale: PoC 検証で読み込みとテスト・型の確認を実施した最も古いバージョン。それより前のバージョンは確認していない。新しいバージョンでは保証しない。Claude Code を上げたときに測り方の手順で再確認する
     measurement: '`claude --version` のバージョンで、`claude plugin validate`・`claude plugin test`・`claude --plugin-dir {プラグインのフォルダ} -p` が通るかを確認する'
     verification:
       device: Windows 11 の WSL2（Linux）の端末
@@ -39,7 +39,7 @@ requirements:
     external_constraint: 10000ms（`HookBudget.ms`。hooks モジュールの処理を待つ上限で、超えると hook が無かった扱いになる）
     source_kind: 実行基盤の制限
     value: '200'
-    rationale: 'PoC の実測で `prompt.submit` 全体が 20.6〜97.6ms（照合だけなら 2,500 つの単語でも p99.9 1.87ms）。実測の最大の 2 倍の余裕を持ち、体感で待ちを感じない値にする。照合する YAML が大きく増えたときは見直す'
+    rationale: 'PoC の実測で `prompt.submit` 全体が 20.6〜97.6ms（照合だけなら 単語 2,500 個でも p99.9 1.87ms）。実測の最大の 2 倍の余裕を持ち、体感で待ちを感じない値にする。照合する YAML が大きく増えたときは見直す'
     source: https://github.com/shuhei1101/alias-inject/pull/7#discussion_r4367912268
     unit: ms
     measurement: 照合する YAML を持つ設定で `prompt.submit` を実行し、処理が始まってから返るまでの時間を測る

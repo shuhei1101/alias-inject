@@ -23,7 +23,7 @@ flows:
         CC->>IF: e
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
-        IF->>IF: 本文から VALUE_A を取得する
+        IF->>IF: 本文から VALUE_A を検出する
         IF->>PR: env -0
         PR-->>IF: 終了コード 0・環境の一覧
         IF-->>CC: 結果の context の末尾に値の行
@@ -65,7 +65,7 @@ flows:
         description: 正常系と同じ
       - name: ツールの結果
         description: '`text` が `!{}` と `!{1ABC}` だけを含む'
-        notes: 名前の書式に合わないものを変数参照として取得さないことを確認する
+        notes: 名前の書式に合わないものを変数参照として検出しないことを確認する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -210,7 +210,7 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が 2 行届いている
     test: test_error_when_process_failed
-lead: ツールを実行させた結果の本文から `!{名前}` の変数参照を取得し、同じ名前の環境変数の値を本文を変えずに `context` に追加して返却する。
+lead: ツールを実行させた結果の本文から `!{名前}` の変数参照を検出し、同じ名前の環境変数の値を本文を変えずに `context` に追加して返却する。
 idempotent: true
 side_effects: 変数参照があるときだけ `$.process.run` で `env -0` の子プロセスを 1 回起こす。ファイルへの書き込み・`$.state` への記録・外への送信はしない
 callers:
@@ -227,7 +227,7 @@ request:
     required: false
     default: なし（文脈を追加せず結果をそのまま返却する）
     location: argument
-    description: '`next(e)` が返却したツールの結果の本文。ここから変数参照を取得する'
+    description: '`next(e)` が返却したツールの結果の本文。ここから変数参照を検出する'
     notes: Read・Bash・MCP のツールを区別しない
   - name: result.isError
     type: boolean
@@ -275,7 +275,7 @@ constraints:
     constraint: 子プロセスを 20ms まで待つ（`timeoutMs` で指定する）
     decided_by: NFR-1#requirements[変数参照の値を取得する子プロセスの待ちの上限]
     notes: 変数参照が無い結果では子プロセスを起動しない
-  - item: 名前の取得し出し
+  - item: 名前の検出
     constraint: '`!{[A-Za-z_][A-Za-z0-9_]*}` に該当する名前を本文に出た順に、重なりを除いて集める'
     notes: 同じ名前が何度出ても行は 1 行
   - item: 名前の数の上限

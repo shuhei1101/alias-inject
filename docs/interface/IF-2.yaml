@@ -14,7 +14,7 @@ flows:
         description: '`e.tool` が `Read`、`e.file_path` が `/work/note.md`'
       - name: ツールの結果
         description: '`text` が「用語エーの説明」。`context` に他のフックが追加した要素を 1 つ持つ'
-        notes: エイリアスで適用する
+        notes: エイリアスでヒットさせる
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -30,7 +30,7 @@ flows:
         IF->>IF: 本文と単語を正規化して照合し term-a がヒットする
         IF->>ST: セッションの記録を参照する
         ST-->>IF: 記録なし・version 0
-        IF->>ST: term-a を ifVersion 0 で記載する
+        IF->>ST: term-a を ifVersion 0 で書き込む
         ST-->>IF: isSet true
         IF-->>CC: 結果の context の末尾に term-a の文脈
     expected:
@@ -211,10 +211,10 @@ flows:
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
         IF->>ST: 記録を参照する（version 0）
-        IF->>ST: term-a と term-b を ifVersion 0 で記載する
+        IF->>ST: term-a と term-b を ifVersion 0 で書き込む
         ST-->>IF: isSet false
         IF->>ST: 記録を再読み込みする（term-a が記録済み）
-        IF->>ST: term-b を追加して ifVersion 1 で記載する
+        IF->>ST: term-b を追加して ifVersion 1 で書き込む
         ST-->>IF: isSet true
         IF-->>CC: context に term-b の文脈
     expected:
@@ -264,7 +264,7 @@ flows:
         IF->>CC: next(e)
         CC-->>IF: ツールの結果
         loop 3 回
-          IF->>ST: ifVersion で記載する
+          IF->>ST: ifVersion で書き込む
           ST-->>IF: isSet false
         end
         IF->>IF: debug log に出す
@@ -360,7 +360,7 @@ idempotent: false
 side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
-exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ記載するため、記録は `$.state.set` の `ifVersion` で記載し、一致しなかったら再読み込みして照合の結果から記録済みの単語を再除外する。この記載方法は `prompt.submit` と共有する
+exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ書き込むため、記録は `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして照合の結果から記録済みの単語を再除外する。この記載方法は `prompt.submit` と共有する
 request:
   - name: e.tool
     type: string
@@ -468,7 +468,7 @@ constraints:
     notes: ワークフローのエージェント・エンジンのフォーク（圧縮・メモリ）も `agentId` があればサブエージェントと同じに扱う
   - item: 記録の書き込みの再試行
     constraint: '`ifVersion` が一致しなかったら記録を再読み込みし、選んだ単語から記録済みの単語を除いて文脈を再作成する。3 回まで'
-    notes: 一致しなくなるのは同じ記録へ同時に記載したときだけで、並列のツールの呼び出しが続けて該当することはまれ
+    notes: 一致しなくなるのは同じ記録へ同時に書き込んだときだけで、並列のツールの呼び出しが続けて競合することはまれ
   - item: 出所
     constraint: '`origins` で絞らない'
     decided_by: CFG-1#settings[global.origins]

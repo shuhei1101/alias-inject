@@ -9,4 +9,4 @@ items:
   - page: IF-4.yaml
     summary: session.compact の後にそのセッションの記録を削除する
   - page: IF-5.yaml
-    summary: tool.call でツールの結果の !{名前} を取得し、環境変数の値を context に追加する
+    summary: tool.call でツールの結果の !{名前} を検出し、環境変数の値を context に追加する

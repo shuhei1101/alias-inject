@@ -28,7 +28,7 @@ flows:
         notes: '`alias_type` を持たない行の YAML は参照しない'
       - name: 入力
         description: '`text` が「用語エーと doc-z を説明して」、`origin.kind` が `composer`'
-        notes: エイリアスで適用する。2 回目の入力「term-a とは」で、大文字を含む単語 `Term-A` が正規化で該当し、記録済みで追加されないことを確認する
+        notes: エイリアスでヒットさせる。2 回目の入力「term-a とは」で、大文字を含む単語 `Term-A` が正規化で該当し、記録済みで追加されないことを確認する
     flow: |-
       ```mermaid
       sequenceDiagram
@@ -629,7 +629,7 @@ flows:
         description: '正常系の `global.repositories` に加え、`global.aliases` に `id: guides`・`paths: [files.yaml]`・`alias_type: doc`・`records: files`・`body_file: path`・`metadata.id: path`・`metadata.description: meta.summary` の行を持つ'
         notes: '`paths` は設定フォルダの `files.yaml`'
       - name: 管理用の YAML
-        description: '設定フォルダの `files.yaml` の配列 `files` に、`path: docs/使用し方/セットアップ.md`・`meta.summary: 前提と手順` の要素を持つ'
+        description: '設定フォルダの `files.yaml` の配列 `files` に、`path: docs/使い方/セットアップ.md`・`meta.summary: 前提と手順` の要素を持つ'
         notes: dev-docs の `templates/files.schema.yaml` のとおり `id`・`name` を持たない。単語は `path` のファイル名の `セットアップ` になる
       - name: 入力
         description: 「セットアップとは」
@@ -649,7 +649,7 @@ flows:
         IF-->>CC: context の「文書」にセットアップ
       ```
     expected:
-      - '返る `context` の `## 文書` に、`セットアップ（id: docs/使用し方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
+      - '返る `context` の `## 文書` に、`セットアップ（id: docs/使い方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
       - テストの `on` の `ui.log` に行が届いていない
     test: test_normal_when_records_body_file
   - name: 正常系（照合条件を持つ文書）
@@ -925,7 +925,7 @@ flows:
         CC->>IF: 旧エーと oldA と旧ビーと旧シーと term-b
         IF->>FS: 設定ファイル・project-index.yaml・用語の YAML を参照する
         FS-->>IF: 文書（avoid を含む）
-        IF->>IF: 用語の avoid のやめた言い方ごとに使用しない単語の単語を作る
+        IF->>IF: 用語の avoid のやめた言い方ごとに、使用しない単語のセクションの項目を作る
         IF->>IF: exclude の旧ビーを除いて照合し、旧エー・OldA・旧シー・term-b がヒットする
         IF->>IF: 旧シーを term-c の照合条件で評価して除外する
         IF->>ST: 旧エー・OldA・term-b を記録に入れる
@@ -947,7 +947,7 @@ idempotent: false
 side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
-exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で記載し、一致しなかったら再読み込みして記録済みの単語を再除外する（3 回まで）。上限まで一致しなかったら、debug log に出して文脈を追加せずに返却する
+exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして記録済みの単語を再除外する（3 回まで）。上限まで一致しなかったら、debug log に出して文脈を追加せずに返却する
 request:
   - name: text
     type: string
@@ -996,7 +996,7 @@ response_example: |
     - cwd: /mnt/c/Users/shuhe/repo/ai-monitor
     - description: 依存を入れる
   ```
-response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 使用しない単語 の順）と単語ごとの箇条書きで並べる。どのリポジトリ・どの行の単語も、同じ `alias_type` なら 1 つのセクションに並べる。単語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。`alias_type` が term の文書の `avoid` のやめた言い方は、やめた言い方ごとに `## 使用しない単語` の単語にし、単語はやめた言い方の値、`id` は用語の `id`、子は `replacement` に用語の単語（`name` の値）を並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
+response_notes: '文脈は `# {heading}` の下に、`alias_type` ごとの `## {見出し}`（term: 用語 / doc: 文書 / command: コマンド / url: URL / skill: スキル / tool: ツール / path: パス / env: 環境 / avoid: 使用しない単語 の順）と単語ごとの箇条書きで並べる。どのリポジトリ・どの行の単語も、同じ `alias_type` なら 1 つのセクションに並べる。単語は文書の `name` の値にする。箇条書きの子には `alias_type` ごとのキー（term: `description`・`related` / doc: `description` / command: `command`・`cwd`・`description` / url: `url`・`description` / skill: `skill`・`description` / tool: `tool`・`description` / path: `path`・`description` / env: `url`・`port`・`description` / avoid: `replacement`）のうち値のあるものだけを並べる。`alias_type` が term の文書の `avoid` のやめた言い方は、やめた言い方ごとに `## 使用しない単語` のセクションの項目にし、単語はやめた言い方の値、`id` は用語の `id`、子は `replacement` に用語の単語（`name` の値）を並べる。command の `command` と、skill の `skill`・tool の `tool`・path の `path` の値はインラインコード（バッククォート）で囲む。'
 exceptions:
   - name: なし（正常終了）
     condition: 照合して文脈を追加したか、追加する単語が無く受け取ったまま返却した
@@ -1036,7 +1036,7 @@ constraints:
   - item: 記録の単位
     constraint: セッション ID（`$.session.id()`）ごとに、出所（`project-index.yaml` の絶対パスか設定ファイルの絶対パス）と行の `id` と文書の `id` の組で記録する。用語のやめた言い方は、その組にやめた言い方の値を加えた組で、用語とは別に記録する
     notes: 同じ文書をエイリアスで入力しても二度目は追加しない。別のリポジトリが同じ行の `id` と文書の `id` を使用しても、それぞれを追加する
-  - item: 再読み込みし
+  - item: 再読み込み
     constraint: 入力の送信ごとに、照合の前に設定ファイル・`project-index.yaml`・`paths` に該当する YAML の `mtimeMs` とフォルダの一覧を確認し、変わったものだけ再読み込みする。同じ `project-index.yaml` を `global` と `projects` の両方が指すときは 1 回だけ参照する
   - item: 出所
     constraint: '`origins` を記載しないときはすべての出所の入力に追加する。記載したときは、`origins` に対応づかない出所の入力には追加しない'
