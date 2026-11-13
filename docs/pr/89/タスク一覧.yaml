@@ -35,8 +35,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-13T01:16:14.926613+00:00'
   - process: 単一ユースケース設計
-    status: todo
+    status: done
     note: docs/scenario/ の SC-1〜SC-7 と目次の置き換え。着手前に用語「語」の呼び名を決める
+    updated_by: planner
+    updated_at: '2026-11-13T01:24:37.532057+00:00'
   - process: モック作成
     status: skipped
     reason: 画面を持たないため対象外
