@@ -1,0 +1,7 @@
+confirmations:
+  - topic: プロジェクトの用語「語」の呼び名
+    decision: 「単語」へ変更する（推奨案 A）
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/89#discussion_r4558652975
