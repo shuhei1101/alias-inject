@@ -6,10 +6,10 @@ scenarios:
     setup:
       - name: Mock
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
-        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を置く'
+        notes: '`CLAUDE_CONFIG_DIR` を一時のフォルダにし、その settings.json の `env` に `ALIAS_INJECT_CONFIG` を配置する'
       - name: 設定ファイル
-        description: 『入力への引用の文脈の追加』の正常シナリオと同じ（語 `term-a`・`term-b` を持つ用語の YAML を、一時のリポジトリの `project-index.yaml` の `documents` の行で読む）
-      - name: 読ませるファイル
+        description: 『入力への引用の文脈の追加』の正常シナリオと同じ（単語 `term-a`・`term-b` を持つ用語の YAML を、一時のリポジトリの `project-index.yaml` の `documents` の行で参照する）
+      - name: 参照させるファイル
         description: 本文に term-a を含み、term-b を含まないテキストファイル
     flow: |-
       sequenceDiagram
@@ -17,28 +17,28 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 本文と語を正規化して照合し term-a が当たる
+        P->>P: 本文と単語を正規化して照合し term-a がヒットする
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 本文はそのままに、term-a の文脈を context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
-      - Read の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の語・`id`・`description` が並んでいる
+      - Read の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
       - term-b の文脈は追加されていない
-      - Read の結果の本文は読ませたファイルのとおりのまま届いている
+      - Read の結果の本文は参照させたファイルのとおりのまま届いている
     test: test_normal
-  - name: 正常シナリオ（記録済みの語だけ）
+  - name: 正常シナリオ（記録済みの単語だけ）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: セッションの記録
         description: 同じセッションで term-a を含む入力を 1 回送信済み
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       sequenceDiagram
@@ -46,26 +46,26 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で term-a が当たるが、入力で記録済み
-        P->>CC: 結果をそのまま返す
+        P->>P: 照合で term-a がヒットするが、入力で記録済み
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
     expected:
       - Read の結果の後ろに引用の文脈が追加されていない
     test: test_normal_when_only_recorded_terms
-  - name: 正常シナリオ（照合から外したツール）
+  - name: 正常シナリオ（照合から除外したツール）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
-        description: 正常シナリオの設定に、照合から外すツールとして `Bash` を指定する
+        description: 正常シナリオの設定に、照合から除外するツールとして `Bash` を指定する
         notes: キーの名前はインターフェース定義設計で決める
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       sequenceDiagram
@@ -73,16 +73,16 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを cat で読ませる入力を送信
+        U->>CC: ファイルを cat で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Bash を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: Bash は照合から外したツール
-        P->>CC: 結果をそのまま返す
+        P->>P: Bash は照合から除外したツール
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
-        U->>CC: 同じファイルを Read で読ませる入力を送信
+        U->>CC: 同じファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
@@ -92,14 +92,14 @@ scenarios:
       - Bash の結果の後ろに引用の文脈が追加されていない
       - その後の Read の結果の後ろに term-a の文脈が追加されている
     test: test_normal_when_tool_excluded
-  - name: 正常シナリオ（読んでいる文書そのもの）
+  - name: 正常シナリオ（参照している文書そのもの）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
-        description: 正常シナリオの設定に加え、`project-index.yaml` の `documents` に、`alias_type` が `doc` で `paths` が文書のファイルに当たる行を持つ
-        notes: 文書の語は `doc-x`
-      - name: 読ませるファイル
+        description: 正常シナリオの設定に加え、`project-index.yaml` の `documents` に、`alias_type` が `doc` で `paths` が文書のファイルに該当する行を持つ
+        notes: 文書の単語は `doc-x`
+      - name: 参照させるファイル
         description: '`doc-x` の文書のファイル。本文に doc-x と term-a を含む'
     flow: |-
       sequenceDiagram
@@ -107,14 +107,14 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: doc-x の文書のファイルを Read で読ませる入力を送信
+        U->>CC: doc-x の文書のファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で doc-x と term-a が当たる
-        P->>P: Read の file_path が doc-x の文書のファイルなので doc-x を外す
+        P->>P: 照合で doc-x と term-a がヒットする
+        P->>P: Read の file_path が doc-x の文書のファイルなので doc-x を除外する
         P->>CC: term-a の文脈だけを context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
@@ -122,14 +122,14 @@ scenarios:
       - doc-x の文脈は追加されていない
     test: test_normal_when_reading_own_document
     notes:
-      MCP で読んだ文書: MCP のツールの引数の文書の ID が語の ID に当たるときも同じく外す。E2E では MCP のサーバーを立てず、結合テストで確かめる
+      MCP で参照した文書: MCP のツールの引数の文書の ID が単語の ID に該当するときも同じく除外する。E2E では MCP のサーバーを起動せず、結合テストで確認する
   - name: 正常シナリオ（上限を超える）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: 正常シナリオの設定の `max_items` を 1 にする
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 本文の先頭に term-a を 1 回、その後に term-b を 3 回含むテキストファイル
         notes: 最初に出た位置は term-a が早く、出た回数は term-b が多い
     flow: |-
@@ -138,13 +138,13 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で 2 語が当たり、出た回数の多い term-b だけを選ぶ
+        P->>P: 照合で 2 つの単語がヒットし、出た回数の多い term-b だけを選ぶ
         P->>P: term-b だけを記録に入れる
         P->>CC: term-b の文脈を context に追加
         CC->>M: ツールの結果と文脈を送信
@@ -156,9 +156,9 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
-        description: 正常シナリオの設定に、照合から外すツールとして `Agent` を指定する
-        notes: サブエージェントの答え（メインの会話の Agent の結果）に term-a が入っても、メインの会話の記録に入らないようにする
-      - name: 読ませるファイル
+        description: 正常シナリオの設定に、照合から除外するツールとして `Agent` を指定する
+        notes: サブエージェントの回答（メインの会話の Agent の結果）に term-a が入っても、メインの会話の記録に入らないようにする
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       sequenceDiagram
@@ -167,7 +167,7 @@ scenarios:
         participant S as サブエージェント
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: サブエージェントにファイルを Read で読ませる入力を送信
+        U->>CC: サブエージェントにファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Agent を呼ぶ
         CC->>S: サブエージェントを起動
@@ -176,12 +176,12 @@ scenarios:
         P->>P: サブエージェントの記録で照合し term-a を記録に入れる
         P->>CC: term-a の文脈を context に追加
         CC->>S: ツールの結果と文脈を送信
-        S-->>CC: 答え
+        S-->>CC: 回答
         CC->>P: tool.call（Agent、agentId なし）
-        P->>P: Agent は照合から外したツール
-        P->>CC: 結果をそのまま返す
+        P->>P: Agent は照合から除外したツール
+        P->>CC: 結果をそのまま返却する
         CC->>M: Agent の結果を送信
-        U->>CC: 同じファイルを Read で読ませる入力を送信
+        U->>CC: 同じファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call（agentId なし）
@@ -196,7 +196,7 @@ scenarios:
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 無いファイルのパス。パスに term-a を含む
     flow: |-
       sequenceDiagram
@@ -204,25 +204,25 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: 無いファイルを Read で読ませる入力を送信
+        U->>CC: 無いファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: エラーの結果
-        P->>CC: 結果をそのまま返す
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
     expected:
       - Read のエラーの結果の後ろに引用の文脈が追加されていない
     test: test_normal_when_error_result
-  - name: 異常シナリオ（設定ファイルが読めない）
+  - name: 異常シナリオ（設定ファイルを読み込めない）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
       - name: 設定ファイル
         description: YAML の書式が崩れた設定ファイル
-        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指す。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを置く（`ALIAS_INJECT_CONFIG` が読めないときに既定のパスを参照しない）'
-      - name: 読ませるファイル
+        notes: '`ALIAS_INJECT_CONFIG` でこの設定ファイルを指す。`claude` の起動時に環境変数 `XDG_CONFIG_HOME` を一時のフォルダにし、その下の `alias-inject/settings.yaml` に term-a を照合できる設定ファイルを配置する（`ALIAS_INJECT_CONFIG` を読み込めないときに既定のパスを参照しない）'
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       sequenceDiagram
@@ -230,14 +230,14 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 設定ファイルが読めない
-        P->>CC: 結果をそのまま返す
+        P->>P: 設定ファイルを読み込めない
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
     expected:
       - Read の結果の本文がそのままモデルに届いている
@@ -249,33 +249,33 @@ scenarios:
         description: 正常シナリオと同じ
         notes: '-'
       - name: 設定ファイル
-        description: 正常シナリオの設定に加え、用語の YAML に照合条件を持つ語 `term-c` を加える
+        description: 正常シナリオの設定に加え、用語の YAML に照合条件を持つ単語 `term-c` を加える
         notes: 照合条件は『入力への引用の文脈の追加』の正常シナリオ（照合条件を持つ文書）と同じ
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 本文に term-c を含み React・tsx を含まないファイルと、本文に term-c と tsx を含むファイル
-        notes: 読ませる入力の文には React・tsx を含めない
+        notes: 参照させる入力の文には React・tsx を含めない
     flow: |-
       sequenceDiagram
         actor U as 利用者
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: tsx を含まないファイルを Read で読ませる入力を送信
+        U->>CC: tsx を含まないファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で term-c が当たるが、照合条件を本文で評価して当たらないので外す
-        P->>CC: 結果をそのまま返す
+        P->>P: 照合で term-c がヒットするが、照合条件を本文で評価して該当しないので除外する
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
-        U->>CC: tsx を含むファイルを Read で読ませる入力を送信
+        U->>CC: tsx を含むファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で term-c が当たり、照合条件にも当たる
+        P->>P: 照合で term-c がヒットし、照合条件にも該当する
         P->>CC: term-c の文脈を context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
@@ -288,42 +288,42 @@ scenarios:
         description: 正常シナリオと同じ。`claude` は一時の作業場所のフォルダで起動する
         notes: '-'
       - name: 設定ファイル
-        description: 正常シナリオの設定に加え、`global.aliases` に、作業場所の絞りに起動したフォルダに当たらない別のフォルダの glob を記載した `alias_type` が `term` の行を 1 つ持つ
-        notes: 行の `paths` は語 `term-s` を持つ YAML に当たる。キーの名前はインターフェース定義設計で決める
-      - name: 読ませるファイル
+        description: 正常シナリオの設定に加え、`global.aliases` に、作業場所の絞りに起動したフォルダに該当しない別のフォルダの glob を記載した `alias_type` が `term` の行を 1 つ持つ
+        notes: 行の `paths` は単語 `term-s` を持つ YAML に該当する。キーの名前はインターフェース定義設計で決める
+      - name: 参照させるファイル
         description: 本文に term-a と term-s を含むテキストファイル
-        notes: 読ませる入力の文には term-a・term-s を含めない
+        notes: 参照させる入力の文には term-a・term-s を含めない
     flow: |-
       sequenceDiagram
         actor U as 利用者
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 作業場所が絞りの glob に当たらない term-s の行を照合から外す
-        P->>P: 照合で term-a が当たる
+        P->>P: 作業場所が絞りの glob に該当しない term-s の行を照合から除外する
+        P->>P: 照合で term-a がヒットする
         P->>CC: term-a の文脈だけを context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
       - Read の結果の後ろの文脈に term-a の文脈がある
       - term-s の文脈は追加されていない
     test: test_normal_when_cwd_scoped
-lead: モデルが Read・Bash・MCP などのツールで読んだ本文を、入力と同じ語と照合し、そのセッションで初めて出た語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
+lead: モデルが Read・Bash・MCP などのツールで参照した本文を、入力と同じ単語と照合し、そのセッションで初めて出た単語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
 issue: 51
 primary_actor: モデル
 stakeholders:
   - name: 利用者
-    interest: エージェントが読んだ文書・コマンドの出力に出た用語や文書の名前を、利用者が入力し直さなくてもモデルが知って作業できる
+    interest: エージェントが参照した文書・コマンドの出力に出た用語や文書の名前を、利用者が再入力しなくてもモデルが知って作業できる
   - name: モデル
-    interest: 同じ語の文脈を何度も受け取らず、長い出力でも多く出た語の文脈を受け取れる
+    interest: 同じ単語の文脈を何度も受け取らず、長い出力でも多く出た単語の文脈を受け取れる
 trigger: モデルがツールを呼び、本文を持つ結果が返る
 preconditions:
   - 設定ファイルのパス（ユーザースコープの settings.json の `env` の `ALIAS_INJECT_CONFIG`、無ければシェルの環境変数の `ALIAS_INJECT_CONFIG`、どちらも無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`）に設定ファイルがある
-success_guarantee: ツールの結果の本文はそのままで、そのセッションで初めて出た語の引用の文脈が `heading` の見出しの下に並んで結果の後ろに届く。
+success_guarantee: ツールの結果の本文はそのままで、そのセッションで初めて出た単語の引用の文脈が `heading` の見出しの下に並んで結果の後ろに届く。
 minimal_guarantee: どの異常でもツールの呼び出しは止まらず、ツールの結果の本文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_tool_result_context.py

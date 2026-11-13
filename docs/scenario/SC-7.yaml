@@ -1,13 +1,13 @@
 id: SC-7
 visibility: internal
-title: "読んだ本文への変数参照の値の追加"
+title: "参照した本文への変数参照の値の追加"
 scenarios:
   - name: 正常シナリオ
     setup:
       - name: Mock
         description: 差し替えない。tmux で `claude --plugin-dir {プラグインのフォルダ}` を起動し、`send-keys` で入力する
         notes: '`claude` の起動時に環境変数 `ALIAS_INJECT_E2E_VALUE` を `value-a` で設定する'
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` を 2 回含むテキストファイル
     flow: |-
       ```mermaid
@@ -16,14 +16,14 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を拾う
-        P->>P: 子プロセスで環境変数の値を引く
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を取得する
+        P->>P: 子プロセスで環境変数の値を取得する
         P->>CC: 本文はそのままに、値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
@@ -31,11 +31,11 @@ scenarios:
       - 'ツールの結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
       - ツールの結果の本文に `!{ALIAS_INJECT_E2E_VALUE}` が置き換わらずに残っている
     test: test_normal
-  - name: 正常シナリオ（Bash で読む）
+  - name: 正常シナリオ（Bash で参照する）
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       ```mermaid
@@ -44,13 +44,13 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを cat で読ませる入力を送信
+        U->>CC: ファイルを cat で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Bash を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を拾い、子プロセスで値を引く
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を取得し、子プロセスで値を取得する
         P->>CC: 本文はそのままに、値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
@@ -62,7 +62,7 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
         notes: '`ALIAS_INJECT_E2E_UNSET` は設定しない'
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_UNSET}` を含むテキストファイル
     flow: |-
       ```mermaid
@@ -71,7 +71,7 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
@@ -88,7 +88,7 @@ scenarios:
     setup:
       - name: Mock
         description: 正常シナリオと同じ
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: '`!{名前}` を含まないテキストファイル'
     flow: |-
       ```mermaid
@@ -97,25 +97,25 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
         P->>P: 本文に変数参照が無い
-        P->>CC: 結果をそのまま返す
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
       ```
     expected:
       - ツールの結果の後ろに `変数参照の値` の行が無い
     test: test_normal_when_no_reference
-  - name: 異常シナリオ（値を引けない）
+  - name: 異常シナリオ（値を取得できない）
     setup:
       - name: Mock
-        description: 正常シナリオと同じ。ただし `claude` を、空のフォルダだけを `PATH` にして起動する。呼び出し元の Claude Code から継いだ `CLAUDE_CODE_CHILD_SESSION` は外す
-        notes: '`claude` は絶対パスで起動する。`PATH` は tmux の `-e` ではなく、起動するコマンドの文字列の頭の `PATH=` で渡す。hooks モジュールの子プロセスはこの `PATH` をそのまま継ぎ、`env` の起動が ENOENT で失敗する'
-      - name: 読ませるファイル
+        description: 正常シナリオと同じ。ただし `claude` を、空のフォルダだけを `PATH` にして起動する。呼び出し元の Claude Code から継いだ `CLAUDE_CODE_CHILD_SESSION` は除外する
+        notes: '`claude` は絶対パスで起動する。`PATH` は tmux の `-e` ではなく、起動するコマンドの文字列の先頭の `PATH=` で指定する。hooks モジュールの子プロセスはこの `PATH` をそのまま継ぎ、`env` の起動が ENOENT で失敗する'
+      - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
       ```mermaid
@@ -124,14 +124,14 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
         P->>P: 子プロセスを起動できない
-        P->>CC: 結果をそのまま返す
+        P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
       ```
     expected:
@@ -143,7 +143,7 @@ scenarios:
       - name: Mock
         description: 正常シナリオと同じ
         notes: 設定ファイルは『ツールの結果への引用の文脈の追加』の正常シナリオと同じ
-      - name: 読ませるファイル
+      - name: 参照させるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` と term-a を含むテキストファイル
     flow: |-
       sequenceDiagram
@@ -151,31 +151,31 @@ scenarios:
         participant M as モデル
         participant CC as Claude Code
         participant P as alias-inject
-        U->>CC: ファイルを Read で読ませる入力を送信
+        U->>CC: ファイルを Read で参照させる入力を送信
         CC->>M: 入力を送信
         M->>CC: Read を呼ぶ
         CC->>P: tool.call
         P->>CC: ツールを実行させる
         CC-->>P: ツールの結果
-        P->>P: 照合で term-a が当たる
-        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を拾い、子プロセスで値を引く
+        P->>P: 照合で term-a がヒットする
+        P->>P: 本文から ALIAS_INJECT_E2E_VALUE を取得し、子プロセスで値を取得する
         P->>CC: 本文はそのままに、term-a の文脈と値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
       - ツールの結果の後ろの文脈に term-a の引用の文脈がある
       - 'ツールの結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
     test: test_normal_when_quote_context_added
-lead: Read・Bash・MCP のツールで読んだ本文に `!{名前}` の変数参照があると、本文は変えずに、同じ名前の環境変数の値をツールの結果の後ろの文脈としてモデルに追加する。
+lead: Read・Bash・MCP のツールで参照した本文に `!{名前}` の変数参照があると、本文は変えずに、同じ名前の環境変数の値をツールの結果の後ろの文脈としてモデルに追加する。
 issue: 11
 primary_actor: モデル
 stakeholders:
   - name: 利用者
-    interest: 規約の本文の `!{名前}` を、置き換えのツールを通さずに Read で読ませても、モデルが値を知って作業できる
+    interest: 規約の本文の `!{名前}` を、置き換えのツールを経由せずに Read で参照させても、モデルが値を知って作業できる
   - name: ai-monitor の自動のセッション
     interest: rule-inject の `read_rules` が無くなっても、規約の `!{名前}` の値がモデルに届く
-trigger: モデルが Read・Bash・MCP のツールで、`!{名前}` を含む本文を読む
+trigger: モデルが Read・Bash・MCP のツールで、`!{名前}` を含む本文を参照する
 preconditions:
   - alias-inject が有効なセッションで動いている
 success_guarantee: ツールの結果の本文はそのままで、本文に出た名前ごとに 1 行の値（設定されていない名前は設定されていない旨）が結果の後ろの文脈としてモデルに届く。
-minimal_guarantee: 値を引けないときも、ツールの結果はそのままモデルに届き、ツールの呼び出しは止まらない。
+minimal_guarantee: 値を取得できないときも、ツールの結果はそのままモデルに届き、ツールの呼び出しは止まらない。
 test_file: tests/e2e/単一ユースケース/test_variable_reference.py
