@@ -18,7 +18,7 @@ export const SECTION_HEADINGS: Record<AliasType, string> = {
   tool: 'ツール',
   path: 'パス',
   env: '環境',
-  avoid: '避ける語',
+  avoid: '使用しない単語',
 }
 
 /** 出所・`aliases` の要素の `id`・項目の ID（用語のやめた言い方の語は、やめた言い方も）の組を 1 つの文字列にする */
