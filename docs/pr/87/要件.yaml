@@ -8,7 +8,9 @@ docs:
   - page: docs/config/CFG-1.yaml
     new: false
     change: avoid の列とセクションの呼び名（107・167・171 行目）を決めた呼び名へ変える
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-13T00:30:54.987698+00:00'
   - page: docs/guide/エイリアスのスキーマ.md
     new: false
     change: 引用の種類の並び（7 行目）の呼び名を決めた呼び名へ変える
