@@ -1,0 +1,1 @@
+# アーキテクチャ図の repository.layout を除き、設計書のスキーマを knowledge の参照へ移してコピーを削除する
