@@ -4,20 +4,6 @@ title: プラグイン / 読み込み / loader.ts
 lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイル・スキーマ・`project-index.yaml`・`aliases` の要素が指す YAML が使用する。
 test_files:
   - tests/unit/hooks/lib/loader.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      loader.ts          パスの展開・glob の展開・変わったファイルの読み込み・YAML のパース
-    vendor/
-      js-yaml.mjs        同梱する js-yaml 5.5.0（npm の dist のまま）
-      js-yaml.d.ts       js-yaml 5.5.0 の型（npm の dist のまま）
-  tests/
-    unit/
-      hooks/
-        lib/
-          loader.test.ts loader.ts の単体テスト
-  ```
 data_models:
   - name: FileStamp
     title: ファイルの更新時刻

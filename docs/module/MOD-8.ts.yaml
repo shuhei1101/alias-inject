@@ -4,17 +4,6 @@ title: プラグイン / 変数参照 / variable.ts
 lead: ツールの結果の本文から `!{名前}` の名前を検出し、`env -0` の出力から値を取得して、文脈に追加する値の行を組み立てる。
 test_files:
   - tests/unit/hooks/lib/variable.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      variable.ts          変数参照の名前の検出・`env -0` の出力の分割・値の行の組み立て・上限の定数
-  tests/
-    unit/
-      hooks/
-        lib/
-          variable.test.ts variable.ts の単体テスト
-  ```
 constants:
   - name: VARIABLE_REFERENCE_TIMEOUT_MS
     title: 子プロセスの待ちの上限

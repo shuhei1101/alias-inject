@@ -2,7 +2,6 @@ id: SC-5
 visibility: internal
 title: 端末のセットアップ
 lead: 利用者がスキル `global-setup` を実行すると、端末の設定（設定ファイル）を作るか今の構造へ移し、引用の文脈が追加されることを確認する。
-issue: 63
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで `/alias-inject:global-setup` を実行する
 preconditions:

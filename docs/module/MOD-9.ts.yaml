@@ -4,17 +4,6 @@ title: プラグイン / 文脈 / context.ts
 lead: 該当した単語から記録済みの単語を除き、`max_items`・`max_chars` に収まる単語を選んで、追加する文脈の文字列を組み立てる。
 test_files:
   - tests/unit/hooks/lib/context.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      context.ts         単語の選択と文脈の組み立て
-  tests/
-    unit/
-      hooks/
-        lib/
-          context.test.ts context.ts の単体テスト
-  ```
 data_models:
   - name: Selection
     title: 選んだ単語と文脈

@@ -559,7 +559,6 @@ scenarios:
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_term_avoid
 lead: 利用者が入力すると、設定ファイルが並べたリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の引用の文脈を、入力の文を変えずにモデルにだけ追加する。
-issue: 1
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する
 preconditions:

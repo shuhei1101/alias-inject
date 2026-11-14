@@ -5,15 +5,6 @@ lead: |-
   入口が `prompt.submit`・`session.compact`・`session.end`・`tool.call` に登録するイベントの処理。
 test_files:
   - tests/unit/hooks/handlers.test.ts
-directory: |-
-  ```text
-  hooks/
-    handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理
-  tests/
-    unit/
-      hooks/
-        handlers.test.ts handlers.ts の単体テスト
-  ```
 functions:
   - name: handlePromptSubmit
     title: 入力への引用の文脈の追加
@@ -321,5 +312,3 @@ functions:
         expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`ui.log` に `to` が `debug` の行が届く"
         notes: 'PR #52 で追加'
     status: planned
-    introduced:
-      pr: 52

@@ -4,17 +4,6 @@ title: プラグイン / スキーマ / schema.ts
 lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `project-index.yaml` の `documents` の行）を検証する。検証はスキーマが使用するキーワードだけを解釈し、外部のライブラリを使用しない。'
 test_files:
   - tests/unit/hooks/lib/schema.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      schema.ts          スキーマのキーワードの確認・値の検証
-  tests/
-    unit/
-      hooks/
-        lib/
-          schema.test.ts schema.ts の単体テスト
-  ```
 classes:
   - name: SchemaError
     title: スキーマの読み込みの失敗

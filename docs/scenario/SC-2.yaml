@@ -314,7 +314,6 @@ scenarios:
       - term-s の文脈は追加されていない
     test: test_normal_when_cwd_scoped
 lead: モデルが Read・Bash・MCP などのツールで参照した本文を、入力と同じ単語と照合し、そのセッションで初めて出た単語の引用の文脈を、本文を変えずにツールの結果の後ろに追加する。
-issue: 51
 primary_actor: モデル
 stakeholders:
   - name: 利用者

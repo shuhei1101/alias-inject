@@ -157,7 +157,7 @@ entries:
               - skill
   - type: folder
     name: schemas
-    contents: 他のリポジトリが取り込むエイリアスの元の行のスキーマと、AI Monitor から配られた設計書の種類のスキーマのコピー
+    contents: 他のリポジトリが取り込むエイリアスの元の行のスキーマ
     content_types:
       - schema
     naming:

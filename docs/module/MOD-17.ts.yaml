@@ -4,17 +4,6 @@ title: プラグイン / 項目 / entry.ts
 lead: 'エイリアスの元の行の `paths` に該当する YAML を参照し、文書ごとに `metadata` の値を解決して、照合する単語と文脈に並べる列を持つ単語の一覧を作る。'
 test_files:
   - tests/unit/hooks/lib/entry.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      entry.ts           行が指す YAML の読み込みと単語の一覧の組み立て
-  tests/
-    unit/
-      hooks/
-        lib/
-          entry.test.ts  entry.ts の単体テスト
-  ```
 data_models:
   - name: Entry
     title: 単語

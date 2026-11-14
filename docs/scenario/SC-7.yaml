@@ -166,7 +166,6 @@ scenarios:
       - 'ツールの結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
     test: test_normal_when_quote_context_added
 lead: Read・Bash・MCP のツールで参照した本文に `!{名前}` の変数参照があると、本文は変えずに、同じ名前の環境変数の値をツールの結果の後ろの文脈としてモデルに追加する。
-issue: 11
 primary_actor: モデル
 stakeholders:
   - name: 利用者

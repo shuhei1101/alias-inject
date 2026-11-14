@@ -124,6 +124,4 @@ requirements:
     refs:
       - IF-2#constraints[処理時間]
     status: planned
-    introduced:
-      pr: 52
 lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして配置する。

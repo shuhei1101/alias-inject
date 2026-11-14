@@ -78,7 +78,6 @@ scenarios:
       - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
     test: test_normal_when_compacted_after_tool_result
 lead: 圧縮か `/clear` の後は、それまでに文脈を追加した単語の記録を削除し、同じ単語が出たらもう一度文脈を追加する。
-issue: 1
 primary_actor: 利用者
 trigger: 利用者が `/compact` か `/clear` を実行するか、自動の圧縮が起きる
 preconditions:

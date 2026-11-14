@@ -1,0 +1,86 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書は揃っており、棚卸しの依頼ではない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めを依頼する Issue ではない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: knowledge のスキーマの参照は layout の行で動いており、未検証の機構に依存しない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: プラグインの振る舞いは変わらない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 単一ユースケース設計
+    status: skipped
+    reason: プラグインの振る舞いは変わらない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: モック作成
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: インターフェース定義設計
+    status: skipped
+    reason: プラグインの操作の入出力は変わらない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: モジュール構成設計
+    status: skipped
+    reason: hooks モジュールのコードは変わらない
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: ドキュメント修正
+    status: done
+    note: ARCH-1 の repository.layout の削除、LAY-1 の schemas の contents、CLAUDE.md、docs/guide/files.yml の $schema の行
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:12.972253+00:00'
+  - process: 単体テスト作成
+    status: skipped
+    reason: コードを変えず、設計書のスキーマの検査で確かめる
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'
+  - process: 実装
+    status: done
+    note: project-index.yaml の schema の書き換えと schemas/ のコピーの削除、設計書のスキーマの検査
+    updated_by: planner
+    updated_at: '2026-11-14T08:38:56.067588+00:00'
+  - process: 結合テスト作成
+    status: skipped
+    reason: コードを変えず、設計書のスキーマの検査で確かめる
+    updated_by: planner
+    updated_at: '2026-11-14T08:09:57.636155+00:00'

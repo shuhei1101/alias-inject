@@ -4,17 +4,6 @@ title: プラグイン / 照合 / match.ts
 lead: 入力と単語を同じ正規化でそろえ、部分文字列として含まれる単語を返却し、出た位置か出た回数の順に並べる。正規表現は使用しない。
 test_files:
   - tests/unit/hooks/lib/match.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      match.ts           正規化と照合
-  tests/
-    unit/
-      hooks/
-        lib/
-          match.test.ts  match.ts の単体テスト
-  ```
 data_models:
   - name: Hit
     title: 該当した単語
@@ -156,5 +145,3 @@ functions:
         mock: なし
         expected: term-b・term-a・term-c の順
     status: planned
-    introduced:
-      pr: 52

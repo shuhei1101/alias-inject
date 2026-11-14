@@ -4,17 +4,6 @@ title: プラグイン / リポジトリ / repository.ts
 lead: 参照するリポジトリの `project-index.yaml` を更新時刻が変わったときだけ参照し、`documents` のうち `alias_type` を持つ行だけを取り出して `paths` をそのフォルダから解決する。
 test_files:
   - tests/unit/hooks/lib/repository.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      repository.ts      project-index.yaml の読み込みと documents の行の取り出し
-  tests/
-    unit/
-      hooks/
-        lib/
-          repository.test.ts repository.ts の単体テスト
-  ```
 data_models:
   - name: RepositoryAliases
     title: リポジトリのエイリアスの行
