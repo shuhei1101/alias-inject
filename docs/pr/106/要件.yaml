@@ -25,13 +25,13 @@ docs:
     updated_at: '2026-11-14T08:15:05.675522+00:00'
   - page: docs/scenario/SC-1.yaml
     new: false
-    change: SC-1〜7 の issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
     status: done
     updated_by: planner
     updated_at: '2026-11-14T08:39:21.285123+00:00'
   - page: docs/module/MOD-7.tsx.yaml
     new: false
-    change: MOD-1〜17 の directory（配置は LAY-1 が持つ）と、関数・定数・データモデルの introduced を削除し、MOD-7 の functions[register] の implementation を削除して引数名 on を引用符で囲む
+    change: directory（配置は LAY-1 が持つ）と functions[register] の introduced・implementation を削除し、引数名 on を引用符で囲む
     status: done
     updated_by: planner
     updated_at: '2026-11-14T08:39:21.285123+00:00'
@@ -47,6 +47,138 @@ docs:
     status: done
     updated_by: planner
     updated_at: '2026-11-14T08:39:21.285123+00:00'
+  - page: docs/scenario/SC-2.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/scenario/SC-3.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/scenario/SC-4.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/scenario/SC-5.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/scenario/SC-6.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/scenario/SC-7.yaml
+    new: false
+    change: issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-1.ts.yaml
+    new: false
+    change: directory（配置は LAY-1 が持つ）と functions[handleToolCall] の introduced を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-10.ts.yaml
+    new: false
+    change: directory（配置は LAY-1 が持つ）と functions[sortByCount] の introduced を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-11.ts.yaml
+    new: false
+    change: directory（配置は LAY-1 が持つ）と functions[parseCondition]・functions[evaluateCondition]・functions[filterByCondition]・constants[MAX_CONDITION_DEPTH]・data_models[ConditionTerm]・data_models[Condition] の introduced を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-12.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-13.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-14.ts.yaml
+    new: false
+    change: directory（配置は LAY-1 が持つ）と functions[recordIdOf]・constants[RECORD_WRITE_ATTEMPTS] の introduced を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-15.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-16.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-17.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-2.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-3.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-4.mjs.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-5.ts.yaml
+    new: false
+    change: directory（配置は LAY-1 が持つ）と functions[collectArgumentStrings]・functions[documentPathOf]・functions[excludeReadingDocuments] の introduced を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-6.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-8.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
+  - page: docs/module/MOD-9.ts.yaml
+    new: false
+    change: directory を削除する（配置は LAY-1 が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:53:04.882574+00:00'
 scope_out:
   - item: docs/pr/ の過去の PR ドキュメントに残る schemas/ のコピーへの言及
     reason: マージ済みの PR の記録で、当時の状態を表すため書き換えない
