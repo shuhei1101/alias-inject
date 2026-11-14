@@ -1,0 +1,50 @@
+docs:
+  - page: docs/layout/LAY-1.yaml
+    new: true
+    change: テンプレート『フォルダ構成』の書式で、リポジトリの直下からの全てのフォルダとファイルを entries[] で記載する設計書を新設
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+  - page: docs/layout/index.yaml
+    new: true
+    change: フォルダ構成のフォルダの目次を新設
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+  - page: docs/layout/README.md
+    new: true
+    change: フォルダ構成のフォルダの README を他の種類のフォルダと同じ形で新設
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+  - page: docs/index.yaml
+    new: false
+    change: layout/ の行を追加
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+  - page: project-index.yaml
+    new: false
+    change: documents に knowledge の schemas/design/layout.schema.yaml を指すフォルダ構成の行を追加
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+  - page: docs/_config.yml
+    new: false
+    change: visibility が internal の文書だけを持つ layout/ を Pages のビルドの exclude に追加
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T07:15:17.178946+00:00'
+scope_out:
+  - item: アーキテクチャ図 ARCH-1 の repository.layout の削除と、project-index.yaml の他の行の schema の knowledge のスキーマの参照への移行・schemas/ のコピーの削除
+    reason: AI Monitor v0.4.0 の配布物への追従（shuhei1101/ai-monitor#3376 の変換と shuhei1101/ai-monitor#3430 の配布先の反映作業『各プロジェクトのスキーマの参照への移行』）で行う。今の schemas/architecture.schema.yaml のコピーは repository.layout を持ち、先に消すと配布の変換と食い違う
+    plan: '#104'
+  - item: .gitignore への .claude-plugin/types/ の追加と __pycache__/ の削除
+    reason: レビューの観点「管理しないもの」で見つかった問題。Issue の `## やりたいこと` が別の Issue で対処すると定めている
+    plan: '#101'
+  - item: dev/pr/71/ の docs/pr/71/ への移動
+    reason: レビューの観点「同じ種類が散る」で見つかった問題。Issue の `## やりたいこと` が別の Issue で対処すると定めている
+    plan: '#102'
+  - item: hooks/vendor/・docs/_theme/ の複製への generated_from の記載
+    reason: 複製の元がリポジトリの外（npm の js-yaml・AI Monitor の配布物）で、テンプレート『フォルダ構成』の generated_from の path（リポジトリの直下からのパス）と command（開発コマンドへの参照）を記載できない。テンプレートの不足として knowledge で対処する。それまでは複製の元を contents に記載する
+    plan: shuhei1101/knowledge#373
