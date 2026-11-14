@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-14T08:07:29.215789+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: フォルダ構成の設計書 docs/layout/LAY-1.yaml の gitignore[] を .gitignore に合わせる
+    updated_by: planner
+    updated_at: '2026-11-14T08:13:40.534235+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードは変わらない
