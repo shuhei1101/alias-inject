@@ -38,7 +38,7 @@ docs:
 scope_out:
   - item: アーキテクチャ図 ARCH-1 の repository.layout の削除と、project-index.yaml の他の行の schema の knowledge のスキーマの参照への移行・schemas/ のコピーの削除
     reason: AI Monitor v0.4.0 の配布物への追従（shuhei1101/ai-monitor#3376 の変換と shuhei1101/ai-monitor#3430 の配布先の反映作業『各プロジェクトのスキーマの参照への移行』）で行う。今の schemas/architecture.schema.yaml のコピーは repository.layout を持ち、先に消すと配布の変換と食い違う
-    plan: to_file
+    plan: '#104'
   - item: .gitignore への .claude-plugin/types/ の追加と __pycache__/ の削除
     reason: レビューの観点「管理しないもの」で見つかった問題。Issue の `## やりたいこと` が別の Issue で対処すると定めている
     plan: '#101'
