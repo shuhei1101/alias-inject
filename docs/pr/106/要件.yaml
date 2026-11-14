@@ -1,0 +1,21 @@
+docs:
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: repository.layout を削除する（shuhei1101/ai-monitor#3376 の変換のとおり。フォルダ構成は docs/layout/LAY-1.yaml が持つ）
+    status: todo
+  - page: docs/layout/LAY-1.yaml
+    new: false
+    change: schemas/ の contents から AI Monitor から配られた設計書の種類のスキーマのコピーを除く
+    status: todo
+  - page: CLAUDE.md
+    new: false
+    change: 「設計書の Schema は schemas/ にある」を、設計書の Schema は knowledge の schemas/design/ を project-index.yaml から参照する記述に直す
+    status: todo
+  - page: docs/guide/files.yml
+    new: false
+    change: 削除する schemas/files.schema.yaml を指す yaml-language-server の $schema の行を直す
+    status: todo
+scope_out:
+  - item: docs/pr/ の過去の PR ドキュメントに残る schemas/ のコピーへの言及
+    reason: マージ済みの PR の記録で、当時の状態を表すため書き換えない
+    plan: none
