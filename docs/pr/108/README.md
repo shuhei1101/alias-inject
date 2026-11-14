@@ -1,0 +1,1 @@
+# フォルダ構成の設計書の複製の元と git で管理する生成物を generated_from.source・tracked で記載する
