@@ -246,6 +246,8 @@ entries:
   - type: folder
     name: docs
     contents: 設計書・公開ドキュメント・PR ドキュメント
+    content_types:
+      - config
     children:
       - type: file
         name: README.md
@@ -371,6 +373,38 @@ entries:
             contents: 1 つの作業 PR の計画・確認ログ・テスト結果・反映作業
             content_types:
               - pr_doc
+            naming:
+              - README.md
+              - 要件.md
+              - 要件.yaml
+              - タスク一覧.yaml
+              - 確認ログ.yaml
+              - '{plan}.md'
+            children:
+              - type: folder
+                name: テスト結果
+                contents: テストと lint の実行のログ
+                content_types:
+                  - pr_doc
+                naming:
+                  - '{datetime}_{sha}_{kind}.log'
+              - type: folder
+                name: 反映作業
+                contents: 反映作業の一覧と、作業ごとのスクリプト・dry-run のログ
+                content_types:
+                  - pr_doc
+                naming:
+                  - index.yaml
+                children:
+                  - type: folder
+                    name: '{work}'
+                    contents: 1 つの反映作業のスクリプトと dry-run のログ
+                    content_types:
+                      - pr_doc
+                    naming:
+                      - '{stage}.py'
+                      - common.py
+                      - dry-run.log
       - type: folder
         name: _theme
         contents: AI Monitor から複製したドキュメントサイトの共通レイアウト
@@ -517,5 +551,5 @@ refs:
   - LIB-2#
 notes:
   中身の種類の付け方: |-
-    種類のフォルダの `index.yaml`・`README.md`・`files.yml` は目次のため、フォルダの中身の種類の判定から除外し、フォルダには設計書・ページの役割を付ける。
+    `docs/` と種類のフォルダの `index.yaml`・`README.md`・`files.yml` は目次のため、フォルダの中身の種類の判定から除外し、フォルダには設計書・ページの役割を付ける。
     種類のフォルダの設計書は ID で名前が決まるため、`naming` で記載し、`children` に列挙しない。

@@ -46,5 +46,5 @@ scope_out:
     reason: レビューの観点「同じ種類が散る」で見つかった問題。Issue の `## やりたいこと` が別の Issue で対処すると定めている
     plan: '#102'
   - item: hooks/vendor/・docs/_theme/ の複製への generated_from の記載
-    reason: 複製の元がリポジトリの外（npm の js-yaml・AI Monitor の配布物）で、generated_from の path（リポジトリの直下からのパス）と command（開発コマンドへの参照）を記載できない。複製の元は contents と LIB-2・ai-monitor-theme.yaml が持つ。テンプレートの修正が要るかはレビューで確定する
-    plan: none
+    reason: 複製の元がリポジトリの外（npm の js-yaml・AI Monitor の配布物）で、テンプレート『フォルダ構成』の generated_from の path（リポジトリの直下からのパス）と command（開発コマンドへの参照）を記載できない。テンプレートの不足として knowledge で対処する。それまでは複製の元を contents に記載する
+    plan: shuhei1101/knowledge#373
