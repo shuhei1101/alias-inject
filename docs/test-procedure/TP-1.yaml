@@ -8,7 +8,7 @@ layers:
     prerequisites:
       - Claude Code 2.1.310 以上（`claude` が PATH にある）
       - '`hooks/hooks.json` が `modules` で入口を指している（無いと `no hooks module to load` で失敗する）'
-      - ランナーの全件実行は、`gh` がログイン済みで、今のブランチを push 済みで、`.github/workflows/test.yml` が develop にある（無ければ `run_all` で回す）
+      - ランナーの全件実行は、`gh` 2.87.0 以上（`gh workflow run` が作った実行の URL を出す）がログイン済みで、今のブランチを push 済みで、`.github/workflows/test.yml` が develop にある（無ければ `run_all` で回す）
     run_all: |-
       ```bash
       claude plugin test .
@@ -28,7 +28,7 @@ layers:
     prerequisites:
       - Claude Code 2.1.310 以上（`claude` が PATH にある）
       - '`hooks/hooks.json` が `modules` で入口を指している'
-      - ランナーの全件実行は、`gh` がログイン済みで、今のブランチを push 済みで、`.github/workflows/test.yml` が develop にある（無ければ `run_all` で回す）
+      - ランナーの全件実行は、`gh` 2.87.0 以上（`gh workflow run` が作った実行の URL を出す）がログイン済みで、今のブランチを push 済みで、`.github/workflows/test.yml` が develop にある（無ければ `run_all` で回す）
     location: runner
     run_runner: |-
       ```bash

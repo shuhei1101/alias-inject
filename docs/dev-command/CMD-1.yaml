@@ -80,4 +80,4 @@ categories:
 prerequisites:
   - Node.js と npm
   - Claude Code 2.1.310 以上（`claude` が PATH にある）
-  - '`gh`（ランナーの全件実行で使用する。ログイン済み）'
+  - '`gh` 2.87.0 以上（ランナーの全件実行で使用する。ログイン済み）'
