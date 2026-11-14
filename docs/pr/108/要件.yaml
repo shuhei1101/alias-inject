@@ -8,5 +8,5 @@ docs:
 use_cases: []
 scope_out:
   - item: knowledge で generated_from.source・tracked を含む design-schemas のタグを作成する
-    reason: knowledge のリポジトリの作業で、この作業 PR の ref の書き換えの前提
+    reason: knowledge のリポジトリの作業で、この作業 PR の ref の書き換えの前提（design-schemas/v8.3.0 を作成済み）
     plan: shuhei1101/knowledge#392
