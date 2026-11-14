@@ -1,0 +1,12 @@
+docs:
+  - page: docs/pr/71/README.md
+    new: true
+    change: dev/pr/71/ の 8 ファイル（README.md・タスク一覧.yaml・要件.md・要件.yaml・プラグイン.md・テスト結果/ の 3 件）を中身を変えずに docs/pr/71/ へ移し、dev/ を無くす
+    status: todo
+scope_out:
+  - item: docs/guide/変更履歴.md の、タグで固定した dev/pr/{PR 番号}/README.md へのリンク（v0.1.0〜v0.3.0）
+    reason: リンクはタグ（blob/v0.x.0）で固定しており、移した後も切れない
+    plan: none
+  - item: 'PR #71 の PR ドキュメントの本文に書かれた dev/ の記述'
+    reason: 'PR #71 の時点の計画の記録で、要望は中身を変えずに移すことに限る'
+    plan: none
