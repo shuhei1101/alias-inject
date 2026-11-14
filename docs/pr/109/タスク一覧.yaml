@@ -77,6 +77,6 @@ tasks:
     note: '`.github/workflows/test.yml` を作る'
   - process: 結合テスト作成
     status: skipped
-    reason: hooks モジュールのコードは変えない。workflow のテストは `tests/e2e/workflow/` で本物の GitHub Actions で回すため、結合テストの対象にならない（扱いはスコープ外の行）
     updated_by: planner
-    updated_at: '2026-11-14T22:23:21.339186+00:00'
+    updated_at: '2026-11-14T22:52:31.156450+00:00'
+    reason: hooks モジュールのコードは変えない。workflow は結合テストのファイルを持たず、E2E テストはスコープ外の行「workflow の E2E テスト」で後続の作業に回す

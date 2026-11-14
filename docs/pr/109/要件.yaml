@@ -49,5 +49,5 @@ scope_out:
     reason: '`workflow_dispatch` は develop にある workflow だけを起動できる。この作業 PR は手元の全件実行で回し、理由をログに記録する（Issue #99 のユーザーのコメント）。develop へ入った後の作業 PR で実施する'
     plan: to_file
   - item: workflow の E2E テスト（`tests/e2e/workflow/`、本物の GitHub Actions で分岐ごとに回す）
-    reason: '判断が分かれるためインターフェース定義設計のレビューで確定する。今の判断は後続へ回す: develop へ入るまで workflow を起動できずこの作業 PR では回せない。また E2E の層（TL-3）は `run_all` が未確定で、実行器の選定から要る'
+    reason: 'develop へ入るまで workflow を `workflow_dispatch` で起動できず、この作業 PR では回せない（ランナーでの初回は develop へ入った後の作業 PR と Issue #99 のユーザーのコメントで決まっている）。また E2E の層（TL-3）は `run_all` が未確定で、実行器の選定から要る'
     plan: to_file
