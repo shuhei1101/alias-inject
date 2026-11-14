@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-14T15:07:44.838758+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: LAY-1 の generated_from.source・tracked への書き換え
+    updated_by: planner
+    updated_at: '2026-11-14T15:15:07.148277+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードを変えず、設計書のスキーマの検査で確かめる

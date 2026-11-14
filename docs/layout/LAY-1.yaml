@@ -119,11 +119,15 @@ entries:
             generated_from:
               path: schemas/aliases.schema.yaml
               command: CMD-1#categories[ビルド・生成]
+              tracked: hooks モジュールが実行時に import する
       - type: folder
         name: vendor
-        contents: 同梱する外部ライブラリ [js-yaml](id:LIB-2) の、npm の tarball から取り出したファイル
+        contents: 同梱する外部ライブラリ [js-yaml](id:LIB-2)
         content_types:
           - vendor
+        generated_from:
+          source: npm:js-yaml@5.5.0
+          tracked: hooks モジュールが実行時に import する
         children:
           - type: file
             name: js-yaml.mjs
@@ -407,9 +411,12 @@ entries:
                       - dry-run.log
       - type: folder
         name: _theme
-        contents: AI Monitor から複製したドキュメントサイトの共通レイアウト
+        contents: ドキュメントサイトの共通レイアウト
         content_types:
           - theme
+        generated_from:
+          source: shuhei1101/ai-monitor@v0.3.0:docs/_theme/
+          tracked: GitHub Pages が `docs/` からサイトを組み立てるときに読み込む
         children:
           - type: file
             name: llms.txt
