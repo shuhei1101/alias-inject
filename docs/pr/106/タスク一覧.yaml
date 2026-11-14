@@ -65,16 +65,20 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-14T08:09:57.636155+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: ARCH-1 の repository.layout の削除、LAY-1 の schemas の contents、CLAUDE.md、docs/guide/files.yml の $schema の行
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:12.972253+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードを変えず、設計書のスキーマの検査で確かめる
     updated_by: planner
     updated_at: '2026-11-14T08:09:57.636155+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: project-index.yaml の schema の書き換えと schemas/ のコピーの削除、設計書のスキーマの検査
+    updated_by: planner
+    updated_at: '2026-11-14T08:38:56.067588+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: コードを変えず、設計書のスキーマの検査で確かめる

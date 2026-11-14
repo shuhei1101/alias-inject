@@ -1,20 +1,52 @@
 docs:
   - page: docs/architecture/ARCH-1.yaml
     new: false
-    change: repository.layout を削除する（shuhei1101/ai-monitor#3376 の変換のとおり。フォルダ構成は docs/layout/LAY-1.yaml が持つ）
-    status: todo
+    change: repository.layout と、subsystems[プラグイン]・external_systems[Claude Code] の introduced を削除する（knowledge のスキーマが持たない。フォルダ構成は docs/layout/LAY-1.yaml が持つ）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:05.675522+00:00'
   - page: docs/layout/LAY-1.yaml
     new: false
     change: schemas/ の contents から AI Monitor から配られた設計書の種類のスキーマのコピーを除く
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:05.675522+00:00'
   - page: CLAUDE.md
     new: false
     change: 「設計書の Schema は schemas/ にある」を、設計書の Schema は knowledge の schemas/design/ を project-index.yaml から参照する記述に直す
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:05.675522+00:00'
   - page: docs/guide/files.yml
     new: false
-    change: 削除する schemas/files.schema.yaml を指す yaml-language-server の $schema の行を直す
-    status: todo
+    change: 削除する schemas/files.schema.yaml を指す yaml-language-server の $schema の行を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:15:05.675522+00:00'
+  - page: docs/scenario/SC-1.yaml
+    new: false
+    change: SC-1〜7 の issue を削除する（AI Monitor の design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:39:21.285123+00:00'
+  - page: docs/module/MOD-7.tsx.yaml
+    new: false
+    change: MOD-1〜17 の directory（配置は LAY-1 が持つ）と、関数・定数・データモデルの introduced を削除し、MOD-7 の functions[register] の implementation を削除して引数名 on を引用符で囲む
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:39:21.285123+00:00'
+  - page: docs/config/CFG-1.yaml
+    new: false
+    change: settings[global.exclude_tools] の introduced を削除する（design-schemas/v8.1.0 の変換）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:39:21.285123+00:00'
+  - page: docs/nonfunctional/NFR-1.yaml
+    new: false
+    change: requirements[NFR-9] の introduced を削除する（knowledge のスキーマが持たない）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:39:21.285123+00:00'
 scope_out:
   - item: docs/pr/ の過去の PR ドキュメントに残る schemas/ のコピーへの言及
     reason: マージ済みの PR の記録で、当時の状態を表すため書き換えない
