@@ -4,17 +4,6 @@ title: プラグイン / ツール / tool.ts
 lead: ツールの呼び出しの引数から、参照している文書そのものの単語を照合の結果から除外する。
 test_files:
   - tests/unit/hooks/lib/tool.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      tool.ts            参照している文書の判定
-  tests/
-    unit/
-      hooks/
-        lib/
-          tool.test.ts   tool.ts の単体テスト
-  ```
 functions:
   - name: collectArgumentStrings
     title: 引数の文字列の収集
@@ -46,8 +35,6 @@ functions:
         mock: なし
         expected: '`knowledge`・`id`・`eq`・`term-a` だけを持ち、`t1`・`agent-1`・ツール名を持たない'
     status: planned
-    introduced:
-      pr: 52
   - name: documentPathOf
     title: 文書のパス
     kind: 関数
@@ -84,8 +71,6 @@ functions:
         mock: なし
         expected: '`/repo/knowledge/terms/term-a.yaml` と `/repo/knowledge/hooks/hooks.json`'
     status: planned
-    introduced:
-      pr: 52
   - name: excludeReadingDocuments
     title: 参照している文書の除外
     kind: 関数
@@ -142,5 +127,3 @@ functions:
         mock: なし
         expected: term-a と term-b
     status: planned
-    introduced:
-      pr: 52

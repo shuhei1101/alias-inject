@@ -4,17 +4,6 @@ title: プラグイン / 設定 / config.ts
 lead: 設定ファイルのパスの取得、設定ファイルの検証と既定値の適用、起動したプロジェクトに該当する `projects` を重ねた実効の設定の組み立て、入力の出所の判定。
 test_files:
   - tests/unit/hooks/lib/config.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      config.ts          設定ファイルのパスの取得・検証・実効の設定の組み立て・出所の判定
-  tests/
-    unit/
-      hooks/
-        lib/
-          config.test.ts config.ts の単体テスト
-  ```
 data_models:
   - name: RepositoryConfig
     title: 参照するリポジトリの設定

@@ -80,7 +80,6 @@ scenarios:
       - 入力の送信は止まっていない
     test: test_error_when_yaml_malformed
 lead: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から書き換え後の内容で照合する。
-issue: 1
 primary_actor: 利用者
 trigger: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:

@@ -6,35 +6,6 @@ lead: |-
   入口は `prompt.submit`・`session.compact`・`session.end`・`tool.call` に処理を登録する。
 test_files:
   - tests/unit/hooks/register.test.ts
-directory: |-
-  ```text
-  .claude-plugin/
-    plugin.json          プラグインの定義（名前 alias-inject・説明・types は ./types/index.d.ts。version は配置しない）
-    marketplace.json     マーケットプレイスの定義（plugins[0].source が ./ でリポジトリ自身を記載する）
-    types/               エンジンが書き出す mod の型の宣言（git に入れない）
-  hooks/
-    hooks.json           { "modules": ["./register.tsx"] }
-    register.tsx         hooks モジュールの入口（register）
-    handlers.ts          prompt.submit・session.compact・session.end・tool.call の処理（イベントの処理の設計書）
-    lib/                 読み込み・スキーマ・設定・エイリアス・リポジトリ・項目・照合・文脈・記録・変数参照・ツール・生成したスキーマ（各分類の設計書）
-    vendor/              同梱する外部ライブラリ（js-yaml）
-  skills/
-    global-setup/
-      SKILL.md           端末のセットアップの手順（単一ユースケース『端末のセットアップ』）
-  schemas/
-    aliases.schema.yaml  aliases の共通のスキーマ（hooks/lib/aliases-schema.ts の生成元）
-  scripts/
-    gen-aliases-schema.mjs  hooks/lib/aliases-schema.ts の生成・一致の確認（スキーマの生成の設計書）
-  types/
-    index.d.ts           $.state の型の契約（PluginState。状態の型の設計書）
-  tests/
-    unit/
-      hooks/
-        register.test.ts register の単体テスト（claude plugin test で実行する）
-        handlers.test.ts handlers.ts の単体テスト
-  package.json           private・type module・script typecheck（tsc -p tsconfig.json --noEmit）・devDependencies typescript 5.9.3
-  tsconfig.json          { "extends": "./.claude-plugin/types/tsconfig.json" }（エンジンが書き出し、git に入れる）
-  ```
 functions:
   - name: register
     title: 入口
@@ -47,7 +18,7 @@ functions:
     scope: public
     is_async: false
     args:
-      - name: on
+      - name: 'on'
         title: 処理の登録
         type: On（claude-code の Register の引数）
         required: true
@@ -76,10 +47,7 @@ functions:
         condition: "テストの中で `prompt.submit` に届いた text と context をそのまま返却する処理を登録し、`$.prompt.submit({ text: 'hello', wait: false, origin: { kind: 'composer' } })` を実行する"
         mock: なし（`claude-code/testing` の `test` が mod を読み込んだ環境で実行する）
         expected: 結果の `text` が `hello` で、`context` に何も追加されていない（`undefined` か空の配列）
-    implementation: hooks/register.tsx#register
     status: implemented
-    introduced:
-      pr: 5
 notes:
   テストと型の確認: |-
     - テストは `claude plugin test` で実行する。`dir` の下の `*.test.ts` を全て実行するので、`tests/` の下に配置しても参照される

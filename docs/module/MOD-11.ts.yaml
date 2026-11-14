@@ -4,17 +4,6 @@ title: プラグイン / 照合条件 / condition.ts
 lead: '文書の `inject_when` の値を照合条件として検査し、照合した本文で評価して、照合条件に該当しない単語を該当した単語から除外する。'
 test_files:
   - tests/unit/hooks/lib/condition.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      condition.ts           照合条件の検査・評価・絞り込み
-  tests/
-    unit/
-      hooks/
-        lib/
-          condition.test.ts  condition.ts の単体テスト
-  ```
 data_models:
   - name: ConditionTerm
     title: 条件
@@ -36,8 +25,6 @@ data_models:
         type: boolean
         description: true なら本文と値を正規化せずに比べる
     status: planned
-    introduced:
-      pr: 58
   - name: Condition
     title: 照合条件
     container: hooks/lib/condition.ts
@@ -46,8 +33,6 @@ data_models:
     summary: '条件か、`and`・`or`・`not` の束'
     description: "`ConditionTerm | { and: Condition[] } | { or: Condition[] } | { not: Condition }` の union"
     status: planned
-    introduced:
-      pr: 58
 constants:
   - name: MAX_CONDITION_DEPTH
     title: 束の入れ子の上限
@@ -58,8 +43,6 @@ constants:
     refs:
       - IF-3#constraints[照合条件]
     status: planned
-    introduced:
-      pr: 58
 functions:
   - name: parseCondition
     title: 照合条件の検査
@@ -109,8 +92,6 @@ functions:
         mock: なし
         expected: 'どれも ok が false。path が順に `inject_when.and`・`inject_when.and[0].op`・`inject_when`・`inject_when.field`・`inject_when.values`・`inject_when.values`・`inject_when.match`・`inject_when.case_sensitive`・`inject_when.value`・4 レイヤー目の束のパス'
     status: planned
-    introduced:
-      pr: 58
   - name: evaluateCondition
     title: 照合条件の評価
     kind: 関数
@@ -152,8 +133,6 @@ functions:
         mock: なし
         expected: false・true・false
     status: planned
-    introduced:
-      pr: 58
   - name: filterByCondition
     title: 照合条件での絞り込み
     kind: 関数
@@ -187,5 +166,3 @@ functions:
         mock: なし
         expected: term-a だけ
     status: planned
-    introduced:
-      pr: 58

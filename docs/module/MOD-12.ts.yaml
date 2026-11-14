@@ -2,11 +2,6 @@ id: MOD-12
 visibility: internal
 title: プラグイン / 状態の型 / index.d.ts
 lead: '`$.state` に配置する値の型の契約。`.claude-plugin/plugin.json` の `types` が指す。'
-directory: |-
-  ```text
-  types/
-    index.d.ts           $.state の型の契約（PluginState）
-  ```
 data_models:
   - name: PluginState
     title: プラグインの状態の契約

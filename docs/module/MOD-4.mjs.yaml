@@ -2,11 +2,6 @@ id: MOD-4
 visibility: internal
 title: プラグイン / スキーマの生成 / gen-aliases-schema.mjs
 lead: '`schemas/aliases.schema.yaml` から `hooks/lib/aliases-schema.ts` を生成し、一致を確認するスクリプト。'
-directory: |-
-  ```text
-  scripts/
-    gen-aliases-schema.mjs  aliases-schema.ts の生成と、YAML との一致の確認（--check）
-  ```
 functions:
   - name: generateAliasSchema
     title: 同梱のスキーマの生成

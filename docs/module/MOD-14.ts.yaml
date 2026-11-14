@@ -4,17 +4,6 @@ title: プラグイン / 記録 / record.ts
 lead: 会話ごとに文脈を追加した単語のキーを `$.state` に持ち、参照・追加・消去をする。会話はメインの会話がセッション、サブエージェントがセッションと `agentId` の組。
 test_files:
   - tests/unit/hooks/lib/record.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      record.ts          会話の記録の参照・追加・消去
-  tests/
-    unit/
-      hooks/
-        lib/
-          record.test.ts record.ts の単体テスト
-  ```
 constants:
   - name: RECORD_WRITE_ATTEMPTS
     title: 記録の書き込みの回数の上限
@@ -25,8 +14,6 @@ constants:
     refs:
       - IF-2#constraints[記録の書き込みの再試行]
     status: planned
-    introduced:
-      pr: 52
 functions:
   - name: recordIdOf
     title: 記録の ID
@@ -59,8 +46,6 @@ functions:
         mock: なし
         expected: 1 つ目が `s1`、3 つとも異なる
     status: planned
-    introduced:
-      pr: 52
   - name: readRecorded
     title: 記録の読み込み
     kind: 関数

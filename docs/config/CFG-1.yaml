@@ -287,8 +287,6 @@ settings:
     refs:
       - IF-2#constraints[照合から除外するツール]
     status: planned
-    introduced:
-      pr: 52
   - key: global.aliases[].scope
     title: 行の使用範囲
     file: ~/.config/alias-inject/settings.yaml

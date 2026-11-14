@@ -4,17 +4,6 @@ title: プラグイン / エイリアス / alias.ts
 lead: 設定ファイルの `aliases` の行と `project-index.yaml` の `documents` の行をスキーマで検証して取り出し、`id` の重なった行を除外する。文書ごとに `metadata` の値を解決し、種類ごとの必須のキーを確認する。
 test_files:
   - tests/unit/hooks/lib/alias.test.ts
-directory: |-
-  ```text
-  hooks/
-    lib/
-      alias.ts           エイリアスの元の行の取り出し・id の重なりの確認・metadata の値の解決
-  tests/
-    unit/
-      hooks/
-        lib/
-          alias.test.ts  alias.ts の単体テスト
-  ```
 data_models:
   - name: AliasConfig
     title: エイリアスの元の行

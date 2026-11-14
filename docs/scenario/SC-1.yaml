@@ -47,7 +47,6 @@ scenarios:
       - その後の term-b を含む入力には文脈が追加されていない
     test: test_normal
 lead: 利用者が 1 つのセッションで入力を重ねる間に、設定ファイルの書き換え・圧縮・`/clear` を挟んでも、単語ごとに 1 回だけ引用の文脈がモデルに追加される複合ユースケース。
-issue: 1
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで入力する
 preconditions:
