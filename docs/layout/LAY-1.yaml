@@ -63,6 +63,9 @@ content_types:
   - name: version
     group: role
     summary: バージョンの記録
+  - name: ci
+    group: role
+    summary: GitHub Actions の workflow
 entries:
   - type: folder
     name: .claude-plugin
@@ -545,6 +548,21 @@ entries:
     contents: Git で管理しないもののパターン
     content_types:
       - config
+  - type: folder
+    name: .github
+    contents: GitHub が読み込む設定
+    children:
+      - type: folder
+        name: workflows
+        contents: GitHub Actions の workflow のファイル
+        content_types:
+          - ci
+        children:
+          - type: file
+            name: test.yml
+            contents: 単体テストと結合テストの全件をランナーで回す workflow（`workflow_dispatch`）
+            content_types:
+              - ci
 gitignore:
   - pattern: docs/generated/
     reason: 生成物（AI Monitor の設計書の生成が書き出す Markdown）
