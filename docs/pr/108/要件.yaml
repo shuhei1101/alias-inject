@@ -1,0 +1,12 @@
+docs:
+  - page: docs/layout/LAY-1.yaml
+    new: false
+    change: hooks/vendor/・docs/_theme/・docs/_theme/assets/vendor/ の複製の元を generated_from.source へ、hooks/lib/aliases-schema.ts の git で管理する理由を generated_from.tracked へ移し、contents から複製の元の記述を削除する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T15:15:03.137986+00:00'
+use_cases: []
+scope_out:
+  - item: knowledge で generated_from.source・tracked を含む design-schemas のタグを作成する
+    reason: knowledge のリポジトリの作業で、この作業 PR の ref の書き換えの前提（design-schemas/v8.3.0 を作成済み）
+    plan: shuhei1101/knowledge#392
