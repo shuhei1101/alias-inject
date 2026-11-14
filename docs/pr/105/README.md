@@ -1,0 +1,1 @@
+# .gitignore に .claude-plugin/types/ を追加し、__pycache__/ を削除する
