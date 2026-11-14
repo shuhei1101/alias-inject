@@ -543,8 +543,8 @@ gitignore:
     reason: 生成物（AI Monitor の設計書の生成が書き出す Markdown）
   - pattern: node_modules/
     reason: '`npm ci` で入れる依存'
-  - pattern: __pycache__/
-    reason: Python のバイトコードのキャッシュ
+  - pattern: .claude-plugin/types/
+    reason: '`claude --plugin-dir {worktree}` が書き出す型の宣言'
 refs:
   - ARCH-1#
   - CMD-1#categories[ビルド・生成]
