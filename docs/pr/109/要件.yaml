@@ -1,0 +1,35 @@
+docs:
+  - page: docs/test-procedure/TP-1.yaml
+    new: false
+    change: 層ごとに判定フローチャート『テストの実行場所』で `location` を記載し、`runner` の層に `run_runner` を記載する（手元の `run_all` は残す）。lint の層に actionlint を加える
+    status: todo
+  - page: docs/interface/IF-6.yaml
+    new: true
+    change: テストの全件実行の workflow（`.github/workflows/test.yml`、`workflow_dispatch`）のインターフェース定義を新しく作る
+    status: todo
+  - page: docs/interface/index.yaml
+    new: false
+    change: IF-6 の行を追加する
+    status: todo
+  - page: docs/layout/LAY-1.yaml
+    new: false
+    change: '`.github/workflows/test.yml` のエントリを追加する'
+    status: todo
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: テストを回す外部システムとして GitHub Actions を追加する
+    status: todo
+  - page: docs/dev-command/CMD-1.yaml
+    new: false
+    change: 前提に actionlint と、`run_runner` で使用する `gh` を追加する
+    status: todo
+scope_out:
+  - item: スキーマのコピー（`schemas/test-procedure.schema.yaml`・`schemas/interface.schema.yaml`）の更新
+    reason: '#106 でコピーを削除し knowledge の `design-schemas/v8.3.0` を参照する形に移した。v8.3.0 のテスト実行方法のスキーマは `location`・`run_runner` を既に持つ'
+    plan: none
+  - item: ランナーでの初回の全件実行と、ランナーと手元の skip の件数の比較
+    reason: '`workflow_dispatch` は develop にある workflow だけを起動できる。この作業 PR は手元の全件実行で回し、理由をログに記録する（Issue #99 のユーザーのコメント）。develop へ入った後の作業 PR で実施する'
+    plan: to_file
+  - item: workflow の E2E テスト（`tests/e2e/workflow/`、本物の GitHub Actions で分岐ごとに回す）
+    reason: '判断が分かれるためインターフェース定義設計のレビューで確定する。今の判断は後続へ回す: develop へ入るまで workflow を起動できずこの作業 PR では回せない。また E2E の層（TL-3）は `run_all` が未確定で、実行器の選定から要る'
+    plan: to_file
