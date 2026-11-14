@@ -1,0 +1,521 @@
+id: LAY-1
+visibility: internal
+title: alias-inject
+repository: shuhei1101/alias-inject
+lead: Claude Code の mod の単独のプラグインのため、配布するもの（`.claude-plugin/`・`hooks/`・`skills/`・`schemas/`）を直下に配置し、開発で使用するもの（`tests/`・`scripts/`・`types/`）と文書の `docs/` を分ける。
+tags:
+  - name: topic:フォルダ
+    main: true
+  - name: topic:構成
+  - name: topic:リポジトリ
+content_types:
+  - name: manifest
+    group: role
+    summary: プラグイン・マーケットプレイス・npm のパッケージの定義
+  - name: config
+    group: role
+    summary: 設定ファイル
+  - name: hook
+    group: role
+    summary: Claude Code が読み込む hooks モジュールの定義とエントリ
+  - name: code
+    group: role
+    summary: hooks モジュールが import する処理
+  - name: vendor
+    group: role
+    summary: 同梱する外部ライブラリ
+  - name: schema
+    group: role
+    summary: スキーマ
+  - name: script
+    group: role
+    summary: 開発で使用するスクリプト
+  - name: skill
+    group: role
+    summary: 配布するスキル
+  - name: test
+    group: role
+    summary: テストコード
+  - name: test_support
+    group: role
+    summary: 複数のテストが共有するテストの道具
+  - name: type_def
+    group: role
+    summary: 型の宣言
+  - name: design_doc
+    group: role
+    summary: 設計書
+  - name: guide
+    group: role
+    summary: 公開ドキュメントのページ
+  - name: index
+    group: role
+    summary: フォルダの目次と管理用の YAML
+  - name: theme
+    group: role
+    summary: ドキュメントサイトの共通レイアウト
+  - name: pr_doc
+    group: role
+    summary: PR ドキュメント
+  - name: agent_instruction
+    group: role
+    summary: エージェントが参照する指示
+  - name: version
+    group: role
+    summary: バージョンの記録
+entries:
+  - type: folder
+    name: .claude-plugin
+    contents: プラグインとマーケットプレイスの定義
+    content_types:
+      - manifest
+    children:
+      - type: file
+        name: plugin.json
+        contents: プラグインの定義
+        content_types:
+          - manifest
+      - type: file
+        name: marketplace.json
+        contents: リポジトリ自身をマーケットプレイスにする定義
+        content_types:
+          - manifest
+  - type: folder
+    name: hooks
+    contents: Claude Code が読み込む hooks モジュール
+    content_types:
+      - hook
+    used_by:
+      - ARCH-1#
+    children:
+      - type: file
+        name: hooks.json
+        contents: hooks モジュールのエントリの定義
+        content_types:
+          - hook
+      - type: file
+        name: register.tsx
+        contents: イベントごとのハンドラーを登録するエントリ
+        content_types:
+          - hook
+      - type: file
+        name: handlers.ts
+        contents: イベントごとのハンドラー
+        content_types:
+          - hook
+      - type: folder
+        name: lib
+        contents: ハンドラーが import する照合・読み込み・記録の処理
+        content_types:
+          - code
+        naming:
+          - '{module}.ts'
+        children:
+          - type: file
+            name: aliases-schema.ts
+            contents: エイリアスの元の行のスキーマを同梱する定数
+            content_types:
+              - code
+            generated_from:
+              path: schemas/aliases.schema.yaml
+              command: CMD-1#categories[ビルド・生成]
+      - type: folder
+        name: vendor
+        contents: 同梱する外部ライブラリ [js-yaml](id:LIB-2) の、npm の tarball から取り出したファイル
+        content_types:
+          - vendor
+        children:
+          - type: file
+            name: js-yaml.mjs
+            contents: js-yaml の本体
+            content_types:
+              - vendor
+          - type: file
+            name: js-yaml.d.ts
+            contents: js-yaml の型の宣言
+            content_types:
+              - vendor
+          - type: file
+            name: js-yaml.d.mts
+            contents: js-yaml の ES モジュールの型の宣言
+            content_types:
+              - vendor
+  - type: folder
+    name: skills
+    contents: 配布するスキル
+    children:
+      - type: folder
+        name: global-setup
+        contents: 端末ごとに 1 回、設定ファイルを用意するスキル
+        content_types:
+          - skill
+        children:
+          - type: file
+            name: SKILL.md
+            contents: スキルの手順
+            content_types:
+              - skill
+  - type: folder
+    name: schemas
+    contents: 他のリポジトリが取り込むエイリアスの元の行のスキーマと、AI Monitor から配られた設計書の種類のスキーマのコピー
+    content_types:
+      - schema
+    naming:
+      - '{kind}.schema.yaml'
+    children:
+      - type: file
+        name: aliases.schema.yaml
+        contents: エイリアスの元の行のスキーマ（mdmark・dev-docs がリリースのタグを指定して取り込む）
+        content_types:
+          - schema
+  - type: folder
+    name: scripts
+    contents: 開発で使用するスクリプト
+    content_types:
+      - script
+    children:
+      - type: file
+        name: gen-aliases-schema.mjs
+        contents: '`schemas/aliases.schema.yaml` から `hooks/lib/aliases-schema.ts` を書き出し、`--check` で一致を確認するスクリプト'
+        content_types:
+          - script
+  - type: folder
+    name: tests
+    contents: テストコード
+    children:
+      - type: folder
+        name: unit
+        contents: 単体テスト
+        children:
+          - type: folder
+            name: hooks
+            contents: '`hooks/` の直下のモジュールの単体テスト'
+            content_types:
+              - test
+            naming:
+              - '{module}.test.ts'
+            children:
+              - type: folder
+                name: lib
+                contents: '`hooks/lib/` のモジュールの単体テスト'
+                content_types:
+                  - test
+                naming:
+                  - '{module}.test.ts'
+              - type: folder
+                name: support
+                contents: 単体テストが共有するエンジン・メモリのファイルシステム・例外の検査の道具
+                content_types:
+                  - test_support
+                naming:
+                  - '{tool}.ts'
+      - type: folder
+        name: integration
+        contents: 結合テスト
+        children:
+          - type: folder
+            name: hooks
+            contents: イベントごとの hooks モジュールの結合テスト
+            content_types:
+              - test
+            naming:
+              - '{event}.test.ts'
+            children:
+              - type: folder
+                name: support
+                contents: 結合テストが共有するフィクスチャ
+                content_types:
+                  - test_support
+                children:
+                  - type: file
+                    name: fixtures.ts
+                    contents: 結合テストのフィクスチャ
+                    content_types:
+                      - test_support
+  - type: folder
+    name: types
+    contents: 型の宣言
+    content_types:
+      - type_def
+    children:
+      - type: file
+        name: index.d.ts
+        contents: プラグインの状態の型を Claude Code の mod の型へ追加する宣言
+        content_types:
+          - type_def
+  - type: folder
+    name: docs
+    contents: 設計書・公開ドキュメント・PR ドキュメント
+    children:
+      - type: file
+        name: README.md
+        contents: ドキュメント全体の入口
+        content_types:
+          - index
+      - type: file
+        name: index.yaml
+        contents: ドキュメント全体の目次
+        content_types:
+          - index
+      - type: file
+        name: _config.yml
+        contents: GitHub Pages の Jekyll の設定
+        content_types:
+          - config
+      - type: folder
+        name: architecture
+        contents: アーキテクチャ図
+        content_types:
+          - design_doc
+        naming:
+          - ARCH-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: nonfunctional
+        contents: 非機能要件
+        content_types:
+          - design_doc
+        naming:
+          - NFR-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: scenario
+        contents: 単一 / 複合ユースケースのシナリオ
+        content_types:
+          - design_doc
+        naming:
+          - SC-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: interface
+        contents: インターフェース定義
+        content_types:
+          - design_doc
+        naming:
+          - IF-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: module
+        contents: モジュール構成
+        content_types:
+          - design_doc
+        naming:
+          - MOD-{n}.{lang}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: config
+        contents: 設定と環境変数のキー定義
+        content_types:
+          - design_doc
+        naming:
+          - CFG-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: test-procedure
+        contents: テスト実行方法
+        content_types:
+          - design_doc
+        naming:
+          - TP-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: dev-command
+        contents: 開発コマンド
+        content_types:
+          - design_doc
+        naming:
+          - CMD-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: library
+        contents: 外部ライブラリ
+        content_types:
+          - design_doc
+        naming:
+          - LIB-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: layout
+        contents: フォルダ構成
+        content_types:
+          - design_doc
+        naming:
+          - LAY-{n}.yaml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: guide
+        contents: 公開ドキュメント（はじめに・使い方・リファレンス）と、その管理用の YAML
+        content_types:
+          - guide
+        naming:
+          - '{page}.md'
+          - files.yml
+          - index.yaml
+          - README.md
+      - type: folder
+        name: pr
+        contents: PR ごとの PR ドキュメント
+        children:
+          - type: folder
+            name: '{pr}'
+            contents: 1 つの作業 PR の計画・確認ログ・テスト結果・反映作業
+            content_types:
+              - pr_doc
+      - type: folder
+        name: _theme
+        contents: AI Monitor から複製したドキュメントサイトの共通レイアウト
+        content_types:
+          - theme
+        children:
+          - type: file
+            name: llms.txt
+            contents: LLM 向けのページの一覧のテンプレート
+            content_types:
+              - theme
+          - type: file
+            name: search.json
+            contents: サイト内検索の索引のテンプレート
+            content_types:
+              - theme
+          - type: folder
+            name: _data
+            contents: 上タブの並び
+            content_types:
+              - theme
+            children:
+              - type: file
+                name: nav.yml
+                contents: 上タブの並びと、実体を持たないタブの行き先
+                content_types:
+                  - theme
+              - type: file
+                name: nav.project.yml
+                contents: '`docs/guide/` の文書の分類から AI Monitor の publish が書き出す上タブ'
+                content_types:
+                  - theme
+          - type: folder
+            name: _includes
+            contents: レイアウトが埋め込む部品
+            content_types:
+              - theme
+            naming:
+              - '{part}.html'
+          - type: folder
+            name: _layouts
+            contents: ページのレイアウト
+            content_types:
+              - theme
+            naming:
+              - '{layout}.html'
+          - type: folder
+            name: assets
+            contents: レイアウトが読み込むスクリプト・スタイル
+            content_types:
+              - theme
+            children:
+              - type: file
+                name: app.js
+                contents: レイアウトのスクリプト
+                content_types:
+                  - theme
+              - type: file
+                name: style.css
+                contents: レイアウトのスタイル
+                content_types:
+                  - theme
+              - type: folder
+                name: vendor
+                contents: 同梱する外部ライブラリ mermaid
+                content_types:
+                  - vendor
+                children:
+                  - type: file
+                    name: mermaid.min.js
+                    contents: mermaid の本体
+                    content_types:
+                      - vendor
+  - type: file
+    name: README.md
+    contents: プラグインの概要と、公開ドキュメントへの入口
+    content_types:
+      - guide
+  - type: file
+    name: CLAUDE.md
+    contents: このリポジトリで作業するエージェントへの指示
+    content_types:
+      - agent_instruction
+  - type: file
+    name: package.json
+    contents: 開発で使用する npm の依存と script
+    content_types:
+      - manifest
+  - type: file
+    name: package-lock.json
+    contents: npm の依存の lock
+    content_types:
+      - manifest
+  - type: file
+    name: tsconfig.json
+    contents: TypeScript の型検査の設定
+    content_types:
+      - config
+  - type: file
+    name: project-index.yaml
+    contents: project-index の配信元の設定
+    content_types:
+      - config
+  - type: file
+    name: rules.yaml
+    contents: rule-inject のルール索引
+    content_types:
+      - config
+  - type: file
+    name: settings.sample.yaml
+    contents: 利用者がコピーして使用する設定ファイルの見本
+    content_types:
+      - config
+  - type: file
+    name: ai-monitor-theme.yaml
+    contents: '`docs/_theme/` を複製した AI Monitor のバージョンと複製の方法'
+    content_types:
+      - config
+  - type: file
+    name: version.ini
+    contents: プラグインのバージョン
+    content_types:
+      - version
+  - type: file
+    name: ai-monitor-version.ini
+    contents: 追従している AI Monitor の配布物のバージョン
+    content_types:
+      - version
+  - type: file
+    name: .gitignore
+    contents: Git で管理しないもののパターン
+    content_types:
+      - config
+gitignore:
+  - pattern: docs/generated/
+    reason: 生成物（AI Monitor の設計書の生成が書き出す Markdown）
+  - pattern: node_modules/
+    reason: '`npm ci` で入れる依存'
+  - pattern: __pycache__/
+    reason: Python のバイトコードのキャッシュ
+refs:
+  - ARCH-1#
+  - CMD-1#categories[ビルド・生成]
+  - LIB-2#
+notes:
+  中身の種類の付け方: |-
+    種類のフォルダの `index.yaml`・`README.md`・`files.yml` は目次のため、フォルダの中身の種類の判定から除外し、フォルダには設計書・ページの役割を付ける。
+    種類のフォルダの設計書は ID で名前が決まるため、`naming` で記載し、`children` に列挙しない。
