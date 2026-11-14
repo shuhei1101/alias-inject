@@ -67,7 +67,6 @@ repository:
   style: モノレポ
   repositories:
     - name: shuhei1101/alias-inject
-  layout: '`.claude-plugin/`（プラグインとマーケットプレイスの定義）・`hooks/`（`hooks.json` と hooks モジュール）・`skills/`（配布するスキル）・`schemas/`（他のリポジトリが取り込むスキーマと、設計書の Schema）・`tests/`・`docs/`（設計書と公開ドキュメント。公開範囲は文書の `visibility`）'
   notes: |-
     リポジトリ自身をマーケットプレイスにして配る。
     mdmark・dev-docs は、リリースのタグを指定して `schemas/aliases.schema.yaml`（エイリアスの元の行のスキーマ）を取り込む。

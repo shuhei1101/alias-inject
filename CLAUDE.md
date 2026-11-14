@@ -7,7 +7,7 @@
 
 ## ドキュメント
 
-実体は [docs/](./docs/) の種類のフォルダにあり、設計書の Schema は [schemas/](./schemas/) にある。
+実体は [docs/](./docs/) の種類のフォルダにあり、設計書の Schema は `project-index.yaml` の各行が参照する knowledge の `schemas/design/` にある。
 公開ドキュメントは [guide](./docs/guide/)。
 
 着手前に索引を作成して参照する。
