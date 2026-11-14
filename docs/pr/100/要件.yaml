@@ -1,0 +1,28 @@
+docs:
+  - page: docs/layout/LAY-1.yaml
+    new: true
+    change: テンプレート『フォルダ構成』の書式で、リポジトリの直下からの全てのフォルダとファイルを entries[] で記載する設計書を新設
+    status: todo
+  - page: docs/layout/index.yaml
+    new: true
+    change: フォルダ構成のフォルダの目次を新設
+    status: todo
+  - page: docs/layout/README.md
+    new: true
+    change: フォルダ構成のフォルダの README を他の種類のフォルダと同じ形で新設
+    status: todo
+  - page: docs/index.yaml
+    new: false
+    change: layout/ の行を追加
+    status: todo
+  - page: project-index.yaml
+    new: false
+    change: documents に knowledge の schemas/design/layout.schema.yaml を指すフォルダ構成の行を追加
+    status: todo
+scope_out:
+  - item: レビューで見つかったフォルダ構成の問題の対処（フォルダの移動・削除）
+    reason: Issue の `## やりたいこと` が別の Issue で対処すると定めている。中身はこの PR のレビューの結果で決まる
+    plan: to_file
+  - item: アーキテクチャ図 ARCH-1 の repository.layout の削除と、project-index.yaml の他の行の schema の knowledge のスキーマの参照への移行・schemas/ のコピーの削除
+    reason: AI Monitor v0.4.0 の配布物への追従（shuhei1101/ai-monitor#3376 の変換と shuhei1101/ai-monitor#3430 の配布先の反映作業『各プロジェクトのスキーマの参照への移行』）で行う。今の schemas/architecture.schema.yaml のコピーは repository.layout を持ち、先に消すと配布の変換と食い違う
+    plan: to_file
