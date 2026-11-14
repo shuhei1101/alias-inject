@@ -19,5 +19,7 @@ items:
     summary: 開発で使用するコマンドの分類ごとの前提・順序・コマンド
   - page: library/
     summary: 採用済みの外部ライブラリ / 外部ツールのリファレンス
+  - page: layout/
+    summary: リポジトリの直下からの全てのフォルダとファイルを入れ子で記載するフォルダ構成
   - page: guide/
     summary: alias-inject の使用方法（はじめに・使い方・リファレンス）

@@ -10,6 +10,7 @@ exclude:
   - dev-command/
   - interface/
   - library/
+  - layout/
   - module/
   - nonfunctional/
   - scenario/
