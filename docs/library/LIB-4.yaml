@@ -98,6 +98,11 @@ catalogs:
         kind: 設定
         purpose: 前の step の成否によらず step を実行する
         verification_state: unverified
+      - name: shell
+        kind: 設定
+        purpose: step の `run` を実行する shell を指定する
+        description: 'Linux で `shell: bash` を明示すると `bash --noprofile --norc -eo pipefail {0}` で実行する。省くと `bash -e {0}` で実行し、`pipefail` は付かない。根拠: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell'
+        verification_state: docs_only
 limitations:
   - item: 1 ジョブの上限
     content: 1 ジョブの実行時間は 6 時間まで
