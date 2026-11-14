@@ -1,8 +1,10 @@
 docs:
   - page: docs/test-procedure/TP-1.yaml
     new: false
-    change: 層ごとに判定フローチャート『テストの実行場所』で `location` を記載し、`runner` の層に `run_runner` を記載する（手元の `run_all` は残す）。lint の層に actionlint を加える
-    status: todo
+    change: '単体（TL-1）・結合（TL-2）を `location: runner` にして `run_runner` を記載し、lint（TL-6）を `location: local` にする（手元の `run_all` は残す）。E2E・非機能要件・外部疎通はテストが無く判定できないため `location` を記載しない。lint の層に actionlint を加える'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T23:02:27.119461+00:00'
   - page: docs/interface/IF-6.yaml
     new: true
     change: テストの全件実行の workflow（`.github/workflows/test.yml`、`workflow_dispatch`）のインターフェース定義を新しく作る
@@ -18,7 +20,9 @@ docs:
   - page: docs/layout/LAY-1.yaml
     new: false
     change: '`.github/workflows/test.yml` のエントリを追加する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T23:02:27.119461+00:00'
   - page: docs/architecture/ARCH-1.yaml
     new: false
     change: 開発でテストを回す外部システムとして GitHub Actions を追加し、詳細を LIB-4 へ向ける
@@ -27,8 +31,10 @@ docs:
     updated_at: '2026-11-14T22:40:10.608399+00:00'
   - page: docs/dev-command/CMD-1.yaml
     new: false
-    change: 前提に actionlint と、`run_runner` で使用する `gh` を追加する
-    status: todo
+    change: 前提に `gh` を追加し、「環境構築（クローン直後）」に actionlint の導入コマンドと確認の記録を追加する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T23:02:27.119461+00:00'
   - page: docs/library/LIB-4.yaml
     new: true
     change: GitHub Actions と使用する Action・workflow のキーの外部ライブラリの設計書を、動作確認を未確認のまま作る
