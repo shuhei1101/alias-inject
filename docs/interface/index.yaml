@@ -10,3 +10,5 @@ items:
     summary: session.compact の後にそのセッションの記録を削除する
   - page: IF-5.yaml
     summary: tool.call でツールの結果の !{名前} を検出し、環境変数の値を context に追加する
+  - page: IF-6.yaml
+    summary: workflow_dispatch で単体テストと結合テストの全件をランナーで回し、ログを成果物に上げる

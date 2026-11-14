@@ -1,0 +1,107 @@
+id: LIB-4
+visibility: internal
+title: GitHub Actions
+kind: サービス
+tags:
+  - name: tool:github
+    main: true
+  - name: topic:ci
+lead: |-
+  GitHub のリポジトリの workflow のファイル（`.github/workflows/`）に従い、ジョブをランナーで実行する CI のサービス。
+  公開の Action を step として呼び出せる。
+adoption: 採用
+dependency_scope: 開発のみ
+official_url: https://github.com/features/actions
+docs_url: https://docs.github.com/en/actions
+supplier: GitHub
+used_in:
+  - .github/workflows/test.yml
+version:
+  current: actions/checkout v7・actions/setup-node v7・actions/upload-artifact v7
+  latest: actions/checkout v7.0.1・actions/setup-node v7.1.0・actions/upload-artifact v7.0.2
+  checked_on: '2026-11-15'
+  pinning: Action はメジャーバージョンのタグで固定する
+  source: .github/workflows/test.yml
+catalogs:
+  - name: Action
+    version: v7
+    entries:
+      - name: actions/checkout
+        kind: Action
+        purpose: workflow を起動したブランチを取得する
+        verification_state: unverified
+      - name: actions/setup-node
+        kind: Action
+        purpose: 指定したバージョンの Node.js と npm を入れる
+        params:
+          - name: node-version
+            type: string
+            required: false
+            description: 入れる Node.js のバージョン
+            verification_state: unverified
+        verification_state: unverified
+      - name: actions/upload-artifact
+        kind: Action
+        purpose: ファイルを実行の成果物として上げる
+        params:
+          - name: name
+            type: string
+            required: false
+            default: artifact
+            description: 成果物の名前
+            verification_state: unverified
+          - name: path
+            type: string
+            required: true
+            description: 上げるファイルのパス
+            verification_state: unverified
+          - name: if-no-files-found
+            type: warn / error / ignore
+            required: false
+            default: warn
+            description: '`path` にファイルが無いときの扱い（`warn` は警告を出して成功で終える）'
+            verification_state: unverified
+        verification_state: unverified
+  - name: workflow のキー
+    version: '2026-11-15'
+    entries:
+      - name: on.workflow_dispatch
+        kind: 設定
+        purpose: workflow を手動（GitHub の画面・`gh workflow run`）でだけ起動する
+        description: 起動できるのは既定のブランチ（develop）にある workflow のファイルだけで、`--ref` に指定したブランチのファイルの内容で実行する。
+        verification_state: docs_only
+      - name: concurrency
+        kind: 設定
+        purpose: 同じ group の実行を 1 つにする
+        params:
+          - name: group
+            type: string
+            required: true
+            description: 同時に 1 つだけ実行する単位
+            verification_state: unverified
+          - name: cancel-in-progress
+            type: boolean
+            required: false
+            default: 'false'
+            description: '`true` なら先に起動した実行を止める'
+            verification_state: unverified
+        verification_state: unverified
+      - name: permissions
+        kind: 設定
+        purpose: ジョブの `GITHUB_TOKEN` に与える権限を絞る
+        verification_state: unverified
+      - name: timeout-minutes
+        kind: 設定
+        purpose: ジョブ・step の実行時間の上限（分）。超えたら止めて失敗にする
+        verification_state: unverified
+      - name: 'if: always()'
+        kind: 設定
+        purpose: 前の step の成否によらず step を実行する
+        verification_state: unverified
+limitations:
+  - item: 1 ジョブの上限
+    content: 1 ジョブの実行時間は 6 時間まで
+    notes: https://docs.github.com/en/actions/reference/limits
+verification:
+  state: 未確認
+  detail: '`workflow_dispatch` は既定のブランチにある workflow だけを起動できるため、workflow を develop へ入れた後の作業 PR で初めて動かして確認する'
