@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-14T07:30:11.280949+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: dev/pr/71/ の 8 ファイルを中身を変えずに docs/pr/71/ へ移す
+    updated_by: planner
+    updated_at: '2026-11-14T07:34:38.678052+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードを変えない
