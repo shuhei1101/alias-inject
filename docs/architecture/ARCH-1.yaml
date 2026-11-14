@@ -89,6 +89,15 @@ external_systems:
     notes:
       事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確認する相手ではない。設定ファイルと照合に使用する YAML を読み込めないときは、文脈を追加せずに入力をそのまま返却する（#1 の D-74）。
     detail: LIB-1#
+  - name: GitHub Actions
+    purpose: 開発で、単体テストと結合テストの全件をランナーで回す。プラグインの利用者の手元では使用しない
+    direction: 双方向
+    protocol: workflow（`.github/workflows/test.yml`）を `gh workflow run` で起動し、`gh run view --log` でログを取得する
+    cost: なし（public のリポジトリの標準ランナー）
+    status: planned
+    notes:
+      事前確認: 要らない。起動に失敗すれば `gh workflow run` が終了コード 1 で終わり、そのときは手元の全件実行で回す
+    detail: LIB-4#
 constraints: |-
   - MCP サーバーと常駐するサーバーは持たない
   - 設定は `ALIAS_INJECT_CONFIG` が指すファイルか、無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`（`global`・`projects`）から参照する
