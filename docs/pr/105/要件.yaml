@@ -1,0 +1,9 @@
+use_cases: []
+docs:
+  - page: docs/layout/LAY-1.yaml
+    new: false
+    change: gitignore[] から __pycache__/ の行を削除し、.claude-plugin/types/ の行を .gitignore と同じ位置に追加する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-14T08:13:36.019355+00:00'
+scope_out: []
