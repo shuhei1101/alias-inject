@@ -12,10 +12,12 @@ const STEPS = ['ブランチを取得する', 'Node を入れる', 'Claude Code 
 // ジョブのタイムアウト（4 分）に、ランナーの割り当ての待ちと成果物の取得を加えた上限
 const TEST_TIMEOUT_MS = 15 * 60 * 1000
 const STEP_TIMEOUT_SECONDS = 60
+// gh run watch が待たずに戻ったときに待ち直すまでの間隔
+const WATCH_RETRY_MS = 5000
 
 type StepName = (typeof STEPS)[number]
 type Step = { name: string; conclusion: string; startedAt: string; completedAt: string }
-type Run = { conclusion: string; jobs: { steps: Step[] }[] }
+type Run = { status: string; conclusion: string; jobs: { steps: Step[] }[] }
 type Branch = { name: string; dir: string }
 type Edit = (dir: string) => void
 
@@ -59,10 +61,14 @@ const dispatch = (branch: string): { id: string; run: Run } => {
   const url = out.match(/https:\/\/\S+\/actions\/runs\/\d+/)?.[0]
   assert.ok(url, `実行の URL が出力にありません: ${out}`)
   const id = url.slice(url.lastIndexOf('/') + 1)
+  // 起動の直後は gh run watch が待たずに戻ることがあるため、実行が completed になるまで待ち直す。
   // 異常系は 0 以外で終わるため、終了コードではなく結論で確認する
-  spawnSync('gh', ['run', 'watch', id, '--exit-status'], { stdio: 'ignore' })
-  const run = JSON.parse(gh(['run', 'view', id, '--json', 'conclusion,jobs'])) as Run
-  return { id, run }
+  for (;;) {
+    spawnSync('gh', ['run', 'watch', id, '--exit-status'], { stdio: 'ignore' })
+    const run = JSON.parse(gh(['run', 'view', id, '--json', 'status,conclusion,jobs'])) as Run
+    if (run.status === 'completed') return { id, run }
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, WATCH_RETRY_MS)
+  }
 }
 
 // workflow の step だけを取り出す（GitHub が追加する step は除く）
