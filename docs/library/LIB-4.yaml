@@ -29,7 +29,8 @@ catalogs:
       - name: actions/checkout
         kind: Action
         purpose: workflow を起動したブランチを取得する
-        verification_state: unverified
+        verification_state: verified
+        verified_at: '2026-11-15T12:06:26+09:00'
       - name: actions/setup-node
         kind: Action
         purpose: 指定したバージョンの Node.js と npm を入れる
@@ -38,8 +39,10 @@ catalogs:
             type: string
             required: false
             description: 入れる Node.js のバージョン
-            verification_state: unverified
-        verification_state: unverified
+            verification_state: verified
+            verified_at: '2026-11-15T12:06:26+09:00'
+        verification_state: verified
+        verified_at: '2026-11-15T12:06:26+09:00'
       - name: actions/upload-artifact
         kind: Action
         purpose: ファイルを実行の成果物として上げる
@@ -49,19 +52,22 @@ catalogs:
             required: false
             default: artifact
             description: 成果物の名前
-            verification_state: unverified
+            verification_state: verified
+            verified_at: '2026-11-15T12:06:26+09:00'
           - name: path
             type: string
             required: true
             description: 上げるファイルのパス
-            verification_state: unverified
+            verification_state: verified
+            verified_at: '2026-11-15T12:06:26+09:00'
           - name: if-no-files-found
             type: warn / error / ignore
             required: false
             default: warn
             description: '`path` にファイルが無いときの扱い（`warn` は警告を出して成功で終える）'
             verification_state: unverified
-        verification_state: unverified
+        verification_state: verified
+        verified_at: '2026-11-15T12:06:26+09:00'
   - name: workflow のキー
     version: '2026-11-15'
     entries:
@@ -69,7 +75,8 @@ catalogs:
         kind: 設定
         purpose: workflow を手動（GitHub の画面・`gh workflow run`）でだけ起動する
         description: 起動できるのは既定のブランチ（develop）にある workflow のファイルだけで、`--ref` に指定したブランチのファイルの内容で実行する。
-        verification_state: docs_only
+        verification_state: verified
+        verified_at: '2026-11-15T12:06:26+09:00'
       - name: concurrency
         kind: 設定
         purpose: 同じ group の実行を 1 つにする
@@ -101,12 +108,14 @@ catalogs:
       - name: shell
         kind: 設定
         purpose: step の `run` を実行する shell を指定する
-        description: 'Linux で `shell: bash` を明示すると `bash --noprofile --norc -eo pipefail {0}` で実行する。省くと `bash -e {0}` で実行し、`pipefail` は付かない。根拠: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell'
-        verification_state: docs_only
+        description: 'Linux で `shell: bash` を明示すると `bash --noprofile --norc -e -o pipefail {0}` で実行する。省くと `bash -e {0}` で実行し、`pipefail` は付かない。根拠: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell'
+        verification_state: verified
+        verified_at: '2026-11-15T12:06:26+09:00'
 limitations:
   - item: 1 ジョブの上限
     content: 1 ジョブの実行時間は 6 時間まで
     notes: https://docs.github.com/en/actions/reference/limits
 verification:
-  state: 未確認
-  detail: '`workflow_dispatch` は既定のブランチにある workflow だけを起動できるため、workflow を develop へ入れた後の作業 PR で初めて動かして確認する'
+  state: 済
+  detail: 'workflow `.github/workflows/test.yml` を `gh workflow run` で作業ブランチに対して起動し、全ての step が成功して成果物 `test-log` が上がることを確認した（正常系）。失敗・タイムアウト・ファイルが無いときの振る舞いは観測していない'
+  date: '2026-11-15'
