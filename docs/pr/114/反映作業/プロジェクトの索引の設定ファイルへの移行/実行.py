@@ -10,6 +10,11 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import os
+
+# 第 1 引数（対象のリポジトリの場所）を省いたら、作業ディレクトリを対象のリポジトリにする
+if len(sys.argv) < 2 or sys.argv[1].startswith("--"):
+    sys.argv.insert(1, os.getcwd())
 
 ENV_KEY = "RULE_INJECT_INDEXES_PROJECT"
 # 値の説明を置く慣習のキー（同じく取り除く）

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="${1:-}"
+REPO="${1:-$PWD}"
 if [ -z "$REPO" ] || [ ! -f "$REPO/project-index.yaml" ]; then
   echo "project-index.yaml: failed"
   exit 1

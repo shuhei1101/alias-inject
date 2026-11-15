@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="${1:-}"
+REPO="${1:-$PWD}"
 if [ -z "$REPO" ] || ! git -C "$REPO" rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "対象のリポジトリ: failed"
   exit 1

@@ -1,0 +1,7 @@
+confirmations:
+  - topic: マージの前の反映作業が dry-run で止まった後の扱い
+    decision: コピーしたスクリプトを、第 1 引数を省いたら作業ディレクトリを対象にする形へ修正し、レビューを通してから tester へ再依頼する（推奨案 A）
+    decided_by: reply
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/issues/113#issuecomment-6892443546

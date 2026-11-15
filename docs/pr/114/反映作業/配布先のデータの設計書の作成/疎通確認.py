@@ -2,6 +2,11 @@
 
 import sys
 from pathlib import Path
+import os
+
+# 第 1 引数（対象のリポジトリの場所）を省いたら、作業ディレクトリを対象のリポジトリにする
+if len(sys.argv) < 2 or sys.argv[1].startswith("--"):
+    sys.argv.insert(1, os.getcwd())
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DEV_DOCS, er_files, fail, parse_args

@@ -7,6 +7,11 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+import os
+
+# 第 1 引数（対象のリポジトリの場所）を省いたら、作業ディレクトリを対象のリポジトリにする
+if len(sys.argv) < 2 or sys.argv[1].startswith("--"):
+    sys.argv.insert(1, os.getcwd())
 
 RULE_INJECT_SETTINGS = Path("~/.config/rule-inject/settings.yaml").expanduser()
 BACKUP = RULE_INJECT_SETTINGS.with_name(RULE_INJECT_SETTINGS.name + ".bak-ai-monitor-3211")
