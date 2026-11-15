@@ -1,0 +1,65 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-4.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+docs:
+  - page: docs/_theme/_data/nav.project.yml
+    new: false
+    change: '`import-site --version v0.4.0` で `docs/_theme/` 一式を v0.4.0 のサイトのレイアウトに取り込む'
+    status: todo
+  - page: ai-monitor-theme.yaml
+    new: false
+    change: '`import-site` が書く控えの版を `v0.4.0` にする'
+    status: todo
+  - page: ai-monitor-version.ini
+    new: false
+    change: '`v0.3.0` を `v0.4.0` にする'
+    status: todo
+scope_out:
+  - item: 配信設定（`docs/_config.yml` のキーの追加）
+    reason: v0.4.0 で増えたのは `exclude` の値だけで、alias-inject の `docs/_config.yml` は自分の種類のフォルダを既に `exclude` に並べている。alias-inject に無い種類のフォルダを足しても効かない
+    plan: none
+  - item: ルール索引（配布元のルール索引で増えた行の追加）
+    reason: 'v0.4.0 で配布元の `rules.global.yaml` は行が減っただけで、alias-inject の `rules.yaml`（`rules: []`）に足す行は無い'
+    plan: none
+  - item: プラグイン（MCP `update_plugins` での取り直し）
+    reason: alias-inject のリポジトリの変更ではなく、稼働しているブランチへ入ったプラグインの変更はモニターが自動で効かせる（テンプレート『PRドキュメント/反映作業』の `時期`）
+    plan: none
+  - item: 設定スキーマ・MCP ツール（`settings.yaml` のキーの追加と `agents[].mcp_tools` の見直し）
+    reason: alias-inject は AI Monitor の `settings.yaml` を持たない（`settings.sample.yaml` はプラグインの設定ファイルの見本）
+    plan: none
+  - item: テンプレート・規約・フェーズ手順・判定・観点の読み直し
+    reason: alias-inject はこれらのコピーを持たず、エージェントは AI Monitor の develop のページを実行時に読む。設計書の書式は knowledge のスキーマの参照（`project-index.yaml` の `schema.ref`）が決め、配布物に含まれない
+    plan: none
