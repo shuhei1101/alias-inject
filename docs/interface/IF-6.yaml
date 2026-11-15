@@ -29,7 +29,7 @@ constraints:
     constraint: '`npm ci` を実行しない'
     notes: '`package.json` の依存は型検査の typescript だけで、テストは node_modules を使用しない（node_modules の無いコピーで 206 件 pass を手元で確認した）'
   - item: テストの全件実行
-    constraint: '`claude plugin test . 2>&1 | tee test.log` を、`shell: bash` を明示した step で実行する（`bash --noprofile --norc -eo pipefail {0}` で実行され、テストが失敗したら step も失敗にする）'
+    constraint: '`claude plugin test . 2>&1 | tee test.log` を、`shell: bash` を明示した step で実行する（`bash --noprofile --norc -e -o pipefail {0}` で実行され、テストが失敗したら step も失敗にする）'
     notes: '`shell` を省くと `bash -e {0}` で実行されて `pipefail` が付かず、`tee` の終了コード 0 で step が成功する'
   - item: タイムアウト（step「Claude Code を入れる」）
     constraint: '1 分（`timeout-minutes: 1`）'
