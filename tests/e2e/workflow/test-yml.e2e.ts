@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -19,7 +20,7 @@ type Branch = { name: string; dir: string }
 type Edit = (dir: string) => void
 
 const git = ({ args, cwd }: { args: string[]; cwd?: string }): string =>
-  execFileSync('git', args, { cwd, encoding: 'utf8' }).trim()
+  execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 
 const gh = (args: string[]): string =>
   execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim()
