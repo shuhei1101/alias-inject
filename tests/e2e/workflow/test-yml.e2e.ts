@@ -9,8 +9,8 @@ import { test } from 'node:test'
 const WORKFLOW = 'test.yml'
 const ARTIFACT = 'test-log'
 const STEPS = ['ブランチを取得する', 'Node を入れる', 'Claude Code を入れる', 'テストの全件を回す', 'ログを成果物に上げる'] as const
-// ジョブのタイムアウト（4 分）に、ランナーの割り当ての待ちと成果物の取得を加えた上限
-const TEST_TIMEOUT_MS = 15 * 60 * 1000
+// 起動から実行が completed になるまでの上限。ジョブのタイムアウト（4 分）に、ランナーの割り当ての待ちを加えた値
+const DISPATCH_TIMEOUT_MS = 15 * 60 * 1000
 const STEP_TIMEOUT_SECONDS = 60
 // gh run watch が待たずに戻ったときに待ち直すまでの間隔
 const WATCH_RETRY_MS = 5000
@@ -63,10 +63,12 @@ const dispatch = (branch: string): { id: string; run: Run } => {
   const id = url.slice(url.lastIndexOf('/') + 1)
   // 起動の直後は gh run watch が待たずに戻ることがあるため、実行が completed になるまで待ち直す。
   // 異常系は 0 以外で終わるため、終了コードではなく結論で確認する
+  const startedAt = Date.now()
   for (;;) {
     spawnSync('gh', ['run', 'watch', id, '--exit-status'], { stdio: 'ignore' })
     const run = JSON.parse(gh(['run', 'view', id, '--json', 'status,conclusion,jobs'])) as Run
     if (run.status === 'completed') return { id, run }
+    if (Date.now() - startedAt > DISPATCH_TIMEOUT_MS) throw new Error(`実行 ${id} が ${DISPATCH_TIMEOUT_MS / 1000} 秒で completed になりません`)
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, WATCH_RETRY_MS)
   }
 }
@@ -106,7 +108,7 @@ const addUnitTest = ({ file, source }: { file: string; source: string }): Edit =
   writeFileSync(join(dir, 'tests/unit/hooks', file), source)
 }
 
-test('test_normal', { timeout: TEST_TIMEOUT_MS }, () => {
+test('test_normal', () => {
   withBranch({
     testName: 'test_normal',
     edit: () => {},
@@ -134,7 +136,7 @@ test('test_normal', { timeout: TEST_TIMEOUT_MS }, () => {
   })
 })
 
-test('test_error_when_tests_fail', { timeout: TEST_TIMEOUT_MS }, () => {
+test('test_error_when_tests_fail', () => {
   const failName = 'e2e_intentional_fail'
   withBranch({
     testName: 'test_error_when_tests_fail',
@@ -162,7 +164,7 @@ test('test_error_when_tests_fail', { timeout: TEST_TIMEOUT_MS }, () => {
   })
 })
 
-test('test_error_when_tests_hang', { timeout: TEST_TIMEOUT_MS }, () => {
+test('test_error_when_tests_hang', () => {
   withBranch({
     testName: 'test_error_when_tests_hang',
     // await の待ちはテストごとの上限（5 秒）で fail になるため、同期の無限ループで止める
@@ -194,7 +196,7 @@ test('test_error_when_tests_hang', { timeout: TEST_TIMEOUT_MS }, () => {
   })
 })
 
-test('test_error_when_setup_fails', { timeout: TEST_TIMEOUT_MS }, () => {
+test('test_error_when_setup_fails', () => {
   withBranch({
     testName: 'test_error_when_setup_fails',
     edit: (dir) => {
