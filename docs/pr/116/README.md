@@ -1,0 +1,1 @@
+# テストの全件実行の workflow の E2E テストを作り、本物の GitHub Actions でフローごとに回す
