@@ -1,0 +1,154 @@
+id: IF-6
+visibility: internal
+title: テストの全件実行のワークフロー
+tags:
+  - name: topic:ci
+    main: true
+  - name: topic:testing
+  - name: tool:github
+  - name: action:実行
+entry:
+  kind: trigger
+  value: '`.github/workflows/test.yml`。手動の起動（`workflow_dispatch`）だけで、push・PR を契機にしない'
+lead: 単体テストと結合テストの全件を GitHub Actions のランナーで `claude plugin test .` で実行し、成否によらずログを成果物に上げる。
+permissions: '`contents: read`'
+exclusivity: '同じブランチの実行が重なったら、先に起動した実行を止める（`concurrency` の `group: test-${{ github.ref }}`・`cancel-in-progress: true`）'
+idempotent: true
+side_effects: 実行の成果物 `test-log`（`test.log`）を上げる。リポジトリには書き込まない
+constraints:
+  - item: ランナー
+    constraint: '`ubuntu-latest`'
+  - item: ジョブの構成
+    constraint: ジョブ `test` の 1 つ。単体テストと結合テストはどちらも `claude plugin test .` で全てのテストを同時に回すため、層ごとにジョブ・入力を分けない
+  - item: 使用する Action
+    constraint: '`actions/checkout@v7`・`actions/setup-node@v7`（Node 24）・`actions/upload-artifact@v7`'
+  - item: Claude Code
+    constraint: '`npm install -g @anthropic-ai/claude-code@2.1.325`（完全一致で固定）'
+    notes: テスト実行方法の前提（2.1.310 以上）を満たす。ログインと端末の設定は要らない（空の HOME で 206 件 pass・skip 0 件を手元で確認した）
+  - item: 依存
+    constraint: '`npm ci` を実行しない'
+    notes: '`package.json` の依存は型検査の typescript だけで、テストは node_modules を使用しない（node_modules の無いコピーで 206 件 pass を手元で確認した）'
+  - item: テストの全件実行
+    constraint: '`claude plugin test . 2>&1 | tee test.log` を、`shell: bash` を明示した step で実行する（`bash --noprofile --norc -eo pipefail {0}` で実行され、テストが失敗したら step も失敗にする）'
+    notes: '`shell` を省くと `bash -e {0}` で実行されて `pipefail` が付かず、`tee` の終了コード 0 で step が成功する'
+  - item: タイムアウト（step「Claude Code を入れる」）
+    constraint: '1 分（`timeout-minutes: 1`）'
+    notes: 手元の実測 6.1 秒の 10 倍を分に切り上げた
+  - item: タイムアウト（step「テストの全件を回す」）
+    constraint: '1 分（`timeout-minutes: 1`）'
+    notes: 手元の実測 4.6 秒の 10 倍を分に切り上げた
+  - item: タイムアウト（ジョブ）
+    constraint: '360 分（`timeout-minutes: 360`）'
+    decided_by: LIB-4#limitations[1 ジョブの上限]
+    notes: 実測の無い step（ブランチの取得・Node の導入・成果物の上げ）を含むため、判定フローチャート『タイムアウトの決め方』の ※5 に従い、外側の作業の上限（GitHub Actions の 1 ジョブの上限 6 時間）を使用する。ランナーでの初回の実測の後に、内側の step の合計から導き、値を修正する
+  - item: 成果物
+    constraint: '名前 `test-log`、`path: test.log`、`if-no-files-found: warn`'
+    notes: テストの前の step で失敗したときは `test.log` が無く、警告を出して step は成功で終わる
+overall_flow: |-
+  <!-- map -->
+
+  ```mermaid
+  flowchart TD
+    s([workflow_dispatch で起動する]) --> a[ブランチを取得する]
+    a -- 成功 --> b[Node を入れる]
+    b -- 成功 --> c[Claude Code を入れる]
+    c -- 成功 --> d[テストの全件を回す]
+    a & b & c -->|"失敗（if: always()）"| e[ログを成果物に上げる]
+    d -->|"全件 pass・fail・1 分で止める（if: always()）"| e
+    e --> q{全ての step が成功したか}
+    q -- YES --> ok([成功])
+    q -- NO --> ng([失敗])
+  ```
+
+  <!-- /map -->
+flows:
+  - name: 正常系
+    summary: 全件が pass して成功で終わる
+    setup:
+      - name: Mock
+        description: なし（本物の GitHub Actions で回す）
+      - name: ブランチ
+        description: 全件が pass するブランチ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      flowchart TD
+        s([workflow_dispatch で起動する]) --> a[ブランチを取得する] --> b[Node を入れる] --> c[Claude Code を入れる] --> d[テストの全件を回す]
+        d -- 全件 pass --> e[ログを成果物に上げる] --> ok([成功])
+      ```
+
+      <!-- /map -->
+    expected:
+      - 実行の結論が `success`
+      - 成果物 `test-log` があり、`test.log` の集計が `0 fail`
+      - '`test.log` の skip の件数が、同じ commit を手元で回したときと同じ'
+  - name: 異常系（テストの失敗・failure）
+    summary: テストが 1 件でも fail すると、ログを上げてから失敗で終わる
+    setup:
+      - name: Mock
+        description: なし（本物の GitHub Actions で回す）
+      - name: ブランチ
+        description: fail するテストを 1 件持つブランチ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      flowchart TD
+        s([workflow_dispatch で起動する]) --> a[ブランチを取得する] --> b[Node を入れる] --> c[Claude Code を入れる] --> d[テストの全件を回す]
+        d -->|"fail あり（if: always()）"| e[ログを成果物に上げる] --> ng([失敗])
+      ```
+
+      <!-- /map -->
+    expected:
+      - 実行の結論が `failure`
+      - step「テストの全件を回す」の結論が `failure`
+      - 成果物 `test-log` があり、`test.log` に fail したテストの名前が出る
+  - name: 異常系（テストが止まる・failure）
+    summary: テストが 1 分で終わらないと止め、ログを上げてから失敗で終わる
+    setup:
+      - name: Mock
+        description: なし（本物の GitHub Actions で回す）
+      - name: ブランチ
+        description: 終わらない待ちを持つテストを 1 件持つブランチ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      flowchart TD
+        s([workflow_dispatch で起動する]) --> a[ブランチを取得する] --> b[Node を入れる] --> c[Claude Code を入れる] --> d[テストの全件を回す]
+        d -->|"1 分で止める（if: always()）"| e[ログを成果物に上げる] --> ng([失敗])
+      ```
+
+      <!-- /map -->
+    expected:
+      - 実行の結論が `failure`
+      - step「テストの全件を回す」の結論が `failure`
+      - 成果物 `test-log` があり、`test.log` に止めるまでの出力が残る
+  - name: 異常系（道具の導入に失敗・failure）
+    summary: Claude Code を入れられないと、テストを回さずに失敗で終わる
+    setup:
+      - name: Mock
+        description: なし（本物の GitHub Actions で回す）
+      - name: ブランチ
+        description: 存在しない Claude Code のバージョンを指定したブランチ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      flowchart TD
+        s([workflow_dispatch で起動する]) --> a[ブランチを取得する] --> b[Node を入れる] --> c[Claude Code を入れる]
+        c -->|"失敗（if: always()）"| e[ログを成果物に上げる] --> ng([失敗])
+      ```
+
+      <!-- /map -->
+    expected:
+      - 実行の結論が `failure`
+      - step「テストの全件を回す」の結論が `skipped`
+      - 成果物 `test-log` が無く、step「ログを成果物に上げる」に `test.log` が無い旨の警告が出る
+refs:
+  - TP-1#
+  - LIB-4#
+  - LIB-1#
+notes:
+  確認方法: 結合テストのファイルは持たない（GitHub Actions の上でしか step の成否と成果物を確認できない）。`workflow_dispatch` は develop にある workflow だけを起動できるため、フローは develop へ入った後の作業 PR で workflow を起動して確認する

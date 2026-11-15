@@ -6,3 +6,5 @@ items:
     summary: 設定ファイルと照合する YAML を読み込むパーサー
   - page: LIB-3.yaml
     summary: 型の確認に使用する TypeScript のコンパイラ
+  - page: LIB-4.yaml
+    summary: テストの全件をランナーで回す CI のサービスと、使用する Action

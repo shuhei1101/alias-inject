@@ -15,11 +15,17 @@ categories:
       ```bash
       claude --plugin-dir {worktree}
       ```
-    effects: 依存のダウンロードが走る。対話のセッションは Claude Code を起動するだけで、モデルへの問い合わせはしない
+
+      3. lint が使用する actionlint を `~/.local/bin` へ入れる（バージョンを固定する）
+
+      ```bash
+      bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 ~/.local/bin
+      ```
+    effects: 依存と actionlint のバイナリのダウンロードが走る。対話のセッションは Claude Code を起動するだけで、モデルへの問い合わせはしない
     verification:
       state: 済
-      date: '2026-10-25'
-      detail: 作業ツリーで `npm ci` が終了コード 0 で通り、tmux の中で `claude --plugin-dir {worktree}` を起動すると `.claude-plugin/types/` が書き出され、`npm run typecheck` が終了コード 0 で通ることを確認した
+      date: '2026-11-15'
+      detail: 作業ツリーで `npm ci` が終了コード 0 で通り、tmux の中で `claude --plugin-dir {worktree}` を起動すると `.claude-plugin/types/` が書き出され、`npm run typecheck` が終了コード 0 で通ることを確認した（2026-10-25）。actionlint の導入コマンドが終了コード 0 で `~/.local/bin/actionlint` を書き出し、`actionlint -version` が `1.7.12` を出すことを確認した（2026-11-15）
   - name: 取り込み後の追従（pull 後）
     commands: |-
       1. 依存を lock に合わせる
@@ -74,3 +80,4 @@ categories:
 prerequisites:
   - Node.js と npm
   - Claude Code 2.1.310 以上（`claude` が PATH にある）
+  - '`gh` 2.87.0 以上（ランナーの全件実行で使用する。ログイン済み）'
