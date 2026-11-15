@@ -57,3 +57,6 @@ scope_out:
   - item: workflow の E2E テスト（`tests/e2e/workflow/`、本物の GitHub Actions で分岐ごとに回す）
     reason: 'develop へ入るまで workflow を `workflow_dispatch` で起動できず、この作業 PR では回せない（ランナーでの初回は develop へ入った後の作業 PR と Issue #99 のユーザーのコメントで決まっている）。また E2E の層（TL-3）は `run_all` が未確定で、実行器の選定から要る'
     plan: '#111'
+  - item: E2E（TL-3）・非機能要件（TL-4）・外部疎通（TL-5）の実行場所の判定
+    reason: 3 つの層はテストが無く `run_all` も未確定で、判定フローチャート『テストの実行場所』の判定の材料が無い。テスト実行方法のスキーマの「決めるまでは記載しない」に従い、`location` を記載しない。その層のテストを作る作業で判定する
+    plan: none
