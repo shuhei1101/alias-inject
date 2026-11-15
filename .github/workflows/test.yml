@@ -1,0 +1,41 @@
+name: test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: ブランチを取得する
+        uses: actions/checkout@v7
+
+      - name: Node を入れる
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Claude Code を入れる
+        timeout-minutes: 1
+        run: npm install -g @anthropic-ai/claude-code@2.1.325
+
+      - name: テストの全件を回す
+        timeout-minutes: 1
+        shell: bash
+        run: claude plugin test . 2>&1 | tee test.log
+
+      - name: ログを成果物に上げる
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-log
+          path: test.log
+          if-no-files-found: warn
