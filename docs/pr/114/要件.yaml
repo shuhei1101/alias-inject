@@ -35,18 +35,24 @@ use_cases:
     detail: プラグインのコードと設定を変えない
     depends_on: []
 docs:
-  - page: docs/_theme/_data/nav.project.yml
-    new: false
-    change: '`import-site --version v0.4.0` で `docs/_theme/` 一式を v0.4.0 のサイトのレイアウトに取り込む'
-    status: todo
   - page: ai-monitor-theme.yaml
     new: false
     change: '`import-site` が書く控えの版を `v0.4.0` にする'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T09:11:47.771840+00:00'
   - page: ai-monitor-version.ini
     new: false
     change: '`v0.3.0` を `v0.4.0` にする'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T09:11:47.771840+00:00'
+  - page: docs/_theme/_layouts/default.html
+    new: false
+    change: '`import-site --version v0.4.0` で `docs/_theme/` の配布物（`_includes/`・`_layouts/`・`assets/`・`llms.txt`）を v0.4.0 のサイトのレイアウトに取り込む（`_data/nav.project.yml` はプロジェクトのもので取り込みの対象外）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T09:11:47.771840+00:00'
 scope_out:
   - item: 配信設定（`docs/_config.yml` のキーの追加）
     reason: v0.4.0 で増えたのは `exclude` の値だけで、alias-inject の `docs/_config.yml` は自分の種類のフォルダを既に `exclude` に並べている。alias-inject に無い種類のフォルダを足しても効かない

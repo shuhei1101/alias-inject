@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T09:03:12.982916+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/_theme/ の取り込み・ai-monitor-theme.yaml と ai-monitor-version.ini の版上げ・反映作業の実施
+    updated_by: planner
+    updated_at: '2026-11-15T09:11:55.390893+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: プラグインのコードを変えない
