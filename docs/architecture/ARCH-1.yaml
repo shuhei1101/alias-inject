@@ -94,7 +94,7 @@ external_systems:
     direction: 双方向
     protocol: workflow（`.github/workflows/test.yml`）を `gh workflow run` で起動し、`gh run view --log` でログを取得する
     cost: なし（public のリポジトリの標準ランナー）
-    status: planned
+    status: implemented
     notes:
       事前確認: 要らない。起動に失敗すれば `gh workflow run` が終了コード 1 で終わり、そのときは手元の全件実行で回す
     detail: LIB-4#

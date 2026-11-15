@@ -1,0 +1,86 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書が揃っているため対象外
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めの依頼ではないため対象外
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: workflow の初回の実行そのものが確認で、未検証の技術機構に依存する要件は無い
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: 利用者の業務フローは変わらない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 単一ユースケース設計
+    status: skipped
+    reason: 利用者の操作と振る舞いは変わらない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: モック作成
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: インターフェース定義設計
+    status: done
+    note: ランナーで初回の実行を回して実測し、IF-6 のジョブ（と必要なら step）のタイムアウトを導き直す
+    updated_by: planner
+    updated_at: '2026-11-15T03:16:47.306987+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面の部品を持たない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: モジュール構成設計
+    status: skipped
+    reason: プラグインのモジュールの構成は変わらない
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: ドキュメント修正
+    status: done
+    note: LIB-4 の verification・verification_state と ARCH-1 の GitHub Actions の status
+    updated_by: planner
+    updated_at: '2026-11-15T05:41:39.200593+00:00'
+  - process: 単体テスト作成
+    status: skipped
+    reason: プラグインのコードを変えない。workflow はランナーの実行で確かめる
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'
+  - process: 実装
+    status: done
+    note: test.yml の timeout-minutes を IF-6 の値に合わせる
+    updated_by: planner
+    updated_at: '2026-11-15T08:43:52.909860+00:00'
+  - process: 結合テスト作成
+    status: skipped
+    reason: 'IF-6 の notes のとおり workflow の結合テストのファイルは持たない。フローごとの E2E は #111'
+    updated_by: planner
+    updated_at: '2026-11-15T03:01:50.517122+00:00'

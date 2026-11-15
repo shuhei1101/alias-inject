@@ -1,0 +1,18 @@
+docs:
+  - page: docs/library/LIB-4.yaml
+    new: false
+    change: 初回のランナーの実行で観測できた範囲で verification と Action・workflow のキーの verification_state を記録する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T03:16:41.034517+00:00'
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: 外部システム GitHub Actions の status を初回の実行の結果に合わせる（成功なら implemented）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T03:16:41.034517+00:00'
+scope_out:
+  - item: 'IF-6 の異常系のフロー（テストの失敗・テストが止まる・道具の導入に失敗）の確認と、それで観測する if: always()・timeout-minutes で止まること・if-no-files-found: warn の verification_state'
+    reason: fail するテスト・終わらない待ち・存在しないバージョンを持つブランチを用意して本物の GitHub Actions で回す作業で、要望の初回の実行に含まれない
+    plan: '#111'
+use_cases: []
