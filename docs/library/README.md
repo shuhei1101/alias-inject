@@ -10,3 +10,4 @@
 | [js-yaml](./LIB-2.yaml) | 設定ファイルと照合する YAML を読み込むパーサー |
 | [typescript](./LIB-3.yaml) | 型の確認に使用する TypeScript のコンパイラ |
 | [GitHub Actions](./LIB-4.yaml) | テストの全件をランナーで回す CI のサービスと、使用する Action |
+| [node:test](./LIB-5.yaml) | E2E テストを実行する Node の組み込みのテストランナー |

@@ -239,6 +239,24 @@ entries:
                     contents: 結合テストのフィクスチャ
                     content_types:
                       - test_support
+      - type: folder
+        name: e2e
+        contents: E2E テスト
+        children:
+          - type: folder
+            name: workflow
+            contents: GitHub Actions の workflow を本物の GitHub Actions で起動して確認する E2E テスト
+            content_types:
+              - test
+            naming:
+              - '{workflow}.e2e.ts'
+          - type: file
+            name: tsconfig.json
+            contents: E2E テストだけが Node の型を参照する型検査の設定
+            content_types:
+              - config
+        content_types:
+          - config
   - type: folder
     name: types
     contents: 型の宣言

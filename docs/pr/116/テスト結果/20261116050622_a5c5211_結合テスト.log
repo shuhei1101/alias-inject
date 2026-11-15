@@ -1,0 +1,20 @@
+$ node --test 'tests/e2e/workflow/*.e2e.ts'
+✔ test_normal (57503.766112ms)
+✔ test_error_when_tests_fail (47303.688798ms)
+✔ test_error_when_tests_hang (120467.16511ms)
+✔ test_error_when_setup_fails (34956.713274ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 260378.619174
+exit 0
+
+# 実行（検証用のブランチ → 実行の ID・結論）
+e2e/test-yml/test_error_when_setup_fails-20261115200518973 → 43756059521 failure
+e2e/test-yml/test_error_when_tests_hang-20261115200329418 → 43755881062 failure
+e2e/test-yml/test_error_when_tests_fail-20261115200244842 → 43755809396 failure
+e2e/test-yml/test_normal-20261115200152794 → 43755729070 success

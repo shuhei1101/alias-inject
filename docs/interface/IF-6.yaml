@@ -82,6 +82,7 @@ flows:
       - 実行の結論が `success`
       - 成果物 `test-log` があり、`test.log` の集計が `0 fail`
       - '`test.log` の skip の件数が、同じ commit を手元で回したときと同じ'
+    test: test_normal
   - name: 異常系（テストの失敗・failure）
     summary: テストが 1 件でも fail すると、ログを上げてから失敗で終わる
     setup:
@@ -103,13 +104,15 @@ flows:
       - 実行の結論が `failure`
       - step「テストの全件を回す」の結論が `failure`
       - 成果物 `test-log` があり、`test.log` に fail したテストの名前が出る
+    test: test_error_when_tests_fail
   - name: 異常系（テストが止まる・failure）
     summary: テストが 1 分で終わらないと止め、ログを上げてから失敗で終わる
     setup:
       - name: Mock
         description: なし（本物の GitHub Actions で回す）
       - name: ブランチ
-        description: 終わらない待ちを持つテストを 1 件持つブランチ
+        description: 同期の無限ループで止まるテストを 1 件持つブランチ
+        notes: '`await` で終わらない待ちは、`claude plugin test` のテストごとの上限（5 秒）で fail になり、step のタイムアウトに届かない'
     flow: |-
       <!-- map -->
 
@@ -124,6 +127,8 @@ flows:
       - 実行の結論が `failure`
       - step「テストの全件を回す」の結論が `failure`
       - 成果物 `test-log` があり、`test.log` に止めるまでの出力が残る
+      - 'step「テストの全件を回す」の開始（`startedAt`）から終了（`completedAt`）までが 1 分以上（`timeout-minutes: 1` で止めた）'
+    test: test_error_when_tests_hang
   - name: 異常系（道具の導入に失敗・failure）
     summary: Claude Code を入れられないと、テストを回さずに失敗で終わる
     setup:
@@ -145,9 +150,11 @@ flows:
       - 実行の結論が `failure`
       - step「テストの全件を回す」の結論が `skipped`
       - 成果物 `test-log` が無く、step「ログを成果物に上げる」に `test.log` が無い旨の警告が出る
+    test: test_error_when_setup_fails
 refs:
   - TP-1#
   - LIB-4#
   - LIB-1#
 notes:
-  確認方法: 結合テストのファイルは持たない（GitHub Actions の上でしか step の成否と成果物を確認できない）。`workflow_dispatch` は develop にある workflow だけを起動できるため、フローは develop へ入った後の作業 PR で workflow を起動して確認する
+  確認方法: '`test_file` の E2E テストが、フローごとに `setup` のブランチを push して `workflow_dispatch` で起動し、実行の結論・step ごとの結論・成果物を確認する。結合テストのファイルは持たない（GitHub Actions の上でしか step の成否と成果物を確認できない）'
+test_file: tests/e2e/workflow/test-yml.e2e.ts
