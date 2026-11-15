@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T03:01:50.517122+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: LIB-4 の verification・verification_state と ARCH-1 の GitHub Actions の status
+    updated_by: planner
+    updated_at: '2026-11-15T05:41:39.200593+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: プラグインのコードを変えない。workflow はランナーの実行で確かめる
