@@ -18,7 +18,9 @@ docs:
   - page: docs/layout/LAY-1.yaml
     new: false
     change: tests/ の下に e2e/workflow/ を記載する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T19:32:03.511563+00:00'
 scope_out:
   - item: E2E テストを GitHub Actions のランナーや push・PR の契機で自動で回すこと
     reason: '検証用のブランチを本物のリポジトリへ push するテストで、手元で回す層（location: local）にする。要望はテストの作成と手元での実行'
