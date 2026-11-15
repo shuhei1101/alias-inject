@@ -30,7 +30,7 @@
   確認方法: 配布先のリポジトリに、内容が AI Monitor の過去の版と同じ移した文書のファイルが無く、索引（rules.yaml・docs/rules.yaml）に、移した文書のパスを指すのにファイルが無いエントリが無い
   状態: 未
 配布先の dev-docs への移行:
-  説明: '配布先のリポジトリの直下に `dev-docs.yaml`（設計書の種類を documents に定義したもの）を置き、`/dev-docs:setup {配布先のパス}` で dev-docs の配信元として登録し、`settings.yaml` の `agents[].mcp_tools` から旧い設計書のツールを外して dev-docs のツールを割り当てる（手順書の設計書のツールが dev-docs のツールに変わるため）。`dev-docs.yaml` の作成と登録はファイルごとの判断を伴うため実行者が `/dev-docs:setup` で行い、実行スクリプトは書き換えずに整ったかを確かめる（書き換えないため切り戻しは持たない）（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3119/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E9%85%8D%E5%B8%83%E5%85%88%E3%81%AE%20dev-docs%20%E3%81%B8%E3%81%AE%E7%A7%BB%E8%A1%8C）'
+  説明: '配布先のリポジトリの直下に `project-index.yaml`（設計書の種類を documents に定義したもの）を置き、`/dev-docs:setup {配布先のパス}` で dev-docs の配信元として登録し、`settings.yaml` の `agents[].mcp_tools` から旧い設計書のツールを外して dev-docs のツールを割り当てる（手順書の設計書のツールが dev-docs のツールに変わるため）。`project-index.yaml` の作成と登録はファイルごとの判断を伴うため実行者が `/dev-docs:setup` で行い、実行スクリプトは書き換えずに整ったかを確かめる（書き換えないため切り戻しは持たない）（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3119/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E9%85%8D%E5%B8%83%E5%85%88%E3%81%AE%20dev-docs%20%E3%81%B8%E3%81%AE%E7%A7%BB%E8%A1%8C）'
   タグ:
   - 配布先
   - 設定ファイル
@@ -77,7 +77,7 @@
   確認方法: 配布先のリポジトリの .claude/settings.json の env に RULE_INJECT_INDEXES_PROJECT が無く、移行前の値の索引が ~/.config/rule-inject/settings.yaml の projects[] の、match がそのリポジトリのクローンの絶対パスの要素の indexes に入っている
   状態: 未
 各プロジェクトのスキーマの参照への移行:
-  説明: '配布先のリポジトリで、dev-docs.yaml の documents[].schema を knowledge のスキーマのリビジョンつきの参照（source・path・ref）へ書き換え（設計書の種別の行は schemas/design/{種類}.schema.yaml、管理用の YAML の行は schemas/knowledge-files.schema.yaml を指す）、自分の schemas/（dev/ が残るリポジトリは dev/テンプレート/）にある AI Monitor から配られたスキーマのコピー（設計書の種別の Schema・files.schema.yaml と、フェーズの設計書を持たないので使わない phase.schema.yaml）を全て削除し、設計書を新しいスキーマの検査に合格させる。dev/ が残るリポジトリは、そのプロジェクトの docs/ への移行の Issue の後に行う（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3430/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E5%90%84%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E3%81%AE%E3%82%B9%E3%82%AD%E3%83%BC%E3%83%9E%E3%81%AE%E5%8F%82%E7%85%A7%E3%81%B8%E3%81%AE%E7%A7%BB%E8%A1%8C）'
+  説明: '配布先のリポジトリで、project-index.yaml の documents[].schema を knowledge のスキーマのリビジョンつきの参照（source・path・ref）へ書き換え（設計書の種別の行は schemas/design/{種類}.schema.yaml、管理用の YAML の行は schemas/knowledge-files.schema.yaml を指す）、自分の schemas/（dev/ が残るリポジトリは dev/テンプレート/）にある AI Monitor から配られたスキーマのコピー（設計書の種別の Schema・files.schema.yaml と、フェーズの設計書を持たないので使わない phase.schema.yaml）を全て削除し、設計書を新しいスキーマの検査に合格させる。dev/ が残るリポジトリは、そのプロジェクトの docs/ への移行の Issue の後に行う（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3430/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E5%90%84%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E3%81%AE%E3%82%B9%E3%82%AD%E3%83%BC%E3%83%9E%E3%81%AE%E5%8F%82%E7%85%A7%E3%81%B8%E3%81%AE%E7%A7%BB%E8%A1%8C）'
   タグ:
   - 配布先の移行
   - スキーマ
@@ -90,7 +90,7 @@
   確認: 各プロジェクトのスキーマの参照への移行/確認.py
   切り戻し: null
   失敗時: 実行者が原因を確かめて依頼元へ返す
-  確認方法: 配布先の dev-docs.yaml の設計書の種別の行の schema が knowledge の source・path・ref を持ち、配布先の schemas/（dev/ が残るリポジトリは dev/テンプレート/）に AI Monitor から配られたスキーマのコピーが無い
+  確認方法: 配布先の project-index.yaml の設計書の種別の行の schema が knowledge の source・path・ref を持ち、配布先の schemas/（dev/ が残るリポジトリは dev/テンプレート/）に AI Monitor から配られたスキーマのコピーが無い
   状態: 未
 配布先の規約のパスの追従:
   説明: '配布先のルール索引・agent_context.yaml が指す AI Monitor の規約・判定フローチャート・チェックシート・テンプレートの .md のパスを、変換後の YAML のパスに書き換える（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3440/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E9%85%8D%E5%B8%83%E5%85%88%E3%81%AE%E8%A6%8F%E7%B4%84%E3%81%AE%E3%83%91%E3%82%B9%E3%81%AE%E8%BF%BD%E5%BE%93）'
@@ -108,7 +108,7 @@
   確認方法: 配布先のリポジトリの rules.yaml・agent_context.yaml に、AI Monitor の docs/rule/・docs/flowchart/・docs/checksheet/・docs/template/ の .md を指す行が無い
   状態: 未
 配布先のデータの設計書の作成:
-  説明: '配布先のリポジトリで、ER 図の設計書（docs/er/）の `tables[].source` を持たないテーブルごとに、カラムが保存するキーを並べたデータの設計書（docs/data/）を作成し、テーブルの `source` とカラムの `source` で指す。ER 図の設計書を持たないリポジトリと、全てのテーブルが `source` を持つリポジトリでは何もしない。docs/data/ が .gitignore で除外されているリポジトリでは、除外の行を直してから行う。書き換える ER 図・dev-docs.yaml・docs/data/ に未 commit の変更があると前提確認で止まる。追加する data の行のスキーマの版は、配布先の er の行の schema.ref に揃える。切り戻しは、実行の結果を commit する前に、書き換えたファイルを git の HEAD へ戻し、作成したデータの設計書を削除する。#3430 の反映作業『各プロジェクトのスキーマの参照への移行』の後に行う（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3445/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E9%85%8D%E5%B8%83%E5%85%88%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%81%AE%E8%A8%AD%E8%A8%88%E6%9B%B8%E3%81%AE%E4%BD%9C%E6%88%90）'
+  説明: '配布先のリポジトリで、ER 図の設計書（docs/er/）の `tables[].source` を持たないテーブルごとに、カラムが保存するキーを並べたデータの設計書（docs/data/）を作成し、テーブルの `source` とカラムの `source` で指す。ER 図の設計書を持たないリポジトリと、全てのテーブルが `source` を持つリポジトリでは何もしない。docs/data/ が .gitignore で除外されているリポジトリでは、除外の行を直してから行う。書き換える ER 図・project-index.yaml・docs/data/ に未 commit の変更があると前提確認で止まる。追加する data の行のスキーマの版は、配布先の er の行の schema.ref に揃える。切り戻しは、実行の結果を commit する前に、書き換えたファイルを git の HEAD へ戻し、作成したデータの設計書を削除する。#3430 の反映作業『各プロジェクトのスキーマの参照への移行』の後に行う（配布元: https://github.com/shuhei1101/ai-monitor/tree/v0.4.0/docs/pr/3445/%E5%8F%8D%E6%98%A0%E4%BD%9C%E6%A5%AD/%E9%85%8D%E5%B8%83%E5%85%88%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%81%AE%E8%A8%AD%E8%A8%88%E6%9B%B8%E3%81%AE%E4%BD%9C%E6%88%90）'
   タグ:
   - 配布先の移行
   - 設計書
