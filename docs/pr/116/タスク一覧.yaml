@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T19:06:42.519691+00:00'
   - process: ドキュメント修正
-    status: todo
-    note: LAY-1 の tests/e2e/workflow/、LIB-4 の verification・verification_state、実行器に依存の追加が要るときは CMD-1
+    status: done
+    note: LAY-1 を修正。LIB-4 は異常系の実行の観測で内容が定まるため、結合テスト作成で記録する
+    updated_by: planner
+    updated_at: '2026-11-15T19:32:36.399785+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: プラグインのコードを変えない
