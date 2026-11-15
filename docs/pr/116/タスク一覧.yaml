@@ -45,8 +45,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T19:06:42.519691+00:00'
   - process: インターフェース定義設計
-    status: todo
+    status: done
     note: E2E の実行器を決め、IF-6 の test_file・flows[].test・notes と TP-1 の TL-3 を記載する
+    updated_by: planner
+    updated_at: '2026-11-15T19:19:50.099227+00:00'
   - process: 部品設計
     status: skipped
     reason: 画面の部品を持たない
