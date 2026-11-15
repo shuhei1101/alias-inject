@@ -13,7 +13,7 @@ from pathlib import Path
 import os
 
 # 第 1 引数（対象のリポジトリの場所）を省いたら、作業ディレクトリを対象のリポジトリにする
-if len(sys.argv) < 2 or sys.argv[1].startswith("--"):
+if sys.argv[1:] in ([], ["--dry-run"]):
     sys.argv.insert(1, os.getcwd())
 
 ENV_KEY = "RULE_INJECT_INDEXES_PROJECT"
