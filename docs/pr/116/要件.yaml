@@ -14,7 +14,9 @@ docs:
   - page: docs/library/LIB-4.yaml
     new: false
     change: '異常系の実行で観測できた if: always()・timeout-minutes・if-no-files-found の verification_state と verification を記録する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-15T20:06:58.867491+00:00'
   - page: docs/layout/LAY-1.yaml
     new: false
     change: tests/ の下に e2e/workflow/ を記載する

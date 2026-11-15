@@ -80,5 +80,7 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T19:42:16.314197+00:00'
   - process: 結合テスト作成
-    status: todo
+    status: done
     note: IF-6 のフローごとの E2E テストを tests/e2e/workflow/ に作り、手元で回す
+    updated_by: planner
+    updated_at: '2026-11-15T20:07:04.203024+00:00'
