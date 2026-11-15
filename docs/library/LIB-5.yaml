@@ -1,0 +1,72 @@
+id: LIB-5
+visibility: internal
+title: node:test
+kind: 標準ライブラリ
+lead: Node.js の組み込みのテストランナー。`node --test` でテストのファイルを実行し、結果を集計する。
+dependency_scope: 開発のみ
+adoption: 採用
+used_in:
+  - tests/e2e/workflow/test-yml.e2e.ts
+upstream: nodejs/node
+license: MIT
+official_url: https://nodejs.org/
+docs_url: https://nodejs.org/api/test.html
+version:
+  current: Node 24.14.0
+  checked_on: '2026-11-16'
+  source: 手元の `node --version`
+  pinning: Node のメジャーバージョン 24 以上。型の宣言 `@types/node` は devDependencies で完全一致で固定する
+selection:
+  candidates: pytest
+  decision: リポジトリが TypeScript だけで、Node は開発環境の前提にあり、依存も実行環境も増えない
+  consequences: '`.ts` は型を除去して実行するため、型だけの構文（`enum`・名前空間・引数プロパティを使用しない構文）だけで記載する。型検査には型の宣言 `@types/node` が要る'
+install: |-
+  ```bash
+  npm install --save-dev --save-exact @types/node@24.19.2
+  ```
+catalogs:
+  - name: コマンド
+    version: Node 24.14.0
+    entries:
+      - name: node --test '{glob}'
+        kind: コマンド
+        purpose: パターンに該当するファイルのテストを実行する。fail があれば終了コード 1
+        verification_state: verified
+        verified_at: '2026-11-16T04:10:00+09:00'
+      - name: node --test --test-name-pattern '{正規表現}' {ファイル}
+        kind: コマンド
+        purpose: 名前が正規表現に該当するテストだけを実行する
+        verification_state: docs_only
+  - name: API
+    version: Node 24.14.0
+    entries:
+      - name: test
+        kind: 関数
+        purpose: テストを 1 つ定義する（`node:test`）
+        params:
+          - name: name
+            type: string
+            description: テストの名前
+            required: true
+            verification_state: verified
+            verified_at: '2026-11-16T04:10:00+09:00'
+          - name: options.timeout
+            type: number
+            description: テストごとの上限（ミリ秒）
+            required: false
+            default: Infinity
+            verification_state: docs_only
+          - name: fn
+            type: () => void | Promise<void>
+            description: テストの本体
+            required: true
+            verification_state: verified
+            verified_at: '2026-11-16T04:10:00+09:00'
+        verification_state: verified
+        verified_at: '2026-11-16T04:10:00+09:00'
+verification:
+  state: 済
+  date: '2026-11-16'
+  detail: Node 24.14.0 で、型の注釈を持つ `.ts` のテストを `node --test` で指定し、型を除去して実行され 1 件 pass することを確認した。`@types/node` 24.19.2 を `types` に指定した設定で、`node:test`・`node:child_process` を import するファイルが `tsc --noEmit` で終了コード 0、型の誤りを入れると終了コード 2 になることを確認した
+refs:
+  - TP-1#
