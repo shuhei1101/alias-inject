@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-14T22:23:21.339186+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: '`.github/workflows/test.yml` を作る'
+    updated_by: planner
+    updated_at: '2026-11-15T02:22:29.936275+00:00'
   - process: 結合テスト作成
     status: skipped
     updated_by: planner
