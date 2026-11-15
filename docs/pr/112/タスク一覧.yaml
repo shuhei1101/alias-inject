@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T03:01:50.517122+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: test.yml の timeout-minutes を IF-6 の値に合わせる
+    updated_by: planner
+    updated_at: '2026-11-15T08:43:52.909860+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: 'IF-6 の notes のとおり workflow の結合テストのファイルは持たない。フローごとの E2E は #111'
