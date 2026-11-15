@@ -45,8 +45,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T03:01:50.517122+00:00'
   - process: インターフェース定義設計
-    status: todo
+    status: done
     note: ランナーで初回の実行を回して実測し、IF-6 のジョブ（と必要なら step）のタイムアウトを導き直す
+    updated_by: planner
+    updated_at: '2026-11-15T03:16:47.306987+00:00'
   - process: 部品設計
     status: skipped
     reason: 画面の部品を持たない
