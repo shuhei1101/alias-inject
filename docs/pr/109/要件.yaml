@@ -53,7 +53,7 @@ scope_out:
     plan: none
   - item: ランナーでの初回の全件実行と、ランナーと手元の skip の件数の比較
     reason: '`workflow_dispatch` は develop にある workflow だけを起動できる。この作業 PR は手元の全件実行で回し、理由をログに記録する（Issue #99 のユーザーのコメント）。develop へ入った後の作業 PR で実施する'
-    plan: to_file
+    plan: '#110'
   - item: workflow の E2E テスト（`tests/e2e/workflow/`、本物の GitHub Actions で分岐ごとに回す）
     reason: 'develop へ入るまで workflow を `workflow_dispatch` で起動できず、この作業 PR では回せない（ランナーでの初回は develop へ入った後の作業 PR と Issue #99 のユーザーのコメントで決まっている）。また E2E の層（TL-3）は `run_all` が未確定で、実行器の選定から要る'
-    plan: to_file
+    plan: '#111'
