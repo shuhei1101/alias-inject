@@ -1,3 +1,4 @@
-/mnt/c/Users/shuhe/repo/alias-inject/.claude/worktrees/chore-distribution-follow-ai-monitor-v0-4-0/dev-docs.yaml がありません
-前提確認: failed
-exit=1
+前提確認: ok
+project-index.yaml の書き換え: skipped
+コピーの削除: skipped
+exit=0

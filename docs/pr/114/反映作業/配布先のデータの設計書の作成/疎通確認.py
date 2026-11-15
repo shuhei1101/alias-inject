@@ -1,4 +1,4 @@
-"""配布先のリポジトリの ER 図・dev-docs.yaml・依存のライブラリへ読み取りだけでつながるかを確かめる。"""
+"""配布先のリポジトリの ER 図・project-index.yaml・依存のライブラリへ読み取りだけでつながるかを確かめる。"""
 
 import sys
 from pathlib import Path
@@ -17,6 +17,6 @@ except ImportError as e:
     fail("ライブラリ", f"PyYAML と ruamel.yaml が要ります: {e}")
 print("ライブラリ: ok")
 if not (root / DEV_DOCS).is_file():
-    fail("dev-docs.yaml", str(root / DEV_DOCS))
-print("dev-docs.yaml: ok")
+    fail("project-index.yaml", str(root / DEV_DOCS))
+print("project-index.yaml: ok")
 print(f"ER 図: ok（{len(er_files(root))} 件）")

@@ -47,7 +47,7 @@ dev_docs_path = root / DEV_DOCS
 dev_docs = dev_docs_path.read_text(encoding="utf-8")
 schema_ref = er_schema_ref(yaml.safe_load(dev_docs) or {})
 if not schema_ref:
-    fail("前提確認", "dev-docs.yaml に schema.ref を持つ er の行がありません")
+    fail("前提確認", "project-index.yaml に schema.ref を持つ er の行がありません")
 print("前提確認: ok")
 
 rt = YAML()
@@ -130,14 +130,14 @@ writes[index_path] = (
 if not any(d.get("id") == "data" for d in (yaml.safe_load(dev_docs) or {}).get("documents") or []):
     marker = "documents:\n"
     if marker not in dev_docs:
-        fail("dev-docs.yaml の data の行", "documents: の行がありません")
+        fail("project-index.yaml の data の行", "documents: の行がありません")
     writes[dev_docs_path] = (
         dev_docs,
         dev_docs.replace(marker, marker + DATA_ROW.format(ref=schema_ref), 1),
     )
-    print("dev-docs.yaml の data の行: changed")
+    print("project-index.yaml の data の行: changed")
 else:
-    print("dev-docs.yaml の data の行: skipped")
+    print("project-index.yaml の data の行: skipped")
 
 for path, (old, new) in writes.items():
     rel = path.relative_to(root)

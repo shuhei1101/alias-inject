@@ -7,7 +7,7 @@ from pathlib import Path
 
 ER_DIR = Path("docs/er")
 DATA_DIR = Path("docs/data")
-DEV_DOCS = Path("dev-docs.yaml")
+DEV_DOCS = Path("project-index.yaml")
 DATA_ROW = """  - id: data
     title: データ
     paths: ["docs/data/**/*.yaml"]
@@ -45,7 +45,7 @@ def parse_args(argv):
 
 
 def er_schema_ref(dev_docs):
-    """`dev-docs.yaml` の `er` の行の `schema.ref` を返す（無ければ None）。"""
+    """`project-index.yaml` の `er` の行の `schema.ref` を返す（無ければ None）。"""
     for d in dev_docs.get("documents") or []:
         if d.get("id") == "er" and isinstance(d.get("schema"), dict):
             return d["schema"].get("ref")

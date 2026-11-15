@@ -77,7 +77,7 @@ def copies(root):
 
 
 def rewrite(text):
-    """`dev-docs.yaml` の `schema:` の行のうちコピーを指すものを knowledge の参照に書き換えた本文を返す。"""
+    """`project-index.yaml` の `schema:` の行のうちコピーを指すものを knowledge の参照に書き換えた本文を返す。"""
     lines = []
     for line in text.splitlines():
         matched = SCHEMA_LINE.match(line)

@@ -1,4 +1,4 @@
-"""実行.py が書き換えた配布先の ER 図・dev-docs.yaml・docs/data/ を、commit する前の状態へ戻す。"""
+"""実行.py が書き換えた配布先の ER 図・project-index.yaml・docs/data/ を、commit する前の状態へ戻す。"""
 
 import subprocess
 import sys

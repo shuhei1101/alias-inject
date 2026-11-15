@@ -1,4 +1,4 @@
-"""配布先の dev-docs.yaml がコピーを指さず、コピーが無いことを読むだけで確かめる。"""
+"""配布先の project-index.yaml がコピーを指さず、コピーが無いことを読むだけで確かめる。"""
 
 import sys
 from pathlib import Path
@@ -12,12 +12,12 @@ if args is None:
 root, _ = args
 remaining = [
     line.strip()
-    for line in (root / "dev-docs.yaml").read_text(encoding="utf-8").splitlines()
+    for line in (root / "project-index.yaml").read_text(encoding="utf-8").splitlines()
     if (m := SCHEMA_LINE.match(line)) and COPIES.get(m.group("name"))
 ]
 if remaining:
-    fail("dev-docs.yaml の参照", "\n".join(remaining))
-print("dev-docs.yaml の参照: ok")
+    fail("project-index.yaml の参照", "\n".join(remaining))
+print("project-index.yaml の参照: ok")
 left = copies(root)
 if left:
     fail("コピー", "\n".join(str(p) for p in left))

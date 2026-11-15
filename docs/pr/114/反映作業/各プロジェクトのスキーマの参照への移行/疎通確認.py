@@ -1,4 +1,4 @@
-"""配布先の dev-docs.yaml と knowledge のクローンのタグを読めるかを確かめる。"""
+"""配布先の project-index.yaml と knowledge のクローンのタグを読めるかを確かめる。"""
 
 import subprocess
 import sys
@@ -11,9 +11,9 @@ args = parse_args(sys.argv[1:])
 if args is None:
     fail("前提確認", "第 1 引数に配布先のリポジトリの直下を渡してください")
 root, _ = args
-if not (root / "dev-docs.yaml").is_file():
-    fail("dev-docs.yaml", f"{root / 'dev-docs.yaml'} がありません")
-print("dev-docs.yaml: ok")
+if not (root / "project-index.yaml").is_file():
+    fail("project-index.yaml", f"{root / 'project-index.yaml'} がありません")
+print("project-index.yaml: ok")
 # knowledge のクローンは、AI Monitor と同じく端末の project-index の設定から引く
 knowledge = knowledge_clone()
 if knowledge is None:
