@@ -127,6 +127,7 @@ flows:
       - 実行の結論が `failure`
       - step「テストの全件を回す」の結論が `failure`
       - 成果物 `test-log` があり、`test.log` に止めるまでの出力が残る
+      - 'step「テストの全件を回す」の開始（`startedAt`）から終了（`completedAt`）までが 1 分以上（`timeout-minutes: 1` で止めた）'
     test: test_error_when_tests_hang
   - name: 異常系（道具の導入に失敗・failure）
     summary: Claude Code を入れられないと、テストを回さずに失敗で終わる

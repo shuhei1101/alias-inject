@@ -46,6 +46,7 @@ layers:
       - '`gh` 2.87.0 以上が、リポジトリへ push と workflow の起動ができるアカウントでログイン済み'
       - '`.github/workflows/test.yml` が develop にある'
       - 検証用のブランチの push と削除、ランナーでの workflow の実行が、テストの関数ごとに発生する
+      - Claude Code 2.1.310 以上（`claude` が PATH にある。正常系で、同じ commit を手元の `claude plugin test .` で回した skip の件数と比べる）
     run_one:
       label: テスト
       command: |-
