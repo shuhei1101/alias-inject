@@ -65,7 +65,8 @@ catalogs:
             required: false
             default: warn
             description: '`path` にファイルが無いときの扱い（`warn` は警告を出して成功で終える）'
-            verification_state: unverified
+            verification_state: verified
+            verified_at: '2026-11-16T04:52:30+09:00'
         verification_state: verified
         verified_at: '2026-11-15T12:06:26+09:00'
   - name: workflow のキー
@@ -101,11 +102,13 @@ catalogs:
       - name: timeout-minutes
         kind: 設定
         purpose: ジョブ・step の実行時間の上限（分）。超えたら止めて失敗にする
-        verification_state: unverified
+        verification_state: verified
+        verified_at: '2026-11-16T04:52:00+09:00'
       - name: 'if: always()'
         kind: 設定
         purpose: 前の step の成否によらず step を実行する
-        verification_state: unverified
+        verification_state: verified
+        verified_at: '2026-11-16T04:52:30+09:00'
       - name: shell
         kind: 設定
         purpose: step の `run` を実行する shell を指定する
@@ -118,5 +121,5 @@ limitations:
     notes: https://docs.github.com/en/actions/reference/limits
 verification:
   state: 済
-  detail: 'workflow `.github/workflows/test.yml` を `gh workflow run` で作業ブランチに対して起動し、全ての step が成功して成果物 `test-log` が上がることを確認した（正常系）。失敗・タイムアウト・ファイルが無いときの振る舞いは観測していない'
-  date: '2026-11-15'
+  detail: 'workflow `.github/workflows/test.yml` を `gh workflow run` で作業ブランチに対して起動し、全ての step が成功して成果物 `test-log` が上がることを確認した（正常系）。E2E テストの異常系で、step が失敗した後に `if: always()` の step が実行されること、step の `timeout-minutes: 1` で 73 秒後に `The action ''テストの全件を回す'' has timed out after 1 minutes.` を出して止められること、`if-no-files-found: warn` で `No files were found with the provided path: test.log. No artifacts will be uploaded.` の警告を出して step が成功することを確認した（実行 43754604209・43754667117・43754833070）。`concurrency` の先の実行を止める振る舞いは観測していない'
+  date: '2026-11-16'
