@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-15T19:06:42.519691+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: 実行器の導入（依存・設定・package.json の script）。導入が要らなければ skipped にする
+    updated_by: planner
+    updated_at: '2026-11-15T19:42:16.314197+00:00'
   - process: 結合テスト作成
     status: todo
     note: IF-6 のフローごとの E2E テストを tests/e2e/workflow/ に作り、手元で回す
