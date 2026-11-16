@@ -53,6 +53,54 @@ docs:
     status: done
     updated_by: planner
     updated_at: '2026-11-16T16:21:09.053424+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '表の種類のマーカー 2 箇所を `<!-- table: {"kind": "data"} -->` にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする（`index.yaml` に有って README に無かった `layout/` の行も入る）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/guide/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/module/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/scenario/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/interface/README.md
+    new: false
+    change: '`design_docs publish` で生成し直す（目次の表を `data` の種類で包む）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/layout/README.md
+    new: false
+    change: '`design_docs publish` で生成し直す（行の名前を設計書の名前 `alias-inject` にする）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/_config.yml
+    new: false
+    change: '`design_docs publish` が書く `exclude` の並びを名前の順にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
 scope_out:
   - item: 配信設定・ルール索引（`docs/_config.yml`・配布元のルール索引）
     reason: v0.5.0 で配布元の `docs/_config.yml` とルール索引は変わっていない
@@ -63,6 +111,6 @@ scope_out:
   - item: MCP ツール（`settings.yaml` の `agents[].mcp_tools` の見直し）
     reason: alias-inject は AI Monitor の `settings.yaml` を持たない（`settings.sample.yaml` はプラグインの設定ファイルの見本）
     plan: none
-  - item: テンプレート・規約・フェーズ手順・判定・観点の読み直し
+  - item: テンプレート・フェーズ手順・判定・観点の読み直し
     reason: alias-inject はこれらのコピーを持たず、エージェントは AI Monitor の develop のページを実行時に読む。設計書の書式は knowledge のスキーマの参照（`project-index.yaml` の `schema.ref`）が決め、配布物に含まれない
     plan: none
