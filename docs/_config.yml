@@ -9,8 +9,8 @@ exclude:
   - config/
   - dev-command/
   - interface/
-  - library/
   - layout/
+  - library/
   - module/
   - nonfunctional/
   - scenario/

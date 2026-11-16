@@ -4,7 +4,7 @@ alias-inject のドキュメント全体の目次
 
 ## 目次
 
-<!-- table: data -->
+<!-- table: {"kind": "data"} -->
 
 | ページ | 概要 |
 | --- | --- |
@@ -17,6 +17,7 @@ alias-inject のドキュメント全体の目次
 | [test-procedure](./test-procedure/) | プロジェクト固有のテスト起動コマンドと前提条件 |
 | [dev-command](./dev-command/) | 開発で使用するコマンドの分類ごとの前提・順序・コマンド |
 | [library](./library/) | 採用済みの外部ライブラリ / 外部ツールのリファレンス |
+| [layout](./layout/) | リポジトリの直下からの全てのフォルダとファイルを入れ子で記載するフォルダ構成 |
 | [guide](./guide/) | alias-inject の使用方法（はじめに・使い方・リファレンス） |
 
 <!-- /table -->
