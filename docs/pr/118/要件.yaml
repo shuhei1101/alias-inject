@@ -1,0 +1,62 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-4.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+docs:
+  - page: ai-monitor-theme.yaml
+    new: false
+    change: '`import-site` が書く記録のバージョンを `v0.5.0` にする'
+    status: todo
+  - page: ai-monitor-version.ini
+    new: false
+    change: '`v0.4.0` を `v0.5.0` にする'
+    status: todo
+  - page: docs/_theme/_layouts/default.html
+    new: false
+    change: '`import-site --version v0.5.0` で `docs/_theme/` の配布物を v0.5.0 のサイトのレイアウトに取り込む（配布物から消えた `assets/vendor/mdmark/` は削除される。`_data/nav.project.yml` はプロジェクトのもので取り込みの対象外）'
+    status: todo
+scope_out:
+  - item: 配信設定・ルール索引（`docs/_config.yml`・配布元のルール索引）
+    reason: v0.5.0 で配布元の `docs/_config.yml` とルール索引は変わっていない
+    plan: none
+  - item: プラグイン（MCP `update_plugins` での取り直し）
+    reason: alias-inject のリポジトリの変更ではなく、稼働しているブランチへ入ったプラグインの変更はモニターが自動で有効にする（テンプレート『PRドキュメント/反映作業』の `時期`）
+    plan: none
+  - item: MCP ツール（`settings.yaml` の `agents[].mcp_tools` の見直し）
+    reason: alias-inject は AI Monitor の `settings.yaml` を持たない（`settings.sample.yaml` はプラグインの設定ファイルの見本）
+    plan: none
+  - item: テンプレート・規約・フェーズ手順・判定・観点の読み直し
+    reason: alias-inject はこれらのコピーを持たず、エージェントは AI Monitor の develop のページを実行時に読む。設計書の書式は knowledge のスキーマの参照（`project-index.yaml` の `schema.ref`）が決め、配布物に含まれない
+    plan: none
