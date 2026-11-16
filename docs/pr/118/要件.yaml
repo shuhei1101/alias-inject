@@ -38,15 +38,21 @@ docs:
   - page: ai-monitor-theme.yaml
     new: false
     change: '`import-site` が書く記録のバージョンを `v0.5.0` にする'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
   - page: ai-monitor-version.ini
     new: false
     change: '`v0.4.0` を `v0.5.0` にする'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
   - page: docs/_theme/_layouts/default.html
     new: false
     change: '`import-site --version v0.5.0` で `docs/_theme/` の配布物を v0.5.0 のサイトのレイアウトに取り込む（配布物から消えた `assets/vendor/mdmark/` は削除される。`_data/nav.project.yml` はプロジェクトのもので取り込みの対象外）'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
 scope_out:
   - item: 配信設定・ルール索引（`docs/_config.yml`・配布元のルール索引）
     reason: v0.5.0 で配布元の `docs/_config.yml` とルール索引は変わっていない
