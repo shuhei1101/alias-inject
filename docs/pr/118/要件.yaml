@@ -1,0 +1,116 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-4.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: none
+    detail: プラグインのコードと設定を変えない
+    depends_on: []
+docs:
+  - page: ai-monitor-theme.yaml
+    new: false
+    change: '`import-site` が書く記録のバージョンを `v0.5.0` にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
+  - page: ai-monitor-version.ini
+    new: false
+    change: '`v0.4.0` を `v0.5.0` にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
+  - page: docs/_theme/_layouts/default.html
+    new: false
+    change: '`import-site --version v0.5.0` で `docs/_theme/` の配布物を v0.5.0 のサイトのレイアウトに取り込む（配布物から消えた `assets/vendor/mdmark/` は削除される。`_data/nav.project.yml` はプロジェクトのもので取り込みの対象外）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:21:09.053424+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '表の種類のマーカー 2 箇所を `<!-- table: {"kind": "data"} -->` にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする（`index.yaml` に有って README に無かった `layout/` の行も入る）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/guide/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/module/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/scenario/README.md
+    new: false
+    change: '`design_docs publish` で生成し直し、表の種類のマーカーを JSON の記載にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/interface/README.md
+    new: false
+    change: '`design_docs publish` で生成し直す（目次の表を `data` の種類で包む）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/layout/README.md
+    new: false
+    change: '`design_docs publish` で生成し直す（行の名前を設計書の名前 `alias-inject` にする）'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+  - page: docs/_config.yml
+    new: false
+    change: '`design_docs publish` が書く `exclude` の並びを名前の順にする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-16T16:28:40.753051+00:00'
+scope_out:
+  - item: 配信設定・ルール索引（`docs/_config.yml`・配布元のルール索引）
+    reason: v0.5.0 で配布元の `docs/_config.yml` とルール索引は変わっていない
+    plan: none
+  - item: プラグイン（MCP `update_plugins` での取り直し）
+    reason: alias-inject のリポジトリの変更ではなく、稼働しているブランチへ入ったプラグインの変更はモニターが自動で有効にする（テンプレート『PRドキュメント/反映作業』の `時期`）
+    plan: none
+  - item: MCP ツール（`settings.yaml` の `agents[].mcp_tools` の見直し）
+    reason: alias-inject は AI Monitor の `settings.yaml` を持たない（`settings.sample.yaml` はプラグインの設定ファイルの見本）
+    plan: none
+  - item: テンプレート・フェーズ手順・判定・観点の読み直し
+    reason: alias-inject はこれらのコピーを持たず、エージェントは AI Monitor の develop のページを実行時に読む。設計書の書式は knowledge のスキーマの参照（`project-index.yaml` の `schema.ref`）が決め、配布物に含まれない
+    plan: none
