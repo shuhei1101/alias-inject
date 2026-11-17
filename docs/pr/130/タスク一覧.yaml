@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T18:31:44.899986+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: mdmark upgrade を docs/ へ適用し、移行の報告に挙がる記載を記載し直す
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:48.228993+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードは変わらない
