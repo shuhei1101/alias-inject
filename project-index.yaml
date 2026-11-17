@@ -239,7 +239,6 @@ nav:
             - page: library/LIB-1
             - page: library/LIB-2
             - page: library/LIB-3
-            - page: library/LIB-5
             - page: library/LIB-4
         - page: config
         - page: dev_command

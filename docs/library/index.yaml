@@ -8,5 +8,3 @@ items:
     summary: 型の確認に使用する TypeScript のコンパイラ
   - page: LIB-4.yaml
     summary: テストの全件をランナーで回す CI のサービスと、使用する Action
-  - page: LIB-5.yaml
-    summary: E2E テストを実行する Node の組み込みのテストランナー
