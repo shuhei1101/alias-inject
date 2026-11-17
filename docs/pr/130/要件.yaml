@@ -1,101 +1,146 @@
 docs:
-  - page: docs/guide/セットアップ.md
-    new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
-  - page: docs/guide/設定の移し替え.md
-    new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
   - page: docs/pr/100/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
-  - page: docs/pr/118/要件.md
-    new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/14/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/14/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/15/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/15/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/18/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/18/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/21/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/21/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/41/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/41/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/5/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/52/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/52/要件.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/58/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/64/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/65/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/69/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/7/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/73/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/75/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/79/プラグイン.md
     new: false
     change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:25.969011+00:00'
+  - page: mdmark.config.yaml
+    new: false
+    change: '移行を適用したバージョンとして version: v0.13.0 を記載する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:38:35.990752+00:00'
+scope_out:
+  - item: mdmark check の plain_md_with_marks（マーカーを持つ .md を .mark.md へ改名する提案）
+    reason: 終わりの条件は legacy_mark を出さないことで、改名はファイルのパスとリンクを変えるため要望に含まれない
+    plan: none
+  - item: mdmark.config.yaml へ build.include を記載して mdmark check の対象に docs/ を含める
+    reason: 移行は一時の設定で docs/**/*.md を対象にして適用した。常設すると plain_md_with_marks が 32 件出続けるため要望に含めない
+    plan: none
