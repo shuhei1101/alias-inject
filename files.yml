@@ -82,52 +82,52 @@ files:
   description: 全てのページの見出しから公開サイトの検索の索引を書き出す Jekyll のテンプレートを受け持ち、検索の項目を修正するときに参照する。
 - path: docs/architecture/README.md
   name: アーキテクチャ図の目次
-  description: アーキテクチャ図のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: システム全体の構成（Claude Code・hooks モジュール・設定ファイル・照合に使用する YAML の関係）を定めるアーキテクチャ図の文書の一覧を受け持ち、docs/architecture/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/config/README.md
   name: 設定の目次
-  description: 設定のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: 設定と環境変数のキーの定義を定める設定の文書の一覧を受け持ち、docs/config/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/dev-command/README.md
   name: 開発コマンドの目次
-  description: 開発コマンドのフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: 開発で使用するコマンドの分類ごとの前提・順序を定める開発コマンドの文書の一覧を受け持ち、docs/dev-command/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/interface/README.md
   name: インターフェース定義の目次
-  description: インターフェース定義のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: サブシステムの外部インターフェースと処理フローを定めるインターフェース定義の文書の一覧を受け持ち、docs/interface/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/layout/README.md
   name: フォルダ構成の目次
-  description: フォルダ構成のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: リポジトリの直下からのフォルダとファイルの構成を定めるフォルダ構成の文書の一覧を受け持ち、docs/layout/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/library/README.md
   name: 外部ライブラリの目次
-  description: 外部ライブラリのフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: 採用済みの外部ライブラリと外部ツールを定める外部ライブラリの文書の一覧を受け持ち、docs/library/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/module/README.md
   name: モジュール構成の目次
-  description: モジュール構成のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: クラス・関数・関数型を定めるモジュール構成の文書の一覧を受け持ち、docs/module/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/nonfunctional/README.md
   name: 非機能要件の目次
-  description: 非機能要件のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: 外部の制約から逆算した決定値を定める非機能要件の文書の一覧を受け持ち、docs/nonfunctional/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/scenario/README.md
   name: シナリオの目次
-  description: シナリオのフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: 単一・複合ユースケースの業務フローを定めるシナリオの文書の一覧を受け持ち、docs/scenario/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: docs/test-procedure/README.md
   name: テスト実行方法の目次
-  description: テスト実行方法のフォルダの文書の一覧を受け持ち、index.yaml から生成した目次を GitHub で開くときに参照する。
+  description: テストの起動コマンドと前提条件を定めるテスト実行方法の文書の一覧を受け持ち、docs/test-procedure/index.yaml から生成した目次を GitHub で開くときに参照する。
   tags:
   - topic:目次
 - path: mdmark.config.yaml
