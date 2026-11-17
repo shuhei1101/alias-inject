@@ -11,7 +11,7 @@ items:
   - page: 設定の移し替え.md
     summary: 端末の設定と project-index.yaml を、`metadata.alias_type` の構造と旧い `aliases[]` の構造（`type`・`fields`）から、行の `alias_type` と列名の `metadata` の構造へ移し替える手順
   - page: エイリアスを登録するかを決める.md
-    summary: 文書を指す名前を、エイリアスとして登録するかを決める判定フローチャート
+    summary: 文書を指す名前をエイリアスとして登録するかの判定に使用する、knowledge の判定フローチャートと判定表の参照先
   - page: 設定ファイル.md
     summary: 設定ファイルの項目・既定値・`alias_type` ごとの `metadata` のキーの一覧
   - page: エイリアスのスキーマ.md

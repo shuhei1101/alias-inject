@@ -1,7 +1,7 @@
 id: CFG-1
 visibility: internal
 title: "設定: プラグイン"
-lead: プラグイン（hooks モジュール）が参照する設定値の一覧。サンプルは [settings.sample.yaml](../../settings.sample.yaml)。
+lead: プラグインが参照する設定ファイルのパスの環境変数と、設定ファイルのキー・既定値を定め、設定のキーや既定値を追加・修正するときに参照する。
 files:
   - file: ~/.claude/settings.json
     manages: 設定ファイルのパス（`env` の `ALIAS_INJECT_CONFIG`）
@@ -316,3 +316,9 @@ settings:
     missing: 空のときも `~/.config` を使用する
 refs:
   - ARCH-1#subsystems[plugin]
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:設定
+  - name: topic:環境変数
+  - name: topic:キー

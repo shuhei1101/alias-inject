@@ -10,6 +10,8 @@ scenarios:
       - name: セッションの記録
         description: term-a を含む入力を 1 回送信済み
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -26,6 +28,8 @@ scenarios:
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
     test: test_normal_when_compacted
@@ -36,6 +40,8 @@ scenarios:
       - name: セッションの記録
         description: term-a を含む入力を 1 回送信済み
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -50,6 +56,8 @@ scenarios:
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - '`/clear` の後の term-a を含む入力に、term-a の文脈が追加されている'
     test: test_normal_when_cleared
@@ -77,7 +85,7 @@ scenarios:
     expected:
       - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
     test: test_normal_when_compacted_after_tool_result
-lead: 圧縮か `/clear` の後は、それまでに文脈を追加した単語の記録を削除し、同じ単語が出たらもう一度文脈を追加する。
+lead: 圧縮か `/clear` の後に記録を削除し、同じ単語にもう一度文脈を追加する流れを定め、記録の消去の振る舞いを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が `/compact` か `/clear` を実行するか、自動の圧縮が起きる
 preconditions:
@@ -85,3 +93,9 @@ preconditions:
 success_guarantee: 圧縮か `/clear` の後の最初の term-a を含む入力で、term-a の文脈がもう一度追加される。
 minimal_guarantee: 記録を削除する処理が失敗しても、圧縮と `/clear` は止まらない。
 test_file: tests/e2e/単一ユースケース/test_reset_record.py
+tags:
+  - name: topic:記録
+    main: true
+  - name: topic:圧縮
+  - name: topic:クリア
+  - name: action:削除

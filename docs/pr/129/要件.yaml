@@ -1,0 +1,236 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: none
+    detail: メタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-4.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-5.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-6.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: none
+    detail: 図とメタデータの記載方法だけを変え、振る舞いは変わらない
+    depends_on: []
+docs:
+  - page: docs/interface/IF-1.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する（関連は管理用の YAML のコード・テストの行から張る）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/interface/IF-2.yaml
+    new: false
+    change: タグを再設定する（関連は管理用の YAML のコード・テストの行から張る）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/interface/IF-3.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する（関連は管理用の YAML のコード・テストの行から張る）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/interface/IF-4.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する（関連は管理用の YAML のコード・テストの行から張る）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/interface/IF-5.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する（関連は管理用の YAML のコード・テストの行から張る）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/interface/IF-6.yaml
+    new: false
+    change: Mermaid は全て map の範囲の中にあり、タグも付いているため変更しない
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-1.yaml
+    new: false
+    change: 'Mermaid を map の範囲へ移し、図の click を id: のリンクにし、タグを再設定する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-2.yaml
+    new: false
+    change: タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-3.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-4.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-5.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-6.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、利用者の自分宛のメッセージのラベルを図に収まる長さにし、タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/scenario/SC-7.yaml
+    new: false
+    change: Mermaid を map の範囲へ移し、タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/module
+    new: false
+    change: 'MOD-1〜MOD-17 のタグを再設定し、変更の経緯の補足（PR #… で追加）を削除する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: タグを再設定し、本文の検討事項の ID を decisions へ移す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/config/CFG-1.yaml
+    new: false
+    change: タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/dev-command/CMD-1.yaml
+    new: false
+    change: タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/library
+    new: false
+    change: LIB-1〜LIB-3 のタグを再設定し、LIB-1・LIB-3 の動作確認の PR 番号と commit をリンクにする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/nonfunctional/NFR-1.yaml
+    new: false
+    change: タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/test-procedure/TP-1.yaml
+    new: false
+    change: タグを再設定する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/guide/エイリアスを登録するかを決める.md
+    new: false
+    change: 判定フローチャートの図を削除し、knowledge の判定フローチャート『エイリアスの登録』を参照する記載にする
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/guide/files.yml
+    new: false
+    change: '公開ドキュメントの行に name・description を記載し、タグを topic:・tool: だけにする'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/guide
+    new: false
+    change: 『引用の文脈』の照合しないもの・除外する範囲・セクションの見出しを表にし、『設定ファイル』の行のキー・metadata の値・alias_type ごとのキーの重複を『エイリアスのスキーマ』への参照にする。Issue 番号・パスは既にタイトル付きのリンクで変更しない
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: project-index.yaml
+    new: false
+    change: 関連は管理用の YAML（files.yml・hooks/files.yml・tests/files.yml）で張れ、変更しない
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/pr
+    new: false
+    change: project-index.yaml の exclude で配信の対象外のため行を持たず、Mermaid も無いため変更しない
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: files.yml
+    new: false
+    change: テストの全件実行の workflow・スキーマの生成・状態の型の行に設計書への implements を張る
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: hooks/files.yml
+    new: false
+    change: コードの行にモジュール構成への implements を張る
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: tests/files.yml
+    new: false
+    change: 単体テストの行にコードへの tests、結合テストの行に入口への tests とインターフェース定義への see_also を張る
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/guide/index.yaml
+    new: false
+    change: 『エイリアスを登録するかを決める』の行の summary を参照先のページであることが分かる文にし、目次を生成し直す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:12:34.118494+00:00'
+  - page: docs
+    new: false
+    change: ARCH-1・CFG-1・IF-1〜IF-6・LAY-1・LIB-1〜LIB-4・MOD-1〜MOD-17・NFR-1・SC-1〜SC-7 の lead（description）を「何を定め（受け持ち）、どんなときに参照するか」の 1 文にする。今の lead にだけあった情報は新しい 1 文に含める
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:12:41.491189+00:00'
+scope_out:
+  - item: AI slop の単語の置き換え
+    reason: 起点 Issue の本文で別の Issue へ移し、その Issue で置き換え済み（closed）
+    plan: '#88'
+  - item: docs/_theme/ の公開サイトのテーマ（同梱の mermaid.min.js を含む）
+    reason: AI Monitor から写した配布物で、文書でない
+    plan: none
+  - item: ER 図の移行
+    reason: 配信元 alias-inject の文書に ER 図が無い
+    plan: none
+  - item: rules.yaml の古い規約の除外
+    reason: rules が空で、規約『markdown マーメイド』『判定フローチャート』を指していない
+    plan: none
+  - item: 設計書・公開ドキュメントへのエイリアスと用語の新規登録
+    reason: 判定表『エイリアスを登録しない条件』の 1 行目（実際にその名前で呼ばれた実例が無い）に当たり、登録しない
+    plan: none
+  - item: 各フォルダの目次（index.yaml）へのタグ
+    reason: '目次のスキーマ（design-schemas/v8.3.0 の schemas/design/index.schema.yaml）が additionalProperties: false で tags のキーを持たず、付けられない'
+    plan: none

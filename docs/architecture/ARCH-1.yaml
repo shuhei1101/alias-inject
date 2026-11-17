@@ -78,7 +78,7 @@ subsystems:
     runtime: TypeScript（Claude Code の mod のランタイムで動く）
     runs_on: 利用者の手元の Claude Code（CLI）。ユーザースコープで入れる
     status: implemented
-lead: alias-inject は利用者の手元の Claude Code が読み込む mod の単独のプラグインで、入力の単語を設定の YAML と照合し、引用の文脈をモデルにだけ追加する。
+lead: alias-inject のサブシステムと、Claude Code・設定ファイル・照合に使用する YAML との境界を定め、機能を配置するサブシステムや外部との接続を決めるときに参照する。
 external_systems:
   - name: Claude Code
     purpose: hooks モジュールを読み込み、入力のイベントを引き渡して、返却した文脈をモデルへの入力に加える
@@ -87,7 +87,7 @@ external_systems:
     cost: なし
     status: implemented
     notes:
-      事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確認する相手ではない。設定ファイルと照合に使用する YAML を読み込めないときは、文脈を追加せずに入力をそのまま返却する（#1 の D-74）。
+      事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確認する相手ではない。設定ファイルと照合に使用する YAML を読み込めないときは、文脈を追加せずに入力をそのまま返却する。
     detail: LIB-1#
   - name: GitHub Actions
     purpose: 開発で、単体テストと結合テストの全件をランナーで回す。プラグインの利用者の手元では使用しない
@@ -101,3 +101,12 @@ external_systems:
 constraints: |-
   - MCP サーバーと常駐するサーバーは持たない
   - 設定は `ALIAS_INJECT_CONFIG` が指すファイルか、無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`（`global`・`projects`）から参照する
+tags:
+  - name: topic:構成
+    main: true
+  - name: topic:architecture
+  - name: topic:サブシステム
+  - name: topic:プラグイン
+  - name: tool:claude-code
+decisions:
+  - D-74

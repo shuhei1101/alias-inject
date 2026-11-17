@@ -18,6 +18,8 @@ scenarios:
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` と term-b を含むテキストファイル
         notes: '`claude` の起動時に環境変数 `ALIAS_INJECT_E2E_VALUE` を `value-a` で設定する'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       flowchart TD
         U0([利用者]) -->|term-a を含む入力| UC1([入力への引用の文脈の追加:正常シナリオ])
@@ -29,14 +31,16 @@ scenarios:
         UC6 -->|term-b を含む入力| UC7([入力への引用の文脈の追加:正常シナリオ（記録済みの単語だけ）])
         UC7 --> DONE([単語ごとに 1 回だけ文脈が追加され、参照した本文の変数参照の値が届いた状態])
 
-        click UC1 "./SC-3.yaml#正常シナリオ"
-        click UC2 "./SC-3.yaml#正常シナリオ（記録済みの単語だけ）"
-        click UC3 "./SC-6.yaml#正常シナリオ"
-        click UC4 "./SC-4.yaml#正常シナリオ（圧縮）"
-        click UC5 "./SC-4.yaml#正常シナリオ（クリア）"
-        click UC6 "./SC-7.yaml#正常シナリオ（引用の文脈と合わせる）"
-        click UC7 "./SC-3.yaml#正常シナリオ（記録済みの単語だけ）"
+        click UC1 "id:SC-3#scenarios[正常シナリオ]"
+        click UC2 "id:SC-3#scenarios[正常シナリオ（記録済みの単語だけ）]"
+        click UC3 "id:SC-6#scenarios[正常シナリオ]"
+        click UC4 "id:SC-4#scenarios[正常シナリオ（圧縮）]"
+        click UC5 "id:SC-4#scenarios[正常シナリオ（クリア）]"
+        click UC6 "id:SC-7#scenarios[正常シナリオ（引用の文脈と合わせる）]"
+        click UC7 "id:SC-3#scenarios[正常シナリオ（記録済みの単語だけ）]"
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目の入力にだけ term-a の文脈が追加されている
       - 2 回目の term-a を含む入力には文脈が追加されていない
@@ -46,7 +50,7 @@ scenarios:
       - '`/clear` の後にファイルを参照させると、ツールの結果の後ろの文脈に term-b の引用の文脈と `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行がある'
       - その後の term-b を含む入力には文脈が追加されていない
     test: test_normal
-lead: 利用者が 1 つのセッションで入力を重ねる間に、設定ファイルの書き換え・圧縮・`/clear` を挟んでも、単語ごとに 1 回だけ引用の文脈がモデルに追加される複合ユースケース。
+lead: 設定ファイルの書き換え・圧縮・`/clear` を挟んでも単語ごとに 1 回だけ引用の文脈が追加される複合ユースケースの流れを定め、セッション全体の振る舞いを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで入力する
 preconditions:
@@ -55,3 +59,13 @@ preconditions:
 success_guarantee: 入力の文は変わらず、初めて出た単語の引用の文脈だけがモデルに追加される。ツールで参照した本文も変わらず、本文に初めて出た単語の引用の文脈と本文の変数参照の値がツールの結果の後ろの文脈としてモデルに届く。
 minimal_guarantee: 設定ファイルや YAML を読み込めないときも、入力はそのままモデルに届く。
 test_file: tests/e2e/複合ユースケース/test_session_flow.py
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:複合ユースケース
+  - name: topic:セッション
+  - name: topic:記録
+  - name: topic:圧縮
+  - name: topic:クリア
+  - name: topic:設定ファイル
+  - name: action:追加

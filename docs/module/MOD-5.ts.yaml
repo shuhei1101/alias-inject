@@ -1,7 +1,7 @@
 id: MOD-5
 visibility: internal
 title: プラグイン / ツール / tool.ts
-lead: ツールの呼び出しの引数から、参照している文書そのものの単語を照合の結果から除外する。
+lead: ツールの呼び出しの引数から参照している文書そのものの単語を照合の結果から除外する処理を受け持ち、ツールごとの除外を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/tool.test.ts
 functions:
@@ -127,3 +127,11 @@ functions:
         mock: なし
         expected: term-a と term-b
     status: planned
+tags:
+  - name: topic:ツール
+    main: true
+  - name: topic:引数
+  - name: topic:照合
+  - name: action:除去
+  - name: topic:モジュール
+  - name: tool:typescript

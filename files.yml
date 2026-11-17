@@ -16,6 +16,9 @@ files:
   tags:
   - topic:ci
   - tool:github
+  related:
+  - to: IF-6
+    type: implements
 - path: .gitignore
   name: Git が無視するファイルの一覧
   description: 生成物・依存・Claude Code が書き出す型の宣言を Git の管理から外す設定を受け持ち、コミットしないファイルを追加するときに参照する。
@@ -168,6 +171,9 @@ files:
   description: エイリアスの元の行のスキーマから同梱するスキーマのオブジェクトを生成して一致を確認する処理を受け持ち、スキーマを書き換えた後に生成し直すときに参照する。
   tags:
   - topic:エイリアス
+  related:
+  - to: MOD-4
+    type: implements
 - path: settings.sample.yaml
   name: 設定ファイルのサンプル
   description: 端末の設定ファイルのキーと既定値の書き方の例を受け持ち、設定ファイルを用意するときやキーを追加するときに参照する。
@@ -187,6 +193,9 @@ files:
 - path: types/index.d.ts
   name: 状態の型
   description: プラグインが `$.state` に配置する値の型の契約を受け持ち、状態に持つ値を追加・修正するときに参照する。
+  related:
+  - to: MOD-12
+    type: implements
 - path: version.ini
   name: プラグインの版
   description: 配布するプラグインの版を受け持ち、リリースで版を上げるときに参照する。

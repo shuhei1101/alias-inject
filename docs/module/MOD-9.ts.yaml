@@ -1,7 +1,7 @@
 id: MOD-9
 visibility: internal
 title: プラグイン / 文脈 / context.ts
-lead: 該当した単語から記録済みの単語を除き、`max_items`・`max_chars` に収まる単語を選んで、追加する文脈の文字列を組み立てる。
+lead: 記録済みの単語を除いて上限に収まる単語を選び、追加する文脈の文字列を組み立てる処理を受け持ち、文脈の並びや上限を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/context.test.ts
 data_models:
@@ -77,7 +77,6 @@ functions:
         condition: origin・aliasId・id が同じで、avoid が undefined・`旧エー`・`OldA` の 3 つ
         mock: なし
         expected: 3 つのキーが互いに異なり、avoid が undefined のキーは `{origin}\u0000{aliasId}\u0000{id}` のまま
-        notes: 'PR #73 で追加'
   - name: renderContext
     title: 文脈の書式化
     kind: 関数
@@ -178,3 +177,10 @@ functions:
         condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
         mock: なし
         expected: どれも null
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:上限
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript

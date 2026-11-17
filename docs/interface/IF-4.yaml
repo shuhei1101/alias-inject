@@ -15,6 +15,8 @@ flows:
       - name: 圧縮
         description: '`trigger` が `manual`'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -27,6 +29,8 @@ flows:
         IF->>ST: そのセッションの記録を削除する
         IF-->>CC: 圧縮した結果
       ```
+
+      <!-- /map -->
     expected:
       - 返る結果が `next(e)` の結果と同じ
       - 続けて「term-a とは」を送信すると、term-a の文脈がもう一度追加される
@@ -78,7 +82,7 @@ flows:
       - 続けて `agentId` が `agent-1` の `tool.call` で term-b を含む結果を返却すると、term-b の文脈がもう一度追加される
       - 続けて「term-a とは」を送信すると、返る `context` が空（メインの会話の記録は残っている）
     test: test_normal_when_subagent_compacted
-lead: 会話の圧縮が終わった後、その会話の追加済みの単語の記録を削除する。メインの会話はセッションの記録、サブエージェントはその `agentId` の記録だけを削除する。
+lead: 会話の圧縮の後にその会話の追加済みの単語の記録を削除する `session.compact` の処理の入出力とフローを定め、圧縮の後の記録の消去を修正するときに参照する。
 idempotent: true
 side_effects: '`$.state` のそのセッション ID、またはセッション ID と `agentId` の組の記録を削除する'
 callers:
@@ -115,3 +119,12 @@ refs:
   - SC-4#
   - IF-3#
 test_file: tests/integration/hooks/session-compact.test.ts
+tags:
+  - name: topic:記録
+    main: true
+  - name: topic:圧縮
+  - name: topic:セッション
+  - name: topic:サブエージェント
+  - name: topic:フック
+  - name: action:削除
+  - name: tool:claude-code

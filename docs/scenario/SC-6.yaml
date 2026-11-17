@@ -11,13 +11,15 @@ scenarios:
         description: '配列 `terms` に単語 `term-a` を持ち、`project-index.yaml` の `records: terms` の用語の行の `paths` の glob に該当する'
         notes: 書き換えで `terms` に単語 `term-c` を追加し、同じ glob に該当する YAML を 1 つ追加する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: 用語の YAML に term-c を追加し、glob に該当する YAML を追加
+        U->>U: YAML に term-c を追加
         U->>CC: term-c と追加した YAML の単語を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 設定ファイルと project-index.yaml と YAML の更新時刻とフォルダの一覧を確認する
@@ -25,6 +27,8 @@ scenarios:
         P->>CC: term-c と追加した YAML の単語の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書き換えた直後の入力で、term-c の文脈が追加されている
       - glob に該当するように追加した YAML の単語の文脈も追加されている
@@ -38,19 +42,23 @@ scenarios:
         description: '`documents` に `alias_type` が term の行を 1 つ持つ'
         notes: 書き換えで、単語 `cmd-a` を持つコマンドの YAML を指す `alias_type` が command の行を追加する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: project-index.yaml の documents に command の行を追加
+        U->>U: documents に行を追加
         U->>CC: cmd-a を含む入力を送信
         CC->>P: prompt.submit
         P->>P: project-index.yaml の更新時刻が変わったので再読み込みする
         P->>CC: cmd-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書き換えた直後の入力で、cmd-a の単語・`id`・`command` の文脈が追加されている
     test: test_normal_when_repository_config_changed
@@ -61,25 +69,29 @@ scenarios:
       - name: 用語の YAML
         description: エイリアスの行を 2 つ持ち、片方の行の YAML を書式の誤った内容に書き換える
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: 片方の YAML を書式の誤った内容に書き換える
+        U->>U: YAML を誤った書式にする
         U->>CC: 両方の行の単語を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 書式の誤った YAML を照合から除外する
         P->>CC: もう一方の行の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書式の誤った YAML の単語の文脈は追加されていない
       - もう一方の行の単語の文脈は追加されている
       - 入力の送信は止まっていない
     test: test_error_when_yaml_malformed
-lead: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から書き換え後の内容で照合する。
+lead: 設定ファイル・`project-index.yaml`・照合の YAML の書き換えが次の入力から反映される流れを定め、再読み込みの振る舞いを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:
@@ -87,3 +99,9 @@ preconditions:
 success_guarantee: 書き換えた直後の入力から、書き換え後の単語とエイリアスの行で照合される。
 minimal_guarantee: 書き換え後の YAML を読み込めないときも、入力の送信は止まらず、他のエイリアスの行の照合は続く。
 test_file: tests/e2e/単一ユースケース/test_reload.py
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:照合
+  - name: action:再読み込み
+  - name: action:変更

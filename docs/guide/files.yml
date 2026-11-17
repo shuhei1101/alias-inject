@@ -1,50 +1,74 @@
 files:
   - path: コアコンセプト-引用の文脈.md
-    tags: [scope:はじめに, topic:引用の文脈]
+    name: 引用の文脈
+    description: 入力の単語を YAML と照合してモデルにだけ文脈を追加する仕組み（照合・照合条件・上限・文脈の書式）を説明し、引用の文脈が追加される条件や書式を確認するときに参照する。
+    tags: [topic:引用の文脈, topic:照合, topic:条件, topic:上限, topic:作業場所]
     visibility: public
     category: はじめに
   - path: コアコンセプト-変数参照の値.md
-    tags: [scope:はじめに, topic:変数参照]
+    name: 変数参照の値
+    description: 参照した本文の `!{名前}` に同じ名前の環境変数の値を文脈として追加する仕組みと文脈の書式・上限を説明し、変数参照の値が追加される条件を確認するときに参照する。
+    tags: [topic:変数参照, topic:環境変数, topic:上限]
     visibility: public
     category: はじめに
   - path: 変更履歴.md
-    tags: [scope:はじめに]
+    name: 変更履歴
+    description: バージョンごとに入った PR の一覧を持ち、あるバージョンで入った変更を確認するときに参照する。
+    tags: [topic:履歴, topic:バージョン, topic:リリース]
     visibility: public
     category: はじめに
   - path: セットアップ.md
-    tags: [scope:使い方, topic:セットアップ手順]
+    name: セットアップ
+    description: 前提条件と、マーケットプレイスからユーザースコープでプラグインを入れて設定ファイルを用意する手順を説明し、alias-inject の使用を始めるときに参照する。
+    tags: [topic:セットアップ手順, topic:設定ファイル, topic:マーケットプレイス, tool:claude-code]
     visibility: public
     category: 使い方
   - path: 設定の移し替え.md
-    tags: [scope:使い方, topic:設定の移し替え]
+    name: 設定の移し替え
+    description: 端末の設定と project-index.yaml を旧構造から行の `alias_type` と列名の `metadata` の構造へ移し替える手順と対応を説明し、設定を今の構造へ移すときに参照する。
+    tags: [topic:設定の移し替え, topic:設定ファイル, topic:エイリアス, topic:メタデータ, tool:project-index]
     visibility: public
     category: 使い方
   - path: エイリアスを登録するかを決める.md
-    tags: [scope:判定フローチャート, topic:エイリアス]
+    name: エイリアスを登録するかを決める
+    description: 文書を指す名前をエイリアスとして登録するかの判定の参照先を示し、文書の別名をエイリアスに登録するかを決めるときに参照する。
+    tags: [topic:エイリアス, topic:判定フローチャート]
     visibility: public
     category: 使い方
   - path: 設定ファイル.md
-    tags: [scope:リファレンス, topic:設定ファイル]
+    name: 設定ファイル
+    description: 設定ファイルの場所・キー・既定値と `alias_type` ごとの `metadata` のキーを定め、設定ファイルを記載・修正するときに参照する。
+    tags: [topic:設定ファイル, topic:キー, topic:エイリアス, topic:メタデータ, topic:作業場所]
     visibility: public
     category: リファレンス
   - path: エイリアスのスキーマ.md
-    tags: [scope:リファレンス, topic:エイリアス]
+    name: エイリアスのスキーマ
+    description: エイリアスの元の行のキー・`metadata` の値・`alias_type` ごとのキー・照合条件とタグを指定した取り込み方を定め、エイリアスの行を記載するときやスキーマを取り込むときに参照する。
+    tags: [topic:エイリアス, topic:スキーマ, topic:キー, topic:メタデータ, topic:条件]
     visibility: public
     category: リファレンス
   - path: README.md
+    name: 公開ドキュメントの目次
+    description: 公開ドキュメント（はじめに・使い方・リファレンス）のページの一覧を持ち、docs/guide/index.yaml から生成した目次を GitHub で開くときに参照する。
     tags: [topic:目次]
     visibility: internal
     category: はじめに
   - path: はじめに.md
-    tags: [scope:はじめに, topic:目次]
+    name: はじめに
+    description: 概要とコアコンセプトのページの一覧を持ち、alias-inject の仕組みのページを探すときに参照する。
+    tags: [topic:目次]
     visibility: public
     category: はじめに
   - path: 使い方.md
-    tags: [scope:使い方, topic:目次]
+    name: 使い方
+    description: セットアップと日々の操作のページの一覧を持ち、使い方のページを探すときに参照する。
+    tags: [topic:目次]
     visibility: public
     category: 使い方
   - path: リファレンス.md
-    tags: [scope:リファレンス, topic:目次]
+    name: リファレンス
+    description: 設定ファイルとエイリアスのスキーマのページの一覧を持ち、キーの定義のページを探すときに参照する。
+    tags: [topic:目次]
     visibility: public
     category: リファレンス
 checkpoint:

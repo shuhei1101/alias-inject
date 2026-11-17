@@ -46,7 +46,7 @@ catalogs:
             type: '{ line: number; column: number; position: number; snippet: string }'
             description: 誤りの位置
             notes: '`line` と `column` は 0 始まり。空の入力では無い'
-lead: YAML 1.2 のパーサー。文字列を JavaScript の値へ変換し、書式の誤りを位置つきの例外で返却する。
+lead: YAML のパースに使用する js-yaml の使用範囲を定め、設定ファイルや照合の YAML の読み込みを修正するときに参照する。
 purl: pkg:npm/js-yaml@5.5.0
 dependency_scope: 必須
 adoption: 採用
@@ -70,3 +70,8 @@ install: |-
   tar -xzf js-yaml-5.5.0.tgz package/dist/js-yaml.mjs package/dist/js-yaml.d.ts
   cp package/dist/js-yaml.mjs package/dist/js-yaml.d.ts hooks/vendor/
   ```
+tags:
+  - name: tool:js-yaml
+    main: true
+  - name: action:パース
+  - name: topic:ライブラリ

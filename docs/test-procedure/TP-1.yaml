@@ -63,3 +63,11 @@ layers:
       exit $rc
       ```
 lead: テストの層ごとの実行の前提・全件実行のコマンド・実行場所を定め、テストや lint を実行するときに参照する。
+tags:
+  - name: topic:testing
+    main: true
+  - name: topic:単体テスト
+  - name: topic:結合テスト
+  - name: topic:e2e
+  - name: topic:lint
+  - name: action:実行

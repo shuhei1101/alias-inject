@@ -1,7 +1,7 @@
 id: MOD-10
 visibility: internal
 title: プラグイン / 照合 / match.ts
-lead: 入力と単語を同じ正規化でそろえ、部分文字列として含まれる単語を返却し、出た位置か出た回数の順に並べる。正規表現は使用しない。
+lead: 正規表現を使用せず入力と単語を同じ正規化でそろえて含まれる単語を返却し、出た位置か回数の順に並べる処理を受け持ち、照合の正規化や並び順を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/match.test.ts
 data_models:
@@ -24,7 +24,6 @@ data_models:
       - name: count
         type: number
         description: 正規化した入力で、その単語の keys のどれかが始まる位置の数（同じ位置は 1 回）
-        notes: 'PR #52 で追加'
 functions:
   - name: normalize
     title: 照合の正規化
@@ -110,7 +109,6 @@ functions:
         condition: 'term-a（keys: term-a・用語エー）、入力「term-a と用語エーと term-a」。単語「レビュー」（keys: レビュー・レビュースレッド）、入力「レビュースレッド」'
         mock: なし
         expected: term-a の count が 3、レビューの count が 1
-        notes: 'PR #52 で追加'
       - name: test_find_hits_when_no_match
         case: 正常
         summary: 該当しなければ空
@@ -145,3 +143,10 @@ functions:
         mock: なし
         expected: term-b・term-a・term-c の順
     status: planned
+tags:
+  - name: topic:照合
+    main: true
+  - name: topic:単語
+  - name: action:照合
+  - name: topic:モジュール
+  - name: tool:typescript

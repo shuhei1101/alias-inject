@@ -1,7 +1,7 @@
 id: SC-5
 visibility: internal
 title: 端末のセットアップ
-lead: 利用者がスキル `global-setup` を実行すると、端末の設定（設定ファイル）を作るか今の構造へ移し、引用の文脈が追加されることを確認する。
+lead: スキル `global-setup` で端末の設定ファイルを作るか今の構造へ移し、引用の文脈が追加されることを確認する流れを定め、端末のセットアップを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで `/alias-inject:global-setup` を実行する
 preconditions:
@@ -20,6 +20,8 @@ scenarios:
       - name: 参照するリポジトリ
         description: 一時のリポジトリの `project-index.yaml` が、単語 `term-a` を持つ用語の YAML を `alias_type` が `term` の行で指す
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -36,6 +38,8 @@ scenarios:
         P->>CC: term-a の文脈を追加
         S->>U: 作った設定ファイルのパスと、term-a の説明が回答に反映された結果を示す
       ```
+
+      <!-- /map -->
     expected:
       - 既定のパスに、`global.repositories` が回答した `project-index.yaml` を指す設定ファイルがある
       - settings.json の `env` に `ALIAS_INJECT_CONFIG` が追加されていない
@@ -48,6 +52,8 @@ scenarios:
         description: 正常シナリオと同じ。settings.json の `env` に `ALIAS_INJECT_CONFIG` と別のキーを 1 つ持つ
         notes: '`ALIAS_INJECT_CONFIG` は無いファイルを指す'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -61,6 +67,8 @@ scenarios:
         S->>F: env の ALIAS_INJECT_CONFIG を回答した場所にする
         S->>U: 作った設定ファイルのパスと env に記載したキーを示す
       ```
+
+      <!-- /map -->
     expected:
       - 回答した場所に設定ファイルがある
       - settings.json の `env` の `ALIAS_INJECT_CONFIG` が回答した場所を指している
@@ -72,6 +80,8 @@ scenarios:
       - name: 端末の設定
         description: 既定のパスの設定ファイルの `global.aliases` に、旧構造（`type`・`fields`）の要素と、行の `alias_type` を持たず `metadata.alias_type` を持つ要素を 1 つずつ持つ
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -83,6 +93,8 @@ scenarios:
         S->>S: 旧構造の要素を今の構造へ移す
         S->>U: 移した要素と確認した結果を示す
       ```
+
+      <!-- /map -->
     expected:
       - 設定ファイルの `global.aliases` に旧構造の要素が残っていない
       - 移した要素の単語の引用の文脈が追加されることが示されている
@@ -93,6 +105,8 @@ scenarios:
       - name: 端末の設定
         description: 既定のパスに、今の構造の設定ファイルがある
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -102,6 +116,8 @@ scenarios:
         S->>S: claude -p で引用の文脈が追加されることを確認する
         S->>U: 書き換えなかったことと確認した結果を示す
       ```
+
+      <!-- /map -->
     expected:
       - 設定ファイルと settings.json が変わっていない
       - スキルの結果に、引用の文脈が追加されたことが示されている
@@ -113,6 +129,8 @@ scenarios:
         description: 既定のパスの設定ファイルの `global.aliases` に、`alias_type` が `memo` の行だけを持つ
         notes: 行の `paths` は単語 `term-a` を持つ用語の YAML に該当する。スキルはこの YAML から試しの入力に使用する単語を取得する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -123,8 +141,20 @@ scenarios:
         P->>P: スキーマに合わない行を照合から除外し、理由を debug log に出して文脈を追加しない
         S->>U: debug log の場所と修正方法を示して止まる
       ```
+
+      <!-- /map -->
     expected:
       - スキルの結果に、引用の文脈が追加されなかったことと、debug log の場所と修正方法が示されている
       - 設定ファイルと settings.json が変わっていない
 notes:
   E2E を持たない: スキルの手順はモデルが実行し、質問の文面と順序が決定的でないため、対応テストファイルを持たない。シナリオの結末は、スキルを手で実行して確認する。
+tags:
+  - name: topic:セットアップ手順
+    main: true
+  - name: topic:端末
+  - name: topic:設定ファイル
+  - name: topic:設定の移し替え
+  - name: topic:スキル
+  - name: action:作成
+  - name: action:移行
+  - name: action:確認

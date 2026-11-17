@@ -1,7 +1,7 @@
 id: MOD-3
 visibility: internal
 title: プラグイン / スキーマ / schema.ts
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクトで、エイリアスの元の行（設定ファイルの `aliases` と `project-index.yaml` の `documents` の行）を検証する。検証はスキーマが使用するキーワードだけを解釈し、外部のライブラリを使用しない。'
+lead: '外部のライブラリを使用せず同梱したスキーマのオブジェクトで行うエイリアスの元の行の検証を受け持ち、検証が解釈するキーワードを修正するときに参照する。'
 test_files:
   - tests/unit/hooks/lib/schema.test.ts
 classes:
@@ -186,3 +186,10 @@ functions:
         condition: 'ALIAS_SCHEMA で、`scope: {cwd: [/repo/a/**]}`・`scope: {cwd: []}`・`scope: {cwd: /repo/a/**}`・`scope: {cwd: [1]}`・`scope: {path: [/repo/a]}` の行'
         mock: なし
         expected: 1 件目は空。2〜4 件目は `aliases[0].scope.cwd` を含む理由、5 件目は `aliases[0].scope` を含む理由
+tags:
+  - name: topic:スキーマ
+    main: true
+  - name: topic:エイリアス
+  - name: action:検証
+  - name: topic:モジュール
+  - name: tool:typescript

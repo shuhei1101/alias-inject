@@ -10,7 +10,7 @@ tags:
 entry:
   kind: trigger
   value: '`.github/workflows/test.yml`。手動の起動（`workflow_dispatch`）だけで、push・PR を契機にしない'
-lead: 単体テストと結合テストの全件を GitHub Actions のランナーで `claude plugin test .` で実行し、成否によらずログを成果物に上げる。
+lead: 単体テストと結合テストの全件を GitHub Actions のランナーで実行してログを成果物に上げる workflow の入出力とフローを定め、テストの全件実行の workflow を修正するときに参照する。
 permissions: '`contents: read`'
 exclusivity: '同じブランチの実行が重なったら、先に起動した実行を止める（`concurrency` の `group: test-${{ github.ref }}`・`cancel-in-progress: true`）'
 idempotent: true

@@ -1,7 +1,7 @@
 id: MOD-15
 visibility: internal
 title: プラグイン / 設定 / config.ts
-lead: 設定ファイルのパスの取得、設定ファイルの検証と既定値の適用、起動したプロジェクトに該当する `projects` を重ねた実効の設定の組み立て、入力の出所の判定。
+lead: 設定ファイルのパスの取得・検証・既定値の適用と、プロジェクトごとの設定を重ねた実効の設定の組み立てを受け持ち、設定のキーや既定値を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/config.test.ts
 data_models:
@@ -58,7 +58,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 結果を照合しないツールの名前。既定 []
-        notes: 'PR #52 で追加'
   - name: Settings
     title: 実効の設定
     container: hooks/lib/config.ts
@@ -96,7 +95,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: Config の excludeTools の後ろに、該当した projects の excludeTools を並べたもの
-        notes: 'PR #52 で追加'
   - name: ProjectConfig
     title: プロジェクトの設定
     container: hooks/lib/config.ts
@@ -134,7 +132,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 後ろに追加する結果を照合しないツールの名前。記載しないときは []
-        notes: 'PR #52 で追加'
 enums:
   - name: OriginKey
     title: 対象にする出所
@@ -494,3 +491,12 @@ functions:
         condition: "文字列 `a`、`config` が無い要素、`config: ''`、`enabled: 'no'`"
         mock: なし
         expected: どれも文字列の理由で、無い・誤ったキーの名前を含む
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:設定
+  - name: topic:パス
+  - name: action:検証
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript
