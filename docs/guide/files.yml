@@ -20,7 +20,7 @@ files:
   - path: セットアップ.md
     name: セットアップ
     description: 前提条件と、マーケットプレイスからユーザースコープでプラグインを入れて設定ファイルを用意する手順を説明し、alias-inject の使用を始めるときに参照する。
-    tags: [topic:セットアップ手順, topic:セットアップ, topic:設定ファイル, topic:マーケットプレイス, tool:claude-code]
+    tags: [topic:セットアップ手順, topic:設定ファイル, topic:マーケットプレイス, tool:claude-code]
     visibility: public
     category: 使い方
   - path: 設定の移し替え.md
