@@ -1,0 +1,11 @@
+docs:
+  - page: docs/test-procedure/TP-1.yaml
+    new: false
+    change: TL-1・TL-2 の run_runner で、run_id を取った後に run を API で参照できるまで 1 秒おきに最大 10 回待ち、参照できなければ標準エラーに出して終了コード 1 で終えてから gh run watch を呼ぶ
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T09:35:54.449670+00:00'
+scope_out:
+  - item: E2E（tests/e2e/workflow/test-yml.e2e.ts）の dispatch の、起動直後の run への gh run view の 404
+    reason: gh run watch の 404 は無視して待ち直すが、直後の gh run view の 404 は拾わずに例外になる。これまでに起きた記録は無く、変える成果物が TP-1 と別のため、別の Issue で扱う
+    plan: '#125'
