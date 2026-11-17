@@ -1,0 +1,47 @@
+docs:
+  - page: docs/library/LIB-5.yaml
+    new: false
+    change: E2E テストだけが使う node:test の設計書を削除する
+    status: todo
+  - page: docs/library/README.md
+    new: false
+    change: LIB-5 の行を削除する
+    status: todo
+  - page: docs/library/index.yaml
+    new: false
+    change: LIB-5 の行を削除する
+    status: todo
+  - page: project-index.yaml
+    new: false
+    change: 'サイドバーの `- page: library/LIB-5` の行を削除する'
+    status: todo
+  - page: docs/layout/LAY-1.yaml
+    new: false
+    change: '`tests/e2e/`（`workflow/` と `tsconfig.json`）のエントリを削除する'
+    status: todo
+  - page: docs/library/LIB-4.yaml
+    new: false
+    change: '`verification.detail` の E2E テストの記載を、検証用のブランチで起動して観測した記載に改める（観測した `verification_state: verified` は残す）'
+    status: todo
+  - page: docs/test-procedure/TP-1.yaml
+    new: false
+    change: 'TL-3 を `run_all: 未確定` に戻し、`description`・`prerequisites`・`run_one`・`location` を削除する（TL-1・TL-2 の `run_runner` と `lead` は残す）'
+    status: todo
+  - page: files.yml
+    new: false
+    change: '`package.json` の行の `description` から E2E の記載を削除する'
+    status: todo
+  - page: tests/files.yml
+    new: false
+    change: '`e2e/tsconfig.json`・`e2e/workflow/test-yml.e2e.ts` の行を削除する'
+    status: todo
+scope_out:
+  - item: 'IF-6 の異常系（テストが止まる）のフローで #116 が書き換えた `setup`（同期の無限ループで止まるテスト）と `expected` の step の所要時間の行'
+    reason: workflow の振る舞いと、フローを確かめるブランチの用意の仕方を定める記載で、E2E テストだけが使う記載ではない。作業 PR で workflow を起動して確かめるときも使う
+    plan: none
+  - item: シナリオ SC-1〜4・SC-6・SC-7 の `test_file`（`tests/e2e/単一ユースケース/` 等）
+    reason: '#116 より前からある記載で、メジャーリリースの前に作る E2E の置き場所を指す。要望は #116 が追加・変更した記載の削除'
+    plan: none
+  - item: PR ドキュメント `docs/pr/116/`
+    reason: マージ済みの作業 PR の記録で、後から書き換えない
+    plan: none
