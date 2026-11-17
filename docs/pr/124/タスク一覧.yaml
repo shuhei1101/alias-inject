@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T09:32:14.547749+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: docs/test-procedure/TP-1.yaml の TL-1・TL-2 の run_runner
+    updated_by: planner
+    updated_at: '2026-11-17T09:35:55.587615+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: テスト実行方法のコマンドの修正で、プラグインのコードを変えない
