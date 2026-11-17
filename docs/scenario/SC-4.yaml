@@ -10,6 +10,8 @@ scenarios:
       - name: セッションの記録
         description: term-a を含む入力を 1 回送信済み
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -26,6 +28,8 @@ scenarios:
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 圧縮の後の term-a を含む入力に、term-a の文脈が追加されている
     test: test_normal_when_compacted
@@ -36,6 +40,8 @@ scenarios:
       - name: セッションの記録
         description: term-a を含む入力を 1 回送信済み
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -50,6 +56,8 @@ scenarios:
         P->>CC: term-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - '`/clear` の後の term-a を含む入力に、term-a の文脈が追加されている'
     test: test_normal_when_cleared

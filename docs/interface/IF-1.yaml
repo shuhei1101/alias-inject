@@ -15,6 +15,8 @@ flows:
       - name: セッションの終了
         description: '`reason` が `clear`、`sessionId` が記録したセッション ID'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -27,6 +29,8 @@ flows:
         CC-->>IF: 結果
         IF-->>CC: 結果
       ```
+
+      <!-- /map -->
     expected:
       - '`$.state` の記録に `sessionId` の要素が無い'
       - 返る結果が `next(e)` の結果と同じ
@@ -42,6 +46,8 @@ flows:
         description: '`reason` が `resume`'
         notes: '`claude --resume` で戻ったセッションは、会話に追加済みの文脈が残るため記録も残す'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -52,6 +58,8 @@ flows:
         CC-->>IF: 結果
         IF-->>CC: 結果（記録は削除しない）
       ```
+
+      <!-- /map -->
     expected:
       - '`$.state` の記録に `sessionId` の term-a が残っている'
       - 返る結果が `next(e)` の結果と同じ

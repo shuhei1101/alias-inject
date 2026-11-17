@@ -11,6 +11,8 @@ scenarios:
         description: '配列 `terms` に単語 `term-a` を持ち、`project-index.yaml` の `records: terms` の用語の行の `paths` の glob に該当する'
         notes: 書き換えで `terms` に単語 `term-c` を追加し、同じ glob に該当する YAML を 1 つ追加する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -25,6 +27,8 @@ scenarios:
         P->>CC: term-c と追加した YAML の単語の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書き換えた直後の入力で、term-c の文脈が追加されている
       - glob に該当するように追加した YAML の単語の文脈も追加されている
@@ -38,6 +42,8 @@ scenarios:
         description: '`documents` に `alias_type` が term の行を 1 つ持つ'
         notes: 書き換えで、単語 `cmd-a` を持つコマンドの YAML を指す `alias_type` が command の行を追加する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -51,6 +57,8 @@ scenarios:
         P->>CC: cmd-a の文脈を context に追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書き換えた直後の入力で、cmd-a の単語・`id`・`command` の文脈が追加されている
     test: test_normal_when_repository_config_changed
@@ -61,6 +69,8 @@ scenarios:
       - name: 用語の YAML
         description: エイリアスの行を 2 つ持ち、片方の行の YAML を書式の誤った内容に書き換える
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -74,6 +84,8 @@ scenarios:
         P->>CC: もう一方の行の文脈だけを追加
         CC->>M: 入力と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 書式の誤った YAML の単語の文脈は追加されていない
       - もう一方の行の単語の文脈は追加されている

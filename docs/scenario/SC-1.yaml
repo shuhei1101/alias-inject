@@ -18,6 +18,8 @@ scenarios:
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` と term-b を含むテキストファイル
         notes: '`claude` の起動時に環境変数 `ALIAS_INJECT_E2E_VALUE` を `value-a` で設定する'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       flowchart TD
         U0([利用者]) -->|term-a を含む入力| UC1([入力への引用の文脈の追加:正常シナリオ])
@@ -37,6 +39,8 @@ scenarios:
         click UC6 "./SC-7.yaml#正常シナリオ（引用の文脈と合わせる）"
         click UC7 "./SC-3.yaml#正常シナリオ（記録済みの単語だけ）"
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目の入力にだけ term-a の文脈が追加されている
       - 2 回目の term-a を含む入力には文脈が追加されていない

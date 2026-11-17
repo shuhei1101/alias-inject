@@ -14,6 +14,8 @@ flows:
         description: '`text` が `!{VALUE_A}` を 2 回含む。`context` に他のフックが追加した要素を 1 つ持つ'
         notes: 同じ名前を 2 回含めて、行が 1 行になることを確認する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -28,6 +30,8 @@ flows:
         PR-->>IF: 終了コード 0・環境の一覧
         IF-->>CC: 結果の context の末尾に値の行
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` が 2 要素で、先頭が受け取った要素のまま
       - '返る `context` の末尾が `変数参照の値: !{VALUE_A} = value-a` の 1 行だけ'
@@ -42,6 +46,8 @@ flows:
       - name: ツールの結果
         description: '`text` が `!{VALUE_A}` と `!{UNSET_B}` をこの順に含む。`context` が無い'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -55,6 +61,8 @@ flows:
         PR-->>IF: UNSET_B を含まない一覧
         IF-->>CC: VALUE_A の値と UNSET_B が設定されていない旨の行
       ```
+
+      <!-- /map -->
     expected:
       - '返る `context` が 1 要素で、`変数参照の値: !{VALUE_A} = value-a` と `変数参照の値: !{UNSET_B} は環境変数が設定されていない` の 2 行がこの順に並ぶ'
     test: test_normal_when_unset
@@ -67,6 +75,8 @@ flows:
         description: '`text` が `!{}` と `!{1ABC}` だけを含む'
         notes: 名前の書式に合わないものを変数参照として検出しないことを確認する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -78,6 +88,8 @@ flows:
         IF->>IF: 変数参照が無い
         IF-->>CC: 結果そのまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る結果が `next(e)` の結果と同じ
       - '`process.run` が呼ばれていない'
@@ -90,6 +102,8 @@ flows:
       - name: ツールの結果
         description: 1 回目は `isError` が `true` で `text` に `!{VALUE_A}` を含む。別の呼び出しでは `deny` が入っている
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -100,6 +114,8 @@ flows:
         CC-->>IF: isError の結果か deny
         IF-->>CC: 結果そのまま
       ```
+
+      <!-- /map -->
     expected:
       - どちらの呼び出しも、返る結果が `next(e)` の結果と同じ
       - '`process.run` が呼ばれていない'
@@ -113,6 +129,8 @@ flows:
         description: '`text` が `!{NAME_01}`〜`!{NAME_52}` の 52 名前をこの順に含む'
         notes: 上限を 2 つ超えさせる
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -126,6 +144,8 @@ flows:
         PR-->>IF: 環境の一覧
         IF-->>CC: NAME_01〜NAME_50 の行と残り 2 件の行
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` の追加した要素に `NAME_01`〜`NAME_50` の行があり、`NAME_51`・`NAME_52` の行が無い
       - '追加した要素の最後の行が `変数参照の値: ほか 2 件の変数参照は値を追加していない`'
@@ -138,6 +158,8 @@ flows:
       - name: ツールの結果
         description: '`text` が `!{LONG_C}` と `!{MULTI_D}` を含む'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -151,6 +173,8 @@ flows:
         PR-->>IF: 長い値と改行を含む値
         IF-->>CC: 切った値の行と JSON の文字列の行
       ```
+
+      <!-- /map -->
     expected:
       - '`LONG_C` の行が `x` 1000 文字と `（1200 文字のうち先頭 1000 文字）` で終わる'
       - '`MULTI_D` の行が `変数参照の値: !{MULTI_D} = "line1\nline2"`'
@@ -164,6 +188,8 @@ flows:
       - name: ツールの結果
         description: 正常系と同じ
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -178,6 +204,8 @@ flows:
         IF->>IF: debug log に出す
         IF-->>CC: 結果そのまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る結果が `next(e)` の結果と同じ
       - フックが例外で終わらない
@@ -191,6 +219,8 @@ flows:
       - name: ツールの結果
         description: 正常系と同じ
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -205,6 +235,8 @@ flows:
         IF->>IF: debug log に出す
         IF-->>CC: 結果そのまま
       ```
+
+      <!-- /map -->
     expected:
       - どちらの例外も、返る結果が `next(e)` の結果と同じ
       - フックが例外で終わらない

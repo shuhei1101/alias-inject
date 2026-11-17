@@ -10,6 +10,8 @@ scenarios:
       - name: 参照させるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` を 2 回含むテキストファイル
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -27,6 +29,8 @@ scenarios:
         P->>CC: 本文はそのままに、値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 'ツールの結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
       - ツールの結果の本文に `!{ALIAS_INJECT_E2E_VALUE}` が置き換わらずに残っている
@@ -38,6 +42,8 @@ scenarios:
       - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -54,6 +60,8 @@ scenarios:
         P->>CC: 本文はそのままに、値の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - 'Bash の結果の後ろの文脈に `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行が 1 行だけある'
     test: test_normal_when_read_by_bash
@@ -65,6 +73,8 @@ scenarios:
       - name: 参照させるファイル
         description: 本文に `!{ALIAS_INJECT_E2E_UNSET}` を含むテキストファイル
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -81,6 +91,8 @@ scenarios:
         P->>CC: 設定されていない旨の行を context に追加
         CC->>M: ツールの結果と文脈を送信
       ```
+
+      <!-- /map -->
     expected:
       - ツールの結果の後ろの文脈に、`!{ALIAS_INJECT_E2E_UNSET}` の環境変数が設定されていない旨の行がある
     test: test_normal_when_unset
@@ -91,6 +103,8 @@ scenarios:
       - name: 参照させるファイル
         description: '`!{名前}` を含まないテキストファイル'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -107,6 +121,8 @@ scenarios:
         P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
       ```
+
+      <!-- /map -->
     expected:
       - ツールの結果の後ろに `変数参照の値` の行が無い
     test: test_normal_when_no_reference
@@ -118,6 +134,8 @@ scenarios:
       - name: 参照させるファイル
         description: 正常シナリオと同じ
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         actor U as 利用者
@@ -134,6 +152,8 @@ scenarios:
         P->>CC: 結果をそのまま返却する
         CC->>M: ツールの結果だけを送信
       ```
+
+      <!-- /map -->
     expected:
       - ツールの結果の本文がそのままモデルに届いている
       - ツールの結果の後ろに `変数参照の値` の行が無い

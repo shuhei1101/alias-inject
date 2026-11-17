@@ -15,6 +15,8 @@ flows:
       - name: 圧縮
         description: '`trigger` が `manual`'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -27,6 +29,8 @@ flows:
         IF->>ST: そのセッションの記録を削除する
         IF-->>CC: 圧縮した結果
       ```
+
+      <!-- /map -->
     expected:
       - 返る結果が `next(e)` の結果と同じ
       - 続けて「term-a とは」を送信すると、term-a の文脈がもう一度追加される

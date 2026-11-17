@@ -30,6 +30,8 @@ flows:
         description: '`text` が「用語エーと doc-z を説明して」、`origin.kind` が `composer`'
         notes: エイリアスでヒットさせる。2 回目の入力「term-a とは」で、大文字を含む単語 `Term-A` が正規化で該当し、記録済みで追加されないことを確認する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -52,6 +54,8 @@ flows:
         IF->>ST: term-a を記録に入れる
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text` が入力の `text` と同じ
       - 返る `context` が 1 要素で、`# この発言に出る用語`・`## 用語`・term-a の単語 `Term-A`・`id`・`description` を含む
@@ -70,6 +74,8 @@ flows:
         description: 1 回目は「term-a と term-b の違い」、2 回目は「term-b について」
         notes: term-a が先に出る
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -84,6 +90,8 @@ flows:
         IF->>ST: term-b を記録に入れる
         IF-->>CC: context に term-b の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目の返る `context` に term-a が含まれ、term-b が含まれない
       - 2 回目の返る `context` に term-b が含まれる
@@ -101,6 +109,8 @@ flows:
       - name: 入力
         description: 「term-a・term-long・term-b を比べて」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -114,6 +124,8 @@ flows:
         IF->>ST: term-a と term-b を記録に入れる
         IF-->>CC: context に term-a と term-b の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a と term-b が含まれ、term-long が含まれない
       - 返る `context` の追加した要素が 300 文字以下
@@ -129,6 +141,8 @@ flows:
       - name: 入力
         description: '`text` が「term-a とは」、`origin.kind` が `composer`'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -138,6 +152,8 @@ flows:
         IF->>IF: composer は user で origins に無い
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text`・`context` が受け取ったまま
       - 同じセッションで `origin.kind` が `plugin` の「term-a とは」を送信すると、term-a の文脈が追加される（前の入力で記録されていない）
@@ -150,6 +166,8 @@ flows:
       - name: 入力
         description: '`text` が「/review term-a」で `command` が入っている'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -158,6 +176,8 @@ flows:
         CC->>IF: /review term-a（command あり）
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text`・`context` が受け取ったまま
       - term-a が記録に入っていない（続けて送信する「term-a とは」で文脈が追加される）
@@ -174,6 +194,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -187,6 +209,8 @@ flows:
         FS-->>IF: ファイルが無い
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text`・`context` が受け取ったまま
       - '`fs.read` が呼ばれていない'
@@ -208,6 +232,8 @@ flows:
         description: 「term-a とは」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -222,6 +248,8 @@ flows:
         FS-->>IF: 文書
         IF-->>CC: context に「用語」と「コマンド」の両方のセクションで term-a
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に `## 用語` と `## コマンド` の両方のセクションがあり、それぞれに term-a が並ぶ
       - '`## コマンド` の term-a に `command: make term-a` が並ぶ'
@@ -237,6 +265,8 @@ flows:
       - name: 入力
         description: 1 回目「term-b とは」、2 回目「term-a と term-c」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -252,6 +282,8 @@ flows:
         IF->>FS: term-a と term-c の YAML だけを参照する
         IF-->>CC: context に書き換え後の term-a と term-c
       ```
+
+      <!-- /map -->
     expected:
       - 2 回目の返る `context` に、書き換え後の term-a の `description` と term-c が含まれる
       - 2 回目の入力で `fs.read` が呼ばれたのは term-a と term-c の YAML だけ（設定ファイルと term-b の YAML は再読み込みしていない）
@@ -275,6 +307,8 @@ flows:
         description: 1 回目も 2 回目も「term-a とは」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -289,6 +323,8 @@ flows:
         IF->>ST: 記録を参照する
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目の返る `context` の `## 用語` に、両方のリポジトリの term-a の `description` が並ぶ
       - 2 回目の返る `context` が受け取ったまま
@@ -312,6 +348,8 @@ flows:
         description: 「term-a・term-x・term-y」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -324,6 +362,8 @@ flows:
         FS-->>IF: 文書
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、term-x と term-y が無い
       - '`/repo/other/project-index.yaml` と `/repo/knowledge/drafts/` の YAML に `fs.read` が呼ばれていない'
@@ -344,6 +384,8 @@ flows:
         description: 1 回目「term-a とは」、2 回目「term-a と cmd-a」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -358,6 +400,8 @@ flows:
         IF->>FS: project-index.yaml とコマンドの YAML を参照する
         IF-->>CC: context に cmd-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - '2 回目の返る `context` に `## コマンド` の cmd-a と `command: make cmd-a` があり、term-a が無い（記録が残っている）'
       - 2 回目の入力で `fs.read` が呼ばれたのは `project-index.yaml` とコマンドの YAML だけ
@@ -371,6 +415,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -382,6 +428,8 @@ flows:
         FS-->>IF: ファイルが無い
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text`・`context` が受け取ったまま
       - フックが例外で終わらない（入力が止まらない）
@@ -397,6 +445,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -409,6 +459,8 @@ flows:
         IF->>IF: /repo/missing のリポジトリを照合から除外する
         IF-->>CC: context に「用語」の term-a
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に `## 用語` の term-a がある
       - フックが例外で終わらない
@@ -430,6 +482,8 @@ flows:
         description: 「term-a・term-x・term-v・term-z」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -442,6 +496,8 @@ flows:
         IF->>FS: 残った行の YAML を参照する
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、term-x・term-v・term-z が無い
       - フックが例外で終わらない
@@ -463,6 +519,8 @@ flows:
         description: 「term-a とは」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -475,6 +533,8 @@ flows:
         IF->>IF: URL の YAML の文書を照合から除外する
         IF-->>CC: context に「用語」の term-a
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に `## 用語` の term-a があり、`## URL` のセクションが無い
       - フックが例外で終わらない
@@ -496,6 +556,8 @@ flows:
         description: 「term-a・skill-a・tool-a・path-a・env-a・env-b・avoid-a」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -512,6 +574,8 @@ flows:
         IF->>ST: 7 つの単語を記録に入れる
         IF-->>CC: context に種類ごとのセクションで 7 つの単語の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` のセクションが `## 用語`・`## スキル`・`## ツール`・`## パス`・`## 環境`・`## 使用しない単語` の順に並ぶ
       - '`## スキル` の skill-a に行「- skill: `code-review`」、`## ツール` の tool-a に行「- tool: `search_design_docs`」、`## パス` の path-a に行「- path: `~/.config/ai-monitor/settings.yaml`」が並ぶ（値をバッククォートで囲む）'
@@ -535,6 +599,8 @@ flows:
         description: 「term-a・env-a・env-x」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -546,6 +612,8 @@ flows:
         IF->>IF: env-x は url も port も空なので除外する
         IF-->>CC: context に term-a と env-a
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に `## 用語` の term-a と `## 環境` の env-a があり、env-x が無い
       - フックが例外で終わらない
@@ -570,6 +638,8 @@ flows:
         description: 「term-a・link-a・term-y・term-w・term-v」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -584,6 +654,8 @@ flows:
         IF->>FS: 残った行の YAML を参照する
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、link-a・term-y・term-w・term-v が無い
       - フックが例外で終わらない
@@ -603,6 +675,8 @@ flows:
         description: 「term-a と term-n」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -614,6 +688,8 @@ flows:
         IF->>IF: 文書ごとに必須のキーの値を確認し、term-n を除外する
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、term-n が無い
       - フックが例外で終わらない
@@ -635,6 +711,8 @@ flows:
         description: 「セットアップとは」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -648,6 +726,8 @@ flows:
         IF->>IF: name が空なので path の列のファイル名を付ける
         IF-->>CC: context の「文書」にセットアップ
       ```
+
+      <!-- /map -->
     expected:
       - '返る `context` の `## 文書` に、`セットアップ（id: docs/使い方/セットアップ.md）` と `description: 前提と手順` が並ぶ'
       - テストの `on` の `ui.log` に行が届いていない
@@ -665,6 +745,8 @@ flows:
         description: 1 回目は「term-a と term-c を React と Python で」、2 回目は「term-c を TSX で」
         notes: 1 回目は `contains` に該当し `not_contains` で除外される。2 回目は大文字の `TSX` が正規化で `tsx` に該当する
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -681,6 +763,8 @@ flows:
         IF->>ST: term-c を記録に入れる
         IF-->>CC: context に term-c
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目に返る `context` に term-a があり、term-c が無い
       - 2 回目に返る `context` に term-c がある
@@ -699,6 +783,8 @@ flows:
         description: 「term-a と term-e と term-f」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -710,6 +796,8 @@ flows:
         IF->>IF: 文書ごとに照合条件を検査し、term-e と term-f を除外する
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、term-e と term-f が無い
       - フックが例外で終わらない
@@ -731,6 +819,8 @@ flows:
         description: 「term-a と link-a と link-b と link-c」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -745,6 +835,8 @@ flows:
         FS-->>IF: 文書
         IF-->>CC: context に term-a と link-a
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a と link-a があり、link-b と link-c が無い
       - '`/repo/links/other.yaml` と `/repo/links/root.yaml` に `fs.read` が呼ばれていない'
@@ -766,6 +858,8 @@ flows:
         description: 「term-a と link-e と link-f」
         notes: '-'
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -777,6 +871,8 @@ flows:
         IF->>IF: aliases の行をスキーマで検証し、empty-scope と string-scope を除外する
         IF-->>CC: context に term-a だけ
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a があり、link-e と link-f が無い
       - フックが例外で終わらない
@@ -794,6 +890,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -807,6 +905,8 @@ flows:
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `text` が入力の `text` と同じ
       - 返る `context` に term-a の単語・`id`・`description` が含まれる
@@ -823,6 +923,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -836,6 +938,8 @@ flows:
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a の単語・`id`・`description` が含まれる
     test: test_normal_when_xdg_config_home_empty
@@ -851,6 +955,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -864,6 +970,8 @@ flows:
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a の単語・`id`・`description` が含まれる
     test: test_normal_when_config_from_shell_env
@@ -879,6 +987,8 @@ flows:
       - name: 入力
         description: 「term-a とは」
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -892,6 +1002,8 @@ flows:
         FS-->>IF: repositories
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
+
+      <!-- /map -->
     expected:
       - 返る `context` に term-a の単語・`id`・`description` が含まれる
       - '`/shell/settings.yaml` に `fs.read` が呼ばれていない'
@@ -915,6 +1027,8 @@ flows:
         description: '正常系（照合条件を持つ文書）の term-c に `avoid: 旧シー` を加えて持つ'
         notes: 1 回目の入力に React・tsx が無く、term-c の照合条件に該当しない
     flow: |-
+      <!-- map -->
+
       ```mermaid
       sequenceDiagram
         participant CC as Claude Code
@@ -934,6 +1048,8 @@ flows:
         IF->>IF: 旧エーがヒットするが記録済み
         IF-->>CC: 受け取ったまま
       ```
+
+      <!-- /map -->
     expected:
       - 1 回目の返る `context` の `## 用語` に term-b が並び、`Term-A` が並ばない
       - '1 回目の返る `context` の `## 使用しない単語` に、行「- 旧エー（id: term-a）」と行「- OldA（id: term-a）」がこの順に並び、それぞれの子に `replacement: Term-A` が並ぶ'
