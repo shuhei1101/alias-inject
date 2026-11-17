@@ -1,0 +1,12 @@
+docs:
+  - page: docs/guide/files.yml
+    new: false
+    change: 検索の対象に入っていない docs/guide/ の README.md などの行を追加し、既存の行のメタデータを setup の付け方で見直す
+    status: todo
+scope_out:
+  - item: PR ドキュメント（docs/pr/）を検索の対象に入れること
+    reason: スコープに含めるか判断が分かれている。その時点の判断は対象から除外する（要件.md の未確定の推奨 B）。確定は実装のレビューで行う
+    plan: none
+  - item: 管理用の YAML のコード・テストの行へ設計書への related を張る作業
+    reason: '#56 の一緒に行う改善が持ち、計画で #56 を #122 の後ろへ回した'
+    plan: '#56'
