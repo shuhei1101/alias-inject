@@ -23,6 +23,7 @@ files:
   name: Claude Code への作業の指示
   description: リポジトリの概要とドキュメントの場所・索引の引き方を受け持ち、Claude Code が着手前に読む指示を修正するときに参照する。
 - path: README.md
+  id: repository-readme
   name: リポジトリの紹介
   description: プラグインが追加する文脈の概要と公開ドキュメントの URL を受け持ち、リポジトリの入口の紹介を修正するときに参照する。
 - path: ai-monitor-theme.yaml
