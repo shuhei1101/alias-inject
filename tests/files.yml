@@ -6,16 +6,31 @@ files:
   tags:
   - topic:testing
   - topic:引用の文脈
+  related:
+  - to: hooks/register.tsx
+    type: tests
+  - to: IF-3
+    type: see_also
 - path: integration/hooks/session-compact.test.ts
   name: 圧縮のイベントの結合テスト
   description: 圧縮の後の記録の消去を hooks モジュールの入口から確かめるテストを受け持ち、圧縮のイベントの振る舞いのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/register.tsx
+    type: tests
+  - to: IF-4
+    type: see_also
 - path: integration/hooks/session-end.test.ts
   name: セッションの終了のイベントの結合テスト
   description: /clear で終わるセッションの記録の消去を hooks モジュールの入口から確かめるテストを受け持ち、セッションの終了のイベントの振る舞いのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/register.tsx
+    type: tests
+  - to: IF-1
+    type: see_also
 - path: integration/hooks/support/fixtures.ts
   name: 結合テストの設定と YAML の準備
   description: 結合テストで使用する設定ファイル・project-index.yaml・単語の YAML とファイルシステムの組み立てを受け持ち、結合テストの準備を修正するときに参照する。
@@ -27,77 +42,126 @@ files:
   tags:
   - topic:testing
   - topic:変数参照
+  related:
+  - to: hooks/register.tsx
+    type: tests
+  - to: IF-2
+    type: see_also
+  - to: IF-5
+    type: see_also
 - path: unit/hooks/handlers.test.ts
   name: イベントの処理の単体テスト
   description: イベントの処理の単体テストを受け持ち、イベントの処理を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/handlers.ts
+    type: tests
 - path: unit/hooks/lib/alias.test.ts
   name: エイリアスの元の行の取り出しの単体テスト
   description: エイリアスの元の行の取り出しの単体テストを受け持ち、エイリアスの行の読み方を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/alias.ts
+    type: tests
 - path: unit/hooks/lib/condition.test.ts
   name: 照合条件の評価の単体テスト
   description: 照合条件の検査と評価の単体テストを受け持ち、照合条件を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/condition.ts
+    type: tests
 - path: unit/hooks/lib/config.test.ts
   name: 設定ファイルの読み込みの単体テスト
   description: 設定ファイルの検証と実効の設定の組み立ての単体テストを受け持ち、設定のキーや既定値を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/config.ts
+    type: tests
 - path: unit/hooks/lib/context.test.ts
   name: 追加する文脈の組み立ての単体テスト
   description: 追加する文脈の組み立ての単体テストを受け持ち、文脈の並びや上限を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/context.ts
+    type: tests
 - path: unit/hooks/lib/entry.test.ts
   name: 照合する単語の一覧の組み立ての単体テスト
   description: 照合する単語と文脈に並べる列の組み立ての単体テストを受け持ち、単語に並べる列を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/entry.ts
+    type: tests
 - path: unit/hooks/lib/loader.test.ts
   name: ファイルの読み込みの単体テスト
   description: パスと glob の展開と YAML の読み込みの単体テストを受け持ち、ファイルの読み込み方を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/loader.ts
+    type: tests
 - path: unit/hooks/lib/match.test.ts
   name: 単語の照合の単体テスト
   description: 単語の照合の単体テストを受け持ち、照合の正規化や並び順を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/match.ts
+    type: tests
 - path: unit/hooks/lib/record.test.ts
   name: 文脈を追加した単語の記録の単体テスト
   description: 会話ごとの単語の記録の単体テストを受け持ち、記録の単位や消去を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/record.ts
+    type: tests
 - path: unit/hooks/lib/repository.test.ts
   name: 参照するリポジトリの読み込みの単体テスト
   description: 参照するリポジトリの project-index.yaml の読み込みの単体テストを受け持ち、リポジトリの読み込み方を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/repository.ts
+    type: tests
 - path: unit/hooks/lib/schema.test.ts
   name: エイリアスの元の行の検証の単体テスト
   description: スキーマのオブジェクトでの検証の単体テストを受け持ち、検証が解釈するキーワードを修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/schema.ts
+    type: tests
 - path: unit/hooks/lib/tool.test.ts
   name: ツールが参照している文書の除外の単体テスト
   description: ツールの引数からの文書の除外の単体テストを受け持ち、ツールごとの除外を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/lib/tool.ts
+    type: tests
 - path: unit/hooks/lib/variable.test.ts
   name: 変数参照の値の組み立ての単体テスト
   description: 変数参照の検出と値の行の組み立ての単体テストを受け持ち、変数参照を修正したときのテストを修正するときに参照する。
   tags:
   - topic:testing
   - topic:変数参照
+  related:
+  - to: hooks/lib/variable.ts
+    type: tests
 - path: unit/hooks/register.test.ts
   name: hooks モジュールの入口の単体テスト
   description: 各イベントへの処理の登録の単体テストを受け持ち、登録するイベントを変えたときのテストを修正するときに参照する。
   tags:
   - topic:testing
+  related:
+  - to: hooks/register.tsx
+    type: tests
 - path: unit/hooks/support/engine.ts
   name: 単体テストの Claude Code のエンジンの代わり
   description: 単体テストで hooks モジュールを動かすエンジンの代わりと、入力・ツールの呼び出しの組み立てを受け持ち、単体テストの準備を修正するときに参照する。
