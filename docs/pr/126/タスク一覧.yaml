@@ -65,15 +65,20 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T11:34:56.247198+00:00'
   - process: ドキュメント修正
-    status: todo
-    note: project-index.yaml の documents[] と、フォルダごとの管理用の YAML の行・メタデータ
+    status: done
+    note: docs/guide/files.yml に目次の 4 行を追加し、確認の時点を記録した
+    updated_by: planner
+    updated_at: '2026-11-17T11:44:45.419178+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: プラグインの振る舞いが変わらない
     updated_by: planner
     updated_at: '2026-11-17T11:34:56.247198+00:00'
   - process: 実装
-    status: todo
+    status: done
+    note: project-index.yaml に repo・hooks・tests の行を加え、files.yml・hooks/files.yml・tests/files.yml を作成してメタデータを付けた。check_project の索引の同期はずれなし
+    updated_by: planner
+    updated_at: '2026-11-17T11:44:45.419178+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: プラグインの振る舞いが変わらず、新しく作る結合テストが無い
