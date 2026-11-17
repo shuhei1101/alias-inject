@@ -75,8 +75,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T02:35:28.498675+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: project-index.yaml に nav を記載し、稼働中の dev-docs の画面をスクリーンショットで確認する
+    updated_by: planner
+    updated_at: '2026-11-17T02:50:25.403842+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: コードを変えない

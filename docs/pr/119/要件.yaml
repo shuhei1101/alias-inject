@@ -8,3 +8,6 @@ scope_out:
   - item: documents の index の行（目次）の削除
     reason: 目次は画面に並べないだけにし、search_docs で検索できる状態は残す。nav の filter で画面から除く
     plan: none
+  - item: TP-1・CMD-1 の lead が無く、check_project が description の欠けを警告する
+    reason: 設計書の記載の欠けで、nav の定義とは関係しない
+    plan: '#120'
