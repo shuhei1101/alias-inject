@@ -42,19 +42,15 @@ data_models:
       - name: path
         type: string
         description: 文書を持つ YAML の絶対パス
-        notes: 'PR #52 で追加'
       - name: bodyFile
         type: string | undefined
         description: '`records` の要素で、行の `body_file` が指す列の値（記載したまま）。それ以外は undefined'
-        notes: 'PR #52 で追加'
       - name: condition
         type: Condition | undefined
         description: 解決した `inject_when` の値に照合条件の検査を適用したもの。値が無い・null なら undefined
-        notes: 'PR #58 で追加'
       - name: avoid
         type: string | undefined
         description: 用語の `avoid` のやめた言い方から作った単語のとき、そのやめた言い方（記載したまま）。それ以外は undefined
-        notes: 'PR #73 で追加'
   - name: LoadedEntries
     title: 参照した単語
     container: hooks/lib/entry.ts
@@ -212,7 +208,6 @@ functions:
         condition: '`alias_type: term` で metadata が `inject_when: when` の行。term-c（`when: {field: text, op: not_contains, values: [Python]}`）、term-d（`when` が null）、term-e（`when: {and: []}`）'
         mock: なし
         expected: 'entries が term-c・term-d で、term-c の condition が照合条件、term-d の condition が undefined。failures が 1 件で `term-e: inject_when.and: 空の束です`'
-        notes: 'PR #58 で追加'
       - name: test_build_entries_when_command
         case: 正常
         summary: command は command・cwd・description の順で、値のある列だけ
@@ -243,7 +238,6 @@ functions:
         condition: '`alias_type: term` で metadata を記載しない行。term-a（`name: Term-A`、`aliases: [用語エー]`、`description`、`avoid: [旧エー, OldA, 旧エー, 用語エー, ""]`、`inject_when: {field: text, op: contains, values: [tsx]}`）と term-b（`description`、`avoid: 旧ビー`（文字列））'
         mock: なし
         expected: "entries が term-a・旧エー・OldA・term-b・旧ビー の順。旧エー の type が avoid、id が `term-a`、word が `旧エー`、keys が `['旧エー']`、fields が `replacement: Term-A`、avoid が `旧エー`、path・itemIndex・condition が term-a と同じ。OldA の keys が `['olda']`。重なった `旧エー`・term-a の keys と同じ `用語エー`・空文字の単語は作らない。term-a・term-b の avoid が undefined。failures が空"
-        notes: 'PR #73 で追加'
   - name: loadAliasEntries
     title: 行の文書の読み込み
     kind: 関数

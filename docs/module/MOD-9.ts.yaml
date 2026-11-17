@@ -77,7 +77,6 @@ functions:
         condition: origin・aliasId・id が同じで、avoid が undefined・`旧エー`・`OldA` の 3 つ
         mock: なし
         expected: 3 つのキーが互いに異なり、avoid が undefined のキーは `{origin}\u0000{aliasId}\u0000{id}` のまま
-        notes: 'PR #73 で追加'
   - name: renderContext
     title: 文脈の書式化
     kind: 関数

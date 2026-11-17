@@ -87,7 +87,7 @@ external_systems:
     cost: なし
     status: implemented
     notes:
-      事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確認する相手ではない。設定ファイルと照合に使用する YAML を読み込めないときは、文脈を追加せずに入力をそのまま返却する（#1 の D-74）。
+      事前確認: 要らない。プラグインは Claude Code に読み込まれる側で、到達を確認する相手ではない。設定ファイルと照合に使用する YAML を読み込めないときは、文脈を追加せずに入力をそのまま返却する。
     detail: LIB-1#
   - name: GitHub Actions
     purpose: 開発で、単体テストと結合テストの全件をランナーで回す。プラグインの利用者の手元では使用しない
@@ -108,3 +108,5 @@ tags:
   - name: topic:サブシステム
   - name: topic:プラグイン
   - name: tool:claude-code
+decisions:
+  - D-74

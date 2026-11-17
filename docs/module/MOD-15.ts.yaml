@@ -58,7 +58,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 結果を照合しないツールの名前。既定 []
-        notes: 'PR #52 で追加'
   - name: Settings
     title: 実効の設定
     container: hooks/lib/config.ts
@@ -96,7 +95,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: Config の excludeTools の後ろに、該当した projects の excludeTools を並べたもの
-        notes: 'PR #52 で追加'
   - name: ProjectConfig
     title: プロジェクトの設定
     container: hooks/lib/config.ts
@@ -134,7 +132,6 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 後ろに追加する結果を照合しないツールの名前。記載しないときは []
-        notes: 'PR #52 で追加'
 enums:
   - name: OriginKey
     title: 対象にする出所

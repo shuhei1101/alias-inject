@@ -25,7 +25,7 @@ official_url: https://www.typescriptlang.org/
 verification:
   state: 済
   date: '2026-10-24'
-  detail: 'PoC PR #6（commit d79fd2a）で、型の取り込み方 (1)・(2) とも `npx tsc -p tsconfig.json --noEmit` が終了コード 0 で通ることを確認した'
+  detail: '[PoC PR #6](https://github.com/shuhei1101/alias-inject/pull/6)（commit [d79fd2a](https://github.com/shuhei1101/alias-inject/commit/d79fd2a)）で、型の取り込み方 (1)・(2) とも `npx tsc -p tsconfig.json --noEmit` が終了コード 0 で通ることを確認した'
 install: |-
   ```bash
   npm install --save-dev --save-exact typescript@5.9.3
