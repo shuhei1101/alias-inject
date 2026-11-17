@@ -1,18 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/shuhei1101/knowledge/design-schemas/v8.3.0/schemas/knowledge-files.schema.yaml
 files:
-- path: e2e/tsconfig.json
-  name: E2E テストの型の確認の設定
-  description: Node の型で E2E テストのコードを確認する設定を受け持ち、E2E テストの型の確認を修正するときに参照する。
-  tags:
-  - topic:testing
-  - tool:typescript
-- path: e2e/workflow/test-yml.e2e.ts
-  name: テストの全件実行の workflow の E2E テスト
-  description: GitHub Actions でテストの全件実行の workflow を起動して結果とログを確かめるテストを受け持ち、workflow の振る舞いのテストを修正するときに参照する。
-  tags:
-  - topic:testing
-  - topic:ci
-  - tool:github
 - path: integration/hooks/prompt-submit.test.ts
   name: 入力のイベントの結合テスト
   description: 入力への引用の文脈の追加を hooks モジュールの入口から確かめるテストを受け持ち、入力のイベントの振る舞いのテストを修正するときに参照する。
