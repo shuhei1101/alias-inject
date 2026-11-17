@@ -1,0 +1,350 @@
+$ rc=0; npm run typecheck || rc=1; claude plugin validate . || rc=1; node scripts/gen-aliases-schema.mjs --check || rc=1; actionlint || rc=1; exit $rc
+
+## 作業ブランチ（HEAD 6d6a138）
+
+> typecheck
+> tsc -p tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json --noEmit
+
+error TS5083: Cannot read file '/home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/.claude-plugin/types/tsconfig.json'.
+hooks/handlers.ts(2,3): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/handlers.ts(3,3): error TS2305: Module '"claude-code"' has no exported member 'PromptSubmitInput'.
+hooks/handlers.ts(4,3): error TS2305: Module '"claude-code"' has no exported member 'PromptSubmitResult'.
+hooks/handlers.ts(5,3): error TS2305: Module '"claude-code"' has no exported member 'SessionCompactInput'.
+hooks/handlers.ts(6,3): error TS2305: Module '"claude-code"' has no exported member 'SessionCompactResult'.
+hooks/handlers.ts(7,3): error TS2305: Module '"claude-code"' has no exported member 'SessionEndInput'.
+hooks/handlers.ts(8,3): error TS2305: Module '"claude-code"' has no exported member 'SessionEndResult'.
+hooks/handlers.ts(9,3): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+hooks/handlers.ts(10,3): error TS2305: Module '"claude-code"' has no exported member 'ToolCallResult'.
+hooks/handlers.ts(63,52): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/handlers.ts(132,32): error TS2802: Type 'ArrayIterator<[number, ResolvedAlias]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/alias.ts(98,31): error TS2802: Type 'ArrayIterator<[number, unknown]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/condition.ts(51,34): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/config.ts(1,32): error TS2305: Module '"claude-code"' has no exported member 'PromptOrigin'.
+hooks/lib/config.ts(137,30): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(210,32): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(284,10): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/context.ts(62,13): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/context.ts(70,59): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/entry.ts(180,39): error TS2802: Type 'ArrayIterator<[number, SourceDocument]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(201,72): error TS2339: Property 'path' does not exist on type 'ParseResult'.
+  Property 'path' does not exist on type '{ ok: true; condition: Condition; }'.
+hooks/lib/entry.ts(201,88): error TS2339: Property 'reason' does not exist on type 'ParseResult'.
+  Property 'reason' does not exist on type '{ ok: true; condition: Condition; }'.
+hooks/lib/entry.ts(222,17): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(240,21): error TS2802: Type 'MapIterator<{ path: string; mtimeMs: number; }>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(254,55): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/lib/entry.ts(260,55): error TS2339: Property 'reason' does not exist on type '{ ok: true; documents: Item[]; } | { ok: false; reason: string; }'.
+  Property 'reason' does not exist on type '{ ok: true; documents: Item[]; }'.
+hooks/lib/entry.ts(263,34): error TS2802: Type 'ArrayIterator<[number, Item]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/loader.ts(161,34): error TS2802: Type 'ArrayIterator<[number, string]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(180,19): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(182,14): error TS2802: Type 'MapIterator<FileStamp>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/record.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/record.ts(39,76): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/repository.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/repository.ts(44,58): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/lib/schema.ts(84,34): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/schema.ts(197,35): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/schema.ts(201,80): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/tool.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+hooks/lib/variable.ts(16,23): error TS2802: Type 'RegExpStringIterator<RegExpExecArray>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/variable.ts(20,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/variable.ts(38,21): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/register.tsx(1,15): error TS2305: Module '"claude-code"' has no exported member 'Register'.
+tests/integration/hooks/prompt-submit.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/session-compact.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/session-end.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/tool-call.test.ts(1,40): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/handlers.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/alias.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/condition.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/condition.test.ts(68,33): error TS2339: Property 'path' does not exist on type 'ParseResult'.
+  Property 'path' does not exist on type '{ ok: true; condition: Condition; }'.
+tests/unit/hooks/lib/condition.test.ts(69,33): error TS2339: Property 'reason' does not exist on type 'ParseResult'.
+  Property 'reason' does not exist on type '{ ok: true; condition: Condition; }'.
+tests/unit/hooks/lib/config.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/context.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/context.test.ts(190,14): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/entry.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/entry.test.ts(71,33): error TS2339: Property 'reason' does not exist on type '{ ok: true; documents: Item[]; } | { ok: false; reason: string; }'.
+  Property 'reason' does not exist on type '{ ok: true; documents: Item[]; }'.
+tests/unit/hooks/lib/loader.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/loader.test.ts(282,35): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+tests/unit/hooks/lib/match.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(10,20): error TS2802: Type 'ReadonlySet<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(54,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(99,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(135,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/repository.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/schema.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/tool.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/tool.test.ts(2,15): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+tests/unit/hooks/lib/tool.test.ts(56,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/variable.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/variable.test.ts(105,21): error TS2550: Property 'at' does not exist on type 'string[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2022' or later.
+tests/unit/hooks/register.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+tests/unit/hooks/support/engine.ts(1,32): error TS2305: Module '"claude-code"' has no exported member 'On'.
+tests/unit/hooks/support/engine.ts(2,22): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(3,29): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/memory-fs.ts(105,23): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(108,34): error TS2802: Type 'Map<string, StoredFile>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(117,34): error TS2802: Type 'Map<string, StoredLink>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(120,16): error TS2802: Type 'MapIterator<ListedEntry>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(136,34): error TS2802: Type 'Map<string, StoredLink>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+types/index.d.ts(3,33): error TS2304: Cannot find name 'StateFamily'.
+Validating marketplace manifest: /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/.claude-plugin/marketplace.json
+
+⚠ Found 3 warnings:
+
+  ❯ description: No marketplace description provided. Adding a description helps users understand what this marketplace offers
+  ❯ plugins[0] plugin.json → version: No version specified. Consider adding a version following semver (e.g., "1.0.0")
+  ❯ plugins[0] plugin.json → author: No author information provided. Consider adding author details for plugin attribution
+
+Validating plugin: /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/.claude-plugin/plugin.json
+
+⚠ Found 2 warnings:
+
+  ❯ version: No version specified. Consider adding a version following semver (e.g., "1.0.0")
+  ❯ author: No author information provided. Consider adding author details for plugin attribution
+
+  ❯ types ./types/index.d.ts declares on $: nothing (no EngineInterface member)
+  ❯ types ./types/index.d.ts declares state: alias-inject.recorded
+
+Validating plugin: /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/CLAUDE.md
+
+⚠ Found 1 warning:
+
+  ❯ root: CLAUDE.md at the plugin root is not loaded as project context. To ship context with your plugin, use a skill (skills/<name>/SKILL.md) instead.
+
+Validating hooks: /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/hooks/hooks.json
+
+  ❯ ./register.tsx hooks: prompt.submit, session.compact, session.end, tool.call
+  ❯ ./register.tsx gating hook without .catch: prompt.submit
+  ❯ ./register.tsx gating hook without .catch: session.compact
+  ❯ ./register.tsx gating hook without .catch: tool.call
+  ❯ ./register.tsx calls: $.env.get (via loadSettings, readConfigPath), $.fs.list (via listOrEmpty), $.fs.read (via readIfChanged), $.fs.stat (via expandFiles, inspect, loadConfig, loadRepositoryAliases, readConfigPath, withDescendants), $.process.run (via formatToolResultReferences), $.session.id, $.session.repo (via loadSettings), $.session.root (via loadSettings), $.settings.read (via readConfigPath), $.state.get (via readRecorded), $.state.set (via addRecorded, clearRecorded), $.ui.log (via logDebug)
+  ❯ ./register.tsx env writes: nothing
+  ❯ ./register.tsx env reads: ALIAS_INJECT_CONFIG, HOME, XDG_CONFIG_HOME
+  ❯ ./register.tsx state writes: alias-inject.recorded
+  ❯ ./register.tsx state reads: alias-inject.recorded
+
+Provides:
+
+  ❯ modules: hooks/register.tsx
+  ❯ skills: alias-inject:global-setup
+
+Plugin directory checks for /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch. The plugin directory is the catalog that plugins are submitted to; this is a subset of what it runs.
+
+✘ Found 2 problems the plugin directory refuses a submission for:
+
+  ❯ README.md: README too short or couldn’t be read (README_TRIVIAL). README has 15 words; at least 40 are required so the listing has a usable description.
+    Fix: Add a few sentences on what the plugin does, how to use it and any setup it needs: at least 40 words in all.
+  ❯ LICENSE: License missing (LICENSE_MISSING). This plugin has no LICENSE file and plugin.json has no `license`. The directory requires one of them.
+    Fix: Add a LICENSE file to the plugin folder, or set `license` (an SPDX id) in plugin.json. A LICENSE at the repository root also counts for a plugin in a sub-folder.
+
+⚠ Found 1 plugin directory warning:
+
+  ❯ .claude-plugin/plugin.json icon: No icon (ICON_MISSING). No icon found in the plugin. The validator looked for `icon` in plugin.json and for a file at .claude-plugin/icon.png or .svg, assets/icon.png or .svg, or a similar path.
+    Fix: Add a square PNG to the plugin folder at .claude-plugin/icon.png, or set `icon` in plugin.json to the path of a square PNG or JPEG in the plugin: 512 to 2048 px on each side, under 2 MB. SVG and WebP are not accepted. That file may become the listing icon only once: the first time the plugin is saved or submitted in the developer portal. Adding or changing it later does not change the icon.
+
+About these checks:
+
+  ❯ This folder also holds a marketplace manifest. The plugin directory treats such a folder as a plugin, so these checks cover only the plugin in this folder. To check another plugin that the marketplace lists, run validate on that plugin's folder.
+  ❯ hooks/hooks.json names a hooks module (a code file listed under `modules`). The plugin directory has rules of its own for such code, and these checks apply none of them, so passing here does not mean the directory accepts the plugin. The developer portal's own validation applies those rules.
+
+These plugin directory checks do not change the result below. To fail on problems the directory refuses a submission for, run this command with --profile directory.
+
+The directory also runs a safety scan and a policy review that this command does not.
+
+ℹ Advice (does not change the verdict):
+
+  ❯ /home/shuhei2441/repo/alias-inject/.claude/worktrees/fix-test-procedure-wait-run-visible-before-watch/README.md: This README has no line that installs "alias-inject" from a marketplace. Add the install line, which works in one step on Claude Code 2.1.275 or later. In it, replace <owner>/<repo> with the repository that holds the marketplace.
+      /plugin install alias-inject --marketplace <owner>/<repo>
+
+✔ Validation passed with warnings
+exit 1
+
+## base ブランチ（develop a953844）で同じコマンドを実行した結果
+
+> typecheck
+> tsc -p tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json --noEmit
+
+error TS5083: Cannot read file '/home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/.claude-plugin/types/tsconfig.json'.
+hooks/handlers.ts(2,3): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/handlers.ts(3,3): error TS2305: Module '"claude-code"' has no exported member 'PromptSubmitInput'.
+hooks/handlers.ts(4,3): error TS2305: Module '"claude-code"' has no exported member 'PromptSubmitResult'.
+hooks/handlers.ts(5,3): error TS2305: Module '"claude-code"' has no exported member 'SessionCompactInput'.
+hooks/handlers.ts(6,3): error TS2305: Module '"claude-code"' has no exported member 'SessionCompactResult'.
+hooks/handlers.ts(7,3): error TS2305: Module '"claude-code"' has no exported member 'SessionEndInput'.
+hooks/handlers.ts(8,3): error TS2305: Module '"claude-code"' has no exported member 'SessionEndResult'.
+hooks/handlers.ts(9,3): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+hooks/handlers.ts(10,3): error TS2305: Module '"claude-code"' has no exported member 'ToolCallResult'.
+hooks/handlers.ts(63,52): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/handlers.ts(132,32): error TS2802: Type 'ArrayIterator<[number, ResolvedAlias]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/alias.ts(98,31): error TS2802: Type 'ArrayIterator<[number, unknown]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/condition.ts(51,34): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/config.ts(1,32): error TS2305: Module '"claude-code"' has no exported member 'PromptOrigin'.
+hooks/lib/config.ts(137,30): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(210,32): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/config.ts(284,10): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/context.ts(62,13): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/context.ts(70,59): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/entry.ts(180,39): error TS2802: Type 'ArrayIterator<[number, SourceDocument]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(201,72): error TS2339: Property 'path' does not exist on type 'ParseResult'.
+  Property 'path' does not exist on type '{ ok: true; condition: Condition; }'.
+hooks/lib/entry.ts(201,88): error TS2339: Property 'reason' does not exist on type 'ParseResult'.
+  Property 'reason' does not exist on type '{ ok: true; condition: Condition; }'.
+hooks/lib/entry.ts(222,17): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(240,21): error TS2802: Type 'MapIterator<{ path: string; mtimeMs: number; }>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/entry.ts(254,55): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/lib/entry.ts(260,55): error TS2339: Property 'reason' does not exist on type '{ ok: true; documents: Item[]; } | { ok: false; reason: string; }'.
+  Property 'reason' does not exist on type '{ ok: true; documents: Item[]; }'.
+hooks/lib/entry.ts(263,34): error TS2802: Type 'ArrayIterator<[number, Item]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/loader.ts(161,34): error TS2802: Type 'ArrayIterator<[number, string]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(180,19): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/loader.ts(182,14): error TS2802: Type 'MapIterator<FileStamp>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/record.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/record.ts(39,76): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/repository.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+hooks/lib/repository.ts(44,58): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+hooks/lib/schema.ts(84,34): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/schema.ts(197,35): error TS2802: Type 'ArrayIterator<[number, any]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/schema.ts(201,80): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/tool.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+hooks/lib/variable.ts(16,23): error TS2802: Type 'RegExpStringIterator<RegExpExecArray>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/variable.ts(20,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/lib/variable.ts(38,21): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+hooks/register.tsx(1,15): error TS2305: Module '"claude-code"' has no exported member 'Register'.
+tests/integration/hooks/prompt-submit.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/session-compact.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/session-end.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/integration/hooks/tool-call.test.ts(1,40): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/handlers.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/alias.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/condition.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/condition.test.ts(68,33): error TS2339: Property 'path' does not exist on type 'ParseResult'.
+  Property 'path' does not exist on type '{ ok: true; condition: Condition; }'.
+tests/unit/hooks/lib/condition.test.ts(69,33): error TS2339: Property 'reason' does not exist on type 'ParseResult'.
+  Property 'reason' does not exist on type '{ ok: true; condition: Condition; }'.
+tests/unit/hooks/lib/config.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/context.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/context.test.ts(190,14): error TS2802: Type 'string' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/entry.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/entry.test.ts(71,33): error TS2339: Property 'reason' does not exist on type '{ ok: true; documents: Item[]; } | { ok: false; reason: string; }'.
+  Property 'reason' does not exist on type '{ ok: true; documents: Item[]; }'.
+tests/unit/hooks/lib/loader.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/loader.test.ts(282,35): error TS2339: Property 'reason' does not exist on type 'YamlResult'.
+  Property 'reason' does not exist on type '{ ok: true; value: unknown; }'.
+tests/unit/hooks/lib/match.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/record.test.ts(10,20): error TS2802: Type 'ReadonlySet<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(54,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(99,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/record.test.ts(135,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/repository.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/schema.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/tool.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/tool.test.ts(2,15): error TS2305: Module '"claude-code"' has no exported member 'ToolCallInput'.
+tests/unit/hooks/lib/tool.test.ts(56,14): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/lib/variable.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/lib/variable.test.ts(105,21): error TS2550: Property 'at' does not exist on type 'string[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2022' or later.
+tests/unit/hooks/register.test.ts(1,30): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(1,15): error TS2305: Module '"claude-code"' has no exported member 'EngineInterface'.
+tests/unit/hooks/support/engine.ts(1,32): error TS2305: Module '"claude-code"' has no exported member 'On'.
+tests/unit/hooks/support/engine.ts(2,22): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/engine.ts(3,29): error TS2307: Cannot find module 'claude-code/testing' or its corresponding type declarations.
+tests/unit/hooks/support/memory-fs.ts(105,23): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(108,34): error TS2802: Type 'Map<string, StoredFile>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(117,34): error TS2802: Type 'Map<string, StoredLink>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(120,16): error TS2802: Type 'MapIterator<ListedEntry>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+tests/unit/hooks/support/memory-fs.ts(136,34): error TS2802: Type 'Map<string, StoredLink>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+types/index.d.ts(3,33): error TS2304: Cannot find name 'StateFamily'.
+Validating marketplace manifest: /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/.claude-plugin/marketplace.json
+
+⚠ Found 3 warnings:
+
+  ❯ description: No marketplace description provided. Adding a description helps users understand what this marketplace offers
+  ❯ plugins[0] plugin.json → version: No version specified. Consider adding a version following semver (e.g., "1.0.0")
+  ❯ plugins[0] plugin.json → author: No author information provided. Consider adding author details for plugin attribution
+
+Validating plugin: /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/.claude-plugin/plugin.json
+
+⚠ Found 2 warnings:
+
+  ❯ version: No version specified. Consider adding a version following semver (e.g., "1.0.0")
+  ❯ author: No author information provided. Consider adding author details for plugin attribution
+
+  ❯ types ./types/index.d.ts declares on $: nothing (no EngineInterface member)
+  ❯ types ./types/index.d.ts declares state: alias-inject.recorded
+
+Validating plugin: /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/CLAUDE.md
+
+⚠ Found 1 warning:
+
+  ❯ root: CLAUDE.md at the plugin root is not loaded as project context. To ship context with your plugin, use a skill (skills/<name>/SKILL.md) instead.
+
+Validating hooks: /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/hooks/hooks.json
+
+  ❯ ./register.tsx hooks: prompt.submit, session.compact, session.end, tool.call
+  ❯ ./register.tsx gating hook without .catch: prompt.submit
+  ❯ ./register.tsx gating hook without .catch: session.compact
+  ❯ ./register.tsx gating hook without .catch: tool.call
+  ❯ ./register.tsx calls: $.env.get (via loadSettings, readConfigPath), $.fs.list (via listOrEmpty), $.fs.read (via readIfChanged), $.fs.stat (via expandFiles, inspect, loadConfig, loadRepositoryAliases, readConfigPath, withDescendants), $.process.run (via formatToolResultReferences), $.session.id, $.session.repo (via loadSettings), $.session.root (via loadSettings), $.settings.read (via readConfigPath), $.state.get (via readRecorded), $.state.set (via addRecorded, clearRecorded), $.ui.log (via logDebug)
+  ❯ ./register.tsx env writes: nothing
+  ❯ ./register.tsx env reads: ALIAS_INJECT_CONFIG, HOME, XDG_CONFIG_HOME
+  ❯ ./register.tsx state writes: alias-inject.recorded
+  ❯ ./register.tsx state reads: alias-inject.recorded
+
+Provides:
+
+  ❯ modules: hooks/register.tsx
+  ❯ skills: alias-inject:global-setup
+
+Plugin directory checks for /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop. The plugin directory is the catalog that plugins are submitted to; this is a subset of what it runs.
+
+✘ Found 2 problems the plugin directory refuses a submission for:
+
+  ❯ README.md: README too short or couldn’t be read (README_TRIVIAL). README has 15 words; at least 40 are required so the listing has a usable description.
+    Fix: Add a few sentences on what the plugin does, how to use it and any setup it needs: at least 40 words in all.
+  ❯ LICENSE: License missing (LICENSE_MISSING). This plugin has no LICENSE file and plugin.json has no `license`. The directory requires one of them.
+    Fix: Add a LICENSE file to the plugin folder, or set `license` (an SPDX id) in plugin.json. A LICENSE at the repository root also counts for a plugin in a sub-folder.
+
+⚠ Found 1 plugin directory warning:
+
+  ❯ .claude-plugin/plugin.json icon: No icon (ICON_MISSING). No icon found in the plugin. The validator looked for `icon` in plugin.json and for a file at .claude-plugin/icon.png or .svg, assets/icon.png or .svg, or a similar path.
+    Fix: Add a square PNG to the plugin folder at .claude-plugin/icon.png, or set `icon` in plugin.json to the path of a square PNG or JPEG in the plugin: 512 to 2048 px on each side, under 2 MB. SVG and WebP are not accepted. That file may become the listing icon only once: the first time the plugin is saved or submitted in the developer portal. Adding or changing it later does not change the icon.
+
+About these checks:
+
+  ❯ This folder also holds a marketplace manifest. The plugin directory treats such a folder as a plugin, so these checks cover only the plugin in this folder. To check another plugin that the marketplace lists, run validate on that plugin's folder.
+  ❯ hooks/hooks.json names a hooks module (a code file listed under `modules`). The plugin directory has rules of its own for such code, and these checks apply none of them, so passing here does not mean the directory accepts the plugin. The developer portal's own validation applies those rules.
+
+These plugin directory checks do not change the result below. To fail on problems the directory refuses a submission for, run this command with --profile directory.
+
+The directory also runs a safety scan and a policy review that this command does not.
+
+ℹ Advice (does not change the verdict):
+
+  ❯ /home/shuhei2441/repo/alias-inject/.claude/worktrees/develop/README.md: This README has no line that installs "alias-inject" from a marketplace. Add the install line, which works in one step on Claude Code 2.1.275 or later. In it, replace <owner>/<repo> with the repository that holds the marketplace.
+      /plugin install alias-inject --marketplace <owner>/<repo>
+
+✔ Validation passed with warnings
+exit 1
+
+## 突き合わせ
+型検査の違反は作業ブランチ・develop とも 86 件で、ファイルと違反の内容が一致する（違いは worktree のパスだけ）。claude plugin validate は両方とも README の警告だけで成功、gen-aliases-schema --check と actionlint は両方とも違反なし。作業 PR で新しく出た違反は無い
