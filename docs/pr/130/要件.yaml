@@ -1,133 +1,133 @@
 docs:
   - page: docs/pr/100/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/14/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/14/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/15/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/15/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/18/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/18/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/21/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/21/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/41/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/41/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/5/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/52/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/52/要件.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/58/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/64/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/65/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/69/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/7/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/73/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/75/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
   - page: docs/pr/79/プラグイン.md
     new: false
-    change: 'mdmark upgrade で旧書式のマーカー（table: data・steps）を JSON の記載へ移す'
+    change: 'mdmark upgrade で `<!-- table: data -->` を `<!-- table: {"kind": "data"} -->` へ移す'
     status: done
     updated_by: planner
     updated_at: '2026-11-17T18:38:25.969011+00:00'
