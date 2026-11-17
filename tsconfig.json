@@ -1,4 +1,3 @@
 {
-  "extends": "./.claude-plugin/types/tsconfig.json",
-  "exclude": ["tests/e2e"]
+  "extends": "./.claude-plugin/types/tsconfig.json"
 }

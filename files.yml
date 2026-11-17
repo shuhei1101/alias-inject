@@ -142,7 +142,7 @@ files:
   - tool:npm
 - path: package.json
   name: 開発の依存と型の確認のスクリプト
-  description: 開発の依存と、プラグインと E2E のテストの型を確認するスクリプトを受け持ち、開発の依存や型の確認のコマンドを修正するときに参照する。
+  description: 開発の依存と、プラグインの型を確認するスクリプトを受け持ち、開発の依存や型の確認のコマンドを修正するときに参照する。
   tags:
   - tool:npm
   - tool:typescript

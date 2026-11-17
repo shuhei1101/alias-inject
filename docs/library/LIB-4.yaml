@@ -121,5 +121,5 @@ limitations:
     notes: https://docs.github.com/en/actions/reference/limits
 verification:
   state: 済
-  detail: 'workflow `.github/workflows/test.yml` を `gh workflow run` で作業ブランチに対して起動し、全ての step が成功して成果物 `test-log` が上がることを確認した（正常系）。E2E テストの異常系で、step が失敗した後に `if: always()` の step が実行されること、step の `timeout-minutes: 1` で 73 秒後に `The action ''テストの全件を回す'' has timed out after 1 minutes.` を出して止められること、`if-no-files-found: warn` で `No files were found with the provided path: test.log. No artifacts will be uploaded.` の警告を出して step が成功することを確認した（実行 43754604209・43754667117・43754833070）。`concurrency` の先の実行を止める振る舞いは観測していない'
+  detail: 'workflow `.github/workflows/test.yml` を `gh workflow run` で作業ブランチに対して起動し、全ての step が成功して成果物 `test-log` が上がることを確認した（正常系）。異常系のフローのブランチで workflow を起動し、step が失敗した後に `if: always()` の step が実行されること、step の `timeout-minutes: 1` で 73 秒後に `The action ''テストの全件を回す'' has timed out after 1 minutes.` を出して止められること、`if-no-files-found: warn` で `No files were found with the provided path: test.log. No artifacts will be uploaded.` の警告を出して step が成功することを確認した（実行 43754604209・43754667117・43754833070）。`concurrency` の先の実行を止める振る舞いは観測していない'
   date: '2026-11-16'
