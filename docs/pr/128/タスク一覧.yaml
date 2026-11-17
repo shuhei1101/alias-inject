@@ -45,8 +45,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T13:15:52.225928+00:00'
   - process: インターフェース定義設計
-    status: todo
+    status: done
     note: IF-6 の test_file・flows[].test を削除し、notes の確認方法を E2E を持たない記載に戻す
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.089469+00:00'
   - process: 部品設計
     status: skipped
     reason: 画面を持たない

@@ -2,31 +2,45 @@ docs:
   - page: docs/library/LIB-5.yaml
     new: false
     change: E2E テストだけが使う node:test の設計書を削除する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: docs/library/README.md
     new: false
     change: LIB-5 の行を削除する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: docs/library/index.yaml
     new: false
     change: LIB-5 の行を削除する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: project-index.yaml
     new: false
     change: 'サイドバーの `- page: library/LIB-5` の行を削除する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: docs/layout/LAY-1.yaml
     new: false
     change: '`tests/e2e/`（`workflow/` と `tsconfig.json`）のエントリを削除する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: docs/library/LIB-4.yaml
     new: false
     change: '`verification.detail` の E2E テストの記載を、検証用のブランチで起動して観測した記載に改める（観測した `verification_state: verified` は残す）'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: docs/test-procedure/TP-1.yaml
     new: false
     change: 'TL-3 を `run_all: 未確定` に戻し、`description`・`prerequisites`・`run_one`・`location` を削除する（TL-1・TL-2 の `run_runner` と `lead` は残す）'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:19:47.266579+00:00'
   - page: files.yml
     new: false
     change: '`package.json` の行の `description` から E2E の記載を削除する'
