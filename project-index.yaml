@@ -10,7 +10,7 @@ documents:
   - id: docs
     title: 公開ドキュメント
     paths: [docs/guide/files.yml]
-    exclude: ["*.yaml", "*.yml", README.md, はじめに.md, 使い方.md, リファレンス.md]
+    exclude: ["*.yaml", README.md, はじめに.md, 使い方.md, リファレンス.md]
     records: files
     body_file: path
     schema:
@@ -152,3 +152,39 @@ documents:
       ref: design-schemas/v8.3.0
     metadata:
       description: summary
+nav:
+  tabs:
+    - title: はじめに
+      items:
+        - page: docs/コアコンセプト-引用の文脈.md
+        - page: docs/コアコンセプト-変数参照の値.md
+        - page: docs/変更履歴.md
+    - title: 使い方
+      items:
+        - page: docs/セットアップ.md
+        - page: docs/エイリアスを登録するかを決める.md
+        - page: docs/設定の移し替え.md
+    - title: 設計書
+      items:
+        - page: architecture
+        - page: nonfunctional
+        - group: シナリオ
+          items:
+            - auto: {document: scenario}
+        - group: インターフェース定義
+          items:
+            - auto: {document: interface}
+        - group: モジュール構成
+          items:
+            - auto: {document: module}
+        - group: 外部ライブラリ
+          items:
+            - auto: {document: library}
+        - page: config
+        - page: dev_command
+        - page: test_procedure
+        - page: layout
+    - title: リファレンス
+      items:
+        - page: docs/設定ファイル.md
+        - page: docs/エイリアスのスキーマ.md
