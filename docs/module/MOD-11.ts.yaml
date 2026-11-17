@@ -1,7 +1,7 @@
 id: MOD-11
 visibility: internal
 title: プラグイン / 照合条件 / condition.ts
-lead: '文書の `inject_when` の値を照合条件として検査し、照合した本文で評価して、照合条件に該当しない単語を該当した単語から除外する。'
+lead: '文書の `inject_when` の照合条件の検査と評価を受け持ち、照合条件の書き方や評価を修正するときに参照する。'
 test_files:
   - tests/unit/hooks/lib/condition.test.ts
 data_models:

@@ -1058,7 +1058,7 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
       - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
     test: test_normal_when_term_avoid
-lead: 入力の文を、参照するリポジトリの `project-index.yaml` の documents の行と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の引用の文脈を `context` に追加して返却する。
+lead: 入力の文を設定の YAML の単語と照合し、初めて出た単語の引用の文脈を `context` に追加する `prompt.submit` の処理の入出力とフローを定め、入力への引用の文脈の追加を修正するときに参照する。
 idempotent: false
 side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
 callers:

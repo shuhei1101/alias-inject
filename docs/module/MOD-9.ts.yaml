@@ -1,7 +1,7 @@
 id: MOD-9
 visibility: internal
 title: プラグイン / 文脈 / context.ts
-lead: 該当した単語から記録済みの単語を除き、`max_items`・`max_chars` に収まる単語を選んで、追加する文脈の文字列を組み立てる。
+lead: 記録済みの単語を除いて上限に収まる単語を選び、追加する文脈の文字列を組み立てる処理を受け持ち、文脈の並びや上限を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/context.test.ts
 data_models:

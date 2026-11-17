@@ -299,7 +299,7 @@ catalogs:
             type: readonly string[]
             description: モデルにだけ追加する文脈
             notes: '末尾に追加した文字列が、ツールの結果の後ろの文脈としてモデルに届く'
-lead: Claude Code が mod に提供する hooks モジュールの型（`claude-code`）と、mod のテストの道具（`claude-code/testing`）。パッケージとして入れず、エンジンが型の宣言を書き出し、実行時に解決する。
+lead: パッケージとして入れずエンジンが型の宣言を書き出す Claude Code の hooks モジュールの型とテストの道具の使用範囲を定め、hooks モジュールの登録やテストを実装・修正するときに参照する。
 used_in:
   - hooks/register.tsx
   - tests/unit/hooks/register.test.ts

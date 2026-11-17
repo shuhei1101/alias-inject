@@ -64,7 +64,7 @@ flows:
       - '`$.state` の記録に `sessionId` の term-a が残っている'
       - 返る結果が `next(e)` の結果と同じ
     test: test_normal_when_not_clear
-lead: '`/clear` で終わるセッションの追加済みの単語の記録を削除する。'
+lead: '`/clear` で終わるセッションの追加済みの単語の記録を削除する `session.end` の処理の入出力とフローを定め、クリアの後の記録の消去を修正するときに参照する。'
 idempotent: true
 side_effects: '`$.state` の終わるセッション ID の記録を削除する'
 callers:

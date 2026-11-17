@@ -1,7 +1,7 @@
 id: MOD-12
 visibility: internal
 title: プラグイン / 状態の型 / index.d.ts
-lead: '`$.state` に配置する値の型の契約。`.claude-plugin/plugin.json` の `types` が指す。'
+lead: '`$.state` に配置する値の型の契約を受け持ち、状態に持つ値を追加・修正するときに参照する。'
 data_models:
   - name: PluginState
     title: プラグインの状態の契約

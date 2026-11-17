@@ -1,7 +1,7 @@
 id: MOD-10
 visibility: internal
 title: プラグイン / 照合 / match.ts
-lead: 入力と単語を同じ正規化でそろえ、部分文字列として含まれる単語を返却し、出た位置か出た回数の順に並べる。正規表現は使用しない。
+lead: 正規表現を使用せず入力と単語を同じ正規化でそろえて含まれる単語を返却し、出た位置か回数の順に並べる処理を受け持ち、照合の正規化や並び順を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/match.test.ts
 data_models:

@@ -242,7 +242,7 @@ flows:
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が 2 行届いている
     test: test_error_when_process_failed
-lead: ツールを実行させた結果の本文から `!{名前}` の変数参照を検出し、同じ名前の環境変数の値を本文を変えずに `context` に追加して返却する。
+lead: ツールの結果の本文の `!{名前}` に同じ名前の環境変数の値を `context` に追加する `tool.call` の処理の入出力とフローを定め、変数参照の値の追加を修正するときに参照する。
 idempotent: true
 side_effects: 変数参照があるときだけ `$.process.run` で `env -0` の子プロセスを 1 回起こす。ファイルへの書き込み・`$.state` への記録・外への送信はしない
 callers:

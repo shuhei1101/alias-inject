@@ -1,7 +1,7 @@
 id: MOD-2
 visibility: internal
 title: プラグイン / エイリアス / alias.ts
-lead: 設定ファイルの `aliases` の行と `project-index.yaml` の `documents` の行をスキーマで検証して取り出し、`id` の重なった行を除外する。文書ごとに `metadata` の値を解決し、種類ごとの必須のキーを確認する。
+lead: 設定ファイルの `aliases` と `project-index.yaml` の `documents` の行の検証と取り出し、文書ごとの `metadata` の値の解決を受け持ち、エイリアスの行の読み方を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/alias.test.ts
 data_models:

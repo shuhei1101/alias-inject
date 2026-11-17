@@ -1,7 +1,7 @@
 id: MOD-15
 visibility: internal
 title: プラグイン / 設定 / config.ts
-lead: 設定ファイルのパスの取得、設定ファイルの検証と既定値の適用、起動したプロジェクトに該当する `projects` を重ねた実効の設定の組み立て、入力の出所の判定。
+lead: 設定ファイルのパスの取得・検証・既定値の適用と、プロジェクトごとの設定を重ねた実効の設定の組み立てを受け持ち、設定のキーや既定値を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/config.test.ts
 data_models:

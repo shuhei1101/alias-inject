@@ -2,7 +2,7 @@ id: LAY-1
 visibility: internal
 title: alias-inject
 repository: shuhei1101/alias-inject
-lead: Claude Code の mod の単独のプラグインのため、配布するもの（`.claude-plugin/`・`hooks/`・`skills/`・`schemas/`）を直下に配置し、開発で使用するもの（`tests/`・`scripts/`・`types/`）と文書の `docs/` を分ける。
+lead: 配布するもの・開発で使用するもの・文書を分けたリポジトリの直下からのフォルダとファイルの配置を定め、新規のファイルやフォルダの配置先を決めるときに参照する。
 tags:
   - name: topic:フォルダ
     main: true

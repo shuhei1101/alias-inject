@@ -1,7 +1,7 @@
 id: MOD-16
 visibility: internal
 title: プラグイン / 読み込み / loader.ts
-lead: パスの展開・glob の展開・更新時刻で変わったファイルだけの読み込みと、YAML のパース。設定ファイル・スキーマ・`project-index.yaml`・`aliases` の要素が指す YAML が使用する。
+lead: パスと glob の展開、更新時刻で変わったファイルだけの読み込みと YAML のパースを受け持ち、ファイルの読み込み方やキャッシュを修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/loader.test.ts
 data_models:

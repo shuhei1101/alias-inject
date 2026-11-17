@@ -78,7 +78,7 @@ subsystems:
     runtime: TypeScript（Claude Code の mod のランタイムで動く）
     runs_on: 利用者の手元の Claude Code（CLI）。ユーザースコープで入れる
     status: implemented
-lead: alias-inject は利用者の手元の Claude Code が読み込む mod の単独のプラグインで、入力の単語を設定の YAML と照合し、引用の文脈をモデルにだけ追加する。
+lead: alias-inject のサブシステムと、Claude Code・設定ファイル・照合に使用する YAML との境界を定め、機能を配置するサブシステムや外部との接続を決めるときに参照する。
 external_systems:
   - name: Claude Code
     purpose: hooks モジュールを読み込み、入力のイベントを引き渡して、返却した文脈をモデルへの入力に加える

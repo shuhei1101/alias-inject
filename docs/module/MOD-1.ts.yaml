@@ -2,7 +2,7 @@ id: MOD-1
 visibility: internal
 title: プラグイン / イベントの処理 / handlers.ts
 lead: |-
-  入口が `prompt.submit`・`session.compact`・`session.end`・`tool.call` に登録するイベントの処理。
+  入口が各イベントに登録する入力・ツールの結果・圧縮・セッションの終了の処理を受け持ち、イベントで追加する文脈や記録の消去を修正するときに参照する。
 test_files:
   - tests/unit/hooks/handlers.test.ts
 functions:

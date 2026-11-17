@@ -354,7 +354,7 @@ flows:
     expected:
       - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
     test: test_normal_when_cwd_scoped
-lead: ツールを実行させた結果の本文を、`prompt.submit` と同じ単語と照合し、その会話で初めて出た単語の引用の文脈を、本文を変えずに `context` に追加して返却する。
+lead: ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を `context` に追加する `tool.call` の処理の入出力とフローを定め、ツールの結果への引用の文脈の追加を修正するときに参照する。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
 side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない

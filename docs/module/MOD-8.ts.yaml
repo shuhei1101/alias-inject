@@ -1,7 +1,7 @@
 id: MOD-8
 visibility: internal
 title: プラグイン / 変数参照 / variable.ts
-lead: ツールの結果の本文から `!{名前}` の名前を検出し、`env -0` の出力から値を取得して、文脈に追加する値の行を組み立てる。
+lead: 本文の変数参照の名前の検出と環境変数の値の取得、文脈に追加する値の行の組み立てを受け持ち、変数参照の検出や値の表し方を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/variable.test.ts
 constants:

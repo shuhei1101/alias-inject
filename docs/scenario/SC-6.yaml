@@ -91,7 +91,7 @@ scenarios:
       - もう一方の行の単語の文脈は追加されている
       - 入力の送信は止まっていない
     test: test_error_when_yaml_malformed
-lead: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から書き換え後の内容で照合する。
+lead: 設定ファイル・`project-index.yaml`・照合の YAML の書き換えが次の入力から反映される流れを定め、再読み込みの振る舞いを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えた後に入力を送信する
 preconditions:

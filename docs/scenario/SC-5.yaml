@@ -1,7 +1,7 @@
 id: SC-5
 visibility: internal
 title: 端末のセットアップ
-lead: 利用者がスキル `global-setup` を実行すると、端末の設定（設定ファイル）を作るか今の構造へ移し、引用の文脈が追加されることを確認する。
+lead: スキル `global-setup` で端末の設定ファイルを作るか今の構造へ移し、引用の文脈が追加されることを確認する流れを定め、端末のセットアップを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで `/alias-inject:global-setup` を実行する
 preconditions:
@@ -149,7 +149,7 @@ scenarios:
 notes:
   E2E を持たない: スキルの手順はモデルが実行し、質問の文面と順序が決定的でないため、対応テストファイルを持たない。シナリオの結末は、スキルを手で実行して確認する。
 tags:
-  - name: topic:セットアップ
+  - name: topic:セットアップ手順
     main: true
   - name: topic:端末
   - name: topic:設定ファイル

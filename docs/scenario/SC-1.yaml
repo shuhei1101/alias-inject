@@ -50,7 +50,7 @@ scenarios:
       - '`/clear` の後にファイルを参照させると、ツールの結果の後ろの文脈に term-b の引用の文脈と `変数参照の値: !{ALIAS_INJECT_E2E_VALUE} = value-a` の行がある'
       - その後の term-b を含む入力には文脈が追加されていない
     test: test_normal
-lead: 利用者が 1 つのセッションで入力を重ねる間に、設定ファイルの書き換え・圧縮・`/clear` を挟んでも、単語ごとに 1 回だけ引用の文脈がモデルに追加される複合ユースケース。
+lead: 設定ファイルの書き換え・圧縮・`/clear` を挟んでも単語ごとに 1 回だけ引用の文脈が追加される複合ユースケースの流れを定め、セッション全体の振る舞いを変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が alias-inject を入れた Claude Code の対話のセッションで入力する
 preconditions:

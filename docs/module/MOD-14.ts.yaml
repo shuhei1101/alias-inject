@@ -1,7 +1,7 @@
 id: MOD-14
 visibility: internal
 title: プラグイン / 記録 / record.ts
-lead: 会話ごとに文脈を追加した単語のキーを `$.state` に持ち、参照・追加・消去をする。会話はメインの会話がセッション、サブエージェントがセッションと `agentId` の組。
+lead: 会話ごとに文脈を追加した単語のキーを状態に持つ記録の参照・追加・消去を受け持ち、記録の単位や消去を修正するときに参照する。
 test_files:
   - tests/unit/hooks/lib/record.test.ts
 constants:

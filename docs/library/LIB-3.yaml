@@ -14,7 +14,7 @@ catalogs:
       - name: tsc -p tsconfig.json --noEmit
         kind: コマンド
         purpose: 出力せずに `tsconfig.json` の対象の型を確認する（`npm run typecheck`）
-lead: TypeScript のコンパイラ。`tsc` で型を確認する。
+lead: 型の確認に使用する TypeScript のコンパイラの使用範囲を定め、型の確認のコマンドや設定を修正するときに参照する。
 purl: pkg:npm/typescript@5.9.3
 dependency_scope: 開発のみ
 used_in:

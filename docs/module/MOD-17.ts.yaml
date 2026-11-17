@@ -1,7 +1,7 @@
 id: MOD-17
 visibility: internal
 title: プラグイン / 項目 / entry.ts
-lead: 'エイリアスの元の行の `paths` に該当する YAML を参照し、文書ごとに `metadata` の値を解決して、照合する単語と文脈に並べる列を持つ単語の一覧を作る。'
+lead: 'エイリアスの元の行が指す YAML から照合する単語と文脈に並べる列の一覧を組み立てる処理を受け持ち、単語に並べる列を修正するときに参照する。'
 test_files:
   - tests/unit/hooks/lib/entry.test.ts
 data_models:

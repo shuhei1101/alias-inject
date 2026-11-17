@@ -1,7 +1,7 @@
 id: MOD-13
 visibility: internal
 title: プラグイン / 生成したスキーマ / aliases-schema.ts
-lead: '`schemas/aliases.schema.yaml` から生成して同梱するスキーマのオブジェクト。手で書き換えない。'
+lead: '`schemas/aliases.schema.yaml` から生成して同梱する、手で書き換えないスキーマのオブジェクトを受け持ち、生成し直した結果を確認するときに参照する。'
 constants:
   - name: ALIAS_SCHEMA
     title: 同梱のスキーマ

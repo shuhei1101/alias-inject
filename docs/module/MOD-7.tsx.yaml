@@ -2,8 +2,7 @@ id: MOD-7
 visibility: internal
 title: プラグイン / 入口 / register.tsx
 lead: |-
-  Claude Code が `hooks/hooks.json` の `modules` から参照する hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイル。
-  入口は `prompt.submit`・`session.compact`・`session.end`・`tool.call` に処理を登録する。
+  Claude Code が読み込む hooks モジュールの入口と、プラグイン・マーケットプレイス・型の確認の定義ファイルを受け持ち、登録するイベントや定義を変えるときに参照する。
 test_files:
   - tests/unit/hooks/register.test.ts
 functions:
