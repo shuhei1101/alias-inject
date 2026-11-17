@@ -87,3 +87,6 @@ files:
   description: YAML のパースに使用する js-yaml の同梱のコピーを受け持ち、js-yaml の版を上げるときに参照する。
   tags:
   - tool:js-yaml
+checkpoint:
+  commit: f1236a5205fd824f8a32788b1fdb0ffb1f46d074
+  reviewed: []

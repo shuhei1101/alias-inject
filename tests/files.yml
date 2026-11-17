@@ -127,3 +127,6 @@ files:
   description: 関数を呼んで投げられた例外を返す単体テストの補助を受け持ち、例外を確かめるテストを書くときに参照する。
   tags:
   - topic:testing
+checkpoint:
+  commit: f1236a5205fd824f8a32788b1fdb0ffb1f46d074
+  reviewed: []

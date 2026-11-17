@@ -190,3 +190,6 @@ files:
 - path: version.ini
   name: プラグインの版
   description: 配布するプラグインの版を受け持ち、リリースで版を上げるときに参照する。
+checkpoint:
+  commit: f1236a5205fd824f8a32788b1fdb0ffb1f46d074
+  reviewed: []
