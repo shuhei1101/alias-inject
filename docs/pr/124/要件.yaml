@@ -6,6 +6,6 @@ docs:
     updated_by: planner
     updated_at: '2026-11-17T09:35:54.449670+00:00'
 scope_out:
-  - item: E2E（tests/e2e/workflow/test-yml.e2e.ts）の、gh run watch が待たずに戻ったときの待ち直し
-    reason: 起動の直後に gh run watch が待たずに戻る別の振る舞いへの対処で、404 で終わる事象とは別。既に待ち直しを持つ
-    plan: none
+  - item: E2E（tests/e2e/workflow/test-yml.e2e.ts）の dispatch の、起動直後の run への gh run view の 404
+    reason: gh run watch の 404 は無視して待ち直すが、直後の gh run view の 404 は拾わずに例外になる。これまでに起きた記録は無く、変える成果物が TP-1 と別のため、別の Issue で扱う
+    plan: '#125'
