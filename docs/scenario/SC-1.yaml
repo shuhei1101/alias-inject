@@ -31,13 +31,13 @@ scenarios:
         UC6 -->|term-b を含む入力| UC7([入力への引用の文脈の追加:正常シナリオ（記録済みの単語だけ）])
         UC7 --> DONE([単語ごとに 1 回だけ文脈が追加され、参照した本文の変数参照の値が届いた状態])
 
-        click UC1 "./SC-3.yaml#正常シナリオ"
-        click UC2 "./SC-3.yaml#正常シナリオ（記録済みの単語だけ）"
-        click UC3 "./SC-6.yaml#正常シナリオ"
-        click UC4 "./SC-4.yaml#正常シナリオ（圧縮）"
-        click UC5 "./SC-4.yaml#正常シナリオ（クリア）"
-        click UC6 "./SC-7.yaml#正常シナリオ（引用の文脈と合わせる）"
-        click UC7 "./SC-3.yaml#正常シナリオ（記録済みの単語だけ）"
+        click UC1 "id:SC-3#scenarios[正常シナリオ]"
+        click UC2 "id:SC-3#scenarios[正常シナリオ（記録済みの単語だけ）]"
+        click UC3 "id:SC-6#scenarios[正常シナリオ]"
+        click UC4 "id:SC-4#scenarios[正常シナリオ（圧縮）]"
+        click UC5 "id:SC-4#scenarios[正常シナリオ（クリア）]"
+        click UC6 "id:SC-7#scenarios[正常シナリオ（引用の文脈と合わせる）]"
+        click UC7 "id:SC-3#scenarios[正常シナリオ（記録済みの単語だけ）]"
       ```
 
       <!-- /map -->
