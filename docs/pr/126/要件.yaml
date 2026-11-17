@@ -7,11 +7,11 @@ docs:
     updated_at: '2026-11-17T11:44:24.202935+00:00'
 scope_out:
   - item: PR ドキュメント（docs/pr/）を検索の対象に入れること
-    reason: スコープに含めるか判断が分かれている。その時点の判断は対象から除外する（要件.md の未確定の推奨 B）。確定は実装のレビューで行う
+    reason: 決定した内容は設計書・公開ドキュメントへ反映され、検索で引けなくなる内容は無い（実装のレビューで B に確定）
     plan: none
   - item: 管理用の YAML のコード・テストの行へ設計書への related を張る作業
     reason: '#56 の一緒に行う改善が持ち、計画で #56 を #122 の後ろへ回した'
     plan: '#56'
   - item: project-index の check_project が、別の行の文書と ID が重なった管理用の YAML の行（直下の README.md と docs/guide/README.md がどちらも README.md）を、ID の重なりではなく「管理用の YAML に無いファイル」として数える
     reason: 'project-index の判定の振る舞いで、この作業 PR の変更の対象外。この配信元では直下の README.md の行に id: repository-readme を付けて避けた'
-    plan: to_file
+    plan: shuhei1101/project-index#144
