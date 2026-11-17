@@ -1,0 +1,84 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書がそろった既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めを依頼する Issue ではない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: 'project-index の PR #139 と claude-balancer の TP-275-1 で検証済みの待ち方を使う'
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: ユースケースの流れは変わらない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 単一ユースケース設計
+    status: skipped
+    reason: ユースケースの流れは変わらない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: モック作成
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: インターフェース定義設計
+    status: skipped
+    reason: インターフェースは変わらない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: 画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: モジュール構成設計
+    status: skipped
+    reason: コードのモジュールは変わらない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: ドキュメント修正
+    status: todo
+    note: docs/test-procedure/TP-1.yaml の TL-1・TL-2 の run_runner
+  - process: 単体テスト作成
+    status: skipped
+    reason: テスト実行方法のコマンドの修正で、プラグインのコードを変えない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 実装
+    status: skipped
+    reason: プラグインのコードを変えない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'
+  - process: 結合テスト作成
+    status: skipped
+    reason: プラグインのコードを変えない
+    updated_by: planner
+    updated_at: '2026-11-17T09:32:14.547749+00:00'

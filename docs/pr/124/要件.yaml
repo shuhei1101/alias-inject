@@ -1,0 +1,9 @@
+docs:
+  - page: docs/test-procedure/TP-1.yaml
+    new: false
+    change: TL-1・TL-2 の run_runner で、run_id を取った後に run を API で参照できるまで 1 秒おきに最大 10 回待ち、参照できなければ標準エラーに出して終了コード 1 で終えてから gh run watch を呼ぶ
+    status: todo
+scope_out:
+  - item: E2E（tests/e2e/workflow/test-yml.e2e.ts）の、gh run watch が待たずに戻ったときの待ち直し
+    reason: 起動の直後に gh run watch が待たずに戻る別の振る舞いへの対処で、404 で終わる事象とは別。既に待ち直しを持つ
+    plan: none
