@@ -137,7 +137,7 @@ docs:
     status: todo
 scope_out:
   - item: AI slop の単語の置き換え
-    reason: 起点 Issue の本文で別の Issue へ移した
+    reason: 起点 Issue の本文で別の Issue へ移し、その Issue で置き換え済み（closed）
     plan: '#88'
   - item: docs/_theme/ の公開サイトのテーマ（同梱の mermaid.min.js を含む）
     reason: AI Monitor から写した配布物で、文書でない
