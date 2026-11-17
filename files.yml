@@ -1,0 +1,195 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/shuhei1101/knowledge/design-schemas/v8.3.0/schemas/knowledge-files.schema.yaml
+files:
+- path: .claude-plugin/marketplace.json
+  name: マーケットプレイスの定義
+  description: このリポジトリをマーケットプレイスとして公開し、プラグイン alias-inject を載せる定義を受け持ち、マーケットプレイスからの入れ方を修正するときに参照する。
+  tags:
+  - tool:claude-code
+- path: .claude-plugin/plugin.json
+  name: プラグインの定義
+  description: プラグインの名前・説明と状態の型の宣言の場所を受け持ち、プラグインの説明や型の宣言を修正するときに参照する。
+  tags:
+  - tool:claude-code
+- path: .github/workflows/test.yml
+  name: テストの全件実行の workflow
+  description: 単体テストと結合テストの全件を GitHub Actions のランナーで回してログを成果物に上げる処理を受け持ち、ランナーでのテストの実行を修正するときに参照する。
+  tags:
+  - topic:ci
+  - tool:github
+- path: .gitignore
+  name: Git が無視するファイルの一覧
+  description: 生成物・依存・Claude Code が書き出す型の宣言を Git の管理から外す設定を受け持ち、コミットしないファイルを追加するときに参照する。
+- path: CLAUDE.md
+  name: Claude Code への作業の指示
+  description: リポジトリの概要とドキュメントの場所・索引の引き方を受け持ち、Claude Code が着手前に読む指示を修正するときに参照する。
+- path: README.md
+  id: repository-readme
+  name: リポジトリの紹介
+  description: プラグインが追加する文脈の概要と公開ドキュメントの URL を受け持ち、リポジトリの入口の紹介を修正するときに参照する。
+- path: ai-monitor-theme.yaml
+  name: 公開ドキュメントのテーマの取り込みの記録
+  description: AI Monitor から写した公開ドキュメントのテーマの取り込み方と版を受け持ち、テーマを更新するときに参照する。
+- path: ai-monitor-version.ini
+  name: 追従している AI Monitor の版
+  description: このリポジトリが追従している AI Monitor の配布物の版を受け持ち、AI Monitor の版上げに追従するときに参照する。
+- path: docs/README.md
+  name: ドキュメント全体の目次
+  description: 公開ドキュメントと設計書のフォルダの一覧を受け持ち、docs/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/_config.yml
+  name: GitHub Pages の Jekyll の設定
+  description: 公開サイトのタイトルとビルドから除外するフォルダを受け持ち、公開する文書の範囲を修正するときに参照する。
+- path: docs/_theme/_data/nav.project.yml
+  name: 公開サイトの上タブとページの分類
+  description: 公開ドキュメントの分類から書き出した上タブとページの対応を受け持ち、公開サイトのタブの並びを確かめるときに参照する。
+  tags:
+  - topic:ナビゲーション
+- path: docs/_theme/_data/nav.yml
+  name: 公開サイトの上タブの並び
+  description: 公開サイトの上タブの並びと実体を持たないタブの行き先を受け持ち、上タブを追加・修正するときに参照する。
+  tags:
+  - topic:ナビゲーション
+- path: docs/_theme/_includes/sidebar-source.html
+  name: 公開サイトのサイドバーの部品
+  description: 公開サイトのサイドバーに並べる項目の組み立てを受け持ち、サイドバーの表示を修正するときに参照する。
+  tags:
+  - topic:ナビゲーション
+- path: docs/_theme/_includes/tab-link.html
+  name: 公開サイトの上タブのリンクの部品
+  description: 公開サイトの上タブのリンク先の組み立てを受け持ち、上タブのリンクを修正するときに参照する。
+  tags:
+  - topic:ナビゲーション
+- path: docs/_theme/_layouts/default.html
+  name: 公開サイトの共通レイアウト
+  description: 公開サイトのページの骨格と読み込むスクリプト・スタイルを受け持ち、ページの共通の構成を修正するときに参照する。
+- path: docs/_theme/assets/app.js
+  name: 公開サイトの画面の動き
+  description: 公開サイトのパンくず・コードのコピー・目次・検索などの画面の動きを受け持ち、公開サイトの操作を修正するときに参照する。
+- path: docs/_theme/assets/style.css
+  name: 公開サイトのスタイル
+  description: 公開サイトの配色・余白・部品の見た目を受け持ち、公開サイトの見た目を修正するときに参照する。
+- path: docs/_theme/assets/vendor/mermaid.min.js
+  name: 公開サイトが同梱する Mermaid
+  description: 公開サイトで図を描く Mermaid の同梱のコピーを受け持ち、Mermaid の版を上げるときに参照する。
+  tags:
+  - tool:mermaid
+- path: docs/_theme/llms.txt
+  name: LLM 向けのページの一覧
+  description: 全ての目次の表から LLM 向けのページの一覧を書き出す Jekyll のテンプレートを受け持ち、llms.txt の書き出し方を修正するときに参照する。
+- path: docs/_theme/search.json
+  name: 公開サイトの検索の索引
+  description: 全てのページの見出しから公開サイトの検索の索引を書き出す Jekyll のテンプレートを受け持ち、検索の項目を修正するときに参照する。
+- path: docs/architecture/README.md
+  name: アーキテクチャ図の目次
+  description: システム全体の構成（Claude Code・hooks モジュール・設定ファイル・照合に使用する YAML の関係）を定めるアーキテクチャ図の文書の一覧を受け持ち、docs/architecture/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/config/README.md
+  name: 設定の目次
+  description: 設定と環境変数のキーの定義を定める設定の文書の一覧を受け持ち、docs/config/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/dev-command/README.md
+  name: 開発コマンドの目次
+  description: 開発で使用するコマンドの分類ごとの前提・順序を定める開発コマンドの文書の一覧を受け持ち、docs/dev-command/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/interface/README.md
+  name: インターフェース定義の目次
+  description: サブシステムの外部インターフェースと処理フローを定めるインターフェース定義の文書の一覧を受け持ち、docs/interface/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/layout/README.md
+  name: フォルダ構成の目次
+  description: リポジトリの直下からのフォルダとファイルの構成を定めるフォルダ構成の文書の一覧を受け持ち、docs/layout/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/library/README.md
+  name: 外部ライブラリの目次
+  description: 採用済みの外部ライブラリと外部ツールを定める外部ライブラリの文書の一覧を受け持ち、docs/library/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/module/README.md
+  name: モジュール構成の目次
+  description: クラス・関数・関数型を定めるモジュール構成の文書の一覧を受け持ち、docs/module/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/nonfunctional/README.md
+  name: 非機能要件の目次
+  description: 外部の制約から逆算した決定値を定める非機能要件の文書の一覧を受け持ち、docs/nonfunctional/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/scenario/README.md
+  name: シナリオの目次
+  description: 単一・複合ユースケースの業務フローを定めるシナリオの文書の一覧を受け持ち、docs/scenario/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: docs/test-procedure/README.md
+  name: テスト実行方法の目次
+  description: テストの起動コマンドと前提条件を定めるテスト実行方法の文書の一覧を受け持ち、docs/test-procedure/index.yaml から生成した目次を GitHub で開くときに参照する。
+  tags:
+  - topic:目次
+- path: mdmark.config.yaml
+  name: mdmark の図の部品の設定
+  description: 文書の図で使用するノードの種類と線の見た目を受け持ち、mdmark の図の表し方を修正するときに参照する。
+  tags:
+  - tool:mdmark
+- path: package-lock.json
+  name: 開発の依存の固定
+  description: 型の確認で使用する開発の依存の版の固定を受け持ち、依存の版を上げるときに参照する。
+  tags:
+  - tool:npm
+- path: package.json
+  name: 開発の依存と型の確認のスクリプト
+  description: 開発の依存と、プラグインと E2E のテストの型を確認するスクリプトを受け持ち、開発の依存や型の確認のコマンドを修正するときに参照する。
+  tags:
+  - tool:npm
+  - tool:typescript
+- path: project-index.yaml
+  name: 配信元の設定
+  description: 配信元 alias-inject の検索の対象・スキーマ・メタデータの列・開発ドキュメントのタブを受け持ち、配信する文書の範囲や画面の構成を修正するときに参照する。
+  tags:
+  - tool:project-index
+  - topic:エイリアス
+- path: rules.yaml
+  name: ルール索引
+  description: このリポジトリのファイルに当てるルールの索引を受け持ち、rule-inject で案内するルールを追加するときに参照する。
+  tags:
+  - tool:rule-inject
+- path: schemas/aliases.schema.yaml
+  name: エイリアスの元の行のスキーマ
+  description: 設定ファイルの aliases と project-index.yaml の documents の行の構造を受け持ち、エイリアスのキーや alias_type を追加・修正するときに参照する。
+  tags:
+  - topic:エイリアス
+  - topic:設定ファイル
+- path: scripts/gen-aliases-schema.mjs
+  name: スキーマのオブジェクトの生成のスクリプト
+  description: エイリアスの元の行のスキーマから同梱するスキーマのオブジェクトを生成して一致を確認する処理を受け持ち、スキーマを書き換えた後に生成し直すときに参照する。
+  tags:
+  - topic:エイリアス
+- path: settings.sample.yaml
+  name: 設定ファイルのサンプル
+  description: 端末の設定ファイルのキーと既定値の書き方の例を受け持ち、設定ファイルを用意するときやキーを追加するときに参照する。
+  tags:
+  - topic:設定ファイル
+- path: skills/global-setup/SKILL.md
+  name: 端末のセットアップのスキル
+  description: 端末ごとに設定ファイルを作るか今の構造へ移し、引用の文脈が追加されることを確かめる手順を受け持ち、端末のセットアップの手順を修正するときに参照する。
+  tags:
+  - topic:セットアップ手順
+  - topic:設定の移し替え
+- path: tsconfig.json
+  name: プラグインの型の確認の設定
+  description: Claude Code が書き出す型の設定を継いでプラグインのコードの型を確認する設定を受け持ち、型の確認の対象を修正するときに参照する。
+  tags:
+  - tool:typescript
+- path: types/index.d.ts
+  name: 状態の型
+  description: プラグインが `$.state` に配置する値の型の契約を受け持ち、状態に持つ値を追加・修正するときに参照する。
+- path: version.ini
+  name: プラグインの版
+  description: 配布するプラグインの版を受け持ち、リリースで版を上げるときに参照する。
+checkpoint:
+  commit: f1236a5205fd824f8a32788b1fdb0ffb1f46d074
+  reviewed: []

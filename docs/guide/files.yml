@@ -31,3 +31,22 @@ files:
     tags: [scope:リファレンス, topic:エイリアス]
     visibility: public
     category: リファレンス
+  - path: README.md
+    tags: [topic:目次]
+    visibility: internal
+    category: はじめに
+  - path: はじめに.md
+    tags: [scope:はじめに, topic:目次]
+    visibility: public
+    category: はじめに
+  - path: 使い方.md
+    tags: [scope:使い方, topic:目次]
+    visibility: public
+    category: 使い方
+  - path: リファレンス.md
+    tags: [scope:リファレンス, topic:目次]
+    visibility: public
+    category: リファレンス
+checkpoint:
+  commit: f1236a5205fd824f8a32788b1fdb0ffb1f46d074
+  reviewed: []
