@@ -103,7 +103,7 @@ docs:
     updated_at: '2026-11-17T17:18:16.764174+00:00'
   - page: docs/scenario/SC-6.yaml
     new: false
-    change: Mermaid を map の範囲へ移し、タグを再設定する
+    change: Mermaid を map の範囲へ移し、利用者の自分宛のメッセージのラベルを図に収まる長さにし、タグを再設定する
     status: done
     updated_by: planner
     updated_at: '2026-11-17T17:18:16.764174+00:00'
@@ -169,7 +169,7 @@ docs:
     updated_at: '2026-11-17T17:18:16.764174+00:00'
   - page: docs/guide
     new: false
-    change: 『引用の文脈』の照合しないもの・除外する範囲・セクションの見出しを表にする。Issue 番号・パスは既にタイトル付きのリンクで変更しない
+    change: 『引用の文脈』の照合しないもの・除外する範囲・セクションの見出しを表にし、『設定ファイル』の行のキー・metadata の値・alias_type ごとのキーの重複を『エイリアスのスキーマ』への参照にする。Issue 番号・パスは既にタイトル付きのリンクで変更しない
     status: done
     updated_by: planner
     updated_at: '2026-11-17T17:18:16.764174+00:00'
@@ -203,6 +203,18 @@ docs:
     status: done
     updated_by: planner
     updated_at: '2026-11-17T17:18:16.764174+00:00'
+  - page: docs/guide/index.yaml
+    new: false
+    change: 『エイリアスを登録するかを決める』の行の summary を参照先のページであることが分かる文にし、目次を生成し直す
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:12:34.118494+00:00'
+  - page: docs
+    new: false
+    change: ARCH-1・CFG-1・IF-1〜IF-6・LAY-1・LIB-1〜LIB-4・MOD-1〜MOD-17・NFR-1・SC-1〜SC-7 の lead（description）を「何を定め（受け持ち）、どんなときに参照するか」の 1 文にする。今の lead にだけあった情報は新しい 1 文に含める
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T18:12:41.491189+00:00'
 scope_out:
   - item: AI slop の単語の置き換え
     reason: 起点 Issue の本文で別の Issue へ移し、その Issue で置き換え済み（closed）
@@ -216,15 +228,9 @@ scope_out:
   - item: rules.yaml の古い規約の除外
     reason: rules が空で、規約『markdown マーメイド』『判定フローチャート』を指していない
     plan: none
-  - item: 設計書の description（各種類の lead）を「何を定め、どんなときに参照するか」の 1 文に書き換える
-    reason: 設計書の description は各種類のスキーマの lead に当たり、スキーマが「初回に記載した内容のまま保ち、対象そのものが変わったときだけ書き換える」と定めるため変えない。スコープに含めるかは判断が分かれるため、レビューで確定する
-    plan: none
   - item: 設計書・公開ドキュメントへのエイリアスと用語の新規登録
-    reason: knowledge の判定フローチャート『エイリアスの登録』の最初の分岐（会話・Issue・本文で実際にその名前で呼ばれたか）に当たる実例がこの作業では見つからず、登録しないと判定した。スコープに含めるかは判断が分かれるため、レビューで確定する
+    reason: 判定表『エイリアスを登録しない条件』の 1 行目（実際にその名前で呼ばれた実例が無い）に当たり、登録しない
     plan: none
   - item: 各フォルダの目次（index.yaml）へのタグ
-    reason: 目次はフォルダの文書の一覧で、設計書の主題は各設計書のタグが持つため付けない。スコープに含めるかは判断が分かれるため、レビューで確定する
-    plan: none
-  - item: 公開ドキュメント『設定ファイル』と『エイリアスのスキーマ』に並ぶ metadata の値の取り方の箇条書きの重複
-    reason: 設定ファイルを書く利用者と、スキーマを取り込む利用側のそれぞれが参照するページで、片方を削除するとそのページだけで読めなくなるため両方に残す。スコープに含めるかは判断が分かれるため、レビューで確定する
+    reason: '目次のスキーマ（design-schemas/v8.3.0 の schemas/design/index.schema.yaml）が additionalProperties: false で tags のキーを持たず、付けられない'
     plan: none
