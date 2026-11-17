@@ -65,16 +65,20 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-17T13:15:52.225928+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: LIB-5 と目次の行・project-index.yaml のサイドバーの行・LAY-1・LIB-4・TP-1 の TL-3・files.yml・tests/files.yml の E2E の記載
+    updated_by: planner
+    updated_at: '2026-11-17T13:25:45.624134+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: hooks モジュールのコードを変えない
     updated_by: planner
     updated_at: '2026-11-17T13:15:52.225928+00:00'
   - process: 実装
-    status: todo
+    status: done
     note: tests/e2e/ の 2 ファイルの削除と、package.json・package-lock.json・tsconfig.json の E2E 用の変更を戻す
+    updated_by: planner
+    updated_at: '2026-11-17T13:25:45.624134+00:00'
   - process: 結合テスト作成
     status: skipped
     reason: E2E テストの削除で、結合テストを追加・変更しない

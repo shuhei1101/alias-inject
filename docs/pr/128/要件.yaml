@@ -44,11 +44,15 @@ docs:
   - page: files.yml
     new: false
     change: '`package.json` の行の `description` から E2E の記載を削除する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:25:44.064990+00:00'
   - page: tests/files.yml
     new: false
     change: '`e2e/tsconfig.json`・`e2e/workflow/test-yml.e2e.ts` の行を削除する'
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-17T13:25:44.064990+00:00'
 scope_out:
   - item: 'IF-6 の異常系（テストが止まる）のフローで #116 が書き換えた `setup`（同期の無限ループで止まるテスト）と `expected` の step の所要時間の行'
     reason: workflow の振る舞いと、フローを確かめるブランチの用意の仕方を定める記載で、E2E テストだけが使う記載ではない。作業 PR で workflow を起動して確かめるときも使う
