@@ -19,7 +19,7 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: 用語の YAML に term-c を追加し、glob に該当する YAML を追加
+        Note right of U: 用語の YAML に term-c を追加し、glob に該当する YAML を追加
         U->>CC: term-c と追加した YAML の単語を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 設定ファイルと project-index.yaml と YAML の更新時刻とフォルダの一覧を確認する
@@ -50,7 +50,7 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: project-index.yaml の documents に command の行を追加
+        Note right of U: project-index.yaml の documents に command の行を追加
         U->>CC: cmd-a を含む入力を送信
         CC->>P: prompt.submit
         P->>P: project-index.yaml の更新時刻が変わったので再読み込みする
@@ -77,7 +77,7 @@ scenarios:
         participant CC as Claude Code
         participant P as alias-inject
         participant M as モデル
-        U->>U: 片方の YAML を書式の誤った内容に書き換える
+        Note right of U: 片方の YAML を書式の誤った内容に書き換える
         U->>CC: 両方の行の単語を含む入力を送信
         CC->>P: prompt.submit
         P->>P: 書式の誤った YAML を照合から除外する
