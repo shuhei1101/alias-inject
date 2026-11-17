@@ -127,3 +127,11 @@ functions:
         mock: なし
         expected: term-a と term-b
     status: planned
+tags:
+  - name: topic:ツール
+    main: true
+  - name: topic:引数
+  - name: topic:照合
+  - name: action:除去
+  - name: topic:モジュール
+  - name: tool:typescript

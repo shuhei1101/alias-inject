@@ -1178,3 +1178,16 @@ refs:
   - SC-6#
   - CFG-1#
 test_file: tests/integration/hooks/prompt-submit.test.ts
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:入力
+  - name: topic:照合
+  - name: topic:エイリアス
+  - name: topic:用語
+  - name: topic:設定ファイル
+  - name: topic:フック
+  - name: action:追加
+  - name: action:照合
+  - name: tool:claude-code
+  - name: tool:project-index

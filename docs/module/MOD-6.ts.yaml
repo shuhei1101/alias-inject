@@ -168,3 +168,12 @@ functions:
         mock: 同上（無いパスの `fs.stat` は例外）
         expected: RepositoryError で、path が `/repo/missing/project-index.yaml`
         exception: '`project-index.yaml` が無い'
+tags:
+  - name: topic:リポジトリ
+    main: true
+  - name: topic:配信元
+  - name: topic:設定
+  - name: action:読み込み
+  - name: topic:モジュール
+  - name: tool:typescript
+  - name: tool:project-index

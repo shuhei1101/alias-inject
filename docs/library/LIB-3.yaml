@@ -30,3 +30,8 @@ install: |-
   ```bash
   npm install --save-dev --save-exact typescript@5.9.3
   ```
+tags:
+  - name: tool:typescript
+    main: true
+  - name: topic:型検査
+  - name: topic:ライブラリ

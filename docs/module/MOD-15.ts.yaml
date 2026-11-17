@@ -494,3 +494,12 @@ functions:
         condition: "文字列 `a`、`config` が無い要素、`config: ''`、`enabled: 'no'`"
         mock: なし
         expected: どれも文字列の理由で、無い・誤ったキーの名前を含む
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:設定
+  - name: topic:パス
+  - name: action:検証
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript

@@ -119,3 +119,12 @@ refs:
   - SC-4#
   - IF-3#
 test_file: tests/integration/hooks/session-compact.test.ts
+tags:
+  - name: topic:記録
+    main: true
+  - name: topic:圧縮
+  - name: topic:セッション
+  - name: topic:サブエージェント
+  - name: topic:フック
+  - name: action:削除
+  - name: tool:claude-code

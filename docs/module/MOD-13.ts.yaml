@@ -9,3 +9,9 @@ constants:
     usecase: 共通
     summary: '`schemas/aliases.schema.yaml` をパースした値。`scripts/gen-aliases-schema.mjs` が生成する'
     value: '`schemas/aliases.schema.yaml` の中身のオブジェクト（型は `Record<string, unknown>`）'
+tags:
+  - name: topic:スキーマ
+    main: true
+  - name: action:生成
+  - name: topic:モジュール
+  - name: tool:typescript

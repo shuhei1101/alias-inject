@@ -70,3 +70,8 @@ install: |-
   tar -xzf js-yaml-5.5.0.tgz package/dist/js-yaml.mjs package/dist/js-yaml.d.ts
   cp package/dist/js-yaml.mjs package/dist/js-yaml.d.ts hooks/vendor/
   ```
+tags:
+  - name: tool:js-yaml
+    main: true
+  - name: action:パース
+  - name: topic:ライブラリ

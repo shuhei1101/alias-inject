@@ -312,3 +312,12 @@ functions:
         expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`ui.log` に `to` が `debug` の行が届く"
         notes: 'PR #52 で追加'
     status: planned
+tags:
+  - name: topic:イベント
+    main: true
+  - name: topic:ハンドラ
+  - name: topic:フック
+  - name: topic:引用の文脈
+  - name: topic:記録
+  - name: topic:モジュール
+  - name: tool:typescript

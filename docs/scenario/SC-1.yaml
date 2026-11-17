@@ -59,3 +59,13 @@ preconditions:
 success_guarantee: 入力の文は変わらず、初めて出た単語の引用の文脈だけがモデルに追加される。ツールで参照した本文も変わらず、本文に初めて出た単語の引用の文脈と本文の変数参照の値がツールの結果の後ろの文脈としてモデルに届く。
 minimal_guarantee: 設定ファイルや YAML を読み込めないときも、入力はそのままモデルに届く。
 test_file: tests/e2e/複合ユースケース/test_session_flow.py
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:複合ユースケース
+  - name: topic:セッション
+  - name: topic:記録
+  - name: topic:圧縮
+  - name: topic:クリア
+  - name: topic:設定ファイル
+  - name: action:追加

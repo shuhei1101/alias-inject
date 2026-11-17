@@ -302,3 +302,11 @@ functions:
         condition: 'term-b.yaml が閉じていない括弧を含む。`records: terms` の行で `terms` を持たない YAML'
         mock: 同上
         expected: 前者は entries が term-a だけで、failures が term-b.yaml のパスと行と列を含む理由の 1 件。後者は entries が空で、failures が `terms の並びがありません` の 1 件
+tags:
+  - name: topic:単語
+    main: true
+  - name: topic:エイリアス
+  - name: topic:メタデータ
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript

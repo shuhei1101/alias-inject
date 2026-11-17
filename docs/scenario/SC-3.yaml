@@ -646,3 +646,13 @@ preconditions:
 success_guarantee: 初めて出た単語の引用の文脈が `heading` の見出しの下に並んでモデルに届き、入力の文は変わらない。
 minimal_guarantee: どの異常でも入力の送信は止まらず、入力の文はそのままモデルに届く。
 test_file: tests/e2e/単一ユースケース/test_prompt_context.py
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:入力
+  - name: topic:照合
+  - name: topic:エイリアス
+  - name: topic:用語
+  - name: topic:設定ファイル
+  - name: action:追加
+  - name: action:照合

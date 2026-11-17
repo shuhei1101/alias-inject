@@ -166,3 +166,11 @@ functions:
         mock: なし
         expected: term-a だけ
     status: planned
+tags:
+  - name: topic:条件
+    main: true
+  - name: topic:照合
+  - name: action:評価
+  - name: action:検査
+  - name: topic:モジュール
+  - name: tool:typescript

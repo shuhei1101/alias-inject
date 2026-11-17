@@ -101,3 +101,10 @@ external_systems:
 constraints: |-
   - MCP サーバーと常駐するサーバーは持たない
   - 設定は `ALIAS_INJECT_CONFIG` が指すファイルか、無ければ `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml`（`global`・`projects`）から参照する
+tags:
+  - name: topic:構成
+    main: true
+  - name: topic:architecture
+  - name: topic:サブシステム
+  - name: topic:プラグイン
+  - name: tool:claude-code

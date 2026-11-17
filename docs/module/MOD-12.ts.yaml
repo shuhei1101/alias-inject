@@ -14,3 +14,8 @@ data_models:
       - name: "'alias-inject'.recorded"
         type: StateFamily<string[]>
         description: 記録の ID（メインの会話はセッション ID、サブエージェントはセッション ID と `agentId` の組）を `id` にした、文脈を追加した単語の記録のキーの並び
+tags:
+  - name: topic:契約
+    main: true
+  - name: topic:モジュール
+  - name: tool:typescript

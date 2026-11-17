@@ -125,3 +125,8 @@ requirements:
       - IF-2#constraints[処理時間]
     status: planned
 lead: 外部の制約から逆算した alias-inject の決定値。決まっていない項目は決定値を `未確定` にして配置する。
+tags:
+  - name: topic:非機能要件
+    main: true
+  - name: topic:上限
+  - name: topic:タイムアウト

@@ -145,3 +145,10 @@ functions:
         mock: なし
         expected: term-b・term-a・term-c の順
     status: planned
+tags:
+  - name: topic:照合
+    main: true
+  - name: topic:単語
+  - name: action:照合
+  - name: topic:モジュール
+  - name: tool:typescript

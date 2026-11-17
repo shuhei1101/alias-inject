@@ -198,3 +198,9 @@ preconditions:
 success_guarantee: ツールの結果の本文はそのままで、本文に出た名前ごとに 1 行の値（設定されていない名前は設定されていない旨）が結果の後ろの文脈としてモデルに届く。
 minimal_guarantee: 値を取得できないときも、ツールの結果はそのままモデルに届き、ツールの呼び出しは止まらない。
 test_file: tests/e2e/単一ユースケース/test_variable_reference.py
+tags:
+  - name: topic:変数参照
+    main: true
+  - name: topic:環境変数
+  - name: topic:ツール
+  - name: action:追加

@@ -99,3 +99,9 @@ preconditions:
 success_guarantee: 書き換えた直後の入力から、書き換え後の単語とエイリアスの行で照合される。
 minimal_guarantee: 書き換え後の YAML を読み込めないときも、入力の送信は止まらず、他のエイリアスの行の照合は続く。
 test_file: tests/e2e/単一ユースケース/test_reload.py
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:照合
+  - name: action:再読み込み
+  - name: action:変更

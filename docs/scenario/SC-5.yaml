@@ -148,3 +148,13 @@ scenarios:
       - 設定ファイルと settings.json が変わっていない
 notes:
   E2E を持たない: スキルの手順はモデルが実行し、質問の文面と順序が決定的でないため、対応テストファイルを持たない。シナリオの結末は、スキルを手で実行して確認する。
+tags:
+  - name: topic:セットアップ
+    main: true
+  - name: topic:端末
+  - name: topic:設定ファイル
+  - name: topic:設定の移し替え
+  - name: topic:スキル
+  - name: action:作成
+  - name: action:移行
+  - name: action:確認

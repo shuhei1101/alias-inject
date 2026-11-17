@@ -146,3 +146,11 @@ functions:
         mock: なし
         expected: '51 個では 50 行の後ろに `変数参照の値: ほか 1 件の変数参照は値を追加していない` が付く。50 個では 50 行だけ'
     status: planned
+tags:
+  - name: topic:変数参照
+    main: true
+  - name: topic:環境変数
+  - name: action:取得
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript

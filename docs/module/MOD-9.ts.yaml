@@ -178,3 +178,10 @@ functions:
         condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
         mock: なし
         expected: どれも null
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:上限
+  - name: action:組み立て
+  - name: topic:モジュール
+  - name: tool:typescript

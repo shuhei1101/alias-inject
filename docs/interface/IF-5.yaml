@@ -325,3 +325,11 @@ constraints:
 refs:
   - SC-7#
 test_file: tests/integration/hooks/tool-call.test.ts
+tags:
+  - name: topic:変数参照
+    main: true
+  - name: topic:環境変数
+  - name: topic:ツール
+  - name: topic:フック
+  - name: action:追加
+  - name: tool:claude-code

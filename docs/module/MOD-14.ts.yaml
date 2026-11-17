@@ -174,3 +174,11 @@ functions:
         condition: s1・s2 に a を追加し、s1 を消去する
         mock: なし（`claude-code/testing` の `test` の `$.state`）
         expected: s1 が空、s2 が a
+tags:
+  - name: topic:記録
+    main: true
+  - name: topic:セッション
+  - name: topic:サブエージェント
+  - name: action:削除
+  - name: topic:モジュール
+  - name: tool:typescript

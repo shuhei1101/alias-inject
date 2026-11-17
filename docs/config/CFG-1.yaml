@@ -316,3 +316,9 @@ settings:
     missing: 空のときも `~/.config` を使用する
 refs:
   - ARCH-1#subsystems[plugin]
+tags:
+  - name: topic:設定ファイル
+    main: true
+  - name: topic:設定
+  - name: topic:環境変数
+  - name: topic:キー

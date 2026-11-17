@@ -418,3 +418,13 @@ functions:
         expected: true・false、true・true・false
 notes:
   キャッシュ: 変わったファイルの読み込みのキャッシュはモジュールの変数に持つ。mod のホットリロードで空に戻り、次の入力で再読み込みする。単体テストではテストごとに空に戻す関数 `clearCache` を使用する
+tags:
+  - name: topic:ファイル
+    main: true
+  - name: topic:パス
+  - name: topic:キャッシュ
+  - name: action:読み込み
+  - name: action:パース
+  - name: topic:モジュール
+  - name: tool:typescript
+  - name: tool:js-yaml

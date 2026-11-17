@@ -482,3 +482,12 @@ constraints:
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
 refs:
   - SC-2#
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:ツール
+  - name: topic:照合
+  - name: topic:フック
+  - name: action:追加
+  - name: action:照合
+  - name: tool:claude-code
