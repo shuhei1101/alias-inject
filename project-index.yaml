@@ -10,7 +10,7 @@ documents:
   - id: docs
     title: 公開ドキュメント
     paths: [docs/guide/files.yml]
-    exclude: ["*.yaml", "*.yml", README.md, はじめに.md, 使い方.md, リファレンス.md]
+    exclude: ["*.yaml", README.md, はじめに.md, 使い方.md, リファレンス.md]
     records: files
     body_file: path
     schema:
@@ -152,3 +152,72 @@ documents:
       ref: design-schemas/v8.3.0
     metadata:
       description: summary
+nav:
+  tabs:
+    - title: はじめに
+      items:
+        - page: docs/コアコンセプト-引用の文脈.md
+          title: 引用の文脈
+        - page: docs/コアコンセプト-変数参照の値.md
+          title: 変数参照の値
+        - page: docs/変更履歴.md
+    - title: 使い方
+      items:
+        - page: docs/セットアップ.md
+        - page: docs/エイリアスを登録するかを決める.md
+        - page: docs/設定の移し替え.md
+    - title: 設計書
+      items:
+        - page: architecture
+        - page: nonfunctional
+        - group: シナリオ
+          items:
+            - page: scenario/SC-1
+            - page: scenario/SC-5
+            - page: scenario/SC-3
+            - page: scenario/SC-2
+            - page: scenario/SC-7
+            - page: scenario/SC-6
+            - page: scenario/SC-4
+        - group: インターフェース定義
+          items:
+            - page: interface/IF-3
+            - page: interface/IF-2
+            - page: interface/IF-5
+            - page: interface/IF-4
+            - page: interface/IF-1
+            - page: interface/IF-6
+        - group: モジュール構成
+          items:
+            - page: module/MOD-7
+            - page: module/MOD-1
+            - page: module/MOD-15
+            - page: module/MOD-16
+            - page: module/MOD-6
+            - page: module/MOD-2
+            - page: module/MOD-3
+            - page: module/MOD-13
+            - page: module/MOD-4
+            - page: module/MOD-17
+            - page: module/MOD-10
+            - page: module/MOD-11
+            - page: module/MOD-5
+            - page: module/MOD-9
+            - page: module/MOD-14
+            - page: module/MOD-8
+            - page: module/MOD-12
+        - group: 外部ライブラリ
+          items:
+            - page: library/LIB-1
+            - page: library/LIB-2
+            - page: library/LIB-3
+            - page: library/LIB-5
+            - page: library/LIB-4
+        - page: config
+        - page: dev_command
+        - page: test_procedure
+        - page: layout
+    - title: リファレンス
+      items:
+        - page: docs/設定ファイル.md
+        - page: docs/エイリアスのスキーマ.md
