@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/shuhei1101/knowledge/design-schemas/v8.3.0/schemas/knowledge-files.schema.yaml
+files:
+- path: handlers.ts
+  name: イベントの処理
+  description: 入力・ツールの結果・圧縮・セッションの終了のイベントごとの処理を受け持ち、イベントで追加する文脈や記録の消去を修正するときに参照する。
+  tags:
+  - topic:引用の文脈
+- path: hooks.json
+  name: hooks モジュールの登録
+  description: Claude Code が読み込む hooks モジュールの入口の指定を受け持ち、入口のファイルを変えるときに参照する。
+  tags:
+  - tool:claude-code
+- path: lib/alias.ts
+  name: エイリアスの元の行の取り出し
+  description: 設定ファイルの aliases と project-index.yaml の documents の行を検証して取り出し、文書ごとの metadata の値を解決する処理を受け持ち、エイリアスの行の読み方を修正するときに参照する。
+  tags:
+  - topic:エイリアス
+- path: lib/aliases-schema.ts
+  name: 生成したスキーマのオブジェクト
+  description: エイリアスの元の行のスキーマから生成して同梱するスキーマのオブジェクトを受け持ち、生成し直した結果を確かめるときに参照する（手で書き換えない）。
+  tags:
+  - topic:エイリアス
+- path: lib/condition.ts
+  name: 照合条件の評価
+  description: 文書の inject_when を照合条件として検査・評価し、条件に該当しない単語を除く処理を受け持ち、照合条件の書き方や評価を修正するときに参照する。
+- path: lib/config.ts
+  name: 設定ファイルの読み込みと実効の設定
+  description: 設定ファイルの検証と既定値の適用、プロジェクトごとの設定を重ねた実効の設定の組み立てを受け持ち、設定のキーや既定値を修正するときに参照する。
+  tags:
+  - topic:設定ファイル
+- path: lib/context.ts
+  name: 追加する文脈の組み立て
+  description: 記録済みの単語を除いて上限に収まる単語を選び、追加する文脈の文字列を組み立てる処理を受け持ち、文脈の並びや上限を修正するときに参照する。
+  tags:
+  - topic:引用の文脈
+- path: lib/entry.ts
+  name: 照合する単語の一覧の組み立て
+  description: エイリアスの元の行が指す YAML を参照し、文書ごとの metadata の値から照合する単語と文脈に並べる列を組み立てる処理を受け持ち、単語に並べる列を修正するときに参照する。
+  tags:
+  - topic:エイリアス
+- path: lib/loader.ts
+  name: ファイルの読み込みと YAML のパース
+  description: パスと glob の展開、更新時刻で変わったファイルだけの読み込みと YAML のパースを受け持ち、ファイルの読み込み方やキャッシュを修正するときに参照する。
+  tags:
+  - tool:js-yaml
+- path: lib/match.ts
+  name: 単語の照合
+  description: 入力と単語を同じ正規化でそろえ、含まれる単語を出た順に返す処理を受け持ち、照合の正規化や並び順を修正するときに参照する。
+- path: lib/record.ts
+  name: 文脈を追加した単語の記録
+  description: 会話ごとに文脈を追加した単語のキーを状態に持ち、参照・追加・消去する処理を受け持ち、記録の単位や消去を修正するときに参照する。
+- path: lib/repository.ts
+  name: 参照するリポジトリの配信元の設定の読み込み
+  description: 参照するリポジトリの project-index.yaml から alias_type を持つ行だけを取り出す処理を受け持ち、リポジトリの読み込み方を修正するときに参照する。
+  tags:
+  - tool:project-index
+- path: lib/schema.ts
+  name: エイリアスの元の行の検証
+  description: 同梱したスキーマのオブジェクトでエイリアスの元の行を検証する処理を受け持ち、検証が解釈するキーワードを修正するときに参照する。
+  tags:
+  - topic:エイリアス
+- path: lib/tool.ts
+  name: ツールが参照している文書の除外
+  description: ツールの呼び出しの引数から参照している文書そのものの単語を照合の結果から除く処理を受け持ち、ツールごとの除外を修正するときに参照する。
+- path: lib/variable.ts
+  name: 変数参照の値の組み立て
+  description: 本文の変数参照の名前を検出して環境変数の値を取得し、文脈に追加する値の行を組み立てる処理を受け持ち、変数参照の検出や値の表し方を修正するときに参照する。
+  tags:
+  - topic:変数参照
+- path: register.tsx
+  name: hooks モジュールの入口
+  description: Claude Code が読み込む hooks モジュールの入口として、各イベントに処理を登録する定義を受け持ち、登録するイベントを変えるときに参照する。
+  tags:
+  - tool:claude-code
+- path: vendor/js-yaml.d.mts
+  name: 同梱した js-yaml の ES モジュールの型の再輸出
+  description: 同梱した js-yaml の型の宣言を ES モジュールから参照させる再輸出を受け持ち、js-yaml の版を上げるときに参照する。
+  tags:
+  - tool:js-yaml
+- path: vendor/js-yaml.d.ts
+  name: 同梱した js-yaml の型の宣言
+  description: 同梱した js-yaml の API の型の宣言を受け持ち、js-yaml の版を上げるときに参照する。
+  tags:
+  - tool:js-yaml
+- path: vendor/js-yaml.mjs
+  name: 同梱した js-yaml
+  description: YAML のパースに使用する js-yaml の同梱のコピーを受け持ち、js-yaml の版を上げるときに参照する。
+  tags:
+  - tool:js-yaml

@@ -10,7 +10,7 @@ documents:
   - id: docs
     title: 公開ドキュメント
     paths: [docs/guide/files.yml]
-    exclude: ["*.yaml", README.md, はじめに.md, 使い方.md, リファレンス.md]
+    exclude: ["*.yaml"]
     records: files
     body_file: path
     schema:
@@ -21,6 +21,34 @@ documents:
       id: path
       visibility: visibility
       category: category
+  - id: repo
+    title: 直下・設定・スキーマ・スクリプト・スキル・型・目次・公開サイトのテーマ
+    paths: [files.yml]
+    exclude: [".git", "docs/pr/**"]
+    records: files
+    body_file: path
+    schema:
+      source: knowledge
+      path: schemas/knowledge-files.schema.yaml
+      ref: design-schemas/v8.3.0
+  - id: hooks
+    title: プラグインのコード
+    paths: [hooks/files.yml]
+    records: files
+    body_file: path
+    schema:
+      source: knowledge
+      path: schemas/knowledge-files.schema.yaml
+      ref: design-schemas/v8.3.0
+  - id: tests
+    title: テスト
+    paths: [tests/files.yml]
+    records: files
+    body_file: path
+    schema:
+      source: knowledge
+      path: schemas/knowledge-files.schema.yaml
+      ref: design-schemas/v8.3.0
   - id: architecture
     title: アーキテクチャ図
     paths: ["docs/architecture/*.yaml"]
