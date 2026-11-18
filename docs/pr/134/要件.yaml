@@ -35,11 +35,15 @@ docs:
   - page: docs/interface/IF-2.yaml
     new: false
     change: 書き込みのツールの書き込む内容（引数）を照合の対象に加える入出力とフロー
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:36:17.269822+00:00'
   - page: docs/interface/IF-7.yaml
     new: true
     change: 応答の文への引用の文脈の追加のイベントの入出力とフロー（使用するイベントは PoC で決める）
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:36:17.269822+00:00'
   - page: docs/module/MOD-1.ts.yaml
     new: false
     change: 応答の文の処理の追加と、tool.call で書き込む内容を照合する処理
