@@ -1,5 +1,5 @@
 {
-  "name": "alias-inject",
+  "name": "alias-inject-poc",
   "owner": { "name": "shuhei1101" },
-  "plugins": [{ "name": "alias-inject", "source": "./" }]
+  "plugins": [{ "name": "alias-inject-poc", "source": "./" }]
 }
