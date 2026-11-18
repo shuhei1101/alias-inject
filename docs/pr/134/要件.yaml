@@ -7,7 +7,7 @@ use_cases:
   - kind: single
     scenario: docs/scenario/SC-2.yaml
     impact: changed
-    detail: 書き込みのツール（Write・Edit・MCP の書き込みのツール）が書き込む内容に初めて出た単語の引用の文脈を、ツールの結果の後ろに追加する
+    detail: 書き込みのツール（Write・Edit・MCP の書き込みのツール）が書き込む内容に初めて出た単語の引用の文脈を、ツールの結果の後ろに追加する。応答の文も照合するため、サブエージェントのシナリオではメインの会話の応答に単語を出させない
     depends_on:
       - docs/scenario/SC-1.yaml
   - kind: single
