@@ -242,8 +242,8 @@ exceptions:
     notes: 例外を外へ出さず、debug log に例外の理由を出し、応答の結果をそのまま返却する
 constraints:
   - item: 処理時間
-    constraint: モデルへの要求ごとに増える待ち時間は、ツールの呼び出しと同じ 200ms まで
-    decided_by: NFR-1#requirements[ツールの呼び出しで増える待ち時間]
+    constraint: モデルへの要求ごとに増える待ち時間は 200ms まで
+    decided_by: NFR-1#requirements[モデルへの要求ごとに増える待ち時間]
     notes: 照合は応答を読み切った後に行い、チャンクの表示を遅らせない。読み込みは `prompt.submit`・`tool.call` と共有する
   - item: 照合
     constraint: '[入力への引用の文脈の追加](id:IF-3) の照合と同じ（同じ設定ファイル・`project-index.yaml`・YAML・`exclude`・作業場所の絞り）'
