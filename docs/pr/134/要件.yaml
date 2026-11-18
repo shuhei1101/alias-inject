@@ -72,6 +72,12 @@ docs:
     new: false
     change: プラグインの説明に、書き込む内容と応答の文の照合を加える
     status: todo
+  - page: docs/nonfunctional/NFR-1.yaml
+    new: false
+    change: '`turn.step` のモデルへの要求ごとに増える待ち時間（NFR-10）を追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:40:24.574041+00:00'
 scope_out:
   - item: エラーになったツールの結果・文字列でない結果の照合
     reason: '要望（やりたいこと）は書き込む内容と応答の文だけで、エラーの結果は現状の表に挙がるだけ。SC-2 はエラーの結果に文脈を追加しないことを正常シナリオとして定めている。入れるかは単一ユースケース設計のレビューで確定する（今の判断: スコープ外）'
