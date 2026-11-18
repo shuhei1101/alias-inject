@@ -120,6 +120,8 @@ scenarios:
         description: 正常シナリオの設定に、照合から除外するツールとして `Agent` を指定する
       - name: 回答させる入力
         description: Agent でサブエージェントを起動し、サブエージェントに、入力の文に term-a を含めず `term-` の後に `a` を続けた単語を含む一文を出してから Bash で `echo ok` を実行させる
+      - name: メインの会話の応答
+        description: メインの会話のモデルには途中の文を出さずに Agent を呼ばせ、Agent の結果を受けた後は単語を含まない「完了」だけを回答させる
     flow: |-
       <!-- map -->
 

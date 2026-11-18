@@ -160,6 +160,8 @@ scenarios:
         notes: サブエージェントの回答（メインの会話の Agent の結果）に term-a が入っても、メインの会話の記録に入らないようにする
       - name: 参照させるファイル
         description: 正常シナリオと同じ
+      - name: メインの会話の応答
+        description: メインの会話のモデルには途中の文を出さずに Agent を呼ばせ、Agent の結果を受けた後は単語を含まない「完了」だけを回答させる
     flow: |-
       sequenceDiagram
         actor U as 利用者
