@@ -206,7 +206,7 @@ functions:
     title: ツールの結果への引用の文脈の追加
     container: hooks/handlers.ts
     usecase: ツールの結果への引用の文脈の追加
-    summary: ツールの結果の本文を照合してその会話で初めて出た単語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返却する
+    summary: ツールの結果の本文と引数を照合してその会話で初めて出た単語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返却する
     kind: フック
     inherits: IF-2#
     scope: public
@@ -233,13 +233,13 @@ functions:
       description: '`next(e)` の結果。引用の文脈か値の行を追加したときは `context` だけを替えたもの'
     process: |-
       1. `r = await next(e)`
-      2. `r.deny` があるか、`r.isError` が true か、`r.text` が文字列でなければ `r` を返却する
+      2. `r.deny` があるか、`r.isError` が true なら `r` を返却する。照合する本文は、`r.text`（文字列のとき）と引数の文字列の連結のうち空でないものをこの順に改行でつないだものにする。照合する本文が空なら引用の文脈を追加しない（7 へ進む）
       3. 設定の読み込みをする（handlePromptSubmit の 2〜6 と同じ）。設定ファイルのパスが null・読み込めない設定のときは引用の文脈を追加しない（7 へ進む）
       4. enabled が false か、`e.tool` が実効の設定の excludeTools のどれかと完全に一致するときは引用の文脈を追加しない（7 へ進む）。origins では絞らない
-      5. 単語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、`r.text` と照合して、`r.text` での照合条件での絞り込み・出た回数の順の並べ替え・参照している文書の除外（home は `$.env.get('HOME')`）を適用する
+      5. 単語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、照合する本文と照合して、照合する本文での照合条件での絞り込み・出た回数の順の並べ替え・参照している文書の除外（home は `$.env.get('HOME')`）を適用する
       6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの単語の選択にして呼び、結果の text を引用の文脈にする
       7. 3〜6 で想定しない例外（RecordConflictError を含む）が起きたら、理由を debug log に出し、引用の文脈を追加せずに続ける
-      8. 変数参照の名前の検出が空でなければ、`$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ。`exitCode` が 0 なら env の出力の分割と値の行の組み立てをする。`exitCode` が 0 以外なら終了コードを、例外（起動できない・待ちの上限の超過を含む）なら理由を debug log に出し、値の行を追加しない
+      8. `r.text` が文字列で、`r.text` の変数参照の名前の検出が空でなければ、`$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ。`exitCode` が 0 なら env の出力の分割と値の行の組み立てをする。`exitCode` が 0 以外なら終了コードを、例外（起動できない・待ちの上限の超過を含む）なら理由を debug log に出し、値の行を追加しない
       9. 引用の文脈も値の行も無ければ `r` を返却する。あれば `{ ...r, context: [...(r.context ?? []), 引用の文脈, 値の行] }` を返却する（無い方は並べない）
     refs:
       - IF-5#
@@ -255,6 +255,7 @@ functions:
       - MOD-8#functions[parseEnvOutput]
       - MOD-8#functions[formatReferenceLines]
       - MOD-8#constants[VARIABLE_REFERENCE_TIMEOUT_MS]
+      - MOD-5#functions[joinArgumentText]
     unit_tests:
       - name: test_handle_tool_call_when_context_given
         case: 正常
@@ -264,8 +265,8 @@ functions:
         expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`text`・`ref` が `next` の結果のまま。`process.run` に `timeoutMs` 20 が渡る"
       - name: test_handle_tool_call_when_skipped
         case: 正常
-        summary: deny・エラーの結果・本文が無い結果・単語も変数参照も無い結果はそのまま返却する
-        condition: '設定ファイルと term-a の YAML がある。`next` が `deny` あり、`isError: true`、`text` が無い、`text` に単語も変数参照も無いの 4 通りを返却する。前の 3 通りの `text` は term-a を含む'
+        summary: deny・エラーの結果・本文も引数の文字列も無い結果・単語も変数参照も無い結果はそのまま返却する
+        condition: '設定ファイルと term-a の YAML がある。`next` が `deny` あり、`isError: true`、`text` が無く引数に文字列が無い、`text` に単語も変数参照も無いの 4 通りを返却する。前の 3 通りの `text` は term-a を含む'
         mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を指定する。`process.run` の呼ばれた回数を記録する
         expected: どれも返る結果が `next` の結果のままで、`process.run` が呼ばれていない。記録が空
       - name: test_handle_tool_call_when_quote_added
@@ -304,6 +305,84 @@ functions:
         condition: test_handle_tool_call_when_quote_added と同じ入力
         mock: 'test_handle_tool_call_when_quote_added と同じ。ただしテストの `on` の `state.set` は `ifVersion` を付けた書き込みに常に `isSet: false` を返却する。`ui.log` は届いた行を記録する'
         expected: "返る `context` が `['other', '変数参照の値: !{VALUE_A} = value-a']` で、`ui.log` に `to` が `debug` の行が届く"
+      - name: test_handle_tool_call_when_written_content
+        case: 正常
+        summary: 引数の文字列も照合し、本文の無い結果でも引数だけを照合する
+        condition: '設定ファイルと term-a・term-b の YAML がある。`e.tool` が `Write` で `content` が「term-a の説明」、`next` の `text` が「File created」。続けて別のセッションで `e.tool` が `mcp__x__write` で `items` が `[{ body: term-b の説明 }]`、`next` の `text` が無い'
+        mock: test_handle_tool_call_when_skipped と同じ
+        expected: 1 回目の `context` の末尾が term-a の文脈、2 回目の `context` が term-b の文脈。どちらも `text` が `next` の結果のまま
+    status: planned
+  - name: handleTurnStep
+    title: 応答の文への引用の文脈の追加
+    kind: フック
+    container: hooks/handlers.ts
+    usecase: 応答の文への引用の文脈の追加
+    summary: モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の文脈を `$.session.append` で会話に追加する
+    scope: public
+    is_async: true
+    side_effects: 追加した単語を `$.state` の会話の記録に入れ、`$.session.append` で会話に 1 行追加する。読み込めない設定・YAML、行の追加を拒まれた理由、想定しない例外を debug log に出す
+    inherits: IF-7#
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: injected
+        description: エンジンから受け取る
+      - name: e
+        type: TurnStepInput
+        required: true
+        passing: positional
+        description: モデルへの要求の入力
+      - name: next
+        type: StreamNext<'turn.step'>
+        required: true
+        passing: positional
+        description: 下のプラグインとエンジンの処理のストリーム
+    returns:
+      type: AsyncGenerator<TurnStepChunk, TurnStepResult>
+      description: '`next(e)` のチャンクをそのまま送信し、`next(e)` の結果をそのまま返却する非同期のジェネレータ'
+    process: |-
+      1. `r = yield* next(e)` でチャンクをそのまま送信し、結果を受け取る
+      2. `r.answer` が空か文字列でなければ `r` を返却する
+      3. 設定の読み込みをする（handlePromptSubmit の 2〜6 と同じ）。設定ファイルのパスが null・読み込めない設定のときは `r` を返却する
+      4. enabled が false なら `r` を返却する。origins と excludeTools では絞らない
+      5. 単語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、`r.answer` と照合して、`r.answer` での照合条件での絞り込み・出た回数の順の並べ替えを適用する
+      6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの単語の選択にして呼ぶ。結果が null なら `r` を返却する
+      7. `$.session.append({ message: { type: 'user', content: [{ type: 'text', text: selection.text }] } })` を呼ぶ。`e.agentId` があれば `agentId` を付ける。結果に `deny` があれば理由を debug log に出す
+      8. 3〜7 で想定しない例外（RecordConflictError を含む）が起きたら、理由を debug log に出す
+      9. `r` を返却する
+    callees:
+      - MOD-10#functions[findHits]
+      - MOD-11#functions[filterByCondition]
+      - MOD-10#functions[sortByCount]
+      - MOD-14#functions[recordIdOf]
+      - MOD-14#functions[addRecorded]
+      - MOD-9#functions[selectEntries]
+    unit_tests:
+      - name: test_handle_turn_step
+        case: 正常
+        summary: 初めて出た単語の文脈を user の行で追加し、チャンクと結果を変えない
+        condition: 設定ファイルと term-a の YAML がある。テストの `on` の `turn.step` がテキストのチャンクを 1 つ送信し、`answer` が「term-a の説明」の結果を返却する
+        mock: test_handle_tool_call_when_skipped と同じファイル表。`mock.session(on)` で追加された行を参照する
+        expected: 受け取ったチャンクと結果がテストの `turn.step` のもののまま。追加された行が 1 行で、`message.type` が `user`、本文に term-a の文脈を含み、`agentId` が無い。`$.session.id()` の記録に term-a のキーが入る
+      - name: test_handle_turn_step_when_in_subagent
+        case: 正常
+        summary: agentId のある要求はその組の記録で照合し、同じ agentId で行を追加する
+        condition: test_handle_turn_step と同じで、`e.agentId` が `agent-1`
+        mock: test_handle_turn_step と同じ
+        expected: 追加された行の `agentId` が `agent-1` で、s1 と `agent-1` の記録に term-a のキーが入り、s1 の記録は空
+      - name: test_handle_turn_step_when_skipped
+        case: 正常
+        summary: 見える文の無い応答・enabled が false・記録済みの単語だけの応答では行を追加しない
+        condition: '`answer` が空の文字列、`global.enabled` が false で `answer` が「term-a」、記録に term-a が入っていて `answer` が「term-a」の 3 通り'
+        mock: test_handle_turn_step と同じ
+        expected: どれも追加された行が 0 行で、結果がテストの `turn.step` のもののまま
+      - name: test_handle_turn_step_when_append_denied
+        case: 異常
+        summary: 行の追加を拒まれたら debug log に出して結果を返却する
+        condition: test_handle_turn_step と同じ入力
+        mock: 'test_handle_turn_step と同じ。ただしテストの `on` の `session.append` が `{ deny: refused }` を返却する。`ui.log` は届いた行を記録する'
+        expected: 結果がテストの `turn.step` のもののままで、`ui.log` に `to` が `debug` で `refused` を含む行が届く
     status: planned
 tags:
   - name: topic:イベント

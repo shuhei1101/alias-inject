@@ -99,9 +99,9 @@ functions:
       type: Hit[]
       description: 除外した残り。並びは受け取ったまま
     process: |-
-      1. `e.tool` が `Read` で `e.file_path` が文字列なら、文書のパスが `e.file_path` と一致する単語を除外する
+      1. `e.tool` が `Read`・`Write`・`Edit` のどれかで `e.file_path` が文字列なら、文書のパスが `e.file_path` と一致する単語を除外する
       2. `e.tool` が `mcp__` で始まるなら、引数の文字列の収集に entry.id がある単語を除外する
-      3. それ以外のツールは hits をそのまま返却する
+      3. それ以外のツール（Bash など）は hits をそのまま返却する
     refs:
       - IF-2#constraints[参照している文書そのもの]
     callees:
@@ -126,6 +126,50 @@ functions:
         condition: hits が term-a と term-b、`e` が `Bash` で `command` が `cat /repo/knowledge/terms/term-a.yaml`
         mock: なし
         expected: term-a と term-b
+      - name: test_exclude_reading_documents_when_write
+        case: 正常
+        summary: Write・Edit も文書のパスが file_path と一致する単語を除外する
+        condition: hits が term-a（path が `/repo/knowledge/terms/term-a.yaml`）と term-b、`e` が `Write` と `Edit` で `file_path` が `/repo/knowledge/terms/term-a.yaml` の 2 通り
+        mock: なし
+        expected: どちらも term-b だけ
+    status: planned
+  - name: joinArgumentText
+    title: 引数の文字列の連結
+    kind: 関数
+    container: hooks/lib/tool.ts
+    usecase: ツールの結果への引用の文脈の追加
+    summary: ツールの引数の文字列の値を、引数の並びの順に改行でつないだ照合する本文を返却する
+    scope: public
+    is_async: false
+    args:
+      - name: e
+        type: ToolCallInput
+        required: true
+        passing: positional
+        description: '`tool.call` の入力'
+    returns:
+      type: string
+      description: 文字列の値を改行でつないだもの。文字列が無ければ空の文字列
+    process: |-
+      1. 引数の文字列の収集と同じキーを除いて、同じ順で辿る
+      2. 辿った順の文字列を、重なりを残したまま改行でつなぐ
+
+      辿り方は引数の文字列の収集と共有する内部の関数に配置する
+    refs:
+      - IF-2#constraints[照合する本文]
+    unit_tests:
+      - name: test_join_argument_text
+        case: 正常
+        summary: 入れ子の文字列を引数の順に改行でつなぎ、予約したキーは含めない
+        condition: '`tool` が `Write`、`tool_use_id` が `t1`、`file_path` が `/work/note.md`、`content` が「term-a の説明」、`meta` が `{ tags: [x, x] }`、`count` が 2'
+        mock: なし
+        expected: '`/work/note.md\nterm-a の説明\nx\nx`'
+      - name: test_join_argument_text_when_no_strings
+        case: 正常
+        summary: 文字列の引数が無ければ空の文字列
+        condition: '`tool` が `Bash`、`tool_use_id` が `t1`、`timeout` が 1000'
+        mock: なし
+        expected: 空の文字列
     status: planned
 tags:
   - name: topic:ツール
