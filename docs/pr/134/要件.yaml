@@ -47,19 +47,27 @@ docs:
   - page: docs/module/MOD-1.ts.yaml
     new: false
     change: 応答の文の処理の追加と、tool.call で書き込む内容を照合する処理
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
   - page: docs/module/MOD-7.tsx.yaml
     new: false
     change: 応答の文のイベントへの処理の登録
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
   - page: docs/module/MOD-5.ts.yaml
     new: false
     change: 書き込む内容を照合するときの、書き込んだ文書そのものの単語の除外（Write・Edit の file_path）
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
   - page: docs/library/LIB-1.yaml
     new: false
     change: PoC で確かめた応答の文のイベントと、tool.call の書き込みのツールの引数のカタログ
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
   - page: docs/architecture/ARCH-1.yaml
     new: false
     change: Claude Code からプラグインへ渡るものに、書き込む内容と応答の文を加える
@@ -79,6 +87,6 @@ docs:
     updated_by: planner
     updated_at: '2026-11-18T16:40:24.574041+00:00'
 scope_out:
-  - item: エラーになったツールの結果・文字列でない結果の照合
-    reason: '要望（やりたいこと）は書き込む内容と応答の文だけで、エラーの結果は現状の表に挙がるだけ。SC-2 はエラーの結果に文脈を追加しないことを正常シナリオとして定めている。入れるかは単一ユースケース設計のレビューで確定する（今の判断: スコープ外）'
-    plan: to_file
+  - item: エラーになったツールの結果の照合
+    reason: 要望は書き込む内容と応答の文だけで、SC-2「正常シナリオ（エラーの結果）」と IF-2 で、エラーの結果は引数も結果も照合しないと決めた。本文の無い結果は引数を照合するためスコープ内になった
+    plan: none
