@@ -1,0 +1,278 @@
+id: IF-7
+visibility: internal
+title: 応答の文への引用の文脈の追加
+lead: モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の引用の文脈を `$.session.append` で会話に追加する `turn.step` の処理の入出力とフローを定め、応答の文への引用の文脈の追加を修正するときに参照する。
+entry:
+  kind: trigger
+  value: '`turn.step`（モデルへの要求ごと。ストリームのイベント）'
+test_file: tests/integration/hooks/turn-step.test.ts
+idempotent: false
+side_effects: 追加した単語を `$.state` の会話の記録に入れ、引用の文脈を `$.session.append` でその会話に 1 行追加する。ファイルへの書き込みと外への送信はしない
+callers:
+  - LIB-1#
+exclusivity: 並列に呼ばれた `tool.call`・`prompt.submit` と同じ記録へ書き込むため、[ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で書き込む
+request:
+  - name: e.turnId
+    type: string
+    required: true
+    location: argument
+    description: ターンの ID。照合には使用しない
+  - name: e.index
+    type: number
+    required: true
+    location: argument
+    description: ターンの中のモデルへの要求の位置（0 始まり）。照合には使用しない
+  - name: e.agentId
+    type: string
+    required: false
+    default: なし（メインの会話）
+    location: argument
+    description: サブエージェントの要求のときに入る。入っているときはセッションと `agentId` の組の記録で照合し、`$.session.append` にも同じ `agentId` を指定する
+  - name: next(e)
+    type: HookStream<TurnStepChunk, TurnStepResult>
+    required: true
+    location: argument
+    description: 下の処理のストリーム。全てのチャンクをそのまま上へ送信し、読み切った後の戻り値を結果として使用する
+  - name: result.answer
+    type: string
+    required: true
+    location: argument
+    description: 応答の見える文。ここを照合する。ツールだけを呼んだ・考えただけ・要求が無かったときは空の文字列
+    notes: ツールの呼び出しの引数は `answer` に入らず `toolUses` に入る（型の宣言と PoC の記録）。引数は [ツールの結果への引用の文脈の追加](id:IF-2) が照合する
+response:
+  - name: '-'
+    type: TurnStepResult
+    description: '`next(e)` の結果をそのまま返却する。応答の文とチャンクは変えない'
+  - name: $.session.append の行
+    type: SessionAppendArgs
+    description: '`message` が `{ type: user, content: [{ type: text, text: 引用の文脈 }] }`。サブエージェントのときは `agentId` を付ける。追加する単語が無いときは呼ばない'
+    constraints: 引用の文脈は `max_chars` 文字まで
+response_notes: 文脈の書式（見出し・`alias_type` ごとのセクション・単語ごとの箇条書き）は [入力への引用の文脈の追加](id:IF-3) と同じ。追加した行は、その会話の次のモデルへの要求（ターンの最後の文なら次のターン、途中の文なら同じターンのツールの結果の後ろ）でモデルに届く
+flows:
+  - name: 正常系
+    summary: 応答の文に初めて出た単語の文脈を会話に追加し、メインの会話の記録に入れる
+    setup:
+      - name: Mock
+        description: '[入力への引用の文脈の追加](id:IF-3) の正常系と同じファイル表。`mock.session(on)` で追加された行を参照する。テストの `on` の `turn.step` はテキストのチャンクを 1 つ送信し、結果を返却する'
+      - name: 要求
+        description: '`e.turnId` が `turn-1`、`e.index` が 0、`e.agentId` が無い'
+      - name: 応答
+        description: '`answer` が「用語エーの説明」'
+        notes: エイリアスでヒットさせる
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant ST as $.state
+        participant SA as $.session.append
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: チャンク
+        IF-->>CC: チャンクをそのまま送信する
+        CC-->>IF: 応答の結果
+        IF->>IF: answer と単語を正規化して照合し term-a がヒットする
+        IF->>ST: term-a をセッションの記録に入れる
+        IF->>SA: term-a の文脈の user の行
+        SA-->>IF: 追加した行
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - 上へ送信されたチャンクと返る結果が `next(e)` のものと同じ
+      - '`mock.session` の追加された行が 1 行で、`message.type` が `user`、本文が `# この発言に出る用語`・`## 用語`・term-a の単語 `Term-A` を含む'
+      - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、返る `context` が空
+    test: test_normal
+  - name: 正常系（記録済みの単語だけ）
+    summary: 記録済みの単語だけがヒットしたときは行を追加しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: セッションの記録
+        description: '`prompt.submit` に「term-a とは」を送信し、メインの会話で term-a が記録済み'
+      - name: 応答
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 応答の結果
+        IF->>IF: term-a がヒットする
+        IF->>ST: 記録を参照する
+        ST-->>IF: term-a は記録済み
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - '`mock.session` の追加された行が 0 行'
+      - 返る結果が `next(e)` の結果と同じ
+    test: test_normal_when_only_recorded_terms
+  - name: 正常系（サブエージェント）
+    summary: agentId のある要求はメインの会話と別の記録で照合し、そのサブエージェントの会話に追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 要求
+        description: '`e.agentId` が `agent-1`'
+      - name: 応答
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant ST as $.state
+        participant SA as $.session.append
+
+        CC->>IF: e（agentId: agent-1）
+        IF->>CC: next(e)
+        CC-->>IF: 応答の結果
+        IF->>ST: セッションと agent-1 の記録に term-a を入れる
+        IF->>SA: agentId agent-1 で term-a の文脈の行
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - '`mock.session` の追加された行が 1 行で、`agentId` が `agent-1`'
+      - 続けて `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
+    test: test_normal_when_in_subagent
+  - name: 正常系（照合しない応答）
+    summary: 見える文の無い応答は照合しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 応答
+        description: '`answer` が空の文字列で、`toolUses` に引数に term-a を含む Write の呼び出しを持つ'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: answer が空の結果
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - '`mock.session` の追加された行が 0 行'
+      - 続けて `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
+    test: test_normal_when_no_answer
+  - name: 異常系（設定ファイルを読み込めない）
+    summary: 設定ファイルを読み込めないときは行を追加せずに返却する
+    setup:
+      - name: Mock
+        description: 正常系と同じ。ただし設定ファイルの中身が YAML の書式の誤ったもの。`ui.log` は届いた行を記録する
+      - name: 応答
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant FS as ファイル・settings
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 応答の結果
+        IF->>FS: 設定ファイルを参照する
+        FS-->>IF: 書式の誤り
+        IF->>IF: debug log に出す
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - '`mock.session` の追加された行が 0 行'
+      - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスを含む行が届いている
+    test: test_error_when_config_unreadable
+  - name: 異常系（行の追加を拒まれた）
+    summary: $.session.append が deny を返却したときは debug log に出して返却する
+    setup:
+      - name: Mock
+        description: '正常系と同じ。ただしテストの `on` の `session.append` が `{ deny: 拒否 }` を返却する。`ui.log` は届いた行を記録する'
+      - name: 応答
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant SA as $.session.append
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 応答の結果
+        IF->>SA: term-a の文脈の user の行
+        SA-->>IF: deny
+        IF->>IF: debug log に出す
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - フックが例外で終わらない
+      - テストの `on` の `ui.log` に、`to` が `debug` で拒否の理由を含む行が届いている
+    test: test_error_when_append_denied
+  - name: 異常系（想定しない例外）
+    summary: 照合の途中の例外では行を追加せずに返却する
+    setup:
+      - name: Mock
+        description: 正常系と同じ。ただしテストの `on` の `state.get` が例外を投げる。`ui.log` は届いた行を記録する
+      - name: 応答
+        description: 正常系と同じ
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as turn.step
+        participant ST as $.state
+
+        CC->>IF: e
+        IF->>CC: next(e)
+        CC-->>IF: 応答の結果
+        IF->>ST: 記録を参照する
+        ST-->>IF: 例外
+        IF->>IF: debug log に出す
+        IF-->>CC: 応答の結果そのまま
+    expected:
+      - 返る結果が `next(e)` の結果と同じ
+      - '`mock.session` の追加された行が 0 行'
+      - テストの `on` の `ui.log` に、`to` が `debug` の行が届いている
+    test: test_error_when_unexpected
+exceptions:
+  - name: なし（正常終了）
+    condition: 照合して行を追加したか、追加する単語が無い・照合しない応答のため追加せずに返却した
+  - name: なし（設定ファイル・YAML を読み込めない・記録の書き込みが再試行の上限まで一致しない）
+    condition: '[ツールの結果への引用の文脈の追加](id:IF-2) の同じ名前の行と同じ'
+    notes: 例外を外へ出さず、debug log に出し、行を追加せずに返却する
+  - name: なし（行の追加を拒まれた）
+    condition: '`$.session.append` が `deny` を返却した'
+    notes: debug log に理由を出す。記録に入れた単語は残る
+  - name: なし（想定しない例外）
+    condition: 照合・記録・行の追加の途中で想定しない例外が起きた
+    notes: 例外を外へ出さず、debug log に例外の理由を出し、応答の結果をそのまま返却する
+constraints:
+  - item: 処理時間
+    constraint: モデルへの要求ごとに増える待ち時間は、ツールの呼び出しと同じ 200ms まで
+    decided_by: NFR-1#requirements[ツールの呼び出しで増える待ち時間]
+    notes: 照合は応答を読み切った後に行い、チャンクの表示を遅らせない。読み込みは `prompt.submit`・`tool.call` と共有する
+  - item: 照合
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合と同じ（同じ設定ファイル・`project-index.yaml`・YAML・`exclude`・作業場所の絞り）'
+  - item: 並び・上限
+    constraint: '[ツールの結果への引用の文脈の追加](id:IF-2) と同じく、応答の文に出た回数の多い順に並べ、`max_items` 単語・`max_chars` 文字まで選ぶ'
+    decided_by: CFG-1#settings[global.max_items]
+  - item: 照合条件
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合条件と同じ。`field` の `text` は応答の文（`result.answer`）を指す'
+  - item: 照合しない応答
+    constraint: '`result.answer` が空・文字列でない応答は照合しない'
+  - item: 記録の単位
+    constraint: '[ツールの結果への引用の文脈の追加](id:IF-2) と同じ。`e.agentId` が無いときはセッション ID、あるときはセッション ID と `agentId` の組ごとに記録し、入力・ツールの結果と記録を共有する'
+  - item: 記録と行の追加の順
+    constraint: 記録に入れた後に `$.session.append` で行を追加する
+    notes: 並列の要求が同じ単語を 2 回追加しないように、記録の `ifVersion` の書き込みを先にする
+  - item: サブエージェントの最後の文
+    constraint: サブエージェントの最後の文で追加した行は、そのループが終わるためモデルに届かない。そのまま追加する
+    notes: 記録はそのサブエージェントのもので、メインの会話の記録には影響しない
+  - item: 出所・除外するツール
+    constraint: '`origins` と `exclude_tools` で絞らない'
+    notes: どちらも入力とツールの結果の設定で、応答の文は出所もツールの名前も持たない
+refs:
+  - SC-8#
+tags:
+  - name: topic:引用の文脈
+    main: true
+  - name: topic:応答
+  - name: topic:照合
+  - name: topic:フック
+  - name: action:追加
+  - name: action:照合
+  - name: tool:claude-code
