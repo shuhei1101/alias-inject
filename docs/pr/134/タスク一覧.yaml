@@ -15,8 +15,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-18T15:45:50.609464+00:00'
   - process: PoC 検証
-    status: todo
+    status: done
     note: 応答の文に文脈を追加できる hooks モジュールのイベントの有無と、書き込みのツールの引数を tool.call で照合して文脈を届けられるか
+    updated_by: planner
+    updated_at: '2026-11-18T16:09:48.075168+00:00'
   - process: 複合ユースケース設計
     status: todo
   - process: デザインスタイル選定
