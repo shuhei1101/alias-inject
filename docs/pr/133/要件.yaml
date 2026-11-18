@@ -1,0 +1,36 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: changed
+    detail: 入力で単語がヒットして引用の文脈を追加したときに、追加した単語と文書の ID を利用者の画面に表示する
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: changed
+    detail: ツールで参照した本文で単語がヒットして引用の文脈を追加したときに、追加した単語と文書の ID を利用者の画面に表示する
+    depends_on: []
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: run_only
+    detail: 単語ごとに 1 回だけ文脈を追加する流れは変わらないが、表示の追加が記録を壊さないかを確認する
+    depends_on: []
+docs:
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: 引用の文脈を追加したときに、追加した単語が利用者の画面に表示されることを追加する
+    status: todo
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: 表示のオンとオフのキーを追加した場合、キーと既定値を追加する
+    status: todo
+  - page: settings.sample.yaml
+    new: false
+    change: 表示のオンとオフのキーを追加した場合、見本に追加する
+    status: todo
+scope_out:
+  - item: 変数参照（`!{名前}`）の値を追加したことの表示
+    reason: 要望は単語のヒットの表示で、変数参照の値は単語の照合ではない
+    plan: none
+  - item: Claude Code が書き込む内容と応答の文の照合で追加した単語の表示
+    reason: 'その照合は open の #132 が追加するもので、develop にまだ無い。#132 の照合とこの PR の表示がそろった後に対応する'
+    plan: to_file
