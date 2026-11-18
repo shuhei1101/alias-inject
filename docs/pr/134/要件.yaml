@@ -18,10 +18,9 @@ use_cases:
       - docs/scenario/SC-1.yaml
   - kind: single
     scenario: docs/scenario/SC-3.yaml
-    impact: following
-    detail: 応答の文と書き込む内容で追加した単語は、入力でも追加済みとして扱う
-    depends_on:
-      - docs/scenario/SC-1.yaml
+    impact: run_only
+    detail: 入力の照合は変えないが、応答の文と書き込む内容で追加した単語も同じ記録に入るため回帰を確かめる（記録の共有は SC-1 と SC-8 が定める）
+    depends_on: []
   - kind: single
     scenario: docs/scenario/SC-4.yaml
     impact: run_only
