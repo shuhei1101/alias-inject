@@ -1,0 +1,36 @@
+{"at":1795017865930,"event":"session.append","door":"response","agentId":null,"text":"ZEBRA を含む短い一文です。"}
+{"at":1795017865955,"event":"turn.step","agentId":null,"turnId":"9010fbdf-7046-40f1-8a13-a5114dc70ec3","index":0,"answer":"ZEBRA を含む短い一文です。","toolUses":[]}
+{"at":1795017865959,"event":"session.append(call)","marker":"POCMARK-STEP-0-MAIN","agentId":null,"result":{"message":{"type":"user","role":"user","isMeta":true,"content":[{"type":"text","text":"PoC の目印: POCMARK-STEP-0-MAIN"}]},"uuid":"2c592aad-db63-4bb4-be39-b11befe7b224"}}
+{"at":1795017866040,"event":"turn.complete","agentId":null,"turnId":"9010fbdf-7046-40f1-8a13-a5114dc70ec3","reason":"answer","answer":"ZEBRA を含む短い一文です。"}
+{"at":1795017996754,"event":"session.append","door":"response","agentId":null,"text":"POCMARK-STEP-0-MAIN"}
+{"at":1795017996773,"event":"turn.step","agentId":null,"turnId":"a4523e77-c5f9-424d-ba81-c036496baed4","index":0,"answer":"POCMARK-STEP-0-MAIN","toolUses":[]}
+{"at":1795017996849,"event":"turn.complete","agentId":null,"turnId":"a4523e77-c5f9-424d-ba81-c036496baed4","reason":"answer","answer":"POCMARK-STEP-0-MAIN"}
+{"at":1795018004622,"event":"session.append","door":"response","agentId":null,"text":"ZEBRA を書き込みます"}
+{"at":1795018005005,"event":"session.append","door":"response","agentId":null,"text":""}
+{"at":1795018005027,"event":"turn.step","agentId":null,"turnId":"f46b96a0-070d-4483-858a-49cac08e381d","index":0,"answer":"ZEBRA を書き込みます","toolUses":["Write"]}
+{"at":1795018005030,"event":"session.append(call)","marker":"POCMARK-STEP-0-MAIN","agentId":null,"result":{"message":{"type":"user","role":"user","isMeta":true,"content":[{"type":"text","text":"PoC の目印: POCMARK-STEP-0-MAIN"}]},"uuid":"d3b8211a-d885-4f38-b5bf-aa9673abe08d"}}
+{"at":1795018006712,"event":"session.append","door":"response","agentId":null,"text":"完了しました"}
+{"at":1795018006727,"event":"turn.step","agentId":null,"turnId":"f46b96a0-070d-4483-858a-49cac08e381d","index":1,"answer":"完了しました","toolUses":[]}
+{"at":1795018006801,"event":"turn.complete","agentId":null,"turnId":"f46b96a0-070d-4483-858a-49cac08e381d","reason":"answer","answer":"完了しました"}
+{"at":1795018014476,"event":"session.append","door":"response","agentId":null,"text":"POCMARK-STEP-0-MAIN で、Write の結果より後に届いていました。"}
+{"at":1795018014493,"event":"turn.step","agentId":null,"turnId":"e237dc9f-b0d0-40f1-b107-04e6295c4343","index":0,"answer":"POCMARK-STEP-0-MAIN で、Write の結果より後に届いていました。","toolUses":[]}
+{"at":1795018014566,"event":"turn.complete","agentId":null,"turnId":"e237dc9f-b0d0-40f1-b107-04e6295c4343","reason":"answer","answer":"POCMARK-STEP-0-MAIN で、Write の結果より後に届いていました。"}
+{"at":1795018029928,"event":"session.append","door":"response","agentId":null,"text":""}
+{"at":1795018030000,"event":"turn.step","agentId":null,"turnId":"f40cdb7c-4208-48ce-a303-10ef023d9d3d","index":0,"answer":"","toolUses":["Agent"]}
+{"at":1795018031533,"event":"session.append","door":"response","agentId":null,"text":"サブエージェントを起動しました。完了通知が届いたら、その回答を伝えます。"}
+{"at":1795018031545,"event":"turn.step","agentId":null,"turnId":"f40cdb7c-4208-48ce-a303-10ef023d9d3d","index":1,"answer":"サブエージェントを起動しました。完了通知が届いたら、その回答を伝えます。","toolUses":[]}
+{"at":1795018031612,"event":"turn.complete","agentId":null,"turnId":"f40cdb7c-4208-48ce-a303-10ef023d9d3d","reason":"answer","answer":"サブエージェントを起動しました。完了通知が届いたら、その回答を伝えます。"}
+{"at":1795018032484,"event":"session.append","door":"response","agentId":"a768716ecc2676b71","text":""}
+{"at":1795018032619,"event":"session.append","door":"response","agentId":"a768716ecc2676b71","text":"ZEBRA は白黒の縞模様が特徴の動物です。"}
+{"at":1795018032819,"event":"session.append","door":"response","agentId":"a768716ecc2676b71","text":""}
+{"at":1795018032838,"event":"turn.step","agentId":"a768716ecc2676b71","turnId":"8476396f-d479-4248-b6eb-d5bbd0c66929","index":0,"answer":"ZEBRA は白黒の縞模様が特徴の動物です。","toolUses":["Bash"]}
+{"at":1795018032842,"event":"session.append(call)","marker":"POCMARK-STEP-0-SUB","agentId":"a768716ecc2676b71","result":{"message":{"type":"user","role":"user","isMeta":true,"content":[{"type":"text","text":"PoC の目印: POCMARK-STEP-0-SUB"}]},"uuid":"335d8e09-b858-4e02-83d8-41afc7a79146"}}
+{"at":1795018036007,"event":"session.append","door":"response","agentId":"a768716ecc2676b71","text":""}
+{"at":1795018036475,"event":"session.append","door":"response","agentId":"a768716ecc2676b71","text":"1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行しました。結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK で始まる文字列: `POCMARK-STEP-0-SUB`（alias-inject プラグインからの注記に含まれていました）。"}
+{"at":1795018036488,"event":"turn.step","agentId":"a768716ecc2676b71","turnId":"8476396f-d479-4248-b6eb-d5bbd0c66929","index":1,"answer":"1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行しました。結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK で始まる文字列: `POCMARK-STEP-0-SUB`（alias-inject プラグインからの注記に含まれていました）。","toolUses":[]}
+{"at":1795018036491,"event":"session.append(call)","marker":"POCMARK-STEP-1-SUB","agentId":"a768716ecc2676b71","result":{"message":{"type":"user","role":"user","isMeta":true,"content":[{"type":"text","text":"PoC の目印: POCMARK-STEP-1-SUB"}]},"uuid":"5f60d6d5-aadd-4855-a3e0-9786079a8600"}}
+{"at":1795018036543,"event":"turn.complete","agentId":"a768716ecc2676b71","turnId":"8476396f-d479-4248-b6eb-d5bbd0c66929","reason":"answer","answer":"1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行しました。結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK で始まる文字列: `POCMARK-STEP-0-SUB`（alias-inject プラグインからの注記に含まれていました）。"}
+{"at":1795018038527,"event":"session.append","door":"response","agentId":null,"text":"サブエージェントの回答は次のとおりです。\n\n1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行し、結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK 文字列: `POCMARK-STEP-0-SUB`"}
+{"at":1795018038541,"event":"turn.step","agentId":null,"turnId":"9c19f014-7811-413a-9b6d-265966ad7c67","index":0,"answer":"サブエージェントの回答は次のとおりです。\n\n1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行し、結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK 文字列: `POCMARK-STEP-0-SUB`","toolUses":[]}
+{"at":1795018038544,"event":"session.append(call)","marker":"POCMARK-STEP-0-MAIN","agentId":null,"result":{"message":{"type":"user","role":"user","isMeta":true,"content":[{"type":"text","text":"PoC の目印: POCMARK-STEP-0-MAIN"}]},"uuid":"c8e15913-165b-4179-955a-cec4f35b57fd"}}
+{"at":1795018038615,"event":"turn.complete","agentId":null,"turnId":"9c19f014-7811-413a-9b6d-265966ad7c67","reason":"answer","answer":"サブエージェントの回答は次のとおりです。\n\n1. ZEBRA を含む一文: ZEBRA は白黒の縞模様が特徴の動物です。\n2. Bash で `echo ok` を実行し、結果は `ok` でした。\n3. 直前に届いたリマインダーの中の POCMARK 文字列: `POCMARK-STEP-0-SUB`"}
