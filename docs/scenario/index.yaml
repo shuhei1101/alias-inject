@@ -14,3 +14,5 @@ items:
     summary: 設定ファイル・`project-index.yaml`・照合の YAML のどれかを書き換えると、次の入力から反映される
   - page: SC-7.yaml
     summary: ツールで参照した本文の `!{名前}` に、同じ名前の環境変数の値を文脈として追加する
+  - page: SC-8.yaml
+    summary: モデルの応答の文に初めて出た単語の引用の文脈を、次のモデルへの要求に追加する

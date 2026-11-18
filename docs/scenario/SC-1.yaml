@@ -18,8 +18,7 @@ scenarios:
         description: 本文に `!{ALIAS_INJECT_E2E_VALUE}` と term-b を含むテキストファイル
         notes: '`claude` の起動時に環境変数 `ALIAS_INJECT_E2E_VALUE` を `value-a` で設定する'
       - name: 書き込ませる・回答させる入力
-        description: 入力の文に term-c・term-d を含めず、`term-` の後に 1 文字を続けてモデルに単語を組み立てさせる
-        notes: 入力に単語を含めると、入力の照合で先に記録に入り、書き込む内容・応答の文での追加を観測できない
+        description: 入力の文に term-c・term-d を含めず、`term-` の後に 1 文字を続けてモデルに単語を組み立てさせる。Write は途中の文を出さずに呼ばせる
     flow: |-
       <!-- map -->
 
