@@ -61,8 +61,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-18T16:45:50.079951+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: 要件.yaml の docs の公開ドキュメント・プラグインの定義
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:35.898996+00:00'
   - process: 単体テスト作成
     status: todo
   - process: 実装
