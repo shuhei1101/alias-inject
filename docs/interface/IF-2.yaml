@@ -410,7 +410,7 @@ request:
     required: false
     default: なし（引数の無いツール）
     location: argument
-    description: ツールの引数。`e` の直下に展開されて入る。`tool`・`tool_use_id`・`agentId` を除いた引数の、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、書き込む内容として照合する。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、参照している文書の ID の判定に使用する
+    description: ツールの引数。`e` の直下に展開されて入る。`tool`・`tool_use_id`・`agentId`・`requestMeta` を除いた引数の、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、書き込む内容として照合する。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、参照している文書の ID の判定に使用する
     notes: dev-docs の `search_docs` は ID を `filter` の条件の `values` に入れる。ID でない文字列（`source`・`op` など）が単語の ID と一致したときはその単語を除外する
   - name: e.agentId
     type: string
@@ -513,7 +513,7 @@ constraints:
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
   - item: 照合する本文
-    constraint: ツールの結果の本文（`result.text`）の後ろに、ツールの引数の文字列の値を引数の並びの順に改行でつないだものを照合する。引数は全てのツールで照合し、書き込みのツールに絞らない
+    constraint: ツールの結果の本文（`result.text`）の後ろに、ツールの引数（`tool`・`tool_use_id`・`agentId`・`requestMeta` を除く）の文字列の値を引数の並びの順に改行でつないだものを照合する。引数は全てのツールで照合し、書き込みのツールに絞らない
     notes: 照合は `next(e)` の後に 1 回だけ行い、文脈は結果の `context` に追加する。変数参照の値は結果の本文だけから取り出す
 refs:
   - SC-2#
