@@ -231,13 +231,18 @@ export async function callTool($: Engine, input: Record<string, unknown> = { too
 export const STEP_CHUNK = { kind: 'text' as const, index: 0, text: '応答' }
 
 /** `turn.step` の一番下の処理が返却する、`answer` を持つ結果 */
-export function stepResult(answer: string, input: { turnId: string; index: number }) {
-  return { turnId: input.turnId, index: input.index, answer, toolUses: [], stopReason: 'end_turn' as const, usage: null }
+export function stepResult(answer: string, input: { turnId: string; index: number }, toolUses: readonly StepToolUse[] = []) {
+  return { turnId: input.turnId, index: input.index, answer, toolUses, stopReason: 'end_turn' as const, usage: null }
 }
+
+/** `turn.step` の結果の `toolUses` の 1 件 */
+export type StepToolUse = { id: string; name: string; input: unknown }
 
 export type StepWorld = {
   /** `turn.step` の一番下の処理が返却する結果の `answer`。テストの途中で書き換えられる */
   answer: string
+  /** `turn.step` の一番下の処理が返却する結果の `toolUses` */
+  toolUses: readonly StepToolUse[]
   /** 指定すると `$.session.append` をこの理由で拒む */
   denyAppend: string | undefined
   /** 追加された行 */
@@ -249,10 +254,10 @@ export type StepWorld = {
 /** 設定ファイルと YAML のファイル表と、`turn.step` の一番下の処理・追加された行の記録をテストの `on` へ登録する */
 export function installStepWorld(on: On, options: WorldOptions): StepWorld {
   const files = installWorld(on, options)
-  const world: StepWorld = { answer: '', denyAppend: undefined, appended: () => [], files }
+  const world: StepWorld = { answer: '', toolUses: [], denyAppend: undefined, appended: () => [], files }
   on('turn.step', async function* (_, e) {
     yield STEP_CHUNK
-    return stepResult(world.answer, e)
+    return stepResult(world.answer, e, world.toolUses)
   })
   const session = mock.session(on)
   // プラグインが追加する行（door が note）を拒む
@@ -262,8 +267,8 @@ export function installStepWorld(on: On, options: WorldOptions): StepWorld {
 }
 
 /** モデルへの要求を 1 回発火し、受け取ったチャンクと結果を返却する */
-export async function step($: Engine, agentId?: string) {
-  const stream = $.turn.step({ turnId: 't-1', index: 0, model: 'haiku', messageCount: 1, ...(agentId === undefined ? {} : { agentId }) })
+export async function step($: Engine, agentId?: string, turnId = 't-1') {
+  const stream = $.turn.step({ turnId, index: 0, model: 'haiku', messageCount: 1, ...(agentId === undefined ? {} : { agentId }) })
   const chunks: unknown[] = []
   let current = await stream.next()
   while (current.done !== true) {
