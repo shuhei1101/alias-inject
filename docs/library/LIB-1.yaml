@@ -154,7 +154,7 @@ catalogs:
           リポジトリが無いとき: 返り値は null
       - name: $.ui.log
         kind: 関数
-        purpose: 'テキストを会話の記録かデバッグログに出す。`transcript` は利用者の画面に `● {プラグインの名前}: {テキスト}` の行で出し、会話の記録に `type: system`・`subtype: informational` で残す。モデルの入力には入らない。サブエージェントの `tool.call`・`turn.step` から呼んだ行もメインの会話に出る。`turn.step` で `$.session.append` の後に呼んでも、追加した `user` の行は次の要求でモデルに届き、`transcript` の行はモデルに届かない。表示とモデルの入力は 2.1.327 の対話モードのセッションで確認。テストの道具（`claude plugin test`）で `ui.log` の応答が `deny` のときは、Claude Code が受け止めて `$.ui.log dropped` を出し、呼び出し元へは例外を返さない（`await` しても同じ。2.1.327 で確認）。対話モードのセッションでの失敗の扱いは未確認'
+        purpose: 'テキストを会話の記録かデバッグログに出す。`transcript` は利用者の画面に `● {プラグインの名前}: {テキスト}` の行で出し、会話の記録に `type: system`・`subtype: informational` で残す。モデルの入力には入らない。サブエージェントの `tool.call`・`turn.step` から呼んだ行もメインの会話に出る。`turn.step` で `$.session.append` の後に呼んでも、追加した `user` の行は次の要求でモデルに届き、`transcript` の行はモデルに届かない。表示とモデルの入力は、`prompt.submit`・`tool.call` は 2.1.327、`turn.step` は 2.1.328 の対話モードのセッションで確認。テストの道具（`claude plugin test`）で `ui.log` の応答が `deny` のときは、Claude Code が受け止めて `$.ui.log dropped` を出し、呼び出し元へは例外を返さない（`await` しても同じ。2.1.327 で確認）。対話モードのセッションでの失敗の扱いは未確認'
         params:
           - name: text
             type: string
