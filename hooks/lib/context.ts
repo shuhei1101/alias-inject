@@ -9,9 +9,6 @@ export type Selection = {
   entries: Entry[]
 }
 
-/** 追加した単語を利用者の画面に表示する行の先頭 */
-export const ADDED_LINE_PREFIX = '文脈を追加: '
-
 /** 引用の種類ごとのセクションの見出し。並びがセクションの順 */
 export const SECTION_HEADINGS: Record<AliasType, string> = {
   term: '用語',
@@ -76,5 +73,5 @@ export function selectEntries(
 
 /** 追加した単語を、利用者の画面に表示する 1 行にする */
 export function renderAddedLine(entries: Entry[]): string {
-  return ADDED_LINE_PREFIX + entries.map((entry) => `${entry.word}（${entry.id}）`).join('、')
+  return entries.map((entry) => `${entry.word}（${entry.id}）`).join('、')
 }
