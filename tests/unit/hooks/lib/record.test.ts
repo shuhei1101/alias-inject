@@ -9,7 +9,7 @@ function selectMissing(candidates: string[], calls: string[][]) {
   return (recorded: ReadonlySet<string>): Selection | null => {
     calls.push([...recorded].sort())
     const keys = candidates.filter((key) => !recorded.has(key))
-    return keys.length === 0 ? null : { text: keys.join(','), keys }
+    return keys.length === 0 ? null : { text: keys.join(','), keys, entries: [] }
   }
 }
 
