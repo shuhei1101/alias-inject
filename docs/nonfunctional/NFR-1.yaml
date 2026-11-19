@@ -124,6 +124,19 @@ requirements:
     refs:
       - IF-2#constraints[処理時間]
     status: planned
+  - id: NFR-10
+    name: モデルへの要求ごとに増える待ち時間
+    english_name: added_latency_on_turn_step
+    category: 性能
+    external_constraint: 10000ms（`HookBudget.ms`。ストリームのフックは自分のコードの時間だけを数え、`turn.step` では 1 つの応答の合計を上限と比べる。超えると hook が無かった扱いになる）
+    source_kind: 実行基盤の制限
+    value: '200'
+    unit: ms
+    rationale: 照合と設定の読み込みは `prompt.submit`・`tool.call` と同じで、入力の送信とツールの呼び出しで増える待ち時間と同じ値に統一する。照合は応答を読み切った後に 1 回だけ行い、`$.session.append` の 1 回の呼び出しを含む
+    measurement: 単語 2,500 を持つ用語の YAML を照合する設定で、`answer` が 20,000 文字で単語を 20 種類含む `turn.step` を実行し、`next(e)` を読み切ってからフックが返るまでの時間を測る
+    refs:
+      - IF-7#constraints[処理時間]
+    status: planned
 lead: 外部の制約から逆算した alias-inject の決定値（決まっていない項目は `未確定`）を定め、上限や待ち時間などの値を決める・変えるときに参照する。
 tags:
   - name: topic:非機能要件

@@ -157,12 +157,12 @@ flows:
       - '1 回目に `to: "transcript"` で term-a と term-b を含む 1 行が届き、2 回目は行が増えない'
     test: test_normal_when_in_subagent
   - name: 正常系（照合しない結果）
-    summary: エラーの結果・deny・本文の無い結果は照合しない
+    summary: エラーの結果・deny は引数も結果も照合しない
     setup:
       - name: Mock
         description: 正常系と同じ
       - name: ツールの結果
-        description: '`isError` が `true` で `text` に term-a を含む結果、`deny` が入った結果、`text` が無い結果を呼び出しごとに返却する'
+        description: '`isError` が `true` で `text` に term-a を含む結果と、`deny` が入った結果を呼び出しごとに返却する。どちらの呼び出しも `e.tool` が `Write` で `e.content` が「term-a の説明」'
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -170,7 +170,7 @@ flows:
 
         CC->>IF: e
         IF->>CC: next(e)
-        CC-->>IF: isError・deny・text の無い結果
+        CC-->>IF: isError・deny の結果
         IF-->>CC: 結果そのまま
     expected:
       - どの呼び出しも、返る結果が `next(e)` の結果と同じ
@@ -365,6 +365,38 @@ flows:
     expected:
       - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
     test: test_normal_when_cwd_scoped
+  - name: 正常系（書き込む内容）
+    summary: ツールの引数の文字列の値を結果の本文と合わせて照合し、書き込む内容に初めて出た単語の文脈を追加する
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: ツールの呼び出し
+        description: '1 回目は `e.tool` が `Write`、`e.file_path` が `/work/note.md`、`e.content` が「用語エーの説明」。2 回目は別のセッションで `e.tool` が `mcp__plugin_project-index_project-index__write_docs`、`e.operations` が `[{ op: update, set: { description: term-b の説明 } }]`'
+        notes: 入れ子の並びとオブジェクトの中の文字列に単語を配置する
+      - name: ツールの結果
+        description: '1 回目は `text` が「File created successfully at: /work/note.md」。2 回目は `text` が無い'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: e（Write の content に「用語エーの説明」）
+        IF->>CC: next(e)
+        CC-->>IF: 成功の結果
+        IF->>IF: 結果の本文と引数の文字列の値を照合し term-a がヒットする
+        IF->>ST: term-a を記録に入れる
+        IF-->>CC: 結果の context の末尾に term-a の文脈
+        CC->>IF: e（MCP の operations の入れ子に term-b）
+        IF->>CC: next(e)
+        CC-->>IF: 本文の無い結果
+        IF->>IF: 引数の文字列の値だけを照合し term-b がヒットする
+        IF-->>CC: 結果の context に term-b の文脈
+    expected:
+      - 1 回目に返る `context` の末尾に term-a の文脈がある
+      - 2 回目に返る `context` に term-b の文脈がある
+      - どちらも返る `text` が `next(e)` の結果の `text` と同じ
+    test: test_normal_when_written_content
   - name: 正常系（表示をオフにした設定）
     summary: show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
     setup:
@@ -433,7 +465,7 @@ request:
     required: false
     default: なし（引数の無いツール）
     location: argument
-    description: ツールの引数。`e` の直下に展開されて入る。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、参照している文書の ID の判定に使用する
+    description: ツールの引数。`e` の直下に展開されて入る。`tool`・`tool_use_id`・`agentId`・`requestMeta` を除いた引数の、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、書き込む内容として照合する。`mcp__` で始まるツールのとき、入れ子のオブジェクトと並びまで辿った全ての文字列の値を、参照している文書の ID の判定に使用する
     notes: dev-docs の `search_docs` は ID を `filter` の条件の `values` に入れる。ID でない文字列（`source`・`op` など）が単語の ID と一致したときはその単語を除外する
   - name: e.agentId
     type: string
@@ -444,15 +476,15 @@ request:
   - name: result.text
     type: string
     required: false
-    default: なし（文脈を追加せず結果をそのまま返却する）
+    default: なし（ツールの引数だけを照合する）
     location: argument
-    description: '`next(e)` が返却したツールの結果の本文。ここを照合する'
+    description: '`next(e)` が返却したツールの結果の本文。ツールの引数の文字列の値と合わせて照合する'
   - name: result.isError
     type: boolean
     required: false
     default: 'false'
     location: argument
-    description: '`true` のときはエラーの結果として、照合せずにそのまま返却する'
+    description: '`true` のときはエラーの結果として、引数も結果も照合せずにそのまま返却する'
   - name: result.deny
     type: string
     required: false
@@ -504,7 +536,7 @@ constraints:
     constraint: 単語ごとに本文に出た回数を数え、回数の多い順に並べる。同じ回数なら本文に最初に出た位置の早い順、同じ位置なら長い単語を先にする
     notes: '`prompt.submit` は今の最初に出た位置の順のまま'
   - item: 照合条件
-    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合条件と同じ。`field` の `text` はツールの結果の本文（`result.text`）を指す'
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の照合条件と同じ。`field` の `text` は照合する本文（ツールの結果の本文と引数の文字列の値）を指す'
     notes: 照合条件で除外した後に、出た回数の順に並べる
   - item: 単語の数の上限
     constraint: '`max_items` 単語まで（既定 20）。並べた順に選ぶ'
@@ -517,10 +549,10 @@ constraints:
     constraint: '`e.tool` が設定の `exclude_tools` の名前のどれかと完全に一致するとき照合しない。既定は空で、全てのツールを照合する'
     decided_by: CFG-1#settings[global.exclude_tools]
   - item: 参照している文書そのもの
-    constraint: '`e.tool` が `Read` のとき、文書のパスが `e.file_path` と一致する単語を除外する。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する単語を除外する'
+    constraint: '`e.tool` が `Read`・`Write`・`Edit` のとき、文書のパスが `e.file_path` と一致する単語を除外する。`e.tool` が `mcp__` で始まるとき、`e` を入れ子まで辿った文字列の値が文書の `id` と一致する単語を除外する'
     notes: 文書のパスは、`records` を記載しない行では単語を取り出した YAML、`records` と `body_file` を記載した行では `body_file` の列の値のパス（単語を取り出した YAML のフォルダから解決）、`records` だけを記載した行では単語を取り出した YAML（その YAML の全ての単語を除外する）
   - item: 照合しない結果
-    constraint: '`result.isError` が `true`・`result.deny` が入っている・`result.text` が文字列でない結果は照合しない'
+    constraint: '`result.isError` が `true`・`result.deny` が入っている結果は、引数も結果も照合しない。`result.text` が文字列でない結果は、引数だけを照合する'
   - item: 記録の単位
     constraint: '`e.agentId` が無いときはセッション ID（`$.session.id()`）、あるときはセッション ID と `agentId` の組ごとに記録する。メインの会話の記録は `prompt.submit` と共有する'
     notes: ワークフローのエージェント・エンジンのフォーク（圧縮・メモリ）も `agentId` があればサブエージェントと同じに扱う
@@ -538,6 +570,9 @@ constraints:
     constraint: '[入力への引用の文脈の追加](id:IF-3) の作業場所の絞りと同じ'
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
+  - item: 照合する本文
+    constraint: ツールの結果の本文（`result.text`）の後ろに、ツールの引数（`tool`・`tool_use_id`・`agentId`・`requestMeta` を除く）の文字列の値を引数の並びの順に改行でつないだものを照合する。引数は全てのツールで照合し、書き込みのツールに絞らない
+    notes: 照合は `next(e)` の後に 1 回だけ行い、文脈は結果の `context` に追加する。変数参照の値は結果の本文だけから取り出す
   - item: 表示
     constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で表示する。変数参照の値は表示せず、変数参照の値の行だけを追加した回（引用の文脈の単語が 0 個）は行を出さない。サブエージェントの呼び出し（`agentId` あり）で追加した単語も表示する'
     decided_by: CFG-1#settings[global.show_added]

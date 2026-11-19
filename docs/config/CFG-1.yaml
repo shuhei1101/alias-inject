@@ -281,7 +281,7 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: string[]
     default: '[]'
-    description: 結果の本文を照合から除外するツールの名前（`Bash`・`Agent`・`mcp__{サーバー}__{ツール}` など）。`tool.call` の `e.tool` と完全に一致するとき除外する。記載しないときは全てのツールの結果を照合する
+    description: 結果の本文と引数を照合から除外するツールの名前（`Bash`・`Agent`・`mcp__{サーバー}__{ツール}` など）。`tool.call` の `e.tool` と完全に一致するとき除外する。記載しないときは全てのツールの結果と引数を照合する。応答の文はこの設定で絞らない
     reload: immediate
     allowed: 文字列でない要素は無視する
     refs:

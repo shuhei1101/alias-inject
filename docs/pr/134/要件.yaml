@@ -1,0 +1,116 @@
+use_cases:
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: changed
+    detail: セッション全体の流れに、書き込む内容と応答の文に初めて出た単語の引用の文脈が追加され、入力・ツールの結果と同じ記録で単語ごとに 1 回だけになる手順を加える
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: changed
+    detail: 書き込みのツール（Write・Edit・MCP の書き込みのツール）が書き込む内容に初めて出た単語の引用の文脈を、ツールの結果の後ろに追加する。応答の文も照合するため、サブエージェントのシナリオではメインの会話の応答に単語を出させない
+    depends_on:
+      - docs/scenario/SC-1.yaml
+  - kind: single
+    scenario: docs/scenario/SC-8.yaml
+    impact: new
+    detail: Claude Code の応答の文に初めて出た単語の引用の文脈を、次にモデルへ届く文脈に追加する
+    depends_on:
+      - docs/scenario/SC-1.yaml
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: run_only
+    detail: 入力の照合は変えないが、応答の文と書き込む内容で追加した単語も同じ記録に入るため回帰を確かめる（記録の共有は SC-1 と SC-8 が定める）
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-4.yaml
+    impact: run_only
+    detail: 圧縮とクリアの後の記録の消去が、応答の文と書き込む内容で追加した単語にも効く
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-7.yaml
+    impact: run_only
+    detail: 参照した本文への変数参照の値の追加は変えないが、同じツールのイベントの処理を変えるため回帰を確かめる
+    depends_on: []
+docs:
+  - page: docs/interface/IF-2.yaml
+    new: false
+    change: 書き込みのツールの書き込む内容（引数）を照合の対象に加える入出力とフロー
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:36:17.269822+00:00'
+  - page: docs/interface/IF-7.yaml
+    new: true
+    change: 応答の文への引用の文脈の追加のイベントの入出力とフロー（使用するイベントは PoC で決める）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:36:17.269822+00:00'
+  - page: docs/module/MOD-1.ts.yaml
+    new: false
+    change: 応答の文の処理の追加と、tool.call で書き込む内容を照合する処理
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
+  - page: docs/module/MOD-7.tsx.yaml
+    new: false
+    change: 応答の文のイベントへの処理の登録
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
+  - page: docs/module/MOD-5.ts.yaml
+    new: false
+    change: 書き込む内容を照合するときの、書き込んだ文書そのものの単語の除外（Write・Edit の file_path）
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
+  - page: docs/library/LIB-1.yaml
+    new: false
+    change: PoC で確かめた応答の文のイベントと、tool.call の書き込みのツールの引数のカタログ
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:45:48.802754+00:00'
+  - page: docs/architecture/ARCH-1.yaml
+    new: false
+    change: Claude Code からプラグインへ渡るものに、書き込む内容と応答の文を加える
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:22.719355+00:00'
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: 照合する対象に書き込む内容と応答の文を加え、照合しないものの表と 1 セッション 1 回の記録の共有を修正する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:22.719355+00:00'
+  - page: .claude-plugin/plugin.json
+    new: false
+    change: プラグインの説明に、書き込む内容と応答の文の照合を加える
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:22.719355+00:00'
+  - page: docs/nonfunctional/NFR-1.yaml
+    new: false
+    change: '`turn.step` のモデルへの要求ごとに増える待ち時間（NFR-10）を追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:40:24.574041+00:00'
+  - page: docs/config/CFG-1.yaml
+    new: false
+    change: '`exclude_tools` が引数も照合から除外し、応答の文は絞らないことを記載する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:24.437537+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '`exclude_tools` の説明を引数の照合と応答の文に合わせる'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:24.437537+00:00'
+  - page: docs/guide/エイリアスのスキーマ.md
+    new: false
+    change: 照合条件が評価する本文に、ツールの引数と応答の文を加える
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-18T16:52:24.437537+00:00'
+scope_out:
+  - item: エラーになったツールの結果の照合
+    reason: 要望は書き込む内容と応答の文だけで、SC-2「正常シナリオ（エラーの結果）」と IF-2 で、エラーの結果は引数も結果も照合しないと決めた。本文の無い結果は引数を照合するためスコープ内になった
+    plan: none

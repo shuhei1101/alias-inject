@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import type { ToolCallInput } from 'claude-code'
 import type { Entry } from '../../../../hooks/lib/entry'
 import type { Hit } from '../../../../hooks/lib/match'
-import { collectArgumentStrings, documentPathOf, excludeReadingDocuments } from '../../../../hooks/lib/tool'
+import { collectArgumentStrings, documentPathOf, excludeReadingDocuments, joinArgumentText } from '../../../../hooks/lib/tool'
 
 const HOME = '/home/u'
 const SEARCH_DOCS = 'mcp__plugin_project-index_project-index__search_docs'
@@ -108,4 +108,51 @@ test('test_exclude_reading_documents_when_other_tool', () => {
 
   // 検証
   expect(remaining.map((hit) => hit.entry.id)).toEqual(['term-a', 'term-b'])
+})
+
+// Write・Edit も文書のパスが file_path と一致する単語を除外する（正常系）
+test('test_exclude_reading_documents_when_write', () => {
+  // 準備
+  const hits = [makeHit(makeEntry('term-a')), makeHit(makeEntry('term-b'))]
+
+  for (const tool of ['Write', 'Edit']) {
+    const e = toolInput({ tool, tool_use_id: 't1', file_path: '/repo/knowledge/terms/term-a.yaml' })
+
+    // 実行
+    const remaining = excludeReadingDocuments(hits, { e, home: HOME })
+
+    // 検証
+    expect(remaining.map((hit) => hit.entry.id)).toEqual(['term-b'])
+  }
+})
+
+// 入れ子の文字列を引数の順に改行でつなぎ、予約したキーは含めない（正常系）
+test('test_join_argument_text', () => {
+  // 準備
+  const e = toolInput({
+    tool: 'Write',
+    tool_use_id: 't1',
+    file_path: '/work/note.md',
+    content: 'term-a の説明',
+    meta: { tags: ['x', 'x'] },
+    count: 2,
+  })
+
+  // 実行
+  const text = joinArgumentText(e)
+
+  // 検証
+  expect(text).toBe('/work/note.md\nterm-a の説明\nx\nx')
+})
+
+// 文字列の引数が無ければ空の文字列（正常系）
+test('test_join_argument_text_when_no_strings', () => {
+  // 準備
+  const e = toolInput({ tool: 'Bash', tool_use_id: 't1', timeout: 1000 })
+
+  // 実行
+  const text = joinArgumentText(e)
+
+  // 検証
+  expect(text).toBe('')
 })
