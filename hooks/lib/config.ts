@@ -31,6 +31,8 @@ export type ProjectConfig = {
   maxChars: number | undefined
   exclude: string[]
   heading: string | undefined
+  /** 置き換える追加した単語の表示のオンとオフ */
+  showAdded: boolean | undefined
   /** 後ろに追加する結果を照合しないツールの名前 */
   excludeTools: string[]
 }
@@ -45,6 +47,8 @@ export type Config = {
   maxChars: number
   exclude: string[]
   heading: string
+  /** 追加した単語を利用者の画面に表示するか */
+  showAdded: boolean
   /** 結果を照合しないツールの名前 */
   excludeTools: string[]
   projects: ProjectConfig[]
@@ -64,6 +68,8 @@ export type Settings = {
   maxChars: number
   exclude: string[]
   heading: string
+  /** 追加した単語を利用者の画面に表示するか */
+  showAdded: boolean
   /** 結果を照合しないツールの名前。global の後ろに該当した projects を並べたもの */
   excludeTools: string[]
   /** `id` が重なって除外した `aliases` の要素の理由。呼び出し元が debug log に出す */
@@ -196,6 +202,7 @@ function parseScope(
     exclude: strings(scope.exclude),
     excludeTools: strings(scope.exclude_tools),
     heading: isNonEmptyString(scope.heading) ? scope.heading : undefined,
+    showAdded: typeof scope.show_added === 'boolean' ? scope.show_added : undefined,
   }
 }
 
@@ -226,6 +233,7 @@ export function parseConfig(value: unknown, schema: Record<string, unknown>): Co
     maxChars: global.maxChars ?? DEFAULT_MAX_CHARS,
     exclude: global.exclude,
     heading: global.heading ?? DEFAULT_HEADING,
+    showAdded: global.showAdded ?? true,
     excludeTools: global.excludeTools,
     projects,
     warnings,
@@ -247,7 +255,7 @@ export function resolveSettings(
 ): Settings {
   const matched = config.projects.filter((project) => matchProject(project.match, where.repoRoot, where.home))
 
-  let { enabled, origins, maxItems, maxChars, heading } = config
+  let { enabled, origins, maxItems, maxChars, heading, showAdded } = config
   const exclude = [...config.exclude]
   const excludeTools = [...config.excludeTools]
   const repositories = [...config.repositories]
@@ -267,6 +275,7 @@ export function resolveSettings(
     if (project.maxItems !== undefined) maxItems = project.maxItems
     if (project.maxChars !== undefined) maxChars = project.maxChars
     if (project.heading !== undefined) heading = project.heading
+    if (project.showAdded !== undefined) showAdded = project.showAdded
   }
 
   const baseDirOf = (baseDir: 'config' | 'project') => (baseDir === 'config' ? parentDir(where.configPath) : where.projectRoot)
@@ -293,6 +302,7 @@ export function resolveSettings(
     maxChars,
     exclude,
     heading,
+    showAdded,
     excludeTools,
     warnings: deduped.warnings,
   }
