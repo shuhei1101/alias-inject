@@ -357,6 +357,7 @@ scenarios:
       - Write の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
       - 書き込ませた入力には文脈が追加されていない
       - 書き込んだファイルの本文は Write の引数のとおりのまま
+      - 書き込む内容で追加した term-a の単語と `id` の行が利用者の画面に 1 行表示されている
     test: test_normal_when_written_content
   - name: 正常シナリオ（表示をオフにした設定）
     setup:

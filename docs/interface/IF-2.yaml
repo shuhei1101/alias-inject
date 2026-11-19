@@ -396,6 +396,7 @@ flows:
       - 1 回目に返る `context` の末尾に term-a の文脈がある
       - 2 回目に返る `context` に term-b の文脈がある
       - どちらも返る `text` が `next(e)` の結果の `text` と同じ
+      - '1 回目に `ui.log` へ `to: "transcript"` で term-a を含む 1 行、2 回目に term-b を含む 1 行が届く'
     test: test_normal_when_written_content
   - name: 正常系（表示をオフにした設定）
     summary: show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
