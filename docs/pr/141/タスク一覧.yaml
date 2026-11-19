@@ -65,8 +65,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T05:09:49.817916+00:00'
   - process: モジュール構成設計
-    status: todo
-    note: MOD-9 の `ADDED_LINE_PREFIX` の値と表示の行の期待結果、MOD-1 のテストの期待結果を変える
+    status: done
+    note: MOD-9 の `ADDED_LINE_PREFIX` を削除して `renderAddedLine` の返り値とテストを、MOD-1 のテストの期待結果を変える
+    updated_by: planner
+    updated_at: '2026-11-19T05:17:53.242464+00:00'
   - process: ドキュメント修正
     status: todo
     note: 公開ドキュメント『引用の文脈』の `## 画面への表示` の例を変える
