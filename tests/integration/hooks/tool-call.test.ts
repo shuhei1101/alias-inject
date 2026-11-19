@@ -199,7 +199,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.text).toBe('用語エーの説明')
     expect(after.context ?? []).toEqual([])
     expect(world.runs).toEqual([])
-    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(transcriptLines(world.logs)).toEqual(['Term-A（term-a）'])
   })
 
   // exclude_tools のツールの結果は照合しない（正常系）
@@ -217,7 +217,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(bash).toEqual(answer)
     expect(read.context?.[0]).toContain('Term-A')
     // 除外したツールの結果では表示せず、続く Read の 1 行だけが出る
-    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(transcriptLines(world.logs)).toEqual(['Term-A（term-a）'])
   })
 
   // Read の file_path と MCP の引数の ID に該当する単語を除外する（正常系）
@@ -335,7 +335,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(mcpWritten.context?.length).toBe(1)
     expect(mcpWritten.context?.[0]).toContain('term-b')
     expect(mcpWritten.text).toBeUndefined()
-    expect(shownByWritten).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(shownByWritten).toEqual(['Term-A（term-a）'])
     expect(transcriptLines(world.logs).length).toBe(2)
     expect(transcriptLines(world.logs)[1]).toContain('（term-b）')
   })
@@ -355,7 +355,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.context?.[0]).toContain('Term-A')
     expect(result.context?.[1]).toBe(VALUE_A_LINE)
     // 変数参照の名前と値は表示しない
-    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(transcriptLines(world.logs)).toEqual(['Term-A（term-a）'])
   })
 
   // ifVersion が一致しなければ再読み込みし、他の呼び出しで記録された単語を除いて追加する（正常系）

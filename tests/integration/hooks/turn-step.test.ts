@@ -39,7 +39,7 @@ describe('応答の文への引用の文脈の追加', () => {
     expect(text).toContain('## 用語')
     expect(text).toContain('Term-A')
     expect(after.context ?? []).toEqual([])
-    expect(transcriptLines(world.files.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(transcriptLines(world.files.logs)).toEqual(['Term-A（term-a）'])
   })
 
   // 記録済みの単語だけがヒットしたときは行を追加しない（正常系）
