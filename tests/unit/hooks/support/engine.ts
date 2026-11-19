@@ -227,6 +227,52 @@ export async function callTool($: Engine, input: Record<string, unknown> = { too
   return $.tool.call(input as never)
 }
 
+/** `turn.step` の一番下の処理が送信するチャンク */
+export const STEP_CHUNK = { kind: 'text' as const, index: 0, text: '応答' }
+
+/** `turn.step` の一番下の処理が返却する、`answer` を持つ結果 */
+export function stepResult(answer: string, input: { turnId: string; index: number }) {
+  return { turnId: input.turnId, index: input.index, answer, toolUses: [], stopReason: 'end_turn' as const, usage: null }
+}
+
+export type StepWorld = {
+  /** `turn.step` の一番下の処理が返却する結果の `answer`。テストの途中で書き換えられる */
+  answer: string
+  /** 指定すると `$.session.append` をこの理由で拒む */
+  denyAppend: string | undefined
+  /** 追加された行 */
+  appended: () => readonly { message: unknown; agentId?: string }[]
+  /** 設定ファイルと YAML のファイル表の応答（セッション ID を書き換えられる） */
+  files: World
+}
+
+/** 設定ファイルと YAML のファイル表と、`turn.step` の一番下の処理・追加された行の記録をテストの `on` へ登録する */
+export function installStepWorld(on: On, options: WorldOptions): StepWorld {
+  const files = installWorld(on, options)
+  const world: StepWorld = { answer: '', denyAppend: undefined, appended: () => [], files }
+  on('turn.step', async function* (_, e) {
+    yield STEP_CHUNK
+    return stepResult(world.answer, e)
+  })
+  const session = mock.session(on)
+  // プラグインが追加する行（door が note）を拒む
+  on('session.append', { door: 'note' }, (_, e, next) => (world.denyAppend === undefined ? next(e) : { deny: world.denyAppend }) as never)
+  world.appended = () => session.appended()
+  return world
+}
+
+/** モデルへの要求を 1 回発火し、受け取ったチャンクと結果を返却する */
+export async function step($: Engine, agentId?: string) {
+  const stream = $.turn.step({ turnId: 't-1', index: 0, model: 'haiku', messageCount: 1, ...(agentId === undefined ? {} : { agentId }) })
+  const chunks: unknown[] = []
+  let current = await stream.next()
+  while (current.done !== true) {
+    chunks.push(current.value)
+    current = await stream.next()
+  }
+  return { chunks, result: current.value }
+}
+
 /** `NAME_01` の書式の名前を `count` 個並べる */
 export function numberedNames(count: number): string[] {
   return Array.from({ length: count }, (_, index) => `NAME_${String(index + 1).padStart(2, '0')}`)
