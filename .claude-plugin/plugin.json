@@ -1,5 +1,5 @@
 {
-  "name": "alias-inject",
+  "name": "alias-inject-poc",
   "description": "入力・ツールの結果と引数・応答の文の単語に該当する引用の文脈と、参照した本文の変数参照の値をモデルへ追加する mod",
   "types": "./types/index.d.ts"
 }
