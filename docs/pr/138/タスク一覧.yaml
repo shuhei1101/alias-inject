@@ -35,8 +35,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T01:49:36.655691+00:00'
   - process: 単一ユースケース設計
-    status: todo
+    status: done
     note: SC-8 に表示の受入条件を追加する
+    updated_by: planner
+    updated_at: '2026-11-19T02:11:37.574414+00:00'
   - process: モック作成
     status: skipped
     reason: 'このプロジェクトが持つ画面は変わらない。表示の文面は #133 で決めたものを使う'
