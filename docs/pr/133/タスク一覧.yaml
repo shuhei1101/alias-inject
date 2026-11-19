@@ -15,8 +15,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-18T15:43:31.618319+00:00'
   - process: PoC 検証
-    status: todo
+    status: done
     note: hooks モジュールから利用者の画面に表示する手段（`$.ui.log` の `transcript` など）が、利用者に表示され、モデルの入力に入らないかを確かめる
+    updated_by: planner
+    updated_at: '2026-11-19T00:38:34.230352+00:00'
   - process: 複合ユースケース設計
     status: skipped
     reason: セッション全体の流れ（SC-1）の連鎖は変わらない
