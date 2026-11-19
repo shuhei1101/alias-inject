@@ -70,8 +70,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T05:17:53.242464+00:00'
   - process: ドキュメント修正
-    status: todo
-    note: 公開ドキュメント『引用の文脈』の `## 画面への表示` の例を変える
+    status: done
+    note: 公開ドキュメント『引用の文脈』の表示の例をインターフェース定義設計で修正済み
+    updated_by: planner
+    updated_at: '2026-11-19T05:20:42.460370+00:00'
   - process: 単体テスト作成
     status: todo
   - process: 実装
