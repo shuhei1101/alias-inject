@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 import { STEP_CHUNK, installStepWorld, step, stepResult, submit, userSettingsWithConfig } from '../../unit/hooks/support/engine'
-import { SETTINGS, makeFs } from './support/fixtures'
+import { SETTINGS, makeConfig, makeFs } from './support/fixtures'
 
 // 正常系の要求のターンの ID
 const TURN_ID = 'turn-1'
@@ -10,6 +10,11 @@ const ANSWER = '用語エーの説明'
 // 正常系の要求の結果
 function expectedResult(answer: string = ANSWER) {
   return stepResult(answer, { turnId: TURN_ID, index: 0 })
+}
+
+// 利用者の画面に出した行（`to: transcript`）
+function transcriptLines(logs: { text: string; to: string }[]): string[] {
+  return logs.filter((line) => line.to === 'transcript').map((line) => line.text)
 }
 
 describe('応答の文への引用の文脈の追加', () => {
@@ -34,6 +39,7 @@ describe('応答の文への引用の文脈の追加', () => {
     expect(text).toContain('## 用語')
     expect(text).toContain('Term-A')
     expect(after.context ?? []).toEqual([])
+    expect(transcriptLines(world.files.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
   })
 
   // 記録済みの単語だけがヒットしたときは行を追加しない（正常系）
@@ -49,6 +55,7 @@ describe('応答の文への引用の文脈の追加', () => {
     // 検証
     expect(world.appended().length).toBe(0)
     expect(result).toEqual(expectedResult())
+    expect(transcriptLines(world.files.logs)).toEqual([])
   })
 
   // agentId のある要求はメインの会話と別の記録で照合し、そのサブエージェントの会話に追加する（正常系）
@@ -66,6 +73,7 @@ describe('応答の文への引用の文脈の追加', () => {
     expect(rows.length).toBe(1)
     expect(rows[0]?.agentId).toBe('agent-1')
     expect(after.context?.[0]).toContain('Term-A')
+    expect(transcriptLines(world.files.logs).filter((line) => line.includes('（term-a）')).length).toBe(2)
   })
 
   // 見える文の無い応答は照合しない（正常系）
@@ -78,10 +86,12 @@ describe('応答の文への引用の文脈の追加', () => {
 
     // 実行
     await step($, undefined, TURN_ID)
+    const shownByStep = transcriptLines(world.files.logs)
     const after = await submit($, 'term-a とは')
 
     // 検証
     expect(world.appended().length).toBe(0)
+    expect(shownByStep).toEqual([])
     expect(after.context?.[0]).toContain('Term-A')
   })
 
@@ -101,6 +111,7 @@ describe('応答の文への引用の文脈の追加', () => {
     expect(result).toEqual(expectedResult())
     expect(world.appended().length).toBe(0)
     expect(world.files.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath)).length).toBeGreaterThan(0)
+    expect(transcriptLines(world.files.logs)).toEqual([])
   })
 
   // $.session.append が deny を返却したときは debug log に出して返却する（異常系）
@@ -116,6 +127,7 @@ describe('応答の文への引用の文脈の追加', () => {
     // 検証
     expect(result).toEqual(expectedResult())
     expect(world.files.logs.filter((line) => line.to === 'debug' && line.text.includes('拒否')).length).toBe(1)
+    expect(transcriptLines(world.files.logs)).toEqual([])
   })
 
   // 照合の途中の例外では行を追加せずに返却する（異常系）
@@ -132,5 +144,39 @@ describe('応答の文への引用の文脈の追加', () => {
     expect(result).toEqual(expectedResult())
     expect(world.appended().length).toBe(0)
     expect(world.files.logs.filter((line) => line.to === 'debug').length).toBeGreaterThan(0)
+    expect(transcriptLines(world.files.logs)).toEqual([])
+  })
+
+  // show_added が false のときは、行を追加して記録に入れ、利用者の画面には表示しない（正常系）
+  test('test_normal_when_display_off', async ($, on) => {
+    // 準備
+    const world = installStepWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['show_added: false'] })), settings: SETTINGS })
+    world.answer = ANSWER
+
+    // 実行
+    await step($, undefined, TURN_ID)
+
+    // 検証
+    const rows = world.appended()
+    expect(rows.length).toBe(1)
+    expect(JSON.stringify(rows[0]?.message)).toContain('Term-A')
+    expect(transcriptLines(world.files.logs)).toEqual([])
+  })
+
+  // 表示の $.ui.log が失敗しても、Claude Code が受け止めるので、行の追加と記録はそのまま（異常系）
+  test('test_error_when_display_fails', async ($, on) => {
+    // 準備
+    const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS, transcriptError: '表示できません' })
+    world.answer = ANSWER
+
+    // 実行
+    const { result } = await step($, undefined, TURN_ID)
+    const after = await submit($, 'term-a とは')
+
+    // 検証
+    expect(result).toEqual(expectedResult())
+    expect(world.appended().length).toBe(1)
+    expect(after.context ?? []).toEqual([])
+    expect(transcriptLines(world.files.logs)).toEqual([])
   })
 })
