@@ -81,7 +81,7 @@ flows:
       - 上へ送信されたチャンクと返る結果が `next(e)` のものと同じ
       - '`mock.session` の追加された行が 1 行で、`message.type` が `user`、本文が `# この発言に出る用語`・`## 用語`・term-a の単語 `Term-A` を含む'
       - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、返る `context` が空
-      - '`ui.log` に `to: "transcript"` で `文脈を追加: Term-A（term-a）` の 1 行が届く'
+      - '`ui.log` に `to: "transcript"` で `Term-A（term-a）` の 1 行が届く'
     test: test_normal
   - name: 正常系（記録済みの単語だけ）
     summary: 記録済みの単語だけがヒットしたときは行を追加しない
@@ -336,7 +336,7 @@ constraints:
   - item: 表示
     constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で、`$.session.append` が行を追加した回だけ表示する。`deny` を返却した回は表示しない。サブエージェントの要求（`agentId` あり）で追加した単語も表示する'
     decided_by: CFG-1#settings[global.show_added]
-    notes: 表示の文面「文脈を追加」はモデルに文脈が届いたことを示すため、行を追加できなかった回は出さない。サブエージェントの要求で出した行も、メインの会話の画面と記録に出る
+    notes: 表示の行はモデルに文脈が届いたことを示すため、行を追加できなかった回は出さない。サブエージェントの要求で出した行も、メインの会話の画面と記録に出る
 refs:
   - SC-8#
 tags:

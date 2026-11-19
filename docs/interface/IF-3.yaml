@@ -63,7 +63,7 @@ flows:
       - 返る `context` に term-b と doc-z が含まれない
       - '`/repo/knowledge/docs/` の YAML に `fs.read` が呼ばれていない'
       - 同じセッションで続けて「term-a とは」を送信すると、返る `context` が空
-      - '`ui.log` に `to: "transcript"` で `文脈を追加: Term-A（term-a）` の 1 行が届き、term-b と doc-z を含まない'
+      - '`ui.log` に `to: "transcript"` で `Term-A（term-a）` の 1 行が届き、term-b と doc-z を含まない'
       - '続けて「term-a とは」を送信したときは、`to: "transcript"` の行が増えない'
     test: test_normal
   - name: 正常系（上限を超える）
@@ -1244,7 +1244,7 @@ constraints:
     constraint: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、`${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` の順に、最初に値があるものを使用する。`XDG_CONFIG_HOME` が空のときは `~/.config`
     notes: '`ALIAS_INJECT_CONFIG` が指すファイルを読み込めないときも既定のパスへ切り替えない。入力の送信ごとに再決定するので、settings と既定のパスの変更は次の入力から有効になる'
   - item: 表示
-    constraint: '引用の文脈に単語を 1 つ以上追加した回だけ、記録の書き込みが確定した後の最終的に追加した単語を、選んだ順に `{単語}（{id}）` の書式で「、」でつなぎ、`文脈を追加: ` に続けた 1 行を `$.ui.log(text, { to: "transcript" })` で表示する。単語は文脈の箇条書きと同じ値（文書の `name`、用語のやめた言い方はその値）にする。記録済み（競合して再除外した単語を含む）・単語の数と文字数の上限・照合条件で追加しなかった単語は表示しない。`show_added` が false のときは表示しない'
+    constraint: '引用の文脈に単語を 1 つ以上追加した回だけ、記録の書き込みが確定した後の最終的に追加した単語を、選んだ順に `{単語}（{id}）` の書式で「、」でつないだ 1 行を `$.ui.log(text, { to: "transcript" })` で表示する（画面では Claude Code が行の頭に `● alias-inject: ` を付ける）。単語は文脈の箇条書きと同じ値（文書の `name`、用語のやめた言い方はその値）にする。記録済み（競合して再除外した単語を含む）・単語の数と文字数の上限・照合条件で追加しなかった単語は表示しない。`show_added` が false のときは表示しない'
     decided_by: CFG-1#settings[global.show_added]
     notes: 'Claude Code が行の先頭にプラグインの名前を付けるため、文面にプラグインの名前を入れない。表示した行は会話の記録に `type: system`・`subtype: informational` で残り、モデルの入力には入らない。単語の数は `max_items` で上限があるため、全てを 1 行に並べる'
 refs:
