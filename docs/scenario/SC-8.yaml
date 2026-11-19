@@ -38,7 +38,8 @@ scenarios:
         P->>P: 応答の文と単語を正規化して照合し term-a がヒットする
         P->>P: term-a をセッションの記録に入れる
         P->>CC: term-a の文脈を会話に追加する
-        CC-->>U: 応答の文をそのまま表示する
+        P->>CC: 追加した term-a の単語と id を表示する行を出す
+        CC-->>U: 応答の文と表示の行を表示する
         U->>CC: 次の入力を送信
         CC->>M: 入力と、追加した term-a の文脈を送信
       ```
@@ -49,6 +50,8 @@ scenarios:
       - term-b の文脈は追加されていない
       - 応答の文は変わらずに表示されている
       - 回答させた入力には文脈が追加されていない
+      - 利用者の画面に、応答の文の後ろに追加した term-a の単語と `id` を示す行が 1 行表示されている（term-b は表示されていない）
+      - 表示した行は、次のターンのモデルへの要求に入っていない
     test: test_normal
   - name: 正常シナリオ（途中の文）
     setup:
@@ -80,6 +83,7 @@ scenarios:
     expected:
       - 同じターンの Bash の結果の後ろに term-a の文脈が届いている
       - 途中の文と最後の文は変わらずに表示されている
+      - 途中の文で追加した term-a の単語と `id` の行が利用者の画面に 1 行表示されている
     test: test_normal_when_intermediate_text
   - name: 正常シナリオ（記録済みの単語だけ）
     setup:
@@ -111,6 +115,7 @@ scenarios:
       <!-- /map -->
     expected:
       - 次のターンのモデルへの要求に引用の文脈が追加されていない
+      - 利用者の画面に表示の行が出ていない
     test: test_normal_when_only_recorded_terms
   - name: 正常シナリオ（サブエージェント）
     setup:
@@ -147,6 +152,7 @@ scenarios:
     expected:
       - サブエージェントの Bash の結果の後ろに term-a の文脈が届いている
       - メインの会話の記録に term-a は入っていない（その後のメインの会話の term-a を含む入力に文脈が追加されている）
+      - サブエージェントの途中の文で追加した term-a を示す行が、メインの会話の画面に表示されている
     test: test_normal_when_in_subagent
   - name: 異常シナリオ（設定ファイルを読み込めない）
     setup:
@@ -179,7 +185,73 @@ scenarios:
     expected:
       - 応答の文は変わらずに表示されている
       - 次のターンのモデルへの要求に引用の文脈が追加されていない
+      - 利用者の画面に表示の行が出ていない
     test: test_error_when_config_unreadable
+  - name: 正常シナリオ（表示をオフにした設定）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: '正常シナリオの設定に `show_added: false` を記載する'
+      - name: 回答させる入力
+        description: 正常シナリオと同じ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: 単語を組み立てて回答させる入力を送信
+        CC->>M: 入力を送信
+        M-->>CC: term-a を含む応答の文
+        CC->>P: turn.step の結果
+        P->>P: 照合で term-a がヒットし、記録に入れる
+        P->>CC: term-a の文脈を会話に追加し、表示の行は出さない
+        CC-->>U: 応答の文をそのまま表示する
+        U->>CC: 次の入力を送信
+        CC->>M: 入力と、追加した term-a の文脈を送信
+      ```
+
+      <!-- /map -->
+    expected:
+      - 次のターンのモデルへの要求に term-a の文脈が届いている
+      - 利用者の画面に表示の行が出ていない
+    test: test_normal_when_display_off
+  - name: 異常シナリオ（表示に失敗する）
+    setup:
+      - name: Mock
+        description: Claude Code の `$.ui.log` が例外を投げるように差し替える
+        notes: E2E では `$.ui.log` を差し替えられないため、結合テストで確認する
+      - name: 回答させる入力
+        description: 正常シナリオと同じ
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: 単語を組み立てて回答させる入力を送信
+        CC->>M: 入力を送信
+        M-->>CC: term-a を含む応答の文
+        CC->>P: turn.step の結果
+        P->>P: 照合で term-a がヒットし、記録に入れる
+        P->>CC: term-a の文脈を会話に追加する
+        P->>CC: 表示の行を出そうとして失敗する
+        CC->>CC: 失敗を debug log に出し、alias-inject へ例外を返さない
+        CC-->>U: 応答の文をそのまま表示する
+      ```
+
+      <!-- /map -->
+    expected:
+      - 応答の文は変わらずに表示されている
+      - term-a の文脈の行が会話に追加され、term-a がセッションの記録に入っている
+    test: test_error_when_display_fails
 tags:
   - name: topic:引用の文脈
     main: true
