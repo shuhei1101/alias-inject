@@ -32,6 +32,7 @@ flows:
         ST-->>IF: 記録なし・version 0
         IF->>ST: term-a を ifVersion 0 で書き込む
         ST-->>IF: isSet true
+        IF->>CC: $.ui.log（transcript）で追加した term-a を 1 行表示する
         IF-->>CC: 結果の context の末尾に term-a の文脈
     expected:
       - 返る `context` が 2 要素で、先頭が受け取った要素のまま
@@ -174,6 +175,7 @@ flows:
     expected:
       - どの呼び出しも、返る結果が `next(e)` の結果と同じ
       - 続けて `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_normal_when_not_matched_result
   - name: 正常系（変数参照の値と合わせる）
     summary: 引用の文脈を先に、変数参照の値の行を後に追加する
@@ -225,6 +227,7 @@ flows:
     expected:
       - 返る `context` に term-b が含まれ、term-a が含まれない
       - 記録に term-a と term-b の両方が入っている
+      - '`to: "transcript"` の行が term-b だけを含み、再除外した term-a を含まない'
     test: test_normal_when_record_conflicted
   - name: 異常系（設定ファイルを読み込めない）
     summary: 設定ファイルを読み込めないときは引用の文脈を追加せずに返却する
@@ -279,6 +282,7 @@ flows:
       - 返る結果が `next(e)` の結果と同じ
       - '`state.set` が 3 回呼ばれている'
       - テストの `on` の `ui.log` に、`to` が `debug` の行が届いている
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_error_when_record_conflicts_exhausted
   - name: 異常系（想定しない例外）
     summary: 照合の途中の例外では引用の文脈を追加せず、変数参照の値の行だけを追加する
@@ -307,6 +311,7 @@ flows:
       - '返る `context` が 1 要素で、`変数参照の値: !{VALUE_A} = value-a`'
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で例外の理由を含む行が届いている
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_error_when_unexpected_exception
   - name: 正常系（照合条件を持つ文書）
     summary: 照合条件をツールの結果の本文で評価し、該当しない文書を除外する
@@ -534,7 +539,7 @@ constraints:
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
   - item: 表示
-    constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で表示する。変数参照の値は表示しない。サブエージェントの呼び出し（`agentId` あり）で追加した単語も表示する'
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で表示する。変数参照の値は表示せず、変数参照の値の行だけを追加した回（引用の文脈の単語が 0 個）は行を出さない。サブエージェントの呼び出し（`agentId` あり）で追加した単語も表示する'
     decided_by: CFG-1#settings[global.show_hits]
     notes: サブエージェントの呼び出しで出した行も、メインの会話の画面と記録に出る
 refs:
