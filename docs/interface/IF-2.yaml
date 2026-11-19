@@ -165,7 +165,7 @@ flows:
 
         CC->>IF: e
         IF->>CC: next(e)
-        CC-->>IF: isError・deny・text の無い結果
+        CC-->>IF: isError・deny の結果
         IF-->>CC: 結果そのまま
     expected:
       - どの呼び出しも、返る結果が `next(e)` の結果と同じ
