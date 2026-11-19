@@ -569,7 +569,7 @@ test('test_handle_prompt_submit_shows_added', async ($, on) => {
   await submit($, 'term-a とは')
 
   // 検証
-  expect(first).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(first).toEqual(['Term-A（term-a）'])
   expect(transcriptLines(world.logs)).toEqual(first)
 })
 
@@ -600,7 +600,7 @@ test('test_handle_tool_call_shows_added', async ($, on) => {
   const referenceOnly = await callTool($, { tool: 'Read', file_path: '/repo/sample/other.md' })
 
   // 検証
-  expect(quoted).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(quoted).toEqual(['Term-A（term-a）'])
   expect(referenceOnly.context).toEqual([VALUE_A_LINE])
   expect(transcriptLines(world.logs)).toEqual(quoted)
 })
@@ -617,7 +617,7 @@ test('test_handle_turn_step_shows_added', async ($, on) => {
   await step($)
 
   // 検証
-  expect(first).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(first).toEqual(['Term-A（term-a）'])
   expect(transcriptLines(world.files.logs)).toEqual(first)
 })
 

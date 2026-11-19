@@ -232,7 +232,7 @@ test('test_render_added_line', () => {
   const line = renderAddedLine([termA, docX])
 
   // 検証
-  expect(line).toBe('文脈を追加: Term-A（term-a）、doc-x（doc-x）')
+  expect(line).toBe('Term-A（term-a）、doc-x（doc-x）')
 })
 
 // 用語のやめた言い方はやめた言い方の値と用語の id で並べる（正常系）
@@ -244,5 +244,5 @@ test('test_render_added_line_when_avoid', () => {
   const line = renderAddedLine([oldA])
 
   // 検証
-  expect(line).toBe('文脈を追加: 旧エー（term-a）')
+  expect(line).toBe('旧エー（term-a）')
 })
