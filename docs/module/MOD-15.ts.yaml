@@ -58,6 +58,9 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 結果を照合しないツールの名前。既定 []
+      - name: showAdded
+        type: boolean
+        description: 追加した単語を利用者の画面に表示するか。既定 true
   - name: Settings
     title: 実効の設定
     container: hooks/lib/config.ts
@@ -95,6 +98,9 @@ data_models:
       - name: excludeTools
         type: string[]
         description: Config の excludeTools の後ろに、該当した projects の excludeTools を並べたもの
+      - name: showAdded
+        type: boolean
+        description: Config の showAdded
   - name: ProjectConfig
     title: プロジェクトの設定
     container: hooks/lib/config.ts
@@ -132,6 +138,9 @@ data_models:
       - name: excludeTools
         type: string[]
         description: 後ろに追加する結果を照合しないツールの名前。記載しないときは []
+      - name: showAdded
+        type: boolean | undefined
+        description: 置き換える表示のオンとオフ
 enums:
   - name: OriginKey
     title: 対象にする出所
@@ -239,7 +248,7 @@ functions:
     process: |-
       1. 最上位がマッピングでなければ ConfigError を投げる
       2. `global` がマッピングでなければ空のマッピングとして扱う
-      3. `enabled` が真偽値ならその値、それ以外は true
+      3. `enabled`・`show_added` は真偽値ならその値、それ以外は true
       4. `repositories` の各要素を検証する（repositories の要素の検証）。無効の要素は飛ばし、除外した要素は理由を warnings に入れる
       5. `aliases` に aliases の取り出し（path は `global.aliases`）を適用し、理由を warnings につなぐ
       6. 4・5 で並びでない値を記載したときは、warnings に入れて [] にする。記載しないときは []
@@ -295,6 +304,12 @@ functions:
         mock: なし
         expected: どれも ConfigError
         exception: 最上位がマッピングでない
+      - name: test_parse_config_show_added
+        case: 正常
+        summary: show_added は真偽値だけを読み、それ以外は既定の true
+        condition: '`global.show_added` が false、記載しない、文字列 `no` の 3 つ'
+        mock: なし
+        expected: showAdded がそれぞれ false・true・true
   - name: matchProject
     title: プロジェクトの一致の判定
     kind: 関数
@@ -406,6 +421,12 @@ functions:
         condition: 'global の aliases に `scope.cwd: [~/repo/a/**]` の行と `scope` を記載しない行、該当する sample の aliases に `scope.cwd: [sub/**]` の行。`home` が `/home/u`、`projectRoot` が `/repo/sample/wt`'
         mock: なし
         expected: cwdPatterns が順に `['/home/u/repo/a/**']`・undefined・`['/repo/sample/wt/sub/**']`
+      - name: test_resolve_settings_when_project_show_added
+        case: 正常
+        summary: 該当した projects の show_added で置き換える
+        condition: '`global.show_added` が true、該当する projects の要素の `show_added` が false'
+        mock: なし
+        expected: showAdded が false
   - name: isOriginAllowed
     title: 出所の判定
     kind: 関数

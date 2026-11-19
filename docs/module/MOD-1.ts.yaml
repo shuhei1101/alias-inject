@@ -47,7 +47,7 @@ functions:
       9. 8 のリポジトリの行を repositories の順に並べ、その後ろに実効の設定の aliases の行を並べ、作業場所での絞り込み（cwd は `$.session.root()`）を適用する。残った各行を並びの位置とともに行の文書の読み込みで参照し、failures は `照合から除外しました（{YAML のパス}）: {理由}` を debug log に出す
       10. 全ての単語を照合し、`e.text` で照合条件での絞り込みを適用する
       11. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は undefined）、select を記録済みのキーでの単語の選択にして呼ぶ
-      12. 結果が null なら `next(e)`、それ以外は `next({ ...e, context: [...(e.context ?? []), selection.text] })` を返却する
+      12. 結果が null なら `next(e)` を返却する。それ以外は、追加した単語の表示を実行してから `next({ ...e, context: [...(e.context ?? []), selection.text] })` を返却する
       13. 3〜11 で想定しない例外（SchemaError・RecordConflictError を含む）が起きたら、理由を debug log に出して `next(e)` を返却する（入力を止めない）
 
       2〜6 の設定の読み込みと 8・9 の単語の読み込みは、handleToolCall と共有する内部の関数に配置する
@@ -69,6 +69,7 @@ functions:
       - MOD-14#functions[addRecorded]
       - MOD-9#functions[selectEntries]
       - MOD-2#functions[filterByScope]
+      - MOD-1#functions[showAdded]
     unit_tests:
       - name: test_handle_prompt_submit_when_disabled
         case: 正常
@@ -106,6 +107,18 @@ functions:
         condition: '`$.session.root()` が `/repo/sample`。設定ファイルの `global.aliases` に `scope.cwd: [/repo/other/**]` で term-s の YAML を指す term の行。入力「term-a と term-s」'
         mock: テストの `on` で `settings.read`・`fs.stat`・`fs.list`・`fs.read` をメモリのファイル表から応答し、`mock.env` で `HOME` を指定する。`fs.read` の呼ばれたパスを記録する
         expected: 返る `context` の末尾が term-a の文脈だけで、term-s の YAML に `fs.read` が呼ばれていない
+      - name: test_handle_prompt_submit_shows_added
+        case: 正常
+        summary: 文脈を追加したときは、追加した単語を transcript に 1 行表示する
+        condition: 入力「term-a とは」を送信し、続けて同じ入力をもう 1 回送信する
+        mock: 同上。`ui.log` は届いた行を記録する
+        expected: '1 回目に `to: transcript` で `文脈を追加: Term-A（term-a）` が 1 行届き、2 回目は transcript の行が増えない'
+      - name: test_handle_prompt_submit_when_show_added_off
+        case: 正常
+        summary: show_added が false のときは表示せずに文脈を追加する
+        condition: '`global.show_added` が false、入力「term-a とは」'
+        mock: 同上
+        expected: 返る `context` に term-a の文脈があり、transcript の行が届かない
   - name: handleSessionCompact
     title: 圧縮の後の記録の消去
     kind: フック
@@ -237,7 +250,7 @@ functions:
       3. 設定の読み込みをする（handlePromptSubmit の 2〜6 と同じ）。設定ファイルのパスが null・読み込めない設定のときは引用の文脈を追加しない（7 へ進む）
       4. enabled が false か、`e.tool` が実効の設定の excludeTools のどれかと完全に一致するときは引用の文脈を追加しない（7 へ進む）。origins では絞らない
       5. 単語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、照合する本文と照合して、照合する本文での照合条件での絞り込み・出た回数の順の並べ替え・参照している文書の除外（home は `$.env.get('HOME')`）を適用する
-      6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの単語の選択にして呼び、結果の text を引用の文脈にする
+      6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの単語の選択にして呼び、結果の text を引用の文脈にする。結果が null でなければ、追加した単語の表示を実行する
       7. 3〜6 で想定しない例外（RecordConflictError を含む）が起きたら、理由を debug log に出し、引用の文脈を追加せずに続ける
       8. `r.text` が文字列で、`r.text` の変数参照の名前の検出が空でなければ、`$.process.run(['env', '-0'], { timeoutMs: VARIABLE_REFERENCE_TIMEOUT_MS })` を呼ぶ。`exitCode` が 0 なら env の出力の分割と値の行の組み立てをする。`exitCode` が 0 以外なら終了コードを、例外（起動できない・待ちの上限の超過を含む）なら理由を debug log に出し、値の行を追加しない
       9. 引用の文脈も値の行も無ければ `r` を返却する。あれば `{ ...r, context: [...(r.context ?? []), 引用の文脈, 値の行] }` を返却する（無い方は並べない）
@@ -256,6 +269,7 @@ functions:
       - MOD-8#functions[formatReferenceLines]
       - MOD-8#constants[VARIABLE_REFERENCE_TIMEOUT_MS]
       - MOD-5#functions[joinArgumentText]
+      - MOD-1#functions[showAdded]
     unit_tests:
       - name: test_handle_tool_call_when_context_given
         case: 正常
@@ -311,6 +325,12 @@ functions:
         condition: '設定ファイルと term-a・term-b の YAML がある。`e.tool` が `Write` で `content` が「term-a の説明」、`next` の `text` が「File created」。続けて別のセッションで `e.tool` が `mcp__x__write` で `items` が `[{ body: term-b の説明 }]`、`next` の `text` が無い'
         mock: test_handle_tool_call_when_skipped と同じ
         expected: 1 回目の `context` の末尾が term-a の文脈、2 回目の `context` が term-b の文脈。どちらも `text` が `next` の結果のまま
+      - name: test_handle_tool_call_shows_added
+        case: 正常
+        summary: 引用の文脈を追加したときだけ、追加した単語を transcript に表示する
+        condition: 結果の `text` が「term-a と !{VALUE_A}」の呼び出しと、結果の `text` が「!{VALUE_A}」だけの呼び出し
+        mock: 同上。`process.run` は `VALUE_A=value-a` を含む出力を返却する
+        expected: '1 つ目で `文脈を追加: Term-A（term-a）` が 1 行届き、2 つ目（変数参照の値の行だけ）では transcript の行が届かない'
     status: planned
   - name: handleTurnStep
     title: 応答の文への引用の文脈の追加
@@ -384,6 +404,47 @@ functions:
         mock: 'test_handle_turn_step と同じ。ただしテストの `on` の `session.append` が `{ deny: refused }` を返却する。`ui.log` は届いた行を記録する'
         expected: 結果がテストの `turn.step` のもののままで、`ui.log` に `to` が `debug` で `refused` を含む行が届く
     status: planned
+  - name: showAdded
+    title: 追加した単語の表示
+    kind: 関数
+    container: hooks/handlers.ts
+    usecase: 入力への引用の文脈の追加
+    summary: 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても例外を外へ出さない
+    scope: internal
+    is_async: false
+    side_effects: '`$.ui.log(text, { to: "transcript" })` で利用者の画面と会話の記録に 1 行を出す。失敗したら debug log に出す'
+    args:
+      - name: $
+        type: EngineInterface
+        required: true
+        passing: positional
+        description: エンジンから受け取る
+      - name: selection
+        type: Selection
+        required: true
+        passing: positional
+        description: 記録への追加が返却した最終的な選択（競合で再除外した後）
+      - name: settings
+        type: Settings
+        required: true
+        passing: positional
+        description: 実効の設定
+    returns:
+      type: void
+      description: なし
+    process: |-
+      1. settings.showAdded が false なら何もしない
+      2. 表示する行の書式化を selection.entries で呼び、`$.ui.log(text, { to: "transcript" })` で出す
+      3. 2 が例外になったら、`追加した単語を表示できません: {理由}` を debug log に出す（記録は戻さない）
+    callees:
+      - MOD-9#functions[renderAddedLine]
+    unit_tests:
+      - name: test_show_added_when_log_fails
+        case: 異常
+        summary: 表示に失敗しても入力は止めず、失敗を debug log に出す
+        condition: 入力「term-a とは」
+        mock: '`ui.log` が `to: transcript` の呼び出しで例外を投げ、`to: debug` は届いた行を記録する'
+        expected: 返る `context` に term-a の文脈があり、debug log に `追加した単語を表示できません` が届き、term-a が記録に入っている
 tags:
   - name: topic:イベント
     main: true
