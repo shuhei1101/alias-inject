@@ -59,6 +59,12 @@ overview:
     - from: plugin
       to: repo_config
       label: 参照する
+    - from: plugin
+      to: cc
+      label: 追加した単語の表示
+    - from: cc
+      to: user
+      label: 追加した単語の表示
   frame:
     label: alias-inject
     nodes:

@@ -39,6 +39,7 @@ flows:
       - 返る `text` が `next(e)` の結果の `text` と同じ
       - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、返る `context` が空
       - '`process.run` が呼ばれていない'
+      - '`ui.log` に `to: "transcript"` で `文脈を追加: Term-A（term-a）` の 1 行が届く'
     test: test_normal
   - name: 正常系（照合から除外したツール）
     summary: exclude_tools のツールの結果は照合しない
@@ -66,6 +67,7 @@ flows:
     expected:
       - 1 回目の返る結果が `next(e)` の結果と同じ
       - 2 回目の返る `context` に term-a が含まれる
+      - '除外したツールの結果では `ui.log` に `to: "transcript"` の行が届かない'
     test: test_normal_when_tool_excluded
   - name: 正常系（参照している文書そのもの）
     summary: Read の file_path と MCP の引数の ID に該当する単語を除外する
@@ -120,6 +122,7 @@ flows:
     expected:
       - 返る `context` に term-b が含まれ、term-a が含まれない
       - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、term-a の文脈が追加される
+      - '`to: "transcript"` の行が返る `context` に含まれる単語だけを含み、上限で除外した単語を含まない'
     test: test_normal_when_over_limit
   - name: 正常系（サブエージェント）
     summary: agentId のある呼び出しはメインの会話と別の記録で照合する
@@ -150,6 +153,7 @@ flows:
       - 1 回目の返る `context` に term-a と term-b が含まれる
       - 2 回目の返る結果が `next(e)` の結果と同じ
       - 続けて `prompt.submit` に「term-b とは」を送信すると、term-b の文脈が追加される
+      - '1 回目に `to: "transcript"` で term-a と term-b を含む 1 行が届き、2 回目は行が増えない'
     test: test_normal_when_in_subagent
   - name: 正常系（照合しない結果）
     summary: エラーの結果・deny・本文の無い結果は照合しない
@@ -193,6 +197,7 @@ flows:
         IF-->>CC: context に term-a の文脈と値の行
     expected:
       - '返る `context` が 2 要素で、1 つ目が term-a の文脈、2 つ目が `変数参照の値: !{VALUE_A} = value-a`'
+      - '`to: "transcript"` の行は term-a だけを含み、変数参照の名前と値を含まない'
     test: test_normal_when_variable_reference_added
   - name: 正常系（記録の書き込みが競合する）
     summary: ifVersion が一致しなかったら再読み込みし、他の呼び出しで記録された単語を除いて追加する
@@ -246,6 +251,7 @@ flows:
       - 返る結果が `next(e)` の結果と同じ
       - フックが例外で終わらない
       - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスを含む行が届いている
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_error_when_config_unreadable
   - name: 異常系（記録の書き込みが再試行の上限まで一致しない）
     summary: ifVersion が 3 回続けて一致しなかったら引用の文脈を追加せずに返却する
@@ -354,10 +360,54 @@ flows:
     expected:
       - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
     test: test_normal_when_cwd_scoped
+  - name: 正常系（表示をオフにした設定）
+    summary: show_hits が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 設定ファイル
+        description: 正常系に加え `show_hits` が false
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: ツールの結果（term-a を含む）
+        IF->>ST: term-a を記録に入れる
+        IF->>IF: show_hits が false なので表示しない
+        IF-->>CC: context に term-a の文脈
+    expected:
+      - 返る `context` の末尾が term-a を含む
+      - '`ui.log` に `to: "transcript"` の行が届かない'
+    test: test_normal_when_display_off
+  - name: 異常系（表示に失敗する）
+    summary: 表示の `$.ui.log` が例外を投げても、文脈の追加と記録はそのままにし、失敗を debug log に出す
+    setup:
+      - name: Mock
+        description: '正常系に加え、`ui.log` が `to: "transcript"` の呼び出しで例外を投げる'
+        notes: '`to: "debug"` の呼び出しは届いた行を記録する'
+    flow: |-
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as tool.call
+        participant ST as $.state
+
+        CC->>IF: ツールの結果（term-a を含む）
+        IF->>ST: term-a を記録に入れる
+        IF->>CC: $.ui.log（transcript）
+        CC-->>IF: 例外
+        IF->>CC: $.ui.log（debug）で表示の失敗を出す
+        IF-->>CC: context に term-a の文脈
+    expected:
+      - 返る `context` の末尾が term-a を含み、返る `text` が `next(e)` の結果の `text` と同じ
+      - term-a が記録に入っている
+      - '`ui.log` に `to: "debug"` で表示の失敗の理由が届く'
+    test: test_error_when_display_fails
 lead: ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を `context` に追加する `tool.call` の処理の入出力とフローを定め、ツールの結果への引用の文脈の追加を修正するときに参照する。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
-side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。引用の文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_hits` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
 exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ書き込むため、記録は `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして照合の結果から記録済みの単語を再除外する。この記載方法は `prompt.submit` と共有する
@@ -434,6 +484,9 @@ exceptions:
   - name: なし（想定しない例外）
     condition: 照合・記録の途中で想定しない例外が起きた
     notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返却する。変数参照の値の行は追加する
+  - name: なし（表示に失敗する）
+    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が例外を投げた'
+    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で理由を debug log に出し、文脈を追加して返却する。記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: ツールの呼び出しで増える待ち時間は 200ms まで
@@ -480,6 +533,10 @@ constraints:
     constraint: '[入力への引用の文脈の追加](id:IF-3) の作業場所の絞りと同じ'
     decided_by: CFG-1#settings[global.aliases[].scope.cwd]
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
+  - item: 表示
+    constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で表示する。変数参照の値は表示しない。サブエージェントの呼び出し（`agentId` あり）で追加した単語も表示する'
+    decided_by: CFG-1#settings[global.show_hits]
+    notes: サブエージェントの呼び出しで出した行も、メインの会話の画面と記録に出る
 refs:
   - SC-2#
 tags:
