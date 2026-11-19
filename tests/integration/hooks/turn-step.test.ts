@@ -47,6 +47,7 @@ describe('応答の文への引用の文脈の追加', () => {
     // 準備
     const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS })
     await submit($, 'term-a とは')
+    const shownBySubmit = transcriptLines(world.files.logs)
     world.answer = ANSWER
 
     // 実行
@@ -55,7 +56,8 @@ describe('応答の文への引用の文脈の追加', () => {
     // 検証
     expect(world.appended().length).toBe(0)
     expect(result).toEqual(expectedResult())
-    expect(transcriptLines(world.files.logs)).toEqual([])
+    // 入力で表示した行のほかに、行が増えていない
+    expect(transcriptLines(world.files.logs)).toEqual(shownBySubmit)
   })
 
   // agentId のある要求はメインの会話と別の記録で照合し、そのサブエージェントの会話に追加する（正常系）
