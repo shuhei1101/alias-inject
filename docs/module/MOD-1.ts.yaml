@@ -340,7 +340,7 @@ functions:
     summary: モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の文脈を `$.session.append` で会話に追加する
     scope: public
     is_async: true
-    side_effects: 追加した単語を `$.state` の会話の記録に入れ、`$.session.append` で会話に 1 行追加する。読み込めない設定・YAML、行の追加を拒まれた理由、想定しない例外を debug log に出す
+    side_effects: 追加した単語を `$.state` の会話の記録に入れ、`$.session.append` で会話に 1 行追加する。行を追加した回は、追加した単語を transcript に 1 行表示する。読み込めない設定・YAML、行の追加を拒まれた理由、想定しない例外を debug log に出す
     inherits: IF-7#
     args:
       - name: $
@@ -368,7 +368,7 @@ functions:
       4. enabled が false なら `r` を返却する。origins と excludeTools では絞らない
       5. 単語の読み込みをし（handlePromptSubmit の 8・9 と同じ）、`r.answer` と照合して、`r.answer` での照合条件での絞り込み・出た回数の順の並べ替えを適用する
       6. 記録への追加を、recordId を記録の ID（sessionId は `$.session.id()`、agentId は `e.agentId`）、select を記録済みのキーでの単語の選択にして呼ぶ。結果が null なら `r` を返却する
-      7. `$.session.append({ message: { type: 'user', content: [{ type: 'text', text: selection.text }] } })` を呼ぶ。`e.agentId` があれば `agentId` を付ける。結果に `deny` があれば理由を debug log に出す
+      7. `$.session.append({ message: { type: 'user', content: [{ type: 'text', text: selection.text }] } })` を呼ぶ。`e.agentId` があれば `agentId` を付ける。結果に `deny` があれば理由を debug log に出し、表示せずに 9 へ進む。`deny` が無ければ、追加した単語の表示を selection と実効の設定で呼ぶ
       8. 3〜7 で想定しない例外（RecordConflictError を含む）が起きたら、理由を debug log に出す
       9. `r` を返却する
     callees:
@@ -378,6 +378,7 @@ functions:
       - MOD-14#functions[recordIdOf]
       - MOD-14#functions[addRecorded]
       - MOD-9#functions[selectEntries]
+      - MOD-1#functions[showAdded]
     unit_tests:
       - name: test_handle_turn_step
         case: 正常
@@ -402,7 +403,19 @@ functions:
         summary: 行の追加を拒まれたら debug log に出して結果を返却する
         condition: test_handle_turn_step と同じ入力
         mock: 'test_handle_turn_step と同じ。ただしテストの `on` の `session.append` が `{ deny: refused }` を返却する。`ui.log` は届いた行を記録する'
-        expected: 結果がテストの `turn.step` のもののままで、`ui.log` に `to` が `debug` で `refused` を含む行が届く
+        expected: 結果がテストの `turn.step` のもののままで、`ui.log` に `to` が `debug` で `refused` を含む行が届き、`to` が `transcript` の行は届かない
+      - name: test_handle_turn_step_shows_added
+        case: 正常
+        summary: 行を追加したときは、追加した単語を transcript に 1 行表示する
+        condition: test_handle_turn_step と同じ入力で 2 回呼ぶ
+        mock: test_handle_turn_step と同じ。`ui.log` は届いた行を記録する
+        expected: '1 回目に `to: transcript` で `文脈を追加: Term-A（term-a）` が 1 行届き、2 回目（記録済み）は transcript の行が増えない'
+      - name: test_handle_turn_step_when_show_added_off
+        case: 正常
+        summary: show_added が false のときは表示せずに行を追加する
+        condition: '`global.show_added` が false、入力は test_handle_turn_step と同じ'
+        mock: test_handle_turn_step_shows_added と同じ
+        expected: 追加された行が 1 行で、transcript の行が届かない
     status: planned
   - name: showAdded
     title: 追加した単語の表示
