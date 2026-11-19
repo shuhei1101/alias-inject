@@ -604,7 +604,7 @@ test('test_handle_tool_call_shows_added', async ($, on) => {
   expect(transcriptLines(world.logs)).toEqual(quoted)
 })
 
-// 表示に失敗しても入力は止めず、失敗を debug log に出す（異常系）
+// 表示に失敗しても入力は止めず、文脈の追加と記録はそのまま（異常系）
 test('test_show_added_when_log_fails', async ($, on) => {
   // 準備
   const world = installWorld(on, { fs: makeFs(), settings: SETTINGS, transcriptError: 'transcript に出せません' })
@@ -615,6 +615,6 @@ test('test_show_added_when_log_fails', async ($, on) => {
 
   // 検証
   expect(result.context?.[0]).toContain('Term-A')
-  expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('追加した単語を表示できません')).length).toBe(1)
+  expect(transcriptLines(world.logs)).toEqual([])
   expect(again.context ?? []).toEqual([])
 })

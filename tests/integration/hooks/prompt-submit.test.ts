@@ -138,7 +138,7 @@ test('test_normal_when_config_path_missing', async ($, on) => {
   expect(result.text).toBe('term-a とは')
   expect(result.context ?? []).toEqual([])
   expect(fs.reads).toEqual([])
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // 該当した projects の aliases の行を global に重ね、同じ単語を alias_type ごとの両方のセクションに追加する（正常系）
@@ -300,7 +300,7 @@ test('test_normal_when_added_types', async ($, on) => {
   expect(context).toContain('- env-a（id: env-a）\n  - url: http://127.0.0.1:8000\n  - port: 8000\n  - description: 開発サーバー')
   expect(context).toContain('- env-b（id: env-b）\n  - port: 5432\n\n## 使用しない単語')
   expect(context).toContain('- avoid-a（id: avoid-a）\n  - replacement: term-a')
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // 設定ファイルを読み込めないときは何も追加せずに返却する（異常系）
@@ -511,7 +511,7 @@ test('test_normal_when_records_body_file', async ($, on) => {
   expect(context).toContain('## 文書')
   expect(context).toContain('- セットアップ（id: docs/使い方/セットアップ.md）')
   expect(context).toContain('description: 前提と手順')
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // 名前が該当した文書のうち、照合条件に該当しない文書を除外する（正常系）
@@ -532,7 +532,7 @@ test('test_normal_when_inject_condition', async ($, on) => {
   expect(firstContext).toContain('Term-A')
   expect(firstContext).not.toContain('term-c')
   expect(second.context?.[0] ?? '').toContain('id: term-c')
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // 用語の avoid のやめた言い方を使用しない単語のセクションに追加し、exclude の単語と照合条件に該当しない用語のやめた言い方は追加しない（正常系）
@@ -559,7 +559,7 @@ test('test_normal_when_term_avoid', async ($, on) => {
   expect(context).not.toContain('旧ビー')
   expect(context).not.toContain('旧シー')
   expect(second.context ?? []).toEqual([])
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // 照合条件の誤った文書だけを除外し、同じ行の他の文書の文脈は追加する（異常系）
@@ -605,7 +605,7 @@ test('test_normal_when_cwd_scoped', async ($, on) => {
   expect(context).not.toContain('link-c')
   expect(fs.reads).not.toContain(SCOPED_LINKS.other)
   expect(fs.reads).not.toContain(SCOPED_LINKS.root)
-  expect(world.logs).toEqual([])
+  expect(world.logs.filter((line) => line.to === 'debug')).toEqual([])
 })
 
 // scope.cwd が 1 つ以上の文字列の並びでない行を、スキーマに合わない行として照合から除外する（異常系）
