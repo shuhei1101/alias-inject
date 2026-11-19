@@ -319,12 +319,13 @@ settings:
     file: ~/.config/alias-inject/settings.yaml
     type: boolean
     default: 'true'
-    description: 入力とツールの結果に引用の文脈を追加したとき、追加した単語と `id` を利用者の画面に 1 行表示するか。false のときは表示せず、文脈の追加だけをする
+    description: 入力・ツールの結果・応答の文で引用の文脈を追加したとき、追加した単語と `id` を利用者の画面に 1 行表示するか。false のときは表示せず、文脈の追加だけをする
     allowed: true / false。それ以外の値は既定を使用する
     reload: immediate
     refs:
       - IF-3#constraints[表示]
       - IF-2#constraints[表示]
+      - IF-7#constraints[表示]
     status: planned
 refs:
   - ARCH-1#subsystems[plugin]
