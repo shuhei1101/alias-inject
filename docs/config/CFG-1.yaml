@@ -7,7 +7,7 @@ files:
     manages: 設定ファイルのパス（`env` の `ALIAS_INJECT_CONFIG`）
     notes: 'ユーザースコープだけを参照する（`$.settings.read({ source: "user" })`）'
   - file: ~/.config/alias-inject/settings.yaml
-    manages: 参照するリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し
+    manages: 参照するリポジトリ・端末だけのエイリアス・対象の出所・上限・見出し・利用者の画面への表示
     notes: 既定の配置場所は `${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` で、`ALIAS_INJECT_CONFIG` の値で変えられる。最上位は `global` と `projects`
   - file: project-index.yaml
     manages: リポジトリのエイリアス（`documents` のうち `alias_type` を持つ行だけを参照する）
@@ -314,6 +314,18 @@ settings:
     default: ~/.config
     description: 既定のパス `{XDG_CONFIG_HOME}/alias-inject/settings.yaml` の基準のフォルダ。`$.env.get` で参照する
     missing: 空のときも `~/.config` を使用する
+  - key: global.show_added
+    title: 追加した単語の表示
+    file: ~/.config/alias-inject/settings.yaml
+    type: boolean
+    default: 'true'
+    description: 入力とツールの結果に引用の文脈を追加したとき、追加した単語と `id` を利用者の画面に 1 行表示するか。false のときは表示せず、文脈の追加だけをする
+    allowed: true / false。それ以外の値は既定を使用する
+    reload: immediate
+    refs:
+      - IF-3#constraints[表示]
+      - IF-2#constraints[表示]
+    status: planned
 refs:
   - ARCH-1#subsystems[plugin]
 tags:

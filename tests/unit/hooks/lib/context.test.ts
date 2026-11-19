@@ -1,5 +1,5 @@
 import { expect, test } from 'claude-code/testing'
-import { entryKey, renderContext, selectEntries } from '../../../../hooks/lib/context'
+import { entryKey, renderAddedLine, renderContext, selectEntries } from '../../../../hooks/lib/context'
 import type { Entry } from '../../../../hooks/lib/entry'
 import type { Hit } from '../../../../hooks/lib/match'
 
@@ -204,4 +204,45 @@ test('test_select_entries_when_nothing_selected', () => {
   expect(noHits).toBeNull()
   expect(allRecorded).toBeNull()
   expect(headingOnly).toBeNull()
+})
+
+// 選んだ単語を選んだ順に返却する（正常系）
+test('test_select_entries_returns_entries', () => {
+  // 準備
+  const termA = makeEntry('term-a', { description: '短い説明' })
+  const termLong = makeEntry('term-long', { description: 'あ'.repeat(500) })
+  const termB = makeEntry('term-b', { description: '短い説明' })
+  const hits = [makeHit(termA, 0), makeHit(termLong, 10), makeHit(termB, 20)]
+
+  // 実行
+  const selection = selectEntries(hits, new Set(), { limits: { ...LIMITS, maxChars: 300 } })
+
+  // 検証
+  expect(selection?.entries.map((entry) => entry.id)).toEqual(['term-a', 'term-b'])
+  expect(selection?.keys).toEqual([entryKey(termA), entryKey(termB)])
+})
+
+// 追加した単語を選んだ順に 1 行に並べる（正常系）
+test('test_render_added_line', () => {
+  // 準備
+  const termA = { ...makeEntry('term-a'), word: 'Term-A' }
+  const docX = makeEntry('doc-x', { type: 'doc' })
+
+  // 実行
+  const line = renderAddedLine([termA, docX])
+
+  // 検証
+  expect(line).toBe('文脈を追加: Term-A（term-a）、doc-x（doc-x）')
+})
+
+// 用語のやめた言い方はやめた言い方の値と用語の id で並べる（正常系）
+test('test_render_added_line_when_avoid', () => {
+  // 準備
+  const oldA = { ...makeEntry('term-a', { type: 'avoid', avoid: '旧エー' }), word: '旧エー' }
+
+  // 実行
+  const line = renderAddedLine([oldA])
+
+  // 検証
+  expect(line).toBe('文脈を追加: 旧エー（term-a）')
 })

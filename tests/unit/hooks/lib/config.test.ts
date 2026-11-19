@@ -500,3 +500,28 @@ test('test_parse_repository_config_when_invalid', () => {
     if (key !== null) expect(String(result)).toContain(key)
   }
 })
+
+// show_added は真偽値だけを読み、それ以外は既定の true（正常系）
+test('test_parse_config_show_added', () => {
+  // 実行
+  const off = parse({ global: { show_added: false } })
+  const omitted = parse({ global: {} })
+  const invalid = parse({ global: { show_added: 'no' } })
+
+  // 検証
+  expect(off.showAdded).toBe(false)
+  expect(omitted.showAdded).toBe(true)
+  expect(invalid.showAdded).toBe(true)
+})
+
+// 該当した projects の show_added で置き換える（正常系）
+test('test_resolve_settings_when_project_show_added', () => {
+  // 準備
+  const config = parse({ global: { show_added: true }, projects: [{ match: 'sample', show_added: false }] })
+
+  // 実行
+  const settings = resolveSettings(config, { where: WHERE })
+
+  // 検証
+  expect(settings.showAdded).toBe(false)
+})

@@ -18,7 +18,7 @@ import type { ResolvedAlias } from './lib/alias'
 import { ConfigError, isOriginAllowed, parseConfig, readConfigPath, resolveSettings } from './lib/config'
 import type { Config, Settings } from './lib/config'
 import { filterByCondition } from './lib/condition'
-import { selectEntries } from './lib/context'
+import { renderAddedLine, selectEntries } from './lib/context'
 import type { Selection } from './lib/context'
 import { loadAliasEntries } from './lib/entry'
 import type { Entry } from './lib/entry'
@@ -147,6 +147,17 @@ function addSelected($: EngineInterface, hits: Hit[], settings: Settings, record
   return addRecorded($, { recordId, select: (recorded) => selectEntries(hits, recorded, { limits }) })
 }
 
+// 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても入力とツールの結果は止めない
+function showAdded($: EngineInterface, selection: Selection, settings: Settings): void {
+  if (!settings.showAdded) return
+  try {
+    $.ui.log(renderAddedLine(selection.entries), { to: 'transcript' })
+  } catch (error) {
+    // テストの道具では Claude Code が失敗を受け止めるが、対話モードのセッションで例外が返っても止めない
+    logDebug($, `追加した単語を表示できません: ${describe(error)}`)
+  }
+}
+
 /** 入力を参照するリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の文脈を `context` の末尾に追加して返却する */
 export async function handlePromptSubmit(
   $: EngineInterface,
@@ -156,10 +167,11 @@ export async function handlePromptSubmit(
   if (e.command !== undefined) return next(e)
 
   let selection: Selection | null
+  let settings: Settings
   try {
     const loaded = await loadSettings($)
     if (loaded === null) return next(e)
-    const { settings } = loaded
+    settings = loaded.settings
     if (!settings.enabled || !isOriginAllowed(settings.origins, e.origin.kind)) return next(e)
 
     const hits = filterByCondition(findHits(e.text, await loadEntries($, loaded), settings.exclude), e.text)
@@ -171,6 +183,7 @@ export async function handlePromptSubmit(
     return next(e)
   }
   if (selection === null) return next(e)
+  showAdded($, selection, settings)
   return next({ ...e, context: [...(e.context ?? []), selection.text] })
 }
 
@@ -209,7 +222,9 @@ async function quoteToolResult($: EngineInterface, e: ToolCallInput, text: strin
     const remaining = excludeReadingDocuments(sortByCount(hits), { e, home })
     const recordId = recordIdOf({ sessionId: await $.session.id(), agentId: e.agentId })
     const selection = await addSelected($, remaining, settings, recordId)
-    return selection?.text ?? null
+    if (selection === null) return null
+    showAdded($, selection, settings)
+    return selection.text
   } catch (error) {
     // 想定しない例外でもツールの結果は止めない
     logDebug($, `引用の文脈を追加できません: ${describe(error)}`)

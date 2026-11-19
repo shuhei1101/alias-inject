@@ -26,11 +26,15 @@ scenarios:
         P->>P: 本文と単語を正規化して照合し term-a がヒットする
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 本文はそのままに、term-a の文脈を context に追加
+        P->>CC: 追加した term-a の単語と id を表示する行を出す
+        CC->>U: 画面に行を表示する
         CC->>M: ツールの結果と文脈を送信
     expected:
       - Read の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
       - term-b の文脈は追加されていない
       - Read の結果の本文は参照させたファイルのとおりのまま届いている
+      - 利用者の画面に、追加した term-a の単語と `id` を示す行が 1 行表示されている（term-b は表示されていない）
+      - 表示した行は、モデルに届いたツールの結果と文脈に入っていない
     test: test_normal
   - name: 正常シナリオ（記録済みの単語だけ）
     setup:
@@ -57,6 +61,7 @@ scenarios:
         CC->>M: ツールの結果だけを送信
     expected:
       - Read の結果の後ろに引用の文脈が追加されていない
+      - 利用者の画面に表示の行が出ていない
     test: test_normal_when_only_recorded_terms
   - name: 正常シナリオ（照合から除外したツール）
     setup:
@@ -91,6 +96,7 @@ scenarios:
     expected:
       - Bash の結果の後ろに引用の文脈が追加されていない
       - その後の Read の結果の後ろに term-a の文脈が追加されている
+      - Bash の結果では、利用者の画面に表示の行が出ていない
     test: test_normal_when_tool_excluded
   - name: 正常シナリオ（参照している文書そのもの）
     setup:
@@ -150,6 +156,7 @@ scenarios:
         CC->>M: ツールの結果と文脈を送信
     expected:
       - Read の結果の後ろの文脈に term-b の文脈だけがあり、term-a の文脈は追加されていない
+      - 表示の行は term-b だけで、term-a は表示されていない
     test: test_normal_when_over_limit
   - name: 正常シナリオ（サブエージェント）
     setup:
@@ -193,6 +200,7 @@ scenarios:
     expected:
       - サブエージェントの Read の結果の後ろに term-a の文脈が追加されている
       - その後のメインの会話の Read の結果の後ろにも term-a の文脈が追加されている
+      - サブエージェントの Read で追加した term-a を示す行が、メインの会話の画面に表示されている
     test: test_normal_when_in_subagent
   - name: 正常シナリオ（エラーの結果）
     setup:
@@ -216,6 +224,7 @@ scenarios:
         CC->>M: ツールの結果だけを送信
     expected:
       - Read のエラーの結果の後ろに引用の文脈が追加されていない
+      - 利用者の画面に表示の行が出ていない
     test: test_normal_when_error_result
   - name: 異常シナリオ（設定ファイルを読み込めない）
     setup:
@@ -244,6 +253,7 @@ scenarios:
     expected:
       - Read の結果の本文がそのままモデルに届いている
       - Read の結果の後ろに引用の文脈が追加されていない
+      - 利用者の画面に表示の行が出ていない
     test: test_error_when_config_unreadable
   - name: 正常シナリオ（照合条件を持つ文書）
     setup:
@@ -347,7 +357,65 @@ scenarios:
       - Write の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
       - 書き込ませた入力には文脈が追加されていない
       - 書き込んだファイルの本文は Write の引数のとおりのまま
+      - 書き込む内容で追加した term-a の単語と `id` の行が利用者の画面に 1 行表示されている
     test: test_normal_when_written_content
+  - name: 正常シナリオ（表示をオフにした設定）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定に、利用者の画面への表示をオフにする値を記載する
+        notes: キーの名前と、入力とツールの結果で分けて設定できるかは、インターフェース定義設計で決める
+      - name: 参照させるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で参照させる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-a がヒットし、記録に入れる
+        P->>CC: term-a の文脈を context に追加し、表示の行は出さない
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろに term-a の文脈が追加されている
+      - 利用者の画面に表示の行が出ていない
+    test: test_normal_when_display_off
+  - name: 異常シナリオ（表示に失敗する）
+    setup:
+      - name: Mock
+        description: Claude Code の `$.ui.log` が例外を投げるように差し替える
+        notes: E2E では `$.ui.log` を差し替えられないため、結合テストで確認する
+      - name: 参照させるファイル
+        description: 正常シナリオと同じ
+    flow: |-
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: ファイルを Read で参照させる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: Read を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: ツールの結果
+        P->>P: 照合で term-a がヒットし、記録に入れる
+        P->>CC: 表示の行を出そうとして失敗する
+        CC->>CC: 失敗を debug log に出し、alias-inject へ例外を返さない
+        P->>CC: term-a の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+    expected:
+      - Read の結果の後ろに term-a の文脈が追加されている
+      - term-a がセッションの記録に入っている
+      - Read の結果の本文は参照させたファイルのとおりのまま届いている
+    test: test_error_when_display_fails
 lead: ツールで参照した本文に、そのセッションで初めて出た単語の引用の文脈を追加する流れを定め、ツールの結果への引用の文脈の追加を変えるときに参照する。
 primary_actor: モデル
 stakeholders:

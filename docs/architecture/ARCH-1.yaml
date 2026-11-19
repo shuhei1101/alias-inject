@@ -65,6 +65,12 @@ overview:
     - from: plugin
       to: cc
       label: 引用の文脈（会話に追加する行）
+    - from: plugin
+      to: cc
+      label: 追加した単語の表示
+    - from: cc
+      to: user
+      label: 追加した単語の表示
   frame:
     label: alias-inject
     nodes:

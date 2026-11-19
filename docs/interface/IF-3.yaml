@@ -52,6 +52,7 @@ flows:
         ST-->>IF: 記録なし
         IF->>IF: 正規化して照合し term-a がヒットする
         IF->>ST: term-a を記録に入れる
+        IF->>CC: $.ui.log（transcript）で追加した term-a を 1 行表示する
         IF-->>CC: text はそのまま、context に term-a の文脈
       ```
 
@@ -62,6 +63,8 @@ flows:
       - 返る `context` に term-b と doc-z が含まれない
       - '`/repo/knowledge/docs/` の YAML に `fs.read` が呼ばれていない'
       - 同じセッションで続けて「term-a とは」を送信すると、返る `context` が空
+      - '`ui.log` に `to: "transcript"` で `文脈を追加: Term-A（term-a）` の 1 行が届き、term-b と doc-z を含まない'
+      - '続けて「term-a とは」を送信したときは、`to: "transcript"` の行が増えない'
     test: test_normal
   - name: 正常系（上限を超える）
     summary: 入力に先に出た単語から max_items 単語だけを追加し、除外された単語は記録しない
@@ -95,6 +98,7 @@ flows:
     expected:
       - 1 回目の返る `context` に term-a が含まれ、term-b が含まれない
       - 2 回目の返る `context` に term-b が含まれる
+      - '1 回目の `to: "transcript"` の行が term-a だけを含み、term-b を含まない'
     test: test_normal_when_over_item_limit
   - name: 正常系（文字数の上限を超える）
     summary: 追加すると max_chars を超える単語を飛ばし、後ろの収まる単語を追加する
@@ -130,6 +134,7 @@ flows:
       - 返る `context` に term-a と term-b が含まれ、term-long が含まれない
       - 返る `context` の追加した要素が 300 文字以下
       - 同じセッションで `max_chars` を 4000 に戻して「term-long とは」を送信すると、term-long の文脈が追加される
+      - '`to: "transcript"` の行が term-a と term-b を含み、飛ばした term-long を含まない'
     test: test_normal_when_over_char_limit
   - name: 正常系（出所が対象外）
     summary: origins に対応づかない出所の入力はそのまま返却する
@@ -157,6 +162,7 @@ flows:
     expected:
       - 返る `text`・`context` が受け取ったまま
       - 同じセッションで `origin.kind` が `plugin` の「term-a とは」を送信すると、term-a の文脈が追加される（前の入力で記録されていない）
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_normal_when_origin_excluded
   - name: 正常系（スラッシュコマンド）
     summary: スラッシュコマンドの行は照合せずにそのまま返却する
@@ -434,6 +440,7 @@ flows:
       - 返る `text`・`context` が受け取ったまま
       - フックが例外で終わらない（入力が止まらない）
       - テストの `on` の `ui.log` に、`to` が `debug` で設定ファイルのパスと理由を含む行が届いている
+      - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_error_when_config_unreadable
   - name: 異常系（project-index.yaml を読み込めない）
     summary: 読み込めない project-index.yaml のリポジトリだけを除外し、他のリポジトリの文脈は追加する
@@ -1058,9 +1065,69 @@ flows:
       - テストの `on` の `ui.log` に行が届いていない
       - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
     test: test_normal_when_term_avoid
+  - name: 正常系（表示をオフにした設定）
+    summary: show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
+    setup:
+      - name: Mock
+        description: 正常系と同じ
+      - name: 設定ファイル
+        description: 正常系に加え `show_added` が false
+      - name: 入力
+        description: 「term-a とは」
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant ST as $.state
+
+        CC->>IF: term-a とは
+        IF->>IF: term-a がヒットする
+        IF->>ST: term-a を記録に入れる
+        IF->>IF: show_added が false なので表示しない
+        IF-->>CC: context に term-a の文脈
+      ```
+
+      <!-- /map -->
+    expected:
+      - 返る `context` に term-a が含まれる
+      - '`ui.log` に `to: "transcript"` の行が届かない'
+    test: test_normal_when_display_off
+  - name: 異常系（表示に失敗する）
+    summary: 表示の `$.ui.log` が失敗しても、Claude Code が受け止めるので、文脈の追加と記録はそのまま
+    setup:
+      - name: Mock
+        description: '正常系に加え、`ui.log` が `to: "transcript"` の呼び出しで例外を投げる'
+        notes: '`to: "debug"` の呼び出しは届いた行を記録する'
+      - name: 入力
+        description: 「term-a とは」
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        participant CC as Claude Code
+        participant IF as prompt.submit
+        participant ST as $.state
+
+        CC->>IF: term-a とは
+        IF->>ST: term-a を記録に入れる
+        IF->>CC: $.ui.log（transcript）
+        CC->>CC: 失敗を Claude Code の debug log に出し、IF へ例外を返さない
+        IF-->>CC: context に term-a の文脈
+      ```
+
+      <!-- /map -->
+    expected:
+      - 返る `context` に term-a が含まれ、返る `text` が入力の `text` と同じ
+      - term-a が記録に入り、続けて「term-a とは」を送信すると返る `context` が空
+      - 'フックが例外で終わらない'
+    test: test_error_when_display_fails
 lead: 入力の文を設定の YAML の単語と照合し、初めて出た単語の引用の文脈を `context` に追加する `prompt.submit` の処理の入出力とフローを定め、入力への引用の文脈の追加を修正するときに参照する。
 idempotent: false
-side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_added` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
 exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして記録済みの単語を再除外する（3 回まで）。上限まで一致しなかったら、debug log に出して文脈を追加せずに返却する
@@ -1134,6 +1201,9 @@ exceptions:
   - name: なし（照合条件が誤っている文書）
     condition: '文書の `inject_when` の値が制約『照合条件』に合わない（例: 知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`・文字列でない `values` の要素・`any`・`all` 以外の `match`・真偽値でない `case_sensitive`）'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から除外する'
+  - name: なし（表示に失敗する）
+    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が失敗した'
+    notes: 'テストの道具では Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。例外が返ったときは、例外を外へ出さず `$.ui.log(text, { to: "debug" })` で理由を debug log に出す。どちらも文脈を追加して返却し、記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで
@@ -1173,6 +1243,10 @@ constraints:
   - item: 設定ファイルのパス
     constraint: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、`${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` の順に、最初に値があるものを使用する。`XDG_CONFIG_HOME` が空のときは `~/.config`
     notes: '`ALIAS_INJECT_CONFIG` が指すファイルを読み込めないときも既定のパスへ切り替えない。入力の送信ごとに再決定するので、settings と既定のパスの変更は次の入力から有効になる'
+  - item: 表示
+    constraint: '引用の文脈に単語を 1 つ以上追加した回だけ、記録の書き込みが確定した後の最終的に追加した単語を、選んだ順に `{単語}（{id}）` の書式で「、」でつなぎ、`文脈を追加: ` に続けた 1 行を `$.ui.log(text, { to: "transcript" })` で表示する。単語は文脈の箇条書きと同じ値（文書の `name`、用語のやめた言い方はその値）にする。記録済み（競合して再除外した単語を含む）・単語の数と文字数の上限・照合条件で追加しなかった単語は表示しない。`show_added` が false のときは表示しない'
+    decided_by: CFG-1#settings[global.show_added]
+    notes: 'Claude Code が行の先頭にプラグインの名前を付けるため、文面にプラグインの名前を入れない。表示した行は会話の記録に `type: system`・`subtype: informational` で残り、モデルの入力には入らない。単語の数は `max_items` で上限があるため、全てを 1 行に並べる'
 refs:
   - SC-3#
   - SC-6#

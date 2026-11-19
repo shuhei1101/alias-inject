@@ -18,6 +18,9 @@ data_models:
       - name: keys
         type: string[]
         description: 選んだ単語の記録のキー
+      - name: entries
+        type: Entry[]
+        description: 選んだ単語（選んだ順）。利用者の画面に表示する行の組み立てに使用する
 constants:
   - name: SECTION_HEADINGS
     title: セクションの見出し
@@ -43,6 +46,11 @@ constants:
         value: 環境
       - key: avoid
         value: 使用しない単語
+  - name: ADDED_LINE_PREFIX
+    title: 表示する行の先頭
+    container: hooks/lib/context.ts
+    usecase: 入力への引用の文脈の追加
+    summary: '追加した単語を利用者の画面に表示する行の先頭。値は `文脈を追加: `（確認ログでユーザーが決めた）'
 functions:
   - name: entryKey
     title: 記録のキー
@@ -148,7 +156,7 @@ functions:
       1. hits を順に確認して、記録のキーが recorded にある単語と、既に選んだ単語を飛ばす
       2. その単語を加えて文脈を書式化し、文字数（コードポイントの数）が maxChars を超えるなら加えずに次へ進む
       3. 選んだ単語が maxItems に達したら止める
-      4. 1 つの単語も選ばなければ null、選んだら最後に書式化した文脈と選んだ単語のキーを返却する
+      4. 1 つの単語も選ばなければ null、選んだら最後に書式化した文脈と選んだ単語のキーと選んだ単語（選んだ順）を返却する
     callees:
       - MOD-9#functions[entryKey]
       - MOD-9#functions[renderContext]
@@ -177,6 +185,45 @@ functions:
         condition: hits が空、または全て記録済み、または見出しだけで maxChars を超える
         mock: なし
         expected: どれも null
+      - name: test_select_entries_returns_entries
+        case: 正常
+        summary: 選んだ単語を選んだ順に返却する
+        condition: hits が term-a・term-long（description が 500 文字）・term-b、maxChars が 300
+        mock: なし
+        expected: entries が term-a・term-b の順で、keys と同じ単語
+  - name: renderAddedLine
+    title: 表示する行の書式化
+    kind: 関数
+    container: hooks/lib/context.ts
+    usecase: 入力への引用の文脈の追加
+    summary: 追加した単語を、利用者の画面に表示する 1 行にする
+    scope: public
+    is_async: false
+    args:
+      - name: entries
+        type: Entry[]
+        required: true
+        passing: positional
+        description: 追加した単語（選んだ順。1 つ以上）
+    returns:
+      type: string
+      description: '`文脈を追加: {word}（{id}）、{word}（{id}）…`'
+    process: |-
+      1. 単語ごとに `{word}（{id}）` にする（用語のやめた言い方の単語は word がやめた言い方の値）
+      2. 選んだ順に「、」でつなぎ、ADDED_LINE_PREFIX の後ろに続けて返却する
+    unit_tests:
+      - name: test_render_added_line
+        case: 正常
+        summary: 追加した単語を選んだ順に 1 行に並べる
+        condition: term の Term-A（id term-a）を先、doc の doc-x（id doc-x）を後に指定する
+        mock: なし
+        expected: '`文脈を追加: Term-A（term-a）、doc-x（doc-x）`'
+      - name: test_render_added_line_when_avoid
+        case: 正常
+        summary: 用語のやめた言い方はやめた言い方の値と用語の id で並べる
+        condition: word が `旧エー`、id が term-a、avoid が `旧エー` の単語 1 つ
+        mock: なし
+        expected: '`文脈を追加: 旧エー（term-a）`'
 tags:
   - name: topic:引用の文脈
     main: true

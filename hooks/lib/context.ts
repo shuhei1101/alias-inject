@@ -2,11 +2,15 @@ import type { AliasType } from './alias'
 import type { Entry } from './entry'
 import type { Hit } from './match'
 
-/** 追加する文脈と、記録に入れる単語のキー */
+/** 追加する文脈と、記録に入れる単語のキーと、選んだ単語（選んだ順） */
 export type Selection = {
   text: string
   keys: string[]
+  entries: Entry[]
 }
+
+/** 追加した単語を利用者の画面に表示する行の先頭 */
+export const ADDED_LINE_PREFIX = '文脈を追加: '
 
 /** 引用の種類ごとのセクションの見出し。並びがセクションの順 */
 export const SECTION_HEADINGS: Record<AliasType, string> = {
@@ -67,5 +71,10 @@ export function selectEntries(
     if (selected.length >= limits.maxItems) break
   }
 
-  return selected.length === 0 ? null : { text, keys: [...keys] }
+  return selected.length === 0 ? null : { text, keys: [...keys], entries: selected }
+}
+
+/** 追加した単語を、利用者の画面に表示する 1 行にする */
+export function renderAddedLine(entries: Entry[]): string {
+  return ADDED_LINE_PREFIX + entries.map((entry) => `${entry.word}（${entry.id}）`).join('、')
 }

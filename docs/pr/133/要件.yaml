@@ -1,0 +1,42 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: changed
+    detail: 入力で単語がヒットして引用の文脈を追加したときに、追加した単語と文書の ID を利用者の画面に表示する
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: changed
+    detail: ツールで参照した本文で単語がヒットして引用の文脈を追加したときに、追加した単語と文書の ID を利用者の画面に表示する
+    depends_on: []
+  - kind: composite
+    scenario: docs/scenario/SC-1.yaml
+    impact: run_only
+    detail: 単語ごとに 1 回だけ文脈を追加する流れは変わらないが、表示の追加が記録を壊さないかを確認する
+    depends_on: []
+docs:
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: 引用の文脈を追加したときに、追加した単語が利用者の画面に表示されることを追加する
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '`show_added` のキーと既定値を追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
+  - page: settings.sample.yaml
+    new: false
+    change: '`show_added` を見本に追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
+scope_out:
+  - item: 変数参照（`!{名前}`）の値を追加したことの表示
+    reason: 要望は単語のヒットの表示で、変数参照の値は単語の照合ではない
+    plan: none
+  - item: 応答の文（`turn.step`）の照合で追加した単語の表示
+    reason: 応答の文は `$.session.append` で会話に追加する別の経路で、この PR の要望（入力とツールの結果）の外。書き込む内容は `tool.call` の照合に含まれ、この PR で表示する
+    plan: '#137'
