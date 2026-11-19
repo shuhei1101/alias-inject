@@ -39,4 +39,4 @@ scope_out:
     plan: none
   - item: 応答の文（`turn.step`）の照合で追加した単語の表示
     reason: 応答の文は `$.session.append` で会話に追加する別の経路で、この PR の要望（入力とツールの結果）の外。書き込む内容は `tool.call` の照合に含まれ、この PR で表示する
-    plan: to_file
+    plan: '#137'
