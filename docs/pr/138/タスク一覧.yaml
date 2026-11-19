@@ -15,8 +15,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T01:49:36.655691+00:00'
   - process: PoC 検証
-    status: todo
+    status: done
     note: '`turn.step`（メインの会話とサブエージェント）から呼んだ `$.ui.log` の `transcript` の行が、利用者の画面に出てモデルの入力に入らないかを確かめる（#135 で確かめたのは `prompt.submit`・`tool.call` だけ）'
+    updated_by: planner
+    updated_at: '2026-11-19T02:09:13.732941+00:00'
   - process: 複合ユースケース設計
     status: skipped
     reason: セッション全体の流れの連鎖は変わらない
