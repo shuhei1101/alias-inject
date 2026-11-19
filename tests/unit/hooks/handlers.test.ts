@@ -551,3 +551,74 @@ test('test_handle_turn_step_when_append_denied', async ($, on) => {
   expect(result).toEqual(stepResult('term-a の説明', { turnId: 't-1', index: 0 }))
   expect(world.files.logs.filter((line) => line.to === 'debug' && line.text.includes('refused')).length).toBe(1)
 })
+
+// 利用者の画面に出した行（`to: transcript`）
+function transcriptLines(logs: LogLine[]): string[] {
+  return logs.filter((line) => line.to === 'transcript').map((line) => line.text)
+}
+
+// 文脈を追加したときは、追加した単語を transcript に 1 行表示する（正常系）
+test('test_handle_prompt_submit_shows_added', async ($, on) => {
+  // 準備
+  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS })
+
+  // 実行
+  await submit($, 'term-a とは')
+  const first = transcriptLines(world.logs)
+  await submit($, 'term-a とは')
+
+  // 検証
+  expect(first).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(transcriptLines(world.logs)).toEqual(first)
+})
+
+// show_added が false のときは表示せずに文脈を追加する（正常系）
+test('test_handle_prompt_submit_when_show_added_off', async ($, on) => {
+  // 準備
+  const world = installWorld(on, { fs: makeFs({ globalExtra: ['show_added: false'] }), settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(transcriptLines(world.logs)).toEqual([])
+})
+
+// 引用の文脈を追加したときだけ、追加した単語を transcript に表示する（正常系）
+test('test_handle_tool_call_shows_added', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.run = VALUE_A_RUN
+
+  // 実行
+  world.answer = { result: 'r', text: 'term-a と !{VALUE_A}' }
+  await callTool($, { tool: 'Read', file_path: '/repo/sample/note.md' })
+  const quoted = transcriptLines(world.logs)
+  world.answer = { result: 'r', text: '!{VALUE_A}' }
+  const referenceOnly = await callTool($, { tool: 'Read', file_path: '/repo/sample/other.md' })
+
+  // 検証
+  expect(quoted).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(referenceOnly.context).toEqual([VALUE_A_LINE])
+  expect(transcriptLines(world.logs)).toEqual(quoted)
+})
+
+// 表示に失敗しても入力は止めず、失敗を debug log に出す（異常系）
+test('test_show_added_when_log_fails', async ($, on) => {
+  // 準備
+  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS })
+  on('ui.log', (_, e, next) => {
+    if (e.to === 'transcript') return { deny: 'transcript に出せません' }
+    return next(e)
+  })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+  const again = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('追加した単語を表示できません')).length).toBe(1)
+  expect(again.context ?? []).toEqual([])
+})
