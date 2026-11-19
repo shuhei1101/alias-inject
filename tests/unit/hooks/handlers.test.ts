@@ -550,6 +550,7 @@ test('test_handle_turn_step_when_append_denied', async ($, on) => {
   // 検証
   expect(result).toEqual(stepResult('term-a の説明', { turnId: 't-1', index: 0 }))
   expect(world.files.logs.filter((line) => line.to === 'debug' && line.text.includes('refused')).length).toBe(1)
+  expect(transcriptLines(world.files.logs)).toEqual([])
 })
 
 // 利用者の画面に出した行（`to: transcript`）
@@ -602,6 +603,36 @@ test('test_handle_tool_call_shows_added', async ($, on) => {
   expect(quoted).toEqual(['文脈を追加: Term-A（term-a）'])
   expect(referenceOnly.context).toEqual([VALUE_A_LINE])
   expect(transcriptLines(world.logs)).toEqual(quoted)
+})
+
+// 行を追加したときは、追加した単語を transcript に 1 行表示する（正常系）
+test('test_handle_turn_step_shows_added', async ($, on) => {
+  // 準備
+  const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = 'term-a の説明'
+
+  // 実行
+  await step($)
+  const first = transcriptLines(world.files.logs)
+  await step($)
+
+  // 検証
+  expect(first).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(transcriptLines(world.files.logs)).toEqual(first)
+})
+
+// show_added が false のときは表示せずに行を追加する（正常系）
+test('test_handle_turn_step_when_show_added_off', async ($, on) => {
+  // 準備
+  const world = installStepWorld(on, { fs: makeFs({ globalExtra: ['show_added: false'] }), settings: SETTINGS })
+  world.answer = 'term-a の説明'
+
+  // 実行
+  await step($)
+
+  // 検証
+  expect(world.appended().length).toBe(1)
+  expect(transcriptLines(world.files.logs)).toEqual([])
 })
 
 // 表示に失敗しても入力は止めず、文脈の追加と記録はそのまま（異常系）

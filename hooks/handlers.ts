@@ -147,7 +147,7 @@ function addSelected($: EngineInterface, hits: Hit[], settings: Settings, record
   return addRecorded($, { recordId, select: (recorded) => selectEntries(hits, recorded, { limits }) })
 }
 
-// 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても入力とツールの結果は止めない
+// 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても入力・ツールの結果・応答は止めない
 function showAdded($: EngineInterface, selection: Selection, settings: Settings): void {
   if (!settings.showAdded) return
   try {
@@ -269,7 +269,7 @@ export async function handleToolCall(
   return { ...result, context: [...(result.context ?? []), ...added] }
 }
 
-// 応答の文を照合し、その会話で初めて出た単語の引用の文脈を会話に追加する
+// 応答の文を照合し、その会話で初めて出た単語の引用の文脈を会話に追加して、追加した単語を利用者の画面に表示する
 async function quoteAnswer($: EngineInterface, e: TurnStepInput, answer: string): Promise<void> {
   try {
     const loaded = await loadSettings($)
@@ -284,14 +284,18 @@ async function quoteAnswer($: EngineInterface, e: TurnStepInput, answer: string)
       message: { type: 'user', content: [{ type: 'text', text: selection.text }] },
       ...(e.agentId === undefined ? {} : { agentId: e.agentId }),
     })
-    if (appended.deny !== undefined) logDebug($, `引用の文脈を追加できません: ${appended.deny}`)
+    if (appended.deny !== undefined) {
+      logDebug($, `引用の文脈を追加できません: ${appended.deny}`)
+      return
+    }
+    showAdded($, selection, loaded.settings)
   } catch (error) {
     // 想定しない例外でも応答は止めない
     logDebug($, `引用の文脈を追加できません: ${describe(error)}`)
   }
 }
 
-/** モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の文脈を `$.session.append` で会話に追加する */
+/** モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の文脈を `$.session.append` で会話に追加して、追加した単語を利用者の画面に表示する */
 export async function* handleTurnStep(
   $: EngineInterface,
   e: TurnStepInput,

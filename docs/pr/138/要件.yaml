@@ -1,0 +1,19 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-8.yaml
+    impact: changed
+    detail: 応答の文で引用の文脈を追加したときに、追加した単語と id を利用者の画面に 1 行表示する受入条件を加える
+    depends_on: []
+docs:
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: '`## 画面への表示` の対象に応答の文を加え、「応答の文の照合で追加した単語は表示しない」の行を、会話への行の追加を拒まれた回は表示しない行に書き換える'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T02:17:12.447036+00:00'
+  - page: docs/guide/設定ファイル.md
+    new: false
+    change: '`show_added` の説明の対象に応答の文を加える'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T02:17:12.447036+00:00'
