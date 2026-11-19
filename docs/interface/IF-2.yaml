@@ -40,7 +40,7 @@ flows:
       - 返る `text` が `next(e)` の結果の `text` と同じ
       - 同じセッションで `prompt.submit` に「term-a とは」を送信すると、返る `context` が空
       - '`process.run` が呼ばれていない'
-      - '`ui.log` に `to: "transcript"` で `文脈を追加: Term-A（term-a）` の 1 行が届く'
+      - '`ui.log` に `to: "transcript"` で `Term-A（term-a）` の 1 行が届く'
     test: test_normal
   - name: 正常系（照合から除外したツール）
     summary: exclude_tools のツールの結果は照合しない

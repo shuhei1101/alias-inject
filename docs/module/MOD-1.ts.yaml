@@ -112,7 +112,7 @@ functions:
         summary: 文脈を追加したときは、追加した単語を transcript に 1 行表示する
         condition: 入力「term-a とは」を送信し、続けて同じ入力をもう 1 回送信する
         mock: 同上。`ui.log` は届いた行を記録する
-        expected: '1 回目に `to: transcript` で `文脈を追加: Term-A（term-a）` が 1 行届き、2 回目は transcript の行が増えない'
+        expected: '1 回目に `to: transcript` で `Term-A（term-a）` が 1 行届き、2 回目は transcript の行が増えない'
       - name: test_handle_prompt_submit_when_show_added_off
         case: 正常
         summary: show_added が false のときは表示せずに文脈を追加する
@@ -330,7 +330,7 @@ functions:
         summary: 引用の文脈を追加したときだけ、追加した単語を transcript に表示する
         condition: 結果の `text` が「term-a と !{VALUE_A}」の呼び出しと、結果の `text` が「!{VALUE_A}」だけの呼び出し
         mock: 同上。`process.run` は `VALUE_A=value-a` を含む出力を返却する
-        expected: '1 つ目で `文脈を追加: Term-A（term-a）` が 1 行届き、2 つ目（変数参照の値の行だけ）では transcript の行が届かない'
+        expected: '1 つ目で `Term-A（term-a）` が 1 行届き、2 つ目（変数参照の値の行だけ）では transcript の行が届かない'
     status: planned
   - name: handleTurnStep
     title: 応答の文への引用の文脈の追加
@@ -409,7 +409,7 @@ functions:
         summary: 行を追加したときは、追加した単語を transcript に 1 行表示する
         condition: test_handle_turn_step と同じ入力で 2 回呼ぶ
         mock: test_handle_turn_step と同じ。`ui.log` は届いた行を記録する
-        expected: '1 回目に `to: transcript` で `文脈を追加: Term-A（term-a）` が 1 行届き、2 回目（記録済み）は transcript の行が増えない'
+        expected: '1 回目に `to: transcript` で `Term-A（term-a）` が 1 行届き、2 回目（記録済み）は transcript の行が増えない'
       - name: test_handle_turn_step_when_show_added_off
         case: 正常
         summary: show_added が false のときは表示せずに行を追加する

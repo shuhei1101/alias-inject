@@ -1,0 +1,27 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: run_only
+    detail: 入力で文脈を追加したときに画面へ出る行の頭の文言が変わる。シナリオの記述は変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-2.yaml
+    impact: run_only
+    detail: ツールの結果で文脈を追加したときに画面へ出る行の頭の文言が変わる。シナリオの記述は変わらない
+    depends_on: []
+  - kind: single
+    scenario: docs/scenario/SC-8.yaml
+    impact: run_only
+    detail: 応答の文で文脈を追加したときに画面へ出る行の頭の文言が変わる。シナリオの記述は変わらない
+    depends_on: []
+docs:
+  - page: docs/guide/コアコンセプト-引用の文脈.md
+    new: false
+    change: '`## 画面への表示` の表示の例から `文脈を追加: ` を削除する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T05:13:12.048071+00:00'
+scope_out:
+  - item: '過去の PR ドキュメント（`docs/pr/133/`・`docs/pr/138/`）の `文脈を追加: ` の記述'
+    reason: その PR の時点の記録のため書き換えない
+    plan: none

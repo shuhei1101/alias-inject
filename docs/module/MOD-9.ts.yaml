@@ -46,11 +46,6 @@ constants:
         value: 環境
       - key: avoid
         value: 使用しない単語
-  - name: ADDED_LINE_PREFIX
-    title: 表示する行の先頭
-    container: hooks/lib/context.ts
-    usecase: 入力への引用の文脈の追加
-    summary: '追加した単語を利用者の画面に表示する行の先頭。値は `文脈を追加: `（確認ログでユーザーが決めた）'
 functions:
   - name: entryKey
     title: 記録のキー
@@ -207,23 +202,23 @@ functions:
         description: 追加した単語（選んだ順。1 つ以上）
     returns:
       type: string
-      description: '`文脈を追加: {word}（{id}）、{word}（{id}）…`'
+      description: '`{word}（{id}）、{word}（{id}）…`。画面では Claude Code が行の頭に `● alias-inject: ` を付ける'
     process: |-
       1. 単語ごとに `{word}（{id}）` にする（用語のやめた言い方の単語は word がやめた言い方の値）
-      2. 選んだ順に「、」でつなぎ、ADDED_LINE_PREFIX の後ろに続けて返却する
+      2. 選んだ順に「、」でつないで返却する
     unit_tests:
       - name: test_render_added_line
         case: 正常
         summary: 追加した単語を選んだ順に 1 行に並べる
         condition: term の Term-A（id term-a）を先、doc の doc-x（id doc-x）を後に指定する
         mock: なし
-        expected: '`文脈を追加: Term-A（term-a）、doc-x（doc-x）`'
+        expected: '`Term-A（term-a）、doc-x（doc-x）`'
       - name: test_render_added_line_when_avoid
         case: 正常
         summary: 用語のやめた言い方はやめた言い方の値と用語の id で並べる
         condition: word が `旧エー`、id が term-a、avoid が `旧エー` の単語 1 つ
         mock: なし
-        expected: '`文脈を追加: 旧エー（term-a）`'
+        expected: '`旧エー（term-a）`'
 tags:
   - name: topic:引用の文脈
     main: true

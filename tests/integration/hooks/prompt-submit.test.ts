@@ -60,7 +60,7 @@ test('test_normal', async ($, on) => {
   expect(context).not.toContain('doc-z')
   expect(fs.reads).not.toContain(`${DOCS_DIR}/doc-z.yaml`)
   expect(second.context ?? []).toEqual([])
-  expect(shown).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(shown).toEqual(['Term-A（term-a）'])
   expect(transcriptLines(world.logs)).toEqual(shown)
 })
 
@@ -78,7 +78,7 @@ test('test_normal_when_over_item_limit', async ($, on) => {
   expect(first.context?.[0]).toContain('Term-A')
   expect(first.context?.[0]).not.toContain('id: term-b')
   expect(second.context?.[0]).toContain('id: term-b')
-  expect(shown).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(shown).toEqual(['Term-A（term-a）'])
 })
 
 // 追加すると max_chars を超える単語を飛ばし、後ろの収まる単語を追加する（正常系）
@@ -102,7 +102,7 @@ test('test_normal_when_over_char_limit', async ($, on) => {
   expect(added).not.toContain('Term-Long')
   expect([...added].length).toBeLessThanOrEqual(300)
   expect(second.context?.[0]).toContain('Term-Long')
-  expect(shown).toEqual(['文脈を追加: Term-A（term-a）、term-b（term-b）'])
+  expect(shown).toEqual(['Term-A（term-a）、term-b（term-b）'])
 })
 
 // origins に対応づかない出所の入力はそのまま返却する（正常系）
