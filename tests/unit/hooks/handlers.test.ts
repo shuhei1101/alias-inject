@@ -607,11 +607,7 @@ test('test_handle_tool_call_shows_added', async ($, on) => {
 // 表示に失敗しても入力は止めず、失敗を debug log に出す（異常系）
 test('test_show_added_when_log_fails', async ($, on) => {
   // 準備
-  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS })
-  on('ui.log', (_, e, next) => {
-    if (e.to === 'transcript') return { deny: 'transcript に出せません' }
-    return next(e)
-  })
+  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS, transcriptError: 'transcript に出せません' })
 
   // 実行
   const result = await submit($, 'term-a とは')

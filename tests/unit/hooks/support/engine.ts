@@ -108,6 +108,8 @@ export type WorldOptions = {
   env?: Record<string, string>
   sessionId?: string
   projectRoot?: string
+  /** 指定すると、`$.ui.log` の `to: transcript` の呼び出しをこの理由で失敗させる */
+  transcriptError?: string
 }
 
 /** 圧縮の後に残る 1 件のメッセージ（圧縮の結果は 1 件以上のメッセージを持つ決まり） */
@@ -154,6 +156,7 @@ export function installWorld(on: On, options: WorldOptions): World {
   on('session.root', () => ({ value: options.projectRoot ?? '/repo/sample' }))
   on('session.repo', () => ({ value: null }))
   on('ui.log', (_, e) => {
+    if (e.to === 'transcript' && options.transcriptError !== undefined) return { deny: options.transcriptError }
     world.logs.push({ text: e.text, to: e.to })
     return { value: undefined }
   })
