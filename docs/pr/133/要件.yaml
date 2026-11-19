@@ -18,15 +18,21 @@ docs:
   - page: docs/guide/コアコンセプト-引用の文脈.md
     new: false
     change: 引用の文脈を追加したときに、追加した単語が利用者の画面に表示されることを追加する
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
   - page: docs/guide/設定ファイル.md
     new: false
-    change: 表示のオンとオフのキーを追加した場合、キーと既定値を追加する
-    status: todo
+    change: '`show_added` のキーと既定値を追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
   - page: settings.sample.yaml
     new: false
-    change: 表示のオンとオフのキーを追加した場合、見本に追加する
-    status: todo
+    change: '`show_added` を見本に追加する'
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:09.480209+00:00'
 scope_out:
   - item: 変数参照（`!{名前}`）の値を追加したことの表示
     reason: 要望は単語のヒットの表示で、変数参照の値は単語の照合ではない

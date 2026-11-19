@@ -62,7 +62,9 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T01:13:48.187156+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T01:19:10.561198+00:00'
   - process: 単体テスト作成
     status: todo
   - process: 実装
