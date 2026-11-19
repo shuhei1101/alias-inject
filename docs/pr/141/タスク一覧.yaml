@@ -50,8 +50,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T05:09:49.817916+00:00'
   - process: インターフェース定義設計
-    status: todo
-    note: IF-2・IF-3・IF-7 の表示の行の文面（制約と期待結果）を変える
+    status: done
+    note: 'IF-2・IF-3・IF-7 の表示の行から `文脈を追加: ` を削除する'
+    updated_by: planner
+    updated_at: '2026-11-19T05:13:34.255910+00:00'
   - process: 部品設計
     status: skipped
     reason: 画面の部品を持たない
