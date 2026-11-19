@@ -81,6 +81,9 @@ global:
   # 文脈の先頭の見出し
   heading: この発言に出る用語
 
+  # false のとき、追加した単語を利用者の画面に表示しない
+  show_added: true
+
 # match が該当したプロジェクトの要素だけを、並びの順に global へ重ねる
 projects:
   # match は絶対パスかプロジェクト名。repositories・aliases の相対パスは、起動したプロジェクトの直下から解決する
