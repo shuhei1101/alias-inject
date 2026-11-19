@@ -1066,12 +1066,12 @@ flows:
       - 1 回目の返る `context` に 旧シー が含まれない（やめた言い方も用語の照合条件で評価する）
     test: test_normal_when_term_avoid
   - name: 正常系（表示をオフにした設定）
-    summary: show_hits が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
+    summary: show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
     setup:
       - name: Mock
         description: 正常系と同じ
       - name: 設定ファイル
-        description: 正常系に加え `show_hits` が false
+        description: 正常系に加え `show_added` が false
       - name: 入力
         description: 「term-a とは」
     flow: |-
@@ -1086,7 +1086,7 @@ flows:
         CC->>IF: term-a とは
         IF->>IF: term-a がヒットする
         IF->>ST: term-a を記録に入れる
-        IF->>IF: show_hits が false なので表示しない
+        IF->>IF: show_added が false なので表示しない
         IF-->>CC: context に term-a の文脈
       ```
 
@@ -1128,7 +1128,7 @@ flows:
     test: test_error_when_display_fails
 lead: 入力の文を設定の YAML の単語と照合し、初めて出た単語の引用の文脈を `context` に追加する `prompt.submit` の処理の入出力とフローを定め、入力への引用の文脈の追加を修正するときに参照する。
 idempotent: false
-side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_hits` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` のセッションの記録に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_added` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
 exclusivity: Claude Code が 1 セッションの `prompt.submit` を順に呼ぶ。メインの会話の記録を `tool.call` と共有するため、記録は [ツールの結果への引用の文脈の追加](id:IF-2) と同じく `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして記録済みの単語を再除外する（3 回まで）。上限まで一致しなかったら、debug log に出して文脈を追加せずに返却する
@@ -1245,8 +1245,8 @@ constraints:
     constraint: ユーザースコープの settings の `env.ALIAS_INJECT_CONFIG`、環境変数 `ALIAS_INJECT_CONFIG`、`${XDG_CONFIG_HOME:-~/.config}/alias-inject/settings.yaml` の順に、最初に値があるものを使用する。`XDG_CONFIG_HOME` が空のときは `~/.config`
     notes: '`ALIAS_INJECT_CONFIG` が指すファイルを読み込めないときも既定のパスへ切り替えない。入力の送信ごとに再決定するので、settings と既定のパスの変更は次の入力から有効になる'
   - item: 表示
-    constraint: '引用の文脈に単語を 1 つ以上追加した回だけ、記録の書き込みが確定した後の最終的に追加した単語を、選んだ順に `{単語}（{id}）` の書式で「、」でつなぎ、`文脈を追加: ` に続けた 1 行を `$.ui.log(text, { to: "transcript" })` で表示する。単語は文脈の箇条書きと同じ値（文書の `name`、用語のやめた言い方はその値）にする。記録済み（競合して再除外した単語を含む）・単語の数と文字数の上限・照合条件で追加しなかった単語は表示しない。`show_hits` が false のときは表示しない'
-    decided_by: CFG-1#settings[global.show_hits]
+    constraint: '引用の文脈に単語を 1 つ以上追加した回だけ、記録の書き込みが確定した後の最終的に追加した単語を、選んだ順に `{単語}（{id}）` の書式で「、」でつなぎ、`文脈を追加: ` に続けた 1 行を `$.ui.log(text, { to: "transcript" })` で表示する。単語は文脈の箇条書きと同じ値（文書の `name`、用語のやめた言い方はその値）にする。記録済み（競合して再除外した単語を含む）・単語の数と文字数の上限・照合条件で追加しなかった単語は表示しない。`show_added` が false のときは表示しない'
+    decided_by: CFG-1#settings[global.show_added]
     notes: 'Claude Code が行の先頭にプラグインの名前を付けるため、文面にプラグインの名前を入れない。表示した行は会話の記録に `type: system`・`subtype: informational` で残り、モデルの入力には入らない。単語の数は `max_items` で上限があるため、全てを 1 行に並べる'
 refs:
   - SC-3#

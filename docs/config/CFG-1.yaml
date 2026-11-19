@@ -314,7 +314,7 @@ settings:
     default: ~/.config
     description: 既定のパス `{XDG_CONFIG_HOME}/alias-inject/settings.yaml` の基準のフォルダ。`$.env.get` で参照する
     missing: 空のときも `~/.config` を使用する
-  - key: global.show_hits
+  - key: global.show_added
     title: 追加した単語の表示
     file: ~/.config/alias-inject/settings.yaml
     type: boolean

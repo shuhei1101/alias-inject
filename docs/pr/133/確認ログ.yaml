@@ -1,0 +1,13 @@
+confirmations:
+  - topic: 追加した単語を画面に表示する行の文面
+    decision: '`文脈を追加: {単語}（{id}）、…`（推奨案 A）'
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit: d938b67
+    thread: https://github.com/shuhei1101/alias-inject/pull/133#discussion_r4622987440
+  - topic: 表示を止める設定のキーの名前
+    decision: '`show_added`（推奨案 B）'
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit: d938b67
+    thread: https://github.com/shuhei1101/alias-inject/pull/133#discussion_r4622987440

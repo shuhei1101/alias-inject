@@ -366,12 +366,12 @@ flows:
       - 返る `context` の末尾に term-a と link-a の文脈があり、link-b が無い
     test: test_normal_when_cwd_scoped
   - name: 正常系（表示をオフにした設定）
-    summary: show_hits が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
+    summary: show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない
     setup:
       - name: Mock
         description: 正常系と同じ
       - name: 設定ファイル
-        description: 正常系に加え `show_hits` が false
+        description: 正常系に加え `show_added` が false
     flow: |-
       sequenceDiagram
         participant CC as Claude Code
@@ -380,7 +380,7 @@ flows:
 
         CC->>IF: ツールの結果（term-a を含む）
         IF->>ST: term-a を記録に入れる
-        IF->>IF: show_hits が false なので表示しない
+        IF->>IF: show_added が false なので表示しない
         IF-->>CC: context に term-a の文脈
     expected:
       - 返る `context` の末尾が term-a を含む
@@ -412,7 +412,7 @@ flows:
 lead: ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を `context` に追加する `tool.call` の処理の入出力とフローを定め、ツールの結果への引用の文脈の追加を修正するときに参照する。
 test_file: tests/integration/hooks/tool-call.test.ts
 idempotent: false
-side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。引用の文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_hits` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
+side_effects: 追加した単語を `$.state` の会話の記録（メインの会話はセッション、サブエージェントはセッションと `agentId` の組）に入れる。読み込んだ設定と単語の一覧をモジュールの中に持つ。引用の文脈を追加した回は、追加した単語を `$.ui.log` で利用者の画面に 1 行表示する（`show_added` が false のときは表示しない）。ファイルへの書き込みと外への送信はしない
 callers:
   - LIB-1#
 exclusivity: 並列に呼ばれた `tool.call` と `prompt.submit` が同じ記録へ書き込むため、記録は `$.state.set` の `ifVersion` で書き込み、一致しなかったら再読み込みして照合の結果から記録済みの単語を再除外する。この記載方法は `prompt.submit` と共有する
@@ -540,7 +540,7 @@ constraints:
     notes: サブエージェントのツールの結果も、セッションを起動したプロジェクトの直下で判定する
   - item: 表示
     constraint: '[入力への引用の文脈の追加](id:IF-3) の制約『表示』と同じ書式・条件で表示する。変数参照の値は表示せず、変数参照の値の行だけを追加した回（引用の文脈の単語が 0 個）は行を出さない。サブエージェントの呼び出し（`agentId` あり）で追加した単語も表示する'
-    decided_by: CFG-1#settings[global.show_hits]
+    decided_by: CFG-1#settings[global.show_added]
     notes: サブエージェントの呼び出しで出した行も、メインの会話の画面と記録に出る
 refs:
   - SC-2#
