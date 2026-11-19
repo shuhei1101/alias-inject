@@ -31,6 +31,8 @@ scenarios:
         P->>P: 入力と単語を正規化して照合し term-a がヒットする
         P->>P: term-a をセッションの記録に入れる
         P->>CC: 入力の文はそのままに、term-a の文脈を context に追加
+        P->>CC: 追加した term-a の単語と id を表示する行を出す
+        CC->>U: 画面に行を表示する
         CC->>M: 入力と文脈を送信
       ```
 
@@ -40,6 +42,8 @@ scenarios:
       - term-b の文脈は追加されていない
       - '`alias_type` を持たない行の doc-z の文脈は追加されていない'
       - 入力の文は送信したとおりのまま届いている
+      - 利用者の画面に、追加した term-a の単語と `id` を示す行が 1 行表示されている（term-b・doc-z は表示されていない）
+      - 表示した行は、モデルに届いた入力の文と文脈に入っていない
     test: test_normal
   - name: 正常シナリオ（記録済みの単語だけ）
     setup:
@@ -67,6 +71,7 @@ scenarios:
     expected:
       - 文脈が追加されていない
       - 入力の文は送信したとおりのまま届いている
+      - 利用者の画面に表示の行が出ていない
     test: test_normal_when_only_recorded_terms
   - name: 正常シナリオ（上限を超える）
     setup:
@@ -638,6 +643,34 @@ scenarios:
       - 2 回目の入力には文脈が追加されていない
       - 入力の文は送信したとおりのまま届いている
     test: test_normal_when_term_avoid
+  - name: 正常シナリオ（表示をオフにした設定）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 設定ファイル
+        description: 正常シナリオの設定に、利用者の画面への表示をオフにする値を記載する
+        notes: キーの名前はインターフェース定義設計で決める
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant CC as Claude Code
+        participant P as alias-inject
+        participant M as モデル
+        U->>CC: term-a を含む入力を送信
+        CC->>P: prompt.submit
+        P->>P: 照合で term-a がヒットし、記録に入れる
+        P->>CC: term-a の文脈を context に追加し、表示の行は出さない
+        CC->>M: 入力と文脈を送信
+      ```
+
+      <!-- /map -->
+    expected:
+      - モデルに届いた文脈に term-a の文脈が追加されている
+      - 利用者の画面に表示の行が出ていない
+    test: test_normal_when_display_off
 lead: 入力に初めて出た単語の引用の文脈を、入力の文を変えずにモデルにだけ追加する流れを定め、入力への引用の文脈の追加を変えるときに参照する。
 primary_actor: 利用者
 trigger: 利用者が対話のセッションで入力を送信する
