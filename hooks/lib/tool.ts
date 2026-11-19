@@ -6,11 +6,11 @@ import type { Hit } from './match'
 // ツールの引数ではない、tool.call の入力のキー
 const RESERVED_KEYS = new Set(['tool', 'tool_use_id', 'agentId', 'requestMeta'])
 
-/** ツールの引数に出る文字列を、入れ子のオブジェクトと並びの中まで集める */
-export function collectArgumentStrings(e: ToolCallInput): Set<string> {
-  const strings = new Set<string>()
+// ツールの引数の文字列の値を、引数の並びの順に入れ子のオブジェクトと並びの中まで辿って返却する
+function argumentStrings(e: ToolCallInput): string[] {
+  const strings: string[] = []
   const collect = (value: unknown): void => {
-    if (typeof value === 'string') strings.add(value)
+    if (typeof value === 'string') strings.push(value)
     else if (Array.isArray(value)) for (const element of value) collect(element)
     else if (typeof value === 'object' && value !== null) for (const child of Object.values(value)) collect(child)
   }
@@ -20,15 +20,28 @@ export function collectArgumentStrings(e: ToolCallInput): Set<string> {
   return strings
 }
 
+/** ツールの引数に出る文字列を、入れ子のオブジェクトと並びの中まで集める */
+export function collectArgumentStrings(e: ToolCallInput): Set<string> {
+  return new Set(argumentStrings(e))
+}
+
+/** ツールの引数の文字列の値を、引数の並びの順に改行でつないで返却する。文字列が無ければ空の文字列 */
+export function joinArgumentText(e: ToolCallInput): string {
+  return argumentStrings(e).join('\n')
+}
+
 /** 単語の文書のパスを返却する。body_file の値があれば、単語を取り出した YAML のフォルダから解決する */
 export function documentPathOf(entry: Entry, { home }: { home: string }): string {
   if (entry.bodyFile === undefined) return entry.path
   return resolvePath({ path: entry.bodyFile, home, baseDir: parentDir(entry.path) })
 }
 
-/** ツールが参照している文書の単語を除外する。Read は file_path、MCP のツールは引数の文字列で判定する */
+// file_path が参照している文書を指すツール
+const FILE_PATH_TOOLS = new Set(['Read', 'Write', 'Edit'])
+
+/** ツールが参照している文書の単語を除外する。Read・Write・Edit は file_path、MCP のツールは引数の文字列で判定する */
 export function excludeReadingDocuments(hits: Hit[], { e, home }: { e: ToolCallInput; home: string }): Hit[] {
-  if (e.tool === 'Read') {
+  if (FILE_PATH_TOOLS.has(e.tool)) {
     const filePath = (e as Record<string, unknown>).file_path
     if (typeof filePath !== 'string') return hits
     return hits.filter((hit) => documentPathOf(hit.entry, { home }) !== filePath)
