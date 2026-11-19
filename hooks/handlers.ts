@@ -6,8 +6,12 @@ import type {
   SessionCompactResult,
   SessionEndInput,
   SessionEndResult,
+  StreamNext,
   ToolCallInput,
   ToolCallResult,
+  TurnStepChunk,
+  TurnStepInput,
+  TurnStepResult,
 } from 'claude-code'
 import { filterByScope } from './lib/alias'
 import type { ResolvedAlias } from './lib/alias'
@@ -24,7 +28,7 @@ import type { Hit } from './lib/match'
 import { addRecorded, clearRecorded, recordIdOf } from './lib/record'
 import { RepositoryError, loadRepositoryAliases } from './lib/repository'
 import { loadAliasSchema } from './lib/schema'
-import { excludeReadingDocuments } from './lib/tool'
+import { excludeReadingDocuments, joinArgumentText } from './lib/tool'
 import { VARIABLE_REFERENCE_TIMEOUT_MS, findReferenceNames, formatReferenceLines, parseEnvOutput } from './lib/variable'
 
 type Next<Input, Result> = (e: Input) => Promise<Result>
@@ -193,7 +197,7 @@ export async function handleSessionEnd(
   return next(e)
 }
 
-// ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を返却する。追加しないときは null
+// ツールの結果の本文と引数を照合し、その会話で初めて出た単語の引用の文脈を返却する。追加しないときは null
 async function quoteToolResult($: EngineInterface, e: ToolCallInput, text: string): Promise<string | null> {
   try {
     const loaded = await loadSettings($)
@@ -232,18 +236,54 @@ async function formatToolResultReferences($: EngineInterface, text: string): Pro
   }
 }
 
-/** ツールの結果の本文を照合してその会話で初めて出た単語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返却する */
+/** ツールの結果の本文と引数を照合してその会話で初めて出た単語の文脈を、本文の `!{名前}` には同じ名前の環境変数の値を、`context` の末尾に追加して返却する */
 export async function handleToolCall(
   $: EngineInterface,
   e: ToolCallInput,
   next: Next<ToolCallInput, ToolCallResult>,
 ): Promise<ToolCallResult> {
   const result = await next(e)
-  if (result.deny !== undefined || result.isError || typeof result.text !== 'string') return result
+  if (result.deny !== undefined || result.isError) return result
 
-  const quote = await quoteToolResult($, e, result.text)
-  const lines = await formatToolResultReferences($, result.text)
-  const added = [quote, lines].filter((text): text is string => text !== null)
+  const resultText = typeof result.text === 'string' ? result.text : ''
+  const text = [resultText, joinArgumentText(e)].filter((part) => part !== '').join('\n')
+  const quote = text === '' ? null : await quoteToolResult($, e, text)
+  const lines = resultText === '' ? null : await formatToolResultReferences($, resultText)
+  const added = [quote, lines].filter((part): part is string => part !== null)
   if (added.length === 0) return result
   return { ...result, context: [...(result.context ?? []), ...added] }
+}
+
+// 応答の文を照合し、その会話で初めて出た単語の引用の文脈を会話に追加する
+async function quoteAnswer($: EngineInterface, e: TurnStepInput, answer: string): Promise<void> {
+  try {
+    const loaded = await loadSettings($)
+    if (loaded === null || !loaded.settings.enabled) return
+
+    const hits = filterByCondition(findHits(answer, await loadEntries($, loaded), loaded.settings.exclude), answer)
+    const recordId = recordIdOf({ sessionId: await $.session.id(), agentId: e.agentId })
+    const selection = await addSelected($, sortByCount(hits), loaded.settings, recordId)
+    if (selection === null) return
+
+    const appended = await $.session.append({
+      message: { type: 'user', content: [{ type: 'text', text: selection.text }] },
+      ...(e.agentId === undefined ? {} : { agentId: e.agentId }),
+    })
+    if (appended.deny !== undefined) logDebug($, `引用の文脈を追加できません: ${appended.deny}`)
+  } catch (error) {
+    // 想定しない例外でも応答は止めない
+    logDebug($, `引用の文脈を追加できません: ${describe(error)}`)
+  }
+}
+
+/** モデルへの要求ごとの応答の文を照合し、その会話で初めて出た単語の文脈を `$.session.append` で会話に追加する */
+export async function* handleTurnStep(
+  $: EngineInterface,
+  e: TurnStepInput,
+  next: StreamNext<'turn.step'>,
+): AsyncGenerator<TurnStepChunk, TurnStepResult> {
+  const result = yield* next(e)
+  if (typeof result.answer !== 'string' || result.answer === '') return result
+  await quoteAnswer($, e, result.answer)
+  return result
 }

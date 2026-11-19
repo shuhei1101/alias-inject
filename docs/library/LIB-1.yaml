@@ -3,12 +3,12 @@ visibility: internal
 title: "claude-code"
 kind: "フレームワーク"
 version:
-  current: 2.1.310
-  checked_on: '2026-10-25'
+  current: 2.1.327
+  checked_on: '2026-11-19'
   source: 利用者の手元の Claude Code のバージョン（`claude --version`）
 catalogs:
   - name: API
-    version: 2.1.310
+    version: 2.1.327
     entries:
       - name: Register
         kind: 型
@@ -190,6 +190,29 @@ catalogs:
             type: string
             description: 標準出力
         returns_example: 起動できないとき（`ENOENT`）と、`options.timeoutMs` を超えたときは例外になる。子プロセスは Claude Code の環境変数を継ぐ。
+      - name: $.session.append
+        kind: 関数
+        purpose: '会話に行を追加する。`type: user` の行はその会話の次のモデルへの要求まで待ち、プラグインの名前を付けたリマインダーとしてモデルに届く'
+        params:
+          - name: message.type
+            type: "'user' | 'system'"
+            required: true
+            description: '`user` はモデルが参照する行、`system` はモデルが参照しない通知'
+          - name: message.content
+            type: ApiContentBlock[]
+            required: true
+            description: テキストのブロックだけ
+          - name: agentId
+            type: string
+            description: 行を追加するサブエージェントの ID。省くとメインの会話
+            notes: 終わったループに追加した行はモデルに届かない
+        returns:
+          - name: '-'
+            type: SessionAppendResult
+            description: 保存した行。上のプラグインが拒んだときは `{ deny }`
+      - name: mock.session
+        kind: 関数
+        purpose: '`claude-code/testing` で、テストの間に `$.session.append` で追加された行を `appended()` で参照する'
   - name: コマンド
     version: 2.1.310
     entries:
@@ -200,7 +223,7 @@ catalogs:
         kind: コマンド
         purpose: プラグインと hooks モジュールの定義を検証する
   - name: イベント
-    version: 2.1.310
+    version: 2.1.327
     entries:
       - name: prompt.submit
         kind: イベント
@@ -299,6 +322,30 @@ catalogs:
             type: readonly string[]
             description: モデルにだけ追加する文脈
             notes: '末尾に追加した文字列が、ツールの結果の後ろの文脈としてモデルに届く'
+      - name: turn.step
+        kind: イベント
+        purpose: モデルへの要求ごとに呼ばれるストリームのイベント。処理は `async function*` で記載し、`yield* next(e)` でチャンクを送信して結果を受け取る
+        params:
+          - name: e.turnId
+            type: string
+            required: true
+            description: ターンの ID
+          - name: e.index
+            type: number
+            required: true
+            description: ターンの中の要求の位置（0 始まり）
+          - name: e.agentId
+            type: string
+            description: サブエージェントの要求のときに入る
+        returns:
+          - name: answer
+            type: string
+            description: 応答の見える文。ツールだけを呼んだときは空の文字列
+            notes: ツールの呼び出しの引数は入らず `toolUses` に入る
+          - name: toolUses
+            type: readonly TurnStepToolUse[]
+            description: 応答が実行を求めるツールの呼び出し
+        returns_example: '`claude-code/testing` で `$.turn.step(e)` を発火させるときは、`for await` で読み切った後の `stream.result` が `undefined` になる。`next()` を `done` まで呼んだ値で結果を参照する'
 lead: パッケージとして入れずエンジンが型の宣言を書き出す Claude Code の hooks モジュールの型とテストの道具の使用範囲を定め、hooks モジュールの登録やテストを実装・修正するときに参照する。
 used_in:
   - hooks/register.tsx
@@ -309,8 +356,8 @@ used_in:
   - hooks/lib/record.ts
 verification:
   state: 済
-  date: '2026-10-31'
-  detail: '[PoC PR #6](https://github.com/shuhei1101/alias-inject/pull/6)（commit [d79fd2a](https://github.com/shuhei1101/alias-inject/commit/d79fd2a)）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確認した。[PoC PR #16](https://github.com/shuhei1101/alias-inject/pull/16)（commit [0a72f27](https://github.com/shuhei1101/alias-inject/commit/0a72f27)）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで参照でき、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確認した。[PoC PR #53](https://github.com/shuhei1101/alias-inject/pull/53)（Claude Code 2.1.316）で、`tool.call` の `e` にツールの名前（`tool`）・呼び出しの ID（`tool_use_id`）・直下に展開したツールの引数（Read の `file_path`・Bash の `command`・MCP の引数）が入り、`agentId` がサブエージェントの中の呼び出しにだけ入ることと、`context` に並べた 2 つの文字列がどちらもモデルに届くことを確認した'
+  date: '2026-11-19'
+  detail: '[PoC PR #6](https://github.com/shuhei1101/alias-inject/pull/6)（commit [d79fd2a](https://github.com/shuhei1101/alias-inject/commit/d79fd2a)）で、2.1.310 の `Register` の入口の読み込み、`claude-code/testing` の `test` / `expect` のテスト 1 件の pass、`claude plugin test` / `claude plugin validate` の終了コード 0 を確認した。[PoC PR #16](https://github.com/shuhei1101/alias-inject/pull/16)（commit [0a72f27](https://github.com/shuhei1101/alias-inject/commit/0a72f27)）で、`tool.call` の `next(e)` の結果の `text` が Read・Bash・MCP のツールで参照でき、返り値の `context` に追加した文字列がモデルに届くことと、`$.process.run` の終了コード・起動できない例外・`timeoutMs` の超過の例外を確認した。[PoC PR #53](https://github.com/shuhei1101/alias-inject/pull/53)（Claude Code 2.1.316）で、`tool.call` の `e` にツールの名前（`tool`）・呼び出しの ID（`tool_use_id`）・直下に展開したツールの引数（Read の `file_path`・Bash の `command`・MCP の引数）が入り、`agentId` がサブエージェントの中の呼び出しにだけ入ることと、`context` に並べた 2 つの文字列がどちらもモデルに届くことを確認した。[PoC PR #136](https://github.com/shuhei1101/alias-inject/pull/136)（Claude Code 2.1.327）で、`turn.step` の結果の `answer` に途中の文と最後の文が要求ごとに入り、サブエージェントの要求では `e.agentId` が入ること、`$.session.append` で追加した `user` の行が次の要求でモデルに届くこと（サブエージェントは `agentId` を付けた行）、`claude-code/testing` の `$.turn.step` と `mock.session` で単体テストを書けることを確認した'
 tags:
   - name: tool:claude-code
     main: true

@@ -12,3 +12,5 @@ items:
     summary: tool.call でツールの結果の !{名前} を検出し、環境変数の値を context に追加する
   - page: IF-6.yaml
     summary: workflow_dispatch で単体テストと結合テストの全件をランナーで回し、ログを成果物に上げる
+  - page: IF-7.yaml
+    summary: 応答の文を照合し、初めて出た単語の引用の文脈を会話に追加する `turn.step` の処理

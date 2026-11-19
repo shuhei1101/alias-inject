@@ -271,22 +271,49 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(after.context?.[0]).toContain('id: term-b')
   })
 
-  // エラーの結果・deny・本文の無い結果は照合しない（正常系）
+  // エラーの結果・deny は引数も結果も照合しない（正常系）
   test('test_normal_when_not_matched_result', async ($, on) => {
     // 準備
     const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
-    const answers = [{ result: 'r', text: 'term-a', isError: true }, { deny: 'no' }, { result: 'r' }]
+    const answers = [{ result: 'r', text: 'term-a', isError: true }, { deny: 'no' }]
 
     for (const answer of answers) {
       // 実行
+      // 書き込む内容に term-a があっても照合しない
       world.answer = answer
-      const result = await callTool($, readInput())
+      const result = await callTool($, { tool: 'Write', file_path: '/work/note.md', content: 'term-a の説明' })
 
       // 検証
       expect(result).toEqual(answer)
     }
     const after = await submit($, 'term-a とは')
     expect(after.context?.[0]).toContain('Term-A')
+  })
+
+  // ツールの引数の文字列の値を結果の本文と合わせて照合し、書き込む内容に初めて出た単語の文脈を追加する（正常系）
+  test('test_normal_when_written_content', async ($, on) => {
+    // 準備
+    const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+    const createdText = 'File created successfully at: /work/note.md'
+
+    // 実行
+    world.answer = { result: 'r', text: createdText }
+    const written = await callTool($, { tool: 'Write', file_path: '/work/note.md', content: '用語エーの説明' })
+    // 別のセッションで、入れ子の並びとオブジェクトの中に単語を持つ MCP の書き込みのツールを呼ぶ
+    if (world.files !== undefined) world.files.sessionId = 's2'
+    world.answer = { result: 'r' }
+    const mcpWritten = await callTool($, {
+      tool: 'mcp__plugin_project-index_project-index__write_docs',
+      operations: [{ op: 'update', set: { description: 'term-b の説明' } }],
+    })
+
+    // 検証
+    expect(written.context?.length).toBe(1)
+    expect(written.context?.[0]).toContain('Term-A')
+    expect(written.text).toBe(createdText)
+    expect(mcpWritten.context?.length).toBe(1)
+    expect(mcpWritten.context?.[0]).toContain('term-b')
+    expect(mcpWritten.text).toBeUndefined()
   })
 
   // 引用の文脈を先に、変数参照の値の行を後に追加する（正常系）

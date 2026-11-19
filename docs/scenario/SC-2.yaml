@@ -160,6 +160,8 @@ scenarios:
         notes: サブエージェントの回答（メインの会話の Agent の結果）に term-a が入っても、メインの会話の記録に入らないようにする
       - name: 参照させるファイル
         description: 正常シナリオと同じ
+      - name: メインの会話の応答
+        description: メインの会話のモデルには途中の文を出さずに Agent を呼ばせ、Agent の結果を受けた後は単語を含まない「完了」だけを回答させる
     flow: |-
       sequenceDiagram
         actor U as 利用者
@@ -313,6 +315,39 @@ scenarios:
       - Read の結果の後ろの文脈に term-a の文脈がある
       - term-s の文脈は追加されていない
     test: test_normal_when_cwd_scoped
+  - name: 正常シナリオ（書き込む内容）
+    setup:
+      - name: Mock
+        description: 正常シナリオと同じ
+      - name: 書き込ませる入力
+        description: 入力の文に term-a を含めず、`term-` の後に `a` を続けた単語を組み立てさせ、その単語を本文に含むファイルを途中の文を出さずに Write で作らせる
+    flow: |-
+      <!-- map -->
+
+      ```mermaid
+      sequenceDiagram
+        actor U as 利用者
+        participant M as モデル
+        participant CC as Claude Code
+        participant P as alias-inject
+        U->>CC: 単語を組み立てて Write で書き込ませる入力を送信
+        CC->>M: 入力を送信
+        M->>CC: content に term-a を含む Write を呼ぶ
+        CC->>P: tool.call
+        P->>CC: ツールを実行させる
+        CC-->>P: 成功の結果
+        P->>P: ツールの引数と結果の本文を照合し term-a がヒットする
+        P->>P: term-a をセッションの記録に入れる
+        P->>CC: 結果はそのままに、term-a の文脈を context に追加
+        CC->>M: ツールの結果と文脈を送信
+      ```
+
+      <!-- /map -->
+    expected:
+      - Write の結果の後ろの文脈に、見出し「この発言に出る用語」の下で term-a の単語・`id`・`description` が並んでいる
+      - 書き込ませた入力には文脈が追加されていない
+      - 書き込んだファイルの本文は Write の引数のとおりのまま
+    test: test_normal_when_written_content
 lead: ツールで参照した本文に、そのセッションで初めて出た単語の引用の文脈を追加する流れを定め、ツールの結果への引用の文脈の追加を変えるときに参照する。
 primary_actor: モデル
 stakeholders:

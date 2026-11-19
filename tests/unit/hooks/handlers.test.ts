@@ -1,5 +1,16 @@
 import { expect, test } from 'claude-code/testing'
-import { COMPACTED_MESSAGE, callTool, installToolWorld, installWorld, submit, userSettingsWithConfig } from './support/engine'
+import {
+  COMPACTED_MESSAGE,
+  STEP_CHUNK,
+  callTool,
+  installStepWorld,
+  installToolWorld,
+  installWorld,
+  step,
+  stepResult,
+  submit,
+  userSettingsWithConfig,
+} from './support/engine'
 import type { LogLine } from './support/engine'
 import { MemoryFs } from './support/memory-fs'
 
@@ -424,4 +435,119 @@ test('test_handle_tool_call_when_record_conflicts_exhausted', async ($, on) => {
   // 検証
   expect(result.context).toEqual(['other', VALUE_A_LINE])
   expect(world.logs.filter((line) => line.to === 'debug').length).toBeGreaterThan(0)
+})
+
+// 引数の文字列も照合し、本文の無い結果でも引数だけを照合する（正常系）
+test('test_handle_tool_call_when_written_content', async ($, on) => {
+  // 準備
+  const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS })
+
+  // 実行
+  world.answer = { result: 'r', text: 'File created' }
+  const written = await callTool($, { tool: 'Write', file_path: '/repo/sample/note.md', content: 'term-a の説明' })
+  // 別のセッションで、本文の無い MCP の書き込みのツールを呼ぶ
+  if (world.files !== undefined) world.files.sessionId = 's2'
+  world.answer = { result: 'r' }
+  const mcpWritten = await callTool($, { tool: 'mcp__x__write', items: [{ body: 'term-b の説明' }] })
+
+  // 検証
+  expect(written.text).toBe('File created')
+  expect(written.context?.length).toBe(1)
+  expect(written.context?.[0]).toContain('Term-A')
+  expect(mcpWritten.text).toBeUndefined()
+  expect(mcpWritten.context?.length).toBe(1)
+  expect(mcpWritten.context?.[0]).toContain('Term-B')
+  expect(mcpWritten.context?.[0]).not.toContain('Term-A')
+})
+
+// 初めて出た単語の文脈を user の行で追加し、チャンクと結果を変えない（正常系）
+test('test_handle_turn_step', async ($, on) => {
+  // 準備
+  const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = 'term-a の説明'
+
+  // 実行
+  const { chunks, result } = await step($)
+
+  // 検証
+  expect(chunks).toEqual([STEP_CHUNK])
+  expect(result).toEqual(stepResult('term-a の説明', { turnId: 't-1', index: 0 }))
+  const rows = world.appended()
+  expect(rows.length).toBe(1)
+  expect((rows[0]?.message as { type: string }).type).toBe('user')
+  expect(JSON.stringify(rows[0]?.message)).toContain('Term-A')
+  expect(rows[0]?.agentId).toBeUndefined()
+  // $.session.id() の記録に入ったため、入力の送信では追加されない
+  expect((await submit($, 'term-a とは')).context ?? []).toEqual([])
+})
+
+// agentId のある要求はその組の記録で照合し、同じ agentId で行を追加する（正常系）
+test('test_handle_turn_step_when_in_subagent', async ($, on) => {
+  // 準備
+  const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = 'term-a の説明'
+
+  // 実行
+  await step($, 'agent-1')
+  const again = await step($, 'agent-1')
+
+  // 検証
+  const rows = world.appended()
+  expect(rows.length).toBe(1)
+  expect(rows[0]?.agentId).toBe('agent-1')
+  expect(JSON.stringify(rows[0]?.message)).toContain('Term-A')
+  expect(again.result.answer).toBe('term-a の説明')
+  // s1 の記録は空のため、入力の送信で追加される
+  expect((await submit($, 'term-a とは')).context?.length).toBe(1)
+})
+
+// 見える文の無い応答・enabled が false・記録済みの単語だけの応答では行を追加しない（正常系）
+test('test_handle_turn_step_when_skipped', async ($, on) => {
+  // 準備
+  const disabledFs = makeFs({ globalExtra: ['enabled: false'] })
+  const fs = makeFs()
+  const world = installStepWorld(on, { fs, settings: SETTINGS })
+  const cases: { answer: string; prepare: () => Promise<void> }[] = [
+    { answer: '', prepare: async () => {} },
+    {
+      answer: 'term-a',
+      prepare: async () => {
+        fs.write(CONFIG_PATH, disabledFs.read(CONFIG_PATH))
+      },
+    },
+    {
+      answer: 'term-a',
+      prepare: async () => {
+        fs.write(CONFIG_PATH, makeFs().read(CONFIG_PATH))
+        world.files.sessionId = 's2'
+        await submit($, 'term-a とは')
+      },
+    },
+  ]
+
+  for (const item of cases) {
+    // 実行
+    await item.prepare()
+    world.answer = item.answer
+    const { result } = await step($)
+
+    // 検証
+    expect(result).toEqual(stepResult(item.answer, { turnId: 't-1', index: 0 }))
+  }
+  expect(world.appended().length).toBe(0)
+})
+
+// 行の追加を拒まれたら debug log に出して結果を返却する（異常系）
+test('test_handle_turn_step_when_append_denied', async ($, on) => {
+  // 準備
+  const world = installStepWorld(on, { fs: makeFs(), settings: SETTINGS })
+  world.answer = 'term-a の説明'
+  world.denyAppend = 'refused'
+
+  // 実行
+  const { result } = await step($)
+
+  // 検証
+  expect(result).toEqual(stepResult('term-a の説明', { turnId: 't-1', index: 0 }))
+  expect(world.files.logs.filter((line) => line.to === 'debug' && line.text.includes('refused')).length).toBe(1)
 })

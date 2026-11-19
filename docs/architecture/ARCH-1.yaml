@@ -43,7 +43,7 @@ overview:
       label: 引用の文脈
     - from: cc
       to: plugin
-      label: ツールの結果
+      label: ツールの結果・引数
     - from: plugin
       to: cc
       label: 引用の文脈・変数参照の値
@@ -59,6 +59,12 @@ overview:
     - from: plugin
       to: repo_config
       label: 参照する
+    - from: cc
+      to: plugin
+      label: 応答の文
+    - from: plugin
+      to: cc
+      label: 引用の文脈（会話に追加する行）
   frame:
     label: alias-inject
     nodes:
@@ -74,7 +80,7 @@ repository:
 subsystems:
   - name: プラグイン
     scope: plugin
-    role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する。ツールで参照した本文も同じ用語・エイリアスと照合した引用の文脈と、本文の `!{名前}` と同じ名前の環境変数の値を文脈として追加する
+    role: Claude Code の hooks モジュールとして入力のイベントを受け、設定の YAML の用語・エイリアスと照合した引用の文脈をモデルにだけ追加する。ツールで参照した本文・ツールに書き込ませる引数・モデルの応答の文も同じ用語・エイリアスと照合した引用の文脈と、本文の `!{名前}` と同じ名前の環境変数の値を文脈として追加する
     runtime: TypeScript（Claude Code の mod のランタイムで動く）
     runs_on: 利用者の手元の Claude Code（CLI）。ユーザースコープで入れる
     status: implemented

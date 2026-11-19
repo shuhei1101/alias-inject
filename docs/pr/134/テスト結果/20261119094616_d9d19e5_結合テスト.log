@@ -1,0 +1,471 @@
+$ run_url=$(gh workflow run test.yml --ref "$(git branch --show-current)" | ...) && gh run watch "$run_id" --exit-status && gh run view "$run_id" --log
+実行: https://github.com/shuhei1101/alias-inject/actions/runs/44431574517（d9d19e5）
+実行範囲: 計画書の ### 結合テストの実行範囲（tool-call.test.ts・session-compact.test.ts・turn-step.test.ts）。claude plugin test . はファイルを指定できず、tests/ の全てが流れる
+
+test	Set up job	﻿2026-11-19T00:45:37.1160215Z Current runner version: '2.338.2'
+test	Set up job	2026-11-19T00:45:37.1182605Z ##[group]Runner Image Provisioner
+test	Set up job	2026-11-19T00:45:37.1183430Z Hosted Compute Agent
+test	Set up job	2026-11-19T00:45:37.1184032Z Version: 20261103.629
+test	Set up job	2026-11-19T00:45:37.1184549Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+test	Set up job	2026-11-19T00:45:37.1185125Z Build Date: 2026-11-03T17:26:59Z
+test	Set up job	2026-11-19T00:45:37.1185746Z Worker ID: {f897e784-5883-4538-85cf-9fdf0f7c0275}
+test	Set up job	2026-11-19T00:45:37.1186556Z Region: westus3
+test	Set up job	2026-11-19T00:45:37.1187160Z Cloud: Azure
+test	Set up job	2026-11-19T00:45:37.1187634Z ##[endgroup]
+test	Set up job	2026-11-19T00:45:37.1188799Z ##[group]Operating System
+test	Set up job	2026-11-19T00:45:37.1189455Z Ubuntu
+test	Set up job	2026-11-19T00:45:37.1189972Z 26.04.1
+test	Set up job	2026-11-19T00:45:37.1190431Z LTS
+test	Set up job	2026-11-19T00:45:37.1190861Z ##[endgroup]
+test	Set up job	2026-11-19T00:45:37.1191326Z ##[group]Runner Image
+test	Set up job	2026-11-19T00:45:37.1191859Z Image: ubuntu-26.04
+test	Set up job	2026-11-19T00:45:37.1192320Z Version: 20261111.196.1
+test	Set up job	2026-11-19T00:45:37.1193268Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261111.196/images/ubuntu/Ubuntu2604-Readme.md
+test	Set up job	2026-11-19T00:45:37.1194643Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261111.196
+test	Set up job	2026-11-19T00:45:37.1195471Z ##[endgroup]
+test	Set up job	2026-11-19T00:45:37.1196676Z ##[group]GITHUB_TOKEN Permissions
+test	Set up job	2026-11-19T00:45:37.1198810Z Contents: read
+test	Set up job	2026-11-19T00:45:37.1199311Z Metadata: read
+test	Set up job	2026-11-19T00:45:37.1199887Z ##[endgroup]
+test	Set up job	2026-11-19T00:45:37.1201625Z Secret source: Actions
+test	Set up job	2026-11-19T00:45:37.1202354Z Cache mode: write
+test	Set up job	2026-11-19T00:45:37.1203040Z Prepare workflow directory
+test	Set up job	2026-11-19T00:45:37.1494911Z Prepare all required actions
+test	Set up job	2026-11-19T00:45:37.1549912Z Getting action download info
+test	Set up job	2026-11-19T00:45:37.4501452Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+test	Set up job	2026-11-19T00:45:37.5892829Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+test	Set up job	2026-11-19T00:45:37.6748580Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+test	Set up job	2026-11-19T00:45:37.8646612Z Complete job name: test
+test	ブランチを取得する	﻿2026-11-19T00:45:37.9307127Z ##[group]Run actions/checkout@v7
+test	ブランチを取得する	2026-11-19T00:45:37.9307878Z with:
+test	ブランチを取得する	2026-11-19T00:45:37.9308246Z   repository: shuhei1101/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:37.9311510Z   token: ***
+test	ブランチを取得する	2026-11-19T00:45:37.9311872Z   ssh-strict: true
+test	ブランチを取得する	2026-11-19T00:45:37.9312232Z   ssh-user: git
+test	ブランチを取得する	2026-11-19T00:45:37.9312603Z   persist-credentials: true
+test	ブランチを取得する	2026-11-19T00:45:37.9312996Z   clean: true
+test	ブランチを取得する	2026-11-19T00:45:37.9313359Z   sparse-checkout-cone-mode: true
+test	ブランチを取得する	2026-11-19T00:45:37.9313778Z   fetch-depth: 1
+test	ブランチを取得する	2026-11-19T00:45:37.9314128Z   fetch-tags: false
+test	ブランチを取得する	2026-11-19T00:45:37.9314491Z   show-progress: true
+test	ブランチを取得する	2026-11-19T00:45:37.9314902Z   lfs: false
+test	ブランチを取得する	2026-11-19T00:45:37.9315242Z   submodules: false
+test	ブランチを取得する	2026-11-19T00:45:37.9315604Z   set-safe-directory: true
+test	ブランチを取得する	2026-11-19T00:45:37.9316006Z   allow-unsafe-pr-checkout: false
+test	ブランチを取得する	2026-11-19T00:45:37.9316718Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.1554561Z Syncing repository: shuhei1101/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:38.1557229Z ##[group]Getting Git version info
+test	ブランチを取得する	2026-11-19T00:45:38.1558212Z Working directory is '/home/runner/work/alias-inject/alias-inject'
+test	ブランチを取得する	2026-11-19T00:45:38.1559674Z [command]/usr/bin/git version
+test	ブランチを取得する	2026-11-19T00:45:38.1560337Z git version 2.56.1
+test	ブランチを取得する	2026-11-19T00:45:38.1581941Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.1588148Z Temporarily overriding HOME='/home/runner/work/_temp/40cd6c4f-14d0-4d31-8bcd-de1adda4ed94' before making global git config changes
+test	ブランチを取得する	2026-11-19T00:45:38.1590141Z Adding repository directory to the temporary git global config as a safe directory
+test	ブランチを取得する	2026-11-19T00:45:38.1592913Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/alias-inject/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:38.1650470Z Deleting the contents of '/home/runner/work/alias-inject/alias-inject'
+test	ブランチを取得する	2026-11-19T00:45:38.1653201Z ##[group]Determining repository object format
+test	ブランチを取得する	2026-11-19T00:45:38.1654972Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.1655771Z ##[group]Initializing the repository
+test	ブランチを取得する	2026-11-19T00:45:38.1659502Z [command]/usr/bin/git init /home/runner/work/alias-inject/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:38.1731954Z hint: Using 'master' as the name for the initial branch. This default branch name
+test	ブランチを取得する	2026-11-19T00:45:38.1733175Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+test	ブランチを取得する	2026-11-19T00:45:38.1733953Z hint: to use in all of your new repositories, which will suppress this warning,
+test	ブランチを取得する	2026-11-19T00:45:38.1734541Z hint: call:
+test	ブランチを取得する	2026-11-19T00:45:38.1735010Z hint:
+test	ブランチを取得する	2026-11-19T00:45:38.1735443Z hint: 	git config --global init.defaultBranch <name>
+test	ブランチを取得する	2026-11-19T00:45:38.1736034Z hint:
+test	ブランチを取得する	2026-11-19T00:45:38.1736705Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+test	ブランチを取得する	2026-11-19T00:45:38.1737835Z hint: 'development'. The just-created branch can be renamed via this command:
+test	ブランチを取得する	2026-11-19T00:45:38.1738779Z hint:
+test	ブランチを取得する	2026-11-19T00:45:38.1739300Z hint: 	git branch -m <name>
+test	ブランチを取得する	2026-11-19T00:45:38.1739878Z hint:
+test	ブランチを取得する	2026-11-19T00:45:38.1740480Z hint: Disable this message with "git config set advice.defaultBranchName false"
+test	ブランチを取得する	2026-11-19T00:45:38.1741773Z Initialized empty Git repository in /home/runner/work/alias-inject/alias-inject/.git/
+test	ブランチを取得する	2026-11-19T00:45:38.1749594Z [command]/usr/bin/git remote add origin https://github.com/shuhei1101/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:38.1790979Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.1791684Z ##[group]Disabling automatic garbage collection
+test	ブランチを取得する	2026-11-19T00:45:38.1794449Z [command]/usr/bin/git config --local gc.auto 0
+test	ブランチを取得する	2026-11-19T00:45:38.1824614Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.1825653Z ##[group]Setting up auth
+test	ブランチを取得する	2026-11-19T00:45:38.1826464Z Removing SSH command configuration
+test	ブランチを取得する	2026-11-19T00:45:38.1830229Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test	ブランチを取得する	2026-11-19T00:45:38.1861398Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test	ブランチを取得する	2026-11-19T00:45:38.2209944Z Removing HTTP extra header
+test	ブランチを取得する	2026-11-19T00:45:38.2215069Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test	ブランチを取得する	2026-11-19T00:45:38.2242774Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test	ブランチを取得する	2026-11-19T00:45:38.2470795Z Removing includeIf entries pointing to credentials config files
+test	ブランチを取得する	2026-11-19T00:45:38.2475540Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test	ブランチを取得する	2026-11-19T00:45:38.2505310Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test	ブランチを取得する	2026-11-19T00:45:38.2742709Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test	ブランチを取得する	2026-11-19T00:45:38.2775682Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/alias-inject/alias-inject/.git.path /home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	ブランチを取得する	2026-11-19T00:45:38.2802216Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/alias-inject/alias-inject/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	ブランチを取得する	2026-11-19T00:45:38.2830504Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	ブランチを取得する	2026-11-19T00:45:38.2856109Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	ブランチを取得する	2026-11-19T00:45:38.2882418Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:38.2883044Z ##[group]Fetching the repository
+test	ブランチを取得する	2026-11-19T00:45:38.2887803Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d9d19e5648b692af99e800514bcf7b88e744e293:refs/remotes/origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.2956661Z From https://github.com/shuhei1101/alias-inject
+test	ブランチを取得する	2026-11-19T00:45:39.2958593Z  * [new ref]         d9d19e5648b692af99e800514bcf7b88e744e293 -> origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.2965015Z [command]/usr/bin/git branch --list --remote origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.2991564Z   origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.3008977Z [command]/usr/bin/git rev-parse refs/remotes/origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.3023382Z d9d19e5648b692af99e800514bcf7b88e744e293
+test	ブランチを取得する	2026-11-19T00:45:39.3032463Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:39.3033437Z ##[group]Determining the checkout info
+test	ブランチを取得する	2026-11-19T00:45:39.3034489Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:39.3044085Z [command]/usr/bin/git sparse-checkout disable
+test	ブランチを取得する	2026-11-19T00:45:39.3084601Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+test	ブランチを取得する	2026-11-19T00:45:39.3113860Z ##[group]Checking out the ref
+test	ブランチを取得する	2026-11-19T00:45:39.3117227Z [command]/usr/bin/git checkout --progress --force -B feat/hooks/match-written-and-response-text refs/remotes/origin/feat/hooks/match-written-and-response-text
+test	ブランチを取得する	2026-11-19T00:45:39.3776093Z Switched to a new branch 'feat/hooks/match-written-and-response-text'
+test	ブランチを取得する	2026-11-19T00:45:39.3780371Z branch 'feat/hooks/match-written-and-response-text' set up to track 'origin/feat/hooks/match-written-and-response-text'.
+test	ブランチを取得する	2026-11-19T00:45:39.3787829Z ##[endgroup]
+test	ブランチを取得する	2026-11-19T00:45:39.3842470Z [command]/usr/bin/git log -1 --format=%H
+test	ブランチを取得する	2026-11-19T00:45:39.3864790Z d9d19e5648b692af99e800514bcf7b88e744e293
+test	Node を入れる	﻿2026-11-19T00:45:39.4180291Z ##[group]Run actions/setup-node@v7
+test	Node を入れる	2026-11-19T00:45:39.4180928Z with:
+test	Node を入れる	2026-11-19T00:45:39.4181295Z   node-version: 24
+test	Node を入れる	2026-11-19T00:45:39.4181734Z   check-latest: false
+test	Node を入れる	2026-11-19T00:45:39.4189439Z   token: ***
+test	Node を入れる	2026-11-19T00:45:39.4189874Z   package-manager-cache: true
+test	Node を入れる	2026-11-19T00:45:39.4190414Z ##[endgroup]
+test	Node を入れる	2026-11-19T00:45:39.5362690Z Found in cache @ /opt/hostedtoolcache/node/24.22.2/x64
+test	Node を入れる	2026-11-19T00:45:40.4505666Z ##[group]Environment details
+test	Node を入れる	2026-11-19T00:45:43.4589654Z node: v24.22.2
+test	Node を入れる	2026-11-19T00:45:43.4591041Z npm: 11.19.1
+test	Node を入れる	2026-11-19T00:45:43.4591382Z yarn: 1.22.22
+test	Node を入れる	2026-11-19T00:45:43.4592180Z ##[endgroup]
+test	Claude Code を入れる	﻿2026-11-19T00:45:43.4718747Z ##[group]Run npm install -g @anthropic-ai/claude-code@2.1.325
+test	Claude Code を入れる	2026-11-19T00:45:43.4719207Z ^[[36;1mnpm install -g @anthropic-ai/claude-code@2.1.325^[[0m
+test	Claude Code を入れる	2026-11-19T00:45:43.4818891Z shell: /usr/bin/bash -e {0}
+test	Claude Code を入れる	2026-11-19T00:45:43.4819179Z ##[endgroup]
+test	Claude Code を入れる	2026-11-19T00:45:48.9321910Z 
+test	Claude Code を入れる	2026-11-19T00:45:48.9327502Z added 2 packages in 5s
+test	Claude Code を入れる	2026-11-19T00:45:48.9330425Z npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+test	Claude Code を入れる	2026-11-19T00:45:48.9331112Z npm warn install-scripts   @anthropic-ai/claude-code@2.1.325 (postinstall: node install.cjs)
+test	Claude Code を入れる	2026-11-19T00:45:48.9331533Z npm warn install-scripts
+test	Claude Code を入れる	2026-11-19T00:45:48.9332494Z npm warn install-scripts Run `npm install -g --allow-scripts=@anthropic-ai/claude-code` to allow these scripts once, or `npm config set allow-scripts=@anthropic-ai/claude-code --location=user` to allow them for all global installs.
+test	テストの全件を回す	﻿2026-11-19T00:45:48.9798081Z ##[group]Run claude plugin test . 2>&1 | tee test.log
+test	テストの全件を回す	2026-11-19T00:45:48.9798481Z ^[[36;1mclaude plugin test . 2>&1 | tee test.log^[[0m
+test	テストの全件を回す	2026-11-19T00:45:48.9847532Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+test	テストの全件を回す	2026-11-19T00:45:48.9847941Z ##[endgroup]
+test	テストの全件を回す	2026-11-19T00:45:55.4757265Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4765432Z tests/integration/hooks/prompt-submit.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4766138Z (pass) test_normal [418.45ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4768050Z (pass) test_normal_when_over_item_limit [360.11ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4768661Z (pass) test_normal_when_over_char_limit [249.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4769259Z (pass) test_normal_when_origin_excluded [173.91ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4769821Z (pass) test_normal_when_slash_command [209.79ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4770438Z (pass) test_normal_when_config_path_missing [256.35ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4771520Z (pass) test_normal_when_project_matched [213.22ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4772215Z (pass) test_normal_when_files_changed [273.32ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4772953Z (pass) test_normal_when_same_id_across_repositories [240.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4773676Z (pass) test_normal_when_disabled [216.63ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4774366Z (pass) test_normal_when_repository_config_changed [161.41ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4775008Z (pass) test_normal_when_added_types [184.21ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4775589Z (pass) test_error_when_config_unreadable [199.81ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4776415Z (pass) test_error_when_repository_unreadable [163.41ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4777070Z (pass) test_error_when_alias_invalid [166.98ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4777628Z (pass) test_error_when_yaml_malformed [229.24ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4778194Z (pass) test_error_when_env_without_endpoint [166.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4778844Z (pass) test_error_when_legacy_aliases [121.72ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4779518Z (pass) test_error_when_required_value_missing [208.01ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4780229Z (pass) test_normal_when_records_body_file [149.58ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4780965Z (pass) test_normal_when_inject_condition [150.83ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4781603Z (pass) test_normal_when_term_avoid [209.60ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4782251Z (pass) test_error_when_inject_condition_invalid [219.13ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4782866Z (pass) test_normal_when_cwd_scoped [192.47ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4783422Z (pass) test_error_when_cwd_scope_invalid [197.54ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4784042Z (pass) test_normal_when_default_config_path [165.79ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4784660Z (pass) test_normal_when_xdg_config_home_empty [127.01ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4785313Z (pass) test_normal_when_config_from_shell_env [168.52ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4786067Z (pass) test_normal_when_settings_env_preferred [170.79ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4786610Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4786992Z tests/integration/hooks/session-compact.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4787549Z (pass) test_normal [408.75ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4788120Z (pass) test_normal_when_not_compacted [343.33ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4788826Z (pass) test_normal_when_subagent_compacted [212.93ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4789228Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4789574Z tests/integration/hooks/session-end.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4790095Z (pass) test_normal [380.39ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4790607Z (pass) test_normal_when_not_clear [332.01ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4790979Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4791316Z tests/integration/hooks/tool-call.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4792225Z (pass) 参照した本文への変数参照の値の追加 > test_normal [385.94ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4792936Z (pass) 参照した本文への変数参照の値の追加 > test_normal_when_unset [287.78ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4795781Z (pass) 参照した本文への変数参照の値の追加 > test_normal_when_no_reference [208.96ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4797113Z (pass) 参照した本文への変数参照の値の追加 > test_normal_when_error_result [303.50ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4797956Z (pass) 参照した本文への変数参照の値の追加 > test_normal_when_over_reference_limit [213.71ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4798766Z (pass) 参照した本文への変数参照の値の追加 > test_normal_when_over_value_limit [334.98ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4799572Z (pass) 参照した本文への変数参照の値の追加 > test_error_when_nonzero_exit [350.49ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4800305Z (pass) 参照した本文への変数参照の値の追加 > test_error_when_process_failed [228.47ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4801493Z (pass) ツールの結果への引用の文脈の追加 > test_normal [167.12ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4802241Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_tool_excluded [277.64ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4803019Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_reading_own_document [289.49ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4803742Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_over_limit [197.50ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4804435Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_in_subagent [235.09ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4805174Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_not_matched_result [175.17ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4806003Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_written_content [198.97ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4807085Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_variable_reference_added [191.04ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4808217Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_record_conflicted [178.66ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4809053Z (pass) ツールの結果への引用の文脈の追加 > test_error_when_config_unreadable [192.92ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4809855Z (pass) ツールの結果への引用の文脈の追加 > test_error_when_record_conflicts_exhausted [148.74ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4810644Z (pass) ツールの結果への引用の文脈の追加 > test_error_when_unexpected_exception [193.10ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4811382Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_inject_condition [210.47ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4812272Z (pass) ツールの結果への引用の文脈の追加 > test_normal_when_cwd_scoped [129.24ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4812701Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4813070Z tests/integration/hooks/turn-step.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4813739Z (pass) 応答の文への引用の文脈の追加 > test_normal [385.81ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4814601Z (pass) 応答の文への引用の文脈の追加 > test_normal_when_only_recorded_terms [317.97ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4815394Z (pass) 応答の文への引用の文脈の追加 > test_normal_when_in_subagent [303.59ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4816043Z (pass) 応答の文への引用の文脈の追加 > test_normal_when_no_answer [177.77ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4816959Z (pass) 応答の文への引用の文脈の追加 > test_error_when_config_unreadable [276.15ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4817862Z (pass) 応答の文への引用の文脈の追加 > test_error_when_append_denied [178.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4818658Z (pass) 応答の文への引用の文脈の追加 > test_error_when_unexpected [183.24ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4819091Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4819422Z tests/unit/hooks/handlers.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4820058Z (pass) test_handle_prompt_submit_when_disabled [336.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4822936Z (pass) test_handle_prompt_submit_when_context_given [218.31ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4823676Z (pass) test_handle_prompt_submit_when_settings_warned [170.93ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4824445Z (pass) test_handle_prompt_submit_when_inject_condition [173.06ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4825117Z (pass) test_handle_prompt_submit_when_cwd_scoped [177.02ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4825712Z (pass) test_handle_session_compact [183.20ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4826516Z (pass) test_handle_session_compact_when_not_compacted [201.34ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4827253Z (pass) test_handle_session_compact_when_subagent [152.56ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4828007Z (pass) test_handle_prompt_submit_when_alias_paths_match_config [152.33ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4828725Z (pass) test_handle_session_end_when_clear [186.72ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4829393Z (pass) test_handle_tool_call_when_context_given [238.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4830075Z (pass) test_handle_tool_call_when_skipped [185.46ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4830754Z (pass) test_handle_tool_call_when_quote_added [227.29ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4831492Z (pass) test_handle_tool_call_when_tool_excluded [207.30ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4831971Z (pass) test_handle_tool_call_when_inject_condition [162.29ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4832444Z (pass) test_handle_tool_call_when_in_subagent [308.99ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4832929Z (pass) test_handle_tool_call_when_process_failed [119.60ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4833536Z (pass) test_handle_tool_call_when_record_conflicts_exhausted [147.24ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4834058Z (pass) test_handle_tool_call_when_written_content [192.36ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4834492Z (pass) test_handle_turn_step [169.78ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4834923Z (pass) test_handle_turn_step_when_in_subagent [163.70ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4835543Z (pass) test_handle_turn_step_when_skipped [166.52ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4836007Z (pass) test_handle_turn_step_when_append_denied [198.53ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4836515Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4836877Z tests/unit/hooks/lib/alias.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4837323Z (pass) test_parse_aliases [5.99ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4837797Z (pass) test_parse_aliases_when_disabled [0.69ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4838336Z (pass) test_parse_aliases_when_alias_type_only [0.91ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4838713Z (pass) test_parse_aliases_when_invalid [1.55ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4839002Z (pass) test_dedupe_aliases [0.85ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4839276Z (pass) test_resolve_metadata [0.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4839578Z (pass) test_resolve_metadata_when_nested [0.37ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4840222Z (pass) test_missing_keys [0.70ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4840584Z (pass) test_missing_keys_when_env [0.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4840901Z (pass) test_parse_aliases_when_scope [0.60ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4841199Z (pass) test_filter_by_scope [0.70ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4841340Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4841492Z tests/unit/hooks/lib/condition.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4841870Z (pass) test_parse_condition [4.89ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4842173Z (pass) test_parse_condition_when_invalid [2.54ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4842471Z (pass) test_evaluate_condition [0.32ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4842799Z (pass) test_evaluate_condition_when_bundle [0.22ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4843106Z (pass) test_filter_by_condition [0.32ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4843261Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4843391Z tests/unit/hooks/lib/config.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4843672Z (pass) test_read_config_path [8.82ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4843976Z (pass) test_read_config_path_when_missing [5.38ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4844310Z (pass) test_read_config_path_when_shell_env [0.41ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4844688Z (pass) test_read_config_path_when_settings_preferred [3.09ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4845073Z (pass) test_read_config_path_when_default_path [0.73ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4845486Z (pass) test_read_config_path_when_explicit_file_missing [0.31ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4845868Z (pass) test_parse_config [5.28ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4846204Z (pass) test_parse_config_when_keys_omitted [3.67ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4846760Z (pass) test_parse_config_when_alias_invalid [0.95ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4847135Z (pass) test_parse_config_when_origins_empty [0.54ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4847512Z (pass) test_parse_config_when_limit_invalid [1.00ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4847907Z (pass) test_parse_config_when_project_without_match [4.35ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4848300Z (pass) test_parse_config_when_not_mapping [0.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4848688Z (pass) test_match_project_when_absolute [0.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4849058Z (pass) test_match_project_when_name [0.35ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4849402Z (pass) test_resolve_settings [3.29ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4849784Z (pass) test_resolve_settings_when_relative_paths [0.69ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4850193Z (pass) test_resolve_settings_when_duplicated [2.94ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4850584Z (pass) test_resolve_settings_when_cwd_scope [2.64ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4851097Z (pass) test_resolve_settings_when_project_overrides [0.56ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4851694Z (pass) test_is_origin_allowed [0.43ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4852062Z (pass) test_is_origin_allowed_when_origins_null [0.30ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4852436Z (pass) test_parse_repository_config [0.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4852838Z (pass) test_parse_repository_config_when_disabled [0.28ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4853253Z (pass) test_parse_repository_config_when_invalid [0.66ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4853453Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4853614Z tests/unit/hooks/lib/context.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4853920Z (pass) test_entry_key [3.60ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4854247Z (pass) test_entry_key_when_avoid [0.55ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4854567Z (pass) test_render_context [0.57ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4854978Z (pass) test_render_context_when_same_id_in_repositories [0.66ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4855352Z (pass) test_select_entries [1.04ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4855859Z (pass) test_select_entries_when_over_item_limit [0.53ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4856399Z (pass) test_select_entries_when_over_char_limit [0.64ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4856817Z (pass) test_select_entries_when_nothing_selected [0.39ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4857054Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4857210Z tests/unit/hooks/lib/entry.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4857562Z (pass) test_parse_documents_when_file [12.55ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4857940Z (pass) test_parse_documents_when_records [2.48ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4858323Z (pass) test_parse_documents_when_unmatched [0.68ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4858692Z (pass) test_build_entries_when_term [2.05ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4859076Z (pass) test_build_entries_when_metadata_column [0.51ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4859476Z (pass) test_build_entries_when_name_missing [0.63ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4860057Z (pass) test_build_entries_when_required_missing [0.81ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4860460Z (pass) test_build_entries_when_inject_condition [1.03ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4860834Z (pass) test_build_entries_when_command [0.41ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4861212Z (pass) test_build_entries_when_doc_and_url [0.46ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4861603Z (pass) test_build_entries_when_skill_tool_path [0.61ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4862009Z (pass) test_build_entries_when_env_and_avoid [0.51ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4862396Z (pass) test_build_entries_when_term_avoid [1.32ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4862758Z (pass) test_load_alias_entries [4.20ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4863123Z (pass) test_load_alias_entries_when_records [0.88ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4863547Z (pass) test_load_alias_entries_when_yaml_malformed [1.30ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4863773Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4863926Z tests/unit/hooks/lib/loader.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4864241Z (pass) test_expand_home [3.29ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4864589Z (pass) test_expand_home_when_tilde_only [0.40ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4864942Z (pass) test_expand_home_when_not_tilde [0.44ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4865254Z (pass) test_resolve_path [0.63ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4865547Z (pass) test_resolve_path_when_absolute [0.59ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4865895Z (pass) test_resolve_path_when_dot_segments [0.58ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4866191Z (pass) test_match_segment [3.94ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4867139Z (pass) test_match_segment_when_multiple_stars [0.45ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4867433Z (pass) test_expand_files [5.16ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4867722Z (pass) test_expand_files_when_double_star [1.03ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4868037Z (pass) test_expand_files_when_no_star [0.67ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4868355Z (pass) test_expand_files_when_dir_missing [0.45ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4868668Z (pass) test_expand_files_when_symlink [3.88ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4868952Z (pass) test_read_if_changed [0.73ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4869335Z (pass) test_read_if_changed_when_mtime_changed [0.60ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4869896Z (pass) test_read_if_changed_when_kind_differs [0.67ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4870358Z (pass) test_parse_yaml [7.21ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4870789Z (pass) test_parse_yaml_when_empty [1.24ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4871271Z (pass) test_parse_yaml_when_malformed [1.71ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4871713Z (pass) test_parse_yaml_when_proto_key [0.45ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4872005Z (pass) test_parent_dir [0.39ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4872309Z (pass) test_match_path_glob_when_descendants [0.43ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4872651Z (pass) test_match_path_glob_when_folder_only [0.34ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4872981Z (pass) test_match_path_glob_when_stars [0.47ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4873147Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4873287Z tests/unit/hooks/lib/match.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4873544Z (pass) test_normalize [3.48ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4873785Z (pass) test_find_hits [0.99ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4874063Z (pass) test_find_hits_when_same_position [0.44ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4874371Z (pass) test_find_hits_when_excluded [0.89ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4874677Z (pass) test_find_hits_when_counted [0.75ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4874986Z (pass) test_find_hits_when_no_match [0.31ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4875397Z (pass) test_sort_by_count [0.97ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4875541Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4875680Z tests/unit/hooks/lib/record.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4875942Z (pass) test_record_id_of [3.25ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4876388Z (pass) test_read_recorded_when_never_written [0.85ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4876738Z (pass) test_add_recorded [1.68ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4877043Z (pass) test_add_recorded_when_nothing_selected [1.12ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4877380Z (pass) test_add_recorded_when_conflicted [0.76ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4877726Z (pass) test_add_recorded_when_conflicts_exhausted [0.52ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4878032Z (pass) test_clear_recorded [0.46ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4878177Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4878320Z tests/unit/hooks/lib/repository.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4878603Z (pass) test_parse_repository [7.77ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4879054Z (pass) test_parse_repository_when_documents_missing [0.98ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4879435Z (pass) test_parse_repository_when_alias_invalid [1.72ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4879776Z (pass) test_parse_repository_when_malformed [1.54ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4880091Z (pass) test_load_repository_aliases [1.79ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4880427Z (pass) test_load_repository_aliases_when_missing [0.51ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4880774Z (pass) test_parse_repository_when_cwd_scope [1.09ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4880945Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4881079Z tests/unit/hooks/lib/schema.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4881345Z (pass) test_load_alias_schema [5.84ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4881609Z (pass) test_check_keywords [0.82ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4881905Z (pass) test_check_keywords_when_unsupported [2.00ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4882193Z (pass) test_validate_schema [1.44ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4882511Z (pass) test_validate_schema_when_required_missing [0.70ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4882866Z (pass) test_validate_schema_when_type_mismatch [0.70ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4883239Z (pass) test_validate_schema_when_additional_property [0.48ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4883583Z (pass) test_validate_schema_when_scope [3.07ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4883924Z (pass) test_validate_schema_when_if_not_matched [0.38ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4884309Z (pass) test_validate_schema_when_any_of_not_matched [0.93ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4884501Z 
+test	テストの全件を回す	2026-11-19T00:45:55.4884630Z tests/unit/hooks/lib/tool.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.4884921Z (pass) test_collect_argument_strings [4.06ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4885206Z (pass) test_document_path_of [0.68ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4885525Z (pass) test_exclude_reading_documents_when_read [0.68ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4885870Z (pass) test_exclude_reading_documents_when_mcp [0.35ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4886359Z (pass) test_exclude_reading_documents_when_other_tool [0.33ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4886793Z (pass) test_exclude_reading_documents_when_write [0.44ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4887119Z (pass) test_join_argument_text [0.52ms]
+test	テストの全件を回す	2026-11-19T00:45:55.4887438Z (pass) test_join_argument_text_when_no_strings [0.29ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5379449Z 
+test	テストの全件を回す	2026-11-19T00:45:55.5380254Z tests/unit/hooks/lib/variable.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.5380724Z (pass) test_find_reference_names [3.03ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5381069Z (pass) test_find_reference_names_when_not_name [0.34ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5381387Z (pass) test_parse_env_output [0.46ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5381720Z (pass) test_format_reference_lines [0.30ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5382057Z (pass) test_format_reference_lines_when_multiline [0.30ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5382475Z (pass) test_format_reference_lines_when_value_too_long [0.45ms]
+test	テストの全件を回す	2026-11-19T00:45:55.5382892Z (pass) test_format_reference_lines_when_too_many [0.64ms]
+test	テストの全件を回す	2026-11-19T00:45:55.7536185Z 
+test	テストの全件を回す	2026-11-19T00:45:55.7547532Z tests/unit/hooks/register.test.ts:
+test	テストの全件を回す	2026-11-19T00:45:55.7547953Z (pass) test_register [173.27ms]
+test	テストの全件を回す	2026-11-19T00:45:55.7548100Z 
+test	テストの全件を回す	2026-11-19T00:45:55.7548190Z  222 pass
+test	テストの全件を回す	2026-11-19T00:45:55.7548354Z  0 fail
+test	テストの全件を回す	2026-11-19T00:45:55.7548602Z Ran 222 tests across 19 files. [6.52s]
+test	ログを成果物に上げる	﻿2026-11-19T00:45:55.7668678Z ##[group]Run actions/upload-artifact@v7
+test	ログを成果物に上げる	2026-11-19T00:45:55.7668917Z with:
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669076Z   name: test-log
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669241Z   path: test.log
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669424Z   if-no-files-found: warn
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669611Z   compression-level: 6
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669785Z   overwrite: false
+test	ログを成果物に上げる	2026-11-19T00:45:55.7669965Z   include-hidden-files: false
+test	ログを成果物に上げる	2026-11-19T00:45:55.7670157Z   archive: true
+test	ログを成果物に上げる	2026-11-19T00:45:55.7670323Z ##[endgroup]
+test	ログを成果物に上げる	2026-11-19T00:45:55.8831214Z With the provided path, there will be 1 file uploaded
+test	ログを成果物に上げる	2026-11-19T00:45:55.8834598Z Artifact name is valid!
+test	ログを成果物に上げる	2026-11-19T00:45:55.8835014Z Root directory input is valid!
+test	ログを成果物に上げる	2026-11-19T00:45:56.2390754Z Uploading artifact: test-log.zip
+test	ログを成果物に上げる	2026-11-19T00:45:56.2419070Z Beginning upload of artifact content to blob storage
+test	ログを成果物に上げる	2026-11-19T00:45:56.4952683Z Uploaded bytes 3026
+test	ログを成果物に上げる	2026-11-19T00:45:56.5615424Z Finished uploading artifact content to blob storage!
+test	ログを成果物に上げる	2026-11-19T00:45:56.5617140Z SHA256 digest of uploaded artifact is 5bf80f6a8e7e0017c16809ad043bb475e088ebb8196c5a7c8380029c3f54b353
+test	ログを成果物に上げる	2026-11-19T00:45:56.5617892Z Finalizing artifact upload
+test	ログを成果物に上げる	2026-11-19T00:45:57.0581970Z Artifact test-log successfully finalized. Artifact ID 14486602617
+test	ログを成果物に上げる	2026-11-19T00:45:57.0582915Z Artifact test-log has been successfully uploaded! Final size is 3026 bytes. Artifact ID is 14486602617
+test	ログを成果物に上げる	2026-11-19T00:45:57.0583980Z Artifact download URL: https://github.com/shuhei1101/alias-inject/actions/runs/44431574517/artifacts/14486602617
+test	Post Node を入れる	﻿2026-11-19T00:45:57.0753435Z Post job cleanup.
+test	Post ブランチを取得する	﻿2026-11-19T00:45:57.1809496Z Post job cleanup.
+test	Post ブランチを取得する	2026-11-19T00:45:57.2536424Z [command]/usr/bin/git version
+test	Post ブランチを取得する	2026-11-19T00:45:57.2571483Z git version 2.56.1
+test	Post ブランチを取得する	2026-11-19T00:45:57.2599240Z Temporarily overriding HOME='/home/runner/work/_temp/696871dd-4da8-4fd3-afba-f8e3649d7dc5' before making global git config changes
+test	Post ブランチを取得する	2026-11-19T00:45:57.2600445Z Adding repository directory to the temporary git global config as a safe directory
+test	Post ブランチを取得する	2026-11-19T00:45:57.2603823Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/alias-inject/alias-inject
+test	Post ブランチを取得する	2026-11-19T00:45:57.2631403Z Removing SSH command configuration
+test	Post ブランチを取得する	2026-11-19T00:45:57.2636098Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test	Post ブランチを取得する	2026-11-19T00:45:57.2664732Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test	Post ブランチを取得する	2026-11-19T00:45:57.2917608Z Removing HTTP extra header
+test	Post ブランチを取得する	2026-11-19T00:45:57.2923652Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test	Post ブランチを取得する	2026-11-19T00:45:57.2959470Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test	Post ブランチを取得する	2026-11-19T00:45:57.3204233Z Removing includeIf entries pointing to credentials config files
+test	Post ブランチを取得する	2026-11-19T00:45:57.3210314Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test	Post ブランチを取得する	2026-11-19T00:45:57.3234217Z includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3235226Z includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git/worktrees/*.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3236095Z includeif.gitdir:/github/workspace/.git.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3237014Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3242257Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3263330Z /home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3271831Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-c7da016b\-937c\-4167\-986e\-224e5e8995fc\.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3305609Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git/worktrees/*.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3330665Z /home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3337656Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/alias-inject/alias-inject/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-c7da016b\-937c\-4167\-986e\-224e5e8995fc\.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3366867Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3386831Z /github/runner_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3393881Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-c7da016b\-937c\-4167\-986e\-224e5e8995fc\.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3423893Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test	Post ブランチを取得する	2026-11-19T00:45:57.3443267Z /github/runner_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3450304Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-c7da016b\-937c\-4167\-986e\-224e5e8995fc\.config
+test	Post ブランチを取得する	2026-11-19T00:45:57.3479628Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test	Post ブランチを取得する	2026-11-19T00:45:57.3720441Z Removing credentials config '/home/runner/work/_temp/git-credentials-c7da016b-937c-4167-986e-224e5e8995fc.config'
+test	Complete job	﻿2026-11-19T00:45:57.3857476Z Cleaning up orphan processes

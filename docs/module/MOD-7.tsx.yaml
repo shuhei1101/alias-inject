@@ -12,7 +12,7 @@ functions:
     container: hooks/register.tsx
     usecase: 共通
     role: 入口
-    summary: hooks モジュールの入口として、4 つのイベントに処理を登録する
+    summary: hooks モジュールの入口として、5 つのイベントに処理を登録する
     inherits: LIB-1#catalogs[API].entries[Register]
     scope: public
     is_async: false
@@ -23,7 +23,7 @@ functions:
         required: true
         passing: injected
         description: イベントへ処理を登録する関数。エンジンから受け取る
-        notes: 4 回呼ぶ
+        notes: 5 回呼ぶ
     args_example: |-
       ```ts
       import type { Register } from 'claude-code'
@@ -33,12 +33,13 @@ functions:
         on('session.compact', handleSessionCompact)
         on('session.end', handleSessionEnd)
         on('tool.call', handleToolCall)
+        on('turn.step', handleTurnStep)
       }
       ```
     returns:
       type: void
       description: 何も返却しない
-    process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)`・`on('tool.call', handleToolCall)` を呼ぶ
+    process: 1. `on('prompt.submit', handlePromptSubmit)`・`on('session.compact', handleSessionCompact)`・`on('session.end', handleSessionEnd)`・`on('tool.call', handleToolCall)`・`on('turn.step', handleTurnStep)` を呼ぶ
     unit_tests:
       - name: test_register
         case: 正常
