@@ -147,10 +147,15 @@ function addSelected($: EngineInterface, hits: Hit[], settings: Settings, record
   return addRecorded($, { recordId, select: (recorded) => selectEntries(hits, recorded, { limits }) })
 }
 
-// 記録に追加できた単語を、利用者の画面に 1 行表示する。表示の失敗は Claude Code が受け止めて debug log に出し、ここへは返さない
+// 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても入力とツールの結果は止めない
 function showAdded($: EngineInterface, selection: Selection, settings: Settings): void {
   if (!settings.showAdded) return
-  $.ui.log(renderAddedLine(selection.entries), { to: 'transcript' })
+  try {
+    $.ui.log(renderAddedLine(selection.entries), { to: 'transcript' })
+  } catch (error) {
+    // テストの道具では Claude Code が失敗を受け止めるが、対話モードのセッションで例外が返っても止めない
+    logDebug($, `追加した単語を表示できません: ${describe(error)}`)
+  }
 }
 
 /** 入力を参照するリポジトリの `documents` と設定ファイルの `aliases` の行が指す YAML の単語と照合し、そのセッションで初めて出た単語の文脈を `context` の末尾に追加して返却する */
