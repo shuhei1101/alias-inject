@@ -154,7 +154,7 @@ catalogs:
           リポジトリが無いとき: 返り値は null
       - name: $.ui.log
         kind: 関数
-        purpose: 'テキストを会話の記録かデバッグログに出す。`transcript` は利用者の画面に `● {プラグインの名前}: {テキスト}` の行で出し、会話の記録に `type: system`・`subtype: informational` で残す。モデルの入力には入らない。サブエージェントの `tool.call` から呼んだ行もメインの会話に出る（2.1.327 で確認）'
+        purpose: 'テキストを会話の記録かデバッグログに出す。`transcript` は利用者の画面に `● {プラグインの名前}: {テキスト}` の行で出し、会話の記録に `type: system`・`subtype: informational` で残す。モデルの入力には入らない。サブエージェントの `tool.call` から呼んだ行もメインの会話に出る。失敗は Claude Code が受け止めて `$.ui.log dropped` を自身の debug log に出し、呼び出し元へは例外も拒否も返さない（`await` しても同じ）（2.1.327 で確認）'
         params:
           - name: text
             type: string

@@ -1096,7 +1096,7 @@ flows:
       - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_normal_when_display_off
   - name: 異常系（表示に失敗する）
-    summary: 表示の `$.ui.log` が例外を投げても、文脈の追加と記録はそのままにし、失敗を debug log に出す
+    summary: 表示の `$.ui.log` が失敗しても、Claude Code が受け止めるので、文脈の追加と記録はそのまま
     setup:
       - name: Mock
         description: '正常系に加え、`ui.log` が `to: "transcript"` の呼び出しで例外を投げる'
@@ -1115,8 +1115,7 @@ flows:
         CC->>IF: term-a とは
         IF->>ST: term-a を記録に入れる
         IF->>CC: $.ui.log（transcript）
-        CC-->>IF: 例外
-        IF->>CC: $.ui.log（debug）で表示の失敗を出す
+        CC->>CC: 失敗を Claude Code の debug log に出し、IF へ例外を返さない
         IF-->>CC: context に term-a の文脈
       ```
 
@@ -1124,7 +1123,7 @@ flows:
     expected:
       - 返る `context` に term-a が含まれ、返る `text` が入力の `text` と同じ
       - term-a が記録に入り、続けて「term-a とは」を送信すると返る `context` が空
-      - '`ui.log` に `to: "debug"` で表示の失敗の理由が届く'
+      - 'フックが例外で終わらない'
     test: test_error_when_display_fails
 lead: 入力の文を設定の YAML の単語と照合し、初めて出た単語の引用の文脈を `context` に追加する `prompt.submit` の処理の入出力とフローを定め、入力への引用の文脈の追加を修正するときに参照する。
 idempotent: false
@@ -1203,8 +1202,8 @@ exceptions:
     condition: '文書の `inject_when` の値が制約『照合条件』に合わない（例: 知らないキー・空の束・4 レイヤー以上の入れ子・`text` 以外の `field`・`contains`・`not_contains` 以外の `op`・空の `values`・文字列でない `values` の要素・`any`・`all` 以外の `match`・真偽値でない `case_sensitive`）'
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から除外する'
   - name: なし（表示に失敗する）
-    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が例外を投げた'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で理由を debug log に出し、文脈を追加して返却する。記録は戻さない'
+    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が失敗した'
+    notes: 'Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。文脈を追加して返却し、記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで

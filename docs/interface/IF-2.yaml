@@ -420,7 +420,7 @@ flows:
       - '`ui.log` に `to: "transcript"` の行が届かない'
     test: test_normal_when_display_off
   - name: 異常系（表示に失敗する）
-    summary: 表示の `$.ui.log` が例外を投げても、文脈の追加と記録はそのままにし、失敗を debug log に出す
+    summary: 表示の `$.ui.log` が失敗しても、Claude Code が受け止めるので、文脈の追加と記録はそのまま
     setup:
       - name: Mock
         description: '正常系に加え、`ui.log` が `to: "transcript"` の呼び出しで例外を投げる'
@@ -434,13 +434,12 @@ flows:
         CC->>IF: ツールの結果（term-a を含む）
         IF->>ST: term-a を記録に入れる
         IF->>CC: $.ui.log（transcript）
-        CC-->>IF: 例外
-        IF->>CC: $.ui.log（debug）で表示の失敗を出す
+        CC->>CC: 失敗を Claude Code の debug log に出し、IF へ例外を返さない
         IF-->>CC: context に term-a の文脈
     expected:
       - 返る `context` の末尾が term-a を含み、返る `text` が `next(e)` の結果の `text` と同じ
       - term-a が記録に入っている
-      - '`ui.log` に `to: "debug"` で表示の失敗の理由が届く'
+      - 'フックが例外で終わらない'
     test: test_error_when_display_fails
 lead: ツールの結果の本文を照合し、その会話で初めて出た単語の引用の文脈を `context` に追加する `tool.call` の処理の入出力とフローを定め、ツールの結果への引用の文脈の追加を修正するときに参照する。
 test_file: tests/integration/hooks/tool-call.test.ts
@@ -523,8 +522,8 @@ exceptions:
     condition: 照合・記録の途中で想定しない例外が起きた
     notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返却する。変数参照の値の行は追加する
   - name: なし（表示に失敗する）
-    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が例外を投げた'
-    notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で理由を debug log に出し、文脈を追加して返却する。記録は戻さない'
+    condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が失敗した'
+    notes: 'Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。文脈を追加して返却し、記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: ツールの呼び出しで増える待ち時間は 200ms まで

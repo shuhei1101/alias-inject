@@ -409,10 +409,10 @@ functions:
     kind: 関数
     container: hooks/handlers.ts
     usecase: 入力への引用の文脈の追加
-    summary: 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても例外を外へ出さない
+    summary: 記録に追加できた単語を、利用者の画面に 1 行表示する。表示の失敗は Claude Code が受け止めるので、例外を扱わない
     scope: internal
     is_async: false
-    side_effects: '`$.ui.log(text, { to: "transcript" })` で利用者の画面と会話の記録に 1 行を出す。失敗したら debug log に出す'
+    side_effects: '`$.ui.log(text, { to: "transcript" })` で利用者の画面と会話の記録に 1 行を出す。失敗は Claude Code が自身の debug log に出す'
     args:
       - name: $
         type: EngineInterface
@@ -435,16 +435,17 @@ functions:
     process: |-
       1. settings.showAdded が false なら何もしない
       2. 表示する行の書式化を selection.entries で呼び、`$.ui.log(text, { to: "transcript" })` で出す
-      3. 2 が例外になったら、`追加した単語を表示できません: {理由}` を debug log に出す（記録は戻さない）
+
+      `$.ui.log` は失敗を呼び出し元へ返さない（LIB-1）ため、try/catch を置かない
     callees:
       - MOD-9#functions[renderAddedLine]
     unit_tests:
       - name: test_show_added_when_log_fails
         case: 異常
-        summary: 表示に失敗しても入力は止めず、失敗を debug log に出す
+        summary: 表示に失敗しても入力は止めず、文脈の追加と記録はそのまま
         condition: 入力「term-a とは」
-        mock: '`ui.log` が `to: transcript` の呼び出しで例外を投げ、`to: debug` は届いた行を記録する'
-        expected: 返る `context` に term-a の文脈があり、debug log に `追加した単語を表示できません` が届き、term-a が記録に入っている
+        mock: '`ui.log` が `to: transcript` の呼び出しで失敗を返す（Claude Code が受け止める）'
+        expected: 返る `context` に term-a の文脈があり、続けて同じ入力を送信すると返る `context` が空（term-a が記録に入っている）
 tags:
   - name: topic:イベント
     main: true

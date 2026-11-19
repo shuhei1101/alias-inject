@@ -408,7 +408,7 @@ scenarios:
         CC-->>P: ツールの結果
         P->>P: 照合で term-a がヒットし、記録に入れる
         P->>CC: 表示の行を出そうとして失敗する
-        P->>P: 失敗を debug log に出す
+        CC->>CC: 失敗を debug log に出し、alias-inject へ例外を返さない
         P->>CC: term-a の文脈を context に追加
         CC->>M: ツールの結果と文脈を送信
     expected:
