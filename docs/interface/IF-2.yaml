@@ -523,7 +523,7 @@ exceptions:
     notes: 例外を外へ出さず、debug log に例外の理由を出し、引用の文脈を追加せずに返却する。変数参照の値の行は追加する
   - name: なし（表示に失敗する）
     condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が失敗した'
-    notes: 'Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。文脈を追加して返却し、記録は戻さない'
+    notes: 'テストの道具では Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。例外が返ったときは、例外を外へ出さず `$.ui.log(text, { to: "debug" })` で理由を debug log に出す。どちらも文脈を追加して返却し、記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: ツールの呼び出しで増える待ち時間は 200ms まで

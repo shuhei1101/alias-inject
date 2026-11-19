@@ -409,10 +409,10 @@ functions:
     kind: 関数
     container: hooks/handlers.ts
     usecase: 入力への引用の文脈の追加
-    summary: 記録に追加できた単語を、利用者の画面に 1 行表示する。表示の失敗は Claude Code が受け止めるので、例外を扱わない
+    summary: 記録に追加できた単語を、利用者の画面に 1 行表示する。表示に失敗しても例外を外へ出さない
     scope: internal
     is_async: false
-    side_effects: '`$.ui.log(text, { to: "transcript" })` で利用者の画面と会話の記録に 1 行を出す。失敗は Claude Code が自身の debug log に出す'
+    side_effects: '`$.ui.log(text, { to: "transcript" })` で利用者の画面と会話の記録に 1 行を出す。`$.ui.log` が例外を投げたら debug log に出す'
     args:
       - name: $
         type: EngineInterface
@@ -435,8 +435,9 @@ functions:
     process: |-
       1. settings.showAdded が false なら何もしない
       2. 表示する行の書式化を selection.entries で呼び、`$.ui.log(text, { to: "transcript" })` で出す
+      3. 2 が例外になったら、`追加した単語を表示できません: {理由}` を debug log に出す（記録は戻さない）
 
-      `$.ui.log` は失敗を呼び出し元へ返さない（LIB-1）ため、try/catch を置かない
+      テストの道具では `$.ui.log` の失敗を Claude Code が受け止めて例外にならない（LIB-1）が、対話モードのセッションでも同じかは未確認のため、3 の分岐を配置する
     callees:
       - MOD-9#functions[renderAddedLine]
     unit_tests:

@@ -1203,7 +1203,7 @@ exceptions:
     notes: '例外を外へ出さず、`$.ui.log(text, { to: "debug" })` で YAML のパス・文書の `id`・誤りの箇所（`inject_when` からのパス）と理由を debug log に出し、その文書だけを照合から除外する'
   - name: なし（表示に失敗する）
     condition: '追加した単語を表示する `$.ui.log(text, { to: "transcript" })` が失敗した'
-    notes: 'Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。文脈を追加して返却し、記録は戻さない'
+    notes: 'テストの道具では Claude Code が失敗を受け止めて自身の debug log に `$.ui.log dropped` を出し、プラグインへ例外を返さない（LIB-1 の `$.ui.log`）。例外が返ったときは、例外を外へ出さず `$.ui.log(text, { to: "debug" })` で理由を debug log に出す。どちらも文脈を追加して返却し、記録は戻さない'
 constraints:
   - item: 処理時間
     constraint: 入力の送信で増える待ち時間は 200ms まで
