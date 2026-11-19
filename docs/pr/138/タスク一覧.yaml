@@ -65,10 +65,14 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-19T02:23:54.279961+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: 公開ドキュメントの『引用の文脈』『設定ファイル』の表示の説明に応答の文を加える
+    updated_by: planner
+    updated_at: '2026-11-19T02:25:40.989476+00:00'
   - process: 単体テスト作成
-    status: todo
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-19T02:27:05.969645+00:00'
   - process: 実装
     status: todo
   - process: 結合テスト作成
