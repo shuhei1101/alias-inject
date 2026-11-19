@@ -22,6 +22,11 @@ function envRun(entries: Record<string, string>): unknown {
   return { value: { exitCode: 0, stdout: envOutput(entries) } }
 }
 
+// 利用者の画面に出した行（`to: transcript`）
+function transcriptLines(logs: { text: string; to: string }[]): string[] {
+  return logs.filter((line) => line.to === 'transcript').map((line) => line.text)
+}
+
 describe('参照した本文への変数参照の値の追加', () => {
   // 本文に出た名前ごとに 1 行の値を context に追加する（正常系）
   test('test_normal', async ($, on) => {
@@ -194,6 +199,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.text).toBe('用語エーの説明')
     expect(after.context ?? []).toEqual([])
     expect(world.runs).toEqual([])
+    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
   })
 
   // exclude_tools のツールの結果は照合しない（正常系）
@@ -210,6 +216,8 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 検証
     expect(bash).toEqual(answer)
     expect(read.context?.[0]).toContain('Term-A')
+    // 除外したツールの結果では表示せず、続く Read の 1 行だけが出る
+    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
   })
 
   // Read の file_path と MCP の引数の ID に該当する単語を除外する（正常系）
@@ -243,12 +251,16 @@ describe('ツールの結果への引用の文脈の追加', () => {
 
     // 実行
     const result = await callTool($, readInput())
+    const shown = transcriptLines(world.logs)
     const after = await submit($, 'term-a とは')
 
     // 検証
     expect(result.context?.[0]).toContain('id: term-b')
     expect(result.context?.[0]).not.toContain('id: term-a')
     expect(after.context?.[0]).toContain('Term-A')
+    expect(shown.length).toBe(1)
+    expect(shown[0]).toContain('（term-b）')
+    expect(shown[0]).not.toContain('（term-a）')
   })
 
   // agentId のある呼び出しはメインの会話と別の記録で照合する（正常系）
@@ -260,7 +272,9 @@ describe('ツールの結果への引用の文脈の追加', () => {
     world.answer = answer
 
     // 実行
+    world.logs.length = 0
     const first = await callTool($, readInput('agent-1'))
+    const shownByFirst = transcriptLines(world.logs)
     const second = await callTool($, readInput('agent-1'))
     const after = await submit($, 'term-b とは')
 
@@ -269,6 +283,11 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(first.context?.[0]).toContain('id: term-b')
     expect(second).toEqual(answer)
     expect(after.context?.[0]).toContain('id: term-b')
+    // サブエージェントで追加した単語も 1 行で表示し、2 回目（記録済み）は表示しない
+    expect(shownByFirst.length).toBe(1)
+    expect(shownByFirst[0]).toContain('（term-a）')
+    expect(shownByFirst[0]).toContain('（term-b）')
+    expect(transcriptLines(world.logs).filter((line) => line.includes('（term-a）、')).length).toBe(1)
   })
 
   // エラーの結果・deny は引数も結果も照合しない（正常系）
@@ -285,6 +304,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
 
       // 検証
       expect(result).toEqual(answer)
+      expect(transcriptLines(world.logs)).toEqual([])
     }
     const after = await submit($, 'term-a とは')
     expect(after.context?.[0]).toContain('Term-A')
@@ -299,6 +319,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 実行
     world.answer = { result: 'r', text: createdText }
     const written = await callTool($, { tool: 'Write', file_path: '/work/note.md', content: '用語エーの説明' })
+    const shownByWritten = transcriptLines(world.logs)
     // 別のセッションで、入れ子の並びとオブジェクトの中に単語を持つ MCP の書き込みのツールを呼ぶ
     if (world.files !== undefined) world.files.sessionId = 's2'
     world.answer = { result: 'r' }
@@ -314,6 +335,9 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(mcpWritten.context?.length).toBe(1)
     expect(mcpWritten.context?.[0]).toContain('term-b')
     expect(mcpWritten.text).toBeUndefined()
+    expect(shownByWritten).toEqual(['文脈を追加: Term-A（term-a）'])
+    expect(transcriptLines(world.logs).length).toBe(2)
+    expect(transcriptLines(world.logs)[1]).toContain('（term-b）')
   })
 
   // 引用の文脈を先に、変数参照の値の行を後に追加する（正常系）
@@ -330,6 +354,8 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.context?.length).toBe(2)
     expect(result.context?.[0]).toContain('Term-A')
     expect(result.context?.[1]).toBe(VALUE_A_LINE)
+    // 変数参照の名前と値は表示しない
+    expect(transcriptLines(world.logs)).toEqual(['文脈を追加: Term-A（term-a）'])
   })
 
   // ifVersion が一致しなければ再読み込みし、他の呼び出しで記録された単語を除いて追加する（正常系）
@@ -355,6 +381,10 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result.context?.[0]).toContain('id: term-b')
     expect(result.context?.[0]).not.toContain('id: term-a')
     expect(after.context ?? []).toEqual([])
+    // 入力の送信で追加した term-a の行と、再除外した後の term-b だけの行
+    const shownByTool = transcriptLines(world.logs).filter((line) => line.includes('（term-b）'))
+    expect(shownByTool.length).toBe(1)
+    expect(shownByTool[0]).not.toContain('（term-a）')
   })
 
   // 設定ファイルを読み込めないときは引用の文脈を追加せずに返却する（異常系）
@@ -374,6 +404,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 検証
     expect(result).toEqual(answer)
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes(brokenPath)).length).toBeGreaterThan(0)
+    expect(transcriptLines(world.logs)).toEqual([])
   })
 
   // ifVersion が 3 回続けて一致しなければ引用の文脈を追加せずに返却する（異常系）
@@ -397,6 +428,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(result).toEqual(answer)
     expect(setCalls).toBe(3)
     expect(world.logs.filter((line) => line.to === 'debug').length).toBeGreaterThan(0)
+    expect(transcriptLines(world.logs)).toEqual([])
   })
 
   // 照合の途中の例外では引用の文脈を追加せず、変数参照の値の行だけを追加する（異常系）
@@ -413,6 +445,7 @@ describe('ツールの結果への引用の文脈の追加', () => {
     // 検証
     expect(result.context).toEqual([VALUE_A_LINE])
     expect(world.logs.filter((line) => line.to === 'debug' && line.text.includes('state broken')).length).toBe(1)
+    expect(transcriptLines(world.logs)).toEqual([])
   })
 
   // 照合条件をツールの結果の本文で評価し、該当しない文書を除外する（正常系）
@@ -452,5 +485,36 @@ describe('ツールの結果への引用の文脈の追加', () => {
     expect(context).toContain('Term-A')
     expect(context).toContain('link-a')
     expect(context).not.toContain('link-b')
+  })
+
+  // show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない（正常系）
+  test('test_normal_when_display_off', async ($, on) => {
+    // 準備
+    const world = installToolWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['show_added: false'] })), settings: SETTINGS })
+    world.answer = { result: 'r', text: '用語エーの説明' }
+
+    // 実行
+    const result = await callTool($, readInput())
+
+    // 検証
+    expect(result.context?.[0]).toContain('Term-A')
+    expect(transcriptLines(world.logs)).toEqual([])
+  })
+
+  // 表示の $.ui.log が失敗しても、文脈の追加と記録はそのまま（異常系）
+  test('test_error_when_display_fails', async ($, on) => {
+    // 準備
+    const world = installToolWorld(on, { fs: makeFs(), settings: SETTINGS, transcriptError: '表示できません' })
+    world.answer = { result: 'r', text: '用語エーの説明' }
+
+    // 実行
+    const result = await callTool($, readInput())
+    const after = await submit($, 'term-a とは')
+
+    // 検証
+    expect(result.context?.[0]).toContain('Term-A')
+    expect(result.text).toBe('用語エーの説明')
+    expect(after.context ?? []).toEqual([])
+    expect(transcriptLines(world.logs)).toEqual([])
   })
 })

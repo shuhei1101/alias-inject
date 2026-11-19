@@ -29,15 +29,21 @@ const DISABLED_CONFIG = 'global: { enabled: false }\n'
 // 環境変数 ALIAS_INJECT_CONFIG が指す設定ファイル
 const SHELL_CONFIG_PATH = '/shell/settings.yaml'
 
+// 利用者の画面に出した行（`to: transcript`）
+function transcriptLines(logs: { text: string; to: string }[]): string[] {
+  return logs.filter((line) => line.to === 'transcript').map((line) => line.text)
+}
+
 // 初めて出た単語の文脈を追加し、記録に入れる（正常系）
 test('test_normal', async ($, on) => {
   // 準備
   const fs = makeFs()
-  installWorld(on, { fs, settings: SETTINGS })
+  const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
   // エイリアスでヒットさせる。alias_type を持たない行の YAML（doc-z）は読み込まない
   const first = await submit($, '用語エーと doc-z を説明して')
+  const shown = transcriptLines(world.logs)
   // 大文字を含む単語 Term-A が正規化でヒットし、記録済みで追加されない
   const second = await submit($, 'term-a とは')
 
@@ -54,21 +60,25 @@ test('test_normal', async ($, on) => {
   expect(context).not.toContain('doc-z')
   expect(fs.reads).not.toContain(`${DOCS_DIR}/doc-z.yaml`)
   expect(second.context ?? []).toEqual([])
+  expect(shown).toEqual(['文脈を追加: Term-A（term-a）'])
+  expect(transcriptLines(world.logs)).toEqual(shown)
 })
 
 // 入力に先に出た単語から max_items 個の単語だけを追加し、上限から漏れた単語は記録しない（正常系）
 test('test_normal_when_over_item_limit', async ($, on) => {
   // 準備
-  installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['max_items: 1'] })), settings: SETTINGS })
+  const world = installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['max_items: 1'] })), settings: SETTINGS })
 
   // 実行
   const first = await submit($, 'term-a と term-b の違い')
+  const shown = transcriptLines(world.logs)
   const second = await submit($, 'term-b について')
 
   // 検証
   expect(first.context?.[0]).toContain('Term-A')
   expect(first.context?.[0]).not.toContain('id: term-b')
   expect(second.context?.[0]).toContain('id: term-b')
+  expect(shown).toEqual(['文脈を追加: Term-A（term-a）'])
 })
 
 // 追加すると max_chars を超える単語を飛ばし、後ろの収まる単語を追加する（正常系）
@@ -76,10 +86,11 @@ test('test_normal_when_over_char_limit', async ($, on) => {
   // 準備
   const fs = makeFs(makeConfig({ globalExtra: ['max_chars: 300'] }))
   fs.write(`${TERMS_DIR}/term-long.yaml`, termYaml({ id: 'term-long', name: 'Term-Long', description: 'あ'.repeat(500) }))
-  installWorld(on, { fs, settings: SETTINGS })
+  const world = installWorld(on, { fs, settings: SETTINGS })
 
   // 実行
   const first = await submit($, 'term-a・term-long・term-b を比べて')
+  const shown = transcriptLines(world.logs)
   // 上限を 4000 に戻すと、飛ばした単語が追加される
   fs.write(CONFIG_PATH, makeConfig({ globalExtra: ['max_chars: 4000'] }))
   const second = await submit($, 'term-long とは')
@@ -91,15 +102,17 @@ test('test_normal_when_over_char_limit', async ($, on) => {
   expect(added).not.toContain('Term-Long')
   expect([...added].length).toBeLessThanOrEqual(300)
   expect(second.context?.[0]).toContain('Term-Long')
+  expect(shown).toEqual(['文脈を追加: Term-A（term-a）、term-b（term-b）'])
 })
 
 // origins に対応づかない出所の入力はそのまま返却する（正常系）
 test('test_normal_when_origin_excluded', async ($, on) => {
   // 準備
-  installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['origins: [plugin]'] })), settings: SETTINGS })
+  const world = installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['origins: [plugin]'] })), settings: SETTINGS })
 
   // 実行
   const fromComposer = await submit($, 'term-a とは', { kind: 'composer' })
+  const shownForComposer = transcriptLines(world.logs)
   // 同じセッションで出所が plugin の入力を送信すると、前の入力で記録されていないため追加される
   const fromPlugin = await submit($, 'term-a とは', { kind: 'plugin' })
 
@@ -107,6 +120,7 @@ test('test_normal_when_origin_excluded', async ($, on) => {
   expect(fromComposer.text).toBe('term-a とは')
   expect(fromComposer.context ?? []).toEqual([])
   expect(fromPlugin.context?.[0]).toContain('Term-A')
+  expect(shownForComposer).toEqual([])
 })
 
 // スラッシュコマンドの行は照合せずにそのまま返却する（正常系）
@@ -320,6 +334,7 @@ test('test_error_when_config_unreadable', async ($, on) => {
   const logged = world.logs.filter((line) => line.to === 'debug' && line.text.includes(missingPath))
   expect(logged.length).toBeGreaterThan(0)
   expect(logged.some((line) => line.text.includes('ENOENT: no such file or directory'))).toBe(true)
+  expect(transcriptLines(world.logs)).toEqual([])
 })
 
 // 読み込めない project-index.yaml のリポジトリだけを除外し、他のリポジトリの文脈は追加する（異常系）
@@ -704,4 +719,33 @@ test('test_normal_when_settings_env_preferred', async ($, on) => {
   expect(result.context?.[0]).toContain('term-a')
   expect(result.context?.[0]).toContain('説明 Term-A')
   expect(fs.reads).not.toContain(SHELL_CONFIG_PATH)
+})
+
+// show_added が false のときは、文脈を追加して記録に入れ、利用者の画面には表示しない（正常系）
+test('test_normal_when_display_off', async ($, on) => {
+  // 準備
+  const world = installWorld(on, { fs: makeFs(makeConfig({ globalExtra: ['show_added: false'] })), settings: SETTINGS })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(transcriptLines(world.logs)).toEqual([])
+})
+
+// 表示の $.ui.log が失敗しても、文脈の追加と記録はそのまま（異常系）
+test('test_error_when_display_fails', async ($, on) => {
+  // 準備
+  const world = installWorld(on, { fs: makeFs(), settings: SETTINGS, transcriptError: '表示できません' })
+
+  // 実行
+  const result = await submit($, 'term-a とは')
+  const again = await submit($, 'term-a とは')
+
+  // 検証
+  expect(result.text).toBe('term-a とは')
+  expect(result.context?.[0]).toContain('Term-A')
+  expect(again.context ?? []).toEqual([])
+  expect(transcriptLines(world.logs)).toEqual([])
 })
