@@ -6,6 +6,24 @@ when:
   - alias-inject が入力や読んだ本文に追加する引用の文脈（用語・エイリアス・変数参照の値）の仕様を調べるとき
   - alias-inject の設定ファイルと、project-index.yaml の alias_type を持つ行の書き方を調べるとき
   - alias-inject のフックのモジュール構成・テスト実行方法・開発コマンドを調べるとき
+direct_commit:
+  branch: develop
+  kinds:
+    - docs
+    - repo
+    - hooks
+    - tests
+    - architecture
+    - interface
+    - scenario
+    - test_procedure
+    - module
+    - library
+    - config
+    - dev_command
+    - nonfunctional
+    - layout
+    - index
 documents:
   - id: docs
     title: 公開ドキュメント
