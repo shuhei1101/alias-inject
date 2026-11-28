@@ -1,0 +1,106 @@
+tasks:
+  - process: 初期構築
+    status: skipped
+    reason: 既存リポジトリのため対象外
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: リバースエンジニアリング
+    status: skipped
+    reason: 設計書は揃っており、棚卸しする対象が無い
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 方針決め
+    status: skipped
+    reason: 方針決めを依頼する Issue ではない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: PoC 検証
+    status: skipped
+    reason: nav の group の入れ子は project-index の既存の機能で、未検証の技術機構に依存しない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 複合ユースケース設計
+    status: skipped
+    reason: 変えるのは配信元の設定の nav だけで、プラグインの振る舞いは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: デザインスタイル選定
+    status: skipped
+    reason: alias-inject は画面を持たず、dev-docs の画面のデザインは変えない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 画面一覧・画面遷移
+    status: skipped
+    reason: alias-inject は画面を持たない。サイドバーの構成は nav の記載で決める
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 単一ユースケース設計
+    status: skipped
+    reason: プラグインの振る舞いは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: モック作成
+    status: skipped
+    reason: alias-inject は画面を持たない。確認は dev-docs の画面のスクリーンショットで行う
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: データ設計
+    status: skipped
+    reason: データの構造は変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: インターフェース定義設計
+    status: skipped
+    reason: インターフェースは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: エージェント・MCP サーバー設計
+    status: skipped
+    reason: エージェント・MCP サーバーを持たない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: エージェントフロー・LLM 呼び出し設計
+    status: skipped
+    reason: LLM を呼び出さない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 精度評価設計
+    status: skipped
+    reason: LLM を呼び出さない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 部品設計
+    status: skipped
+    reason: 画面の部品を持たない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 画面設計
+    status: skipped
+    reason: alias-inject は画面を持たない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: モジュール構成設計
+    status: skipped
+    reason: コードは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: ドキュメント修正
+    status: done
+    note: project-index.yaml の nav でサイドバーのグループを入れ子にし、dev-docs の画面のスクリーンショットで確認する
+    updated_by: planner
+    updated_at: '2026-11-28T09:12:08.010075+00:00'
+  - process: 単体テスト作成
+    status: skipped
+    reason: コードは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 実装
+    status: skipped
+    reason: コードは変わらない。nav の修正はドキュメント修正で行う
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'
+  - process: 結合テスト作成
+    status: skipped
+    reason: コードは変わらない
+    updated_by: planner
+    updated_at: '2026-11-28T08:59:39.130007+00:00'

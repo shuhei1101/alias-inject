@@ -1,0 +1,17 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: 参照するリポジトリの project-index.yaml から documents の行だけを取り出すため、nav の入れ子で照合する単語は変わらない
+    depends_on: []
+scope_out:
+  - item: 設計書への主題のタグの付与
+    reason: 'シナリオ・インターフェース定義・モジュール構成・外部ライブラリの 36 件はどれも main: true のタグを既に持ち、判定フローチャートの「文書に主題のタグを付ける」に進まない'
+    plan: none
+docs:
+  - page: project-index.yaml
+    new: false
+    change: nav のタブ「設計書」のシナリオ・インターフェース定義・モジュール構成のグループを機能の単位の入れ子にし、IF-7・SC-8 を並べる
+    status: done
+    updated_by: planner
+    updated_at: '2026-11-28T09:04:05.796343+00:00'
