@@ -85,8 +85,10 @@ tasks:
     updated_by: planner
     updated_at: '2026-11-28T08:59:39.130007+00:00'
   - process: ドキュメント修正
-    status: todo
+    status: done
     note: project-index.yaml の nav でサイドバーのグループを入れ子にし、dev-docs の画面のスクリーンショットで確認する
+    updated_by: planner
+    updated_at: '2026-11-28T09:12:08.010075+00:00'
   - process: 単体テスト作成
     status: skipped
     reason: コードは変わらない
