@@ -1,0 +1,10 @@
+use_cases:
+  - kind: single
+    scenario: docs/scenario/SC-3.yaml
+    impact: none
+    detail: 参照するリポジトリの project-index.yaml から documents の行だけを取り出すため、nav の入れ子で照合する単語は変わらない
+    depends_on: []
+scope_out:
+  - item: 設計書への主題のタグの付与
+    reason: 'シナリオ・インターフェース定義・モジュール構成・外部ライブラリの 36 件はどれも main: true のタグを既に持ち、判定フローチャートの「文書に主題のタグを付ける」に進まない'
+    plan: none
