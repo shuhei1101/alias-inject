@@ -1,0 +1,7 @@
+confirmations:
+  - topic: 設計書のサイドバーの入れ子の画面
+    decision: この画面で進める（推奨案 A）
+    decided_by: thumbs_up
+    approver: shuhei1101
+    commit:
+    thread: https://github.com/shuhei1101/alias-inject/pull/145#discussion_r4726377553
