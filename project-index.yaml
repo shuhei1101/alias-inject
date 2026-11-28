@@ -252,7 +252,7 @@ nav:
                 - page: module/MOD-15
                 - page: module/MOD-16
                 - page: module/MOD-6
-            - group: エイリアスの検証
+            - group: エイリアスの読み込み
               items:
                 - page: module/MOD-2
                 - page: module/MOD-3
